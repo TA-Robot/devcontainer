@@ -25,6 +25,7 @@
 
 - このテンプレと合わせて、対象リポジトリに **`project/AGENTS.md`（サブ向け指示）**を置く運用を推奨します
 - `codex-second-agent` 実行時は `-- --cd project` を付けて **実行ディレクトリも project に固定**します
+  - 重要: これは「実行ディレクトリを project にする」だけで、技術的な強制隔離ではありません（ルールで縛る運用）
 
 例（implementer を project 固定で起動）:
 
@@ -37,6 +38,12 @@ PROMPT
 ---
 
 ## codex-second-agent の使い方（要点）
+
+### codex-second-agent とは？どこにある？
+
+- **何か**: `codex exec` を「セッションID自動保持」「agent別worktree」「ログ保存」付きで呼び出すラッパー
+- **この基盤リポジトリでの実装**: `scripts/codex-second-agent`
+- **コンテナ内のPATH**: 環境によっては `codex-second-agent` がPATHに入っていないことがあります（その場合は `scripts/codex-second-agent` を直接実行）
 
 ### 基本
 

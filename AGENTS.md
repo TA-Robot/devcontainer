@@ -36,4 +36,9 @@ bash -n scripts/codex-second-agent
 - `AGENTS_TEMPLATE.md`: マルチエージェント運用（管理者/実装者の分業、バックグラウンド実行、ログ追跡）用テンプレ
 - `project/AGENTS.md`: サブエージェントを **project配下だけ**で動かすための指示テンプレ（対象プロジェクトへコピーして利用）
 
+## codex-second-agent はどこにある？
+
+- 実体: `scripts/codex-second-agent`
+- 使い方/運用: `README.md` / `docs/` / `AGENTS_TEMPLATE.md`
+
 

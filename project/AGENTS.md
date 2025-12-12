@@ -6,6 +6,11 @@
 > 注意: 技術的に“強制隔離”するものではなく、運用ルールとしてスコープを縛ります。  
 > `codex-second-agent` 実行時に `-- --cd project` を付けて **実行ディレクトリも project に固定**してください。
 
+## codex-second-agent とは？（簡単に）
+
+- `codex exec` を「セッションID自動保持」「agent別worktree」「ログ保存」付きで呼び出すラッパーです
+- この基盤リポジトリでは `scripts/codex-second-agent` が実体です（PATHに無い場合はこれを直接実行）
+
 ---
 
 ## スコープ（最重要）
@@ -65,5 +70,11 @@ codex-second-agent --agent implementer doctor
 ```
 
 `paths` の `effective_cd` が `.../project` になっていることを必ず確認してください。
+
+## 補足（よくある誤解）
+
+- **worktreeが project 配下に作られるわけではありません**  
+  `codex-second-agent` は基本的に「workspace（git root）単位」で agent worktree を作ります。  
+  `-- --cd project` は *実行ディレクトリ* を `project/` にする指定です。
 
 
