@@ -19,6 +19,23 @@
 
 ---
 
+## 「project配下だけを見せる」運用（推奨）
+
+サブエージェントは、リポジトリ全体を見せるのではなく **project配下のみ**を対象にすると安全です。
+
+- このテンプレと合わせて、対象リポジトリに **`project/AGENTS.md`（サブ向け指示）**を置く運用を推奨します
+- `codex-second-agent` 実行時は `-- --cd project` を付けて **実行ディレクトリも project に固定**します
+
+例（implementer を project 固定で起動）:
+
+```bash
+cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status -- --cd project - > /tmp/implementer.out 2>&1 &
+project/ 配下のみを対象に実装して。
+PROMPT
+```
+
+---
+
 ## codex-second-agent の使い方（要点）
 
 ### 基本
