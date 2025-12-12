@@ -1,0 +1,121 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'USAGE'
+codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼び出すラッパー
+
+使い方:
+  codex-second-agent "プロンプト..."
+  codex-second-agent -                 # プロンプトをstdinから読む
+  codex-second-agent status            # 現在の保存セッションIDを表示
+  codex-second-agent reset             # セッションIDを削除（次回は新規セッション）
+
+オプション:
+  --raw-json          codexのJSONLイベントをそのまま出力（デバッグ用）
+  --                 以降は codex exec にそのまま渡す（例: --model o3 --sandbox read-only）
+
+環境変数:
+  CODEX_SA_STATE_DIR  セッションID保存先（デフォルト: ~/.codex/cursor-second-agent）
+
+例:
+  codex-second-agent "このリポジトリのREADMEを要約して"
+  codex-second-agent "次はAGENTS.mdを書いて" -- --model o3 --sandbox read-only
+USAGE
+}
+
+cmd="${1:-}"
+case "$cmd" in
+  -h|--help|help)
+    usage
+    exit 0
+    ;;
+esac
+
+raw_json=0
+prompt_parts=()
+codex_args=()
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --raw-json)
+      raw_json=1
+      shift
+      ;;
+    --)
+      shift
+      codex_args+=("$@")
+      break
+      ;;
+    *)
+      prompt_parts+=("$1")
+      shift
+      ;;
+  esac
+done
+
+prompt="${prompt_parts[*]:-}"
+
+state_dir="${CODEX_SA_STATE_DIR:-$HOME/.codex/cursor-second-agent}"
+
+workspace_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+workspace_key="$(printf '%s' "$workspace_root" | sha256sum | awk '{print $1}')"
+session_file="${state_dir}/${workspace_key}/session_id"
+
+mkdir -p "$(dirname "$session_file")"
+chmod 700 "$state_dir" 2>/dev/null || true
+
+if [[ "$prompt" == "status" ]]; then
+  if [[ -f "$session_file" ]]; then
+    cat "$session_file"
+    exit 0
+  fi
+  echo "(no session)" >&2
+  exit 1
+fi
+
+if [[ "$prompt" == "reset" ]]; then
+  rm -f "$session_file"
+  echo "reset: removed session_id for workspace: $workspace_root" >&2
+  exit 0
+fi
+
+if [[ -z "$prompt" || "$prompt" == "-" ]]; then
+  # stdin からプロンプト（Cursorエージェントは heredoc/パイプで渡せる）
+  prompt="$(cat)"
+fi
+
+if [[ -z "${prompt//[[:space:]]/}" ]]; then
+  echo "error: prompt is empty" >&2
+  usage >&2
+  exit 2
+fi
+
+session_id=""
+if [[ -f "$session_file" ]]; then
+  session_id="$(cat "$session_file" || true)"
+fi
+
+run_codex() {
+  if [[ -n "$session_id" ]]; then
+    # NOTE:
+    # - `--search` はトップレベルオプションなので `codex --search exec ...` の形で付与
+    # - `--dangerously-bypass-approvals-and-sandbox` は常に有効化（ユーザー要求）
+    # - `--json` は `codex exec` のオプションなので `exec` の後に置く
+    codex --dangerously-bypass-approvals-and-sandbox --search exec "${codex_args[@]}" --json resume "$session_id" "$prompt"
+  else
+    codex --dangerously-bypass-approvals-and-sandbox --search exec "${codex_args[@]}" --json "$prompt"
+  fi
+}
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+filter_py="${script_dir}/codex-second-agent-filter.py"
+
+# Dockerfile経由で /usr/local/bin に入ると filter が同階層にいないので /usr/local/lib も見る
+if [[ ! -f "$filter_py" && -f "/usr/local/lib/codex-second-agent/filter.py" ]]; then
+  filter_py="/usr/local/lib/codex-second-agent/filter.py"
+fi
+
+run_codex | python3 "$filter_py" "$session_file" "$raw_json"
+
+

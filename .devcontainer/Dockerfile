@@ -55,6 +55,11 @@ RUN npm install -g \
     @google/gemini-cli \
     && npm cache clean --force
 
+# Codex セカンドエージェント用ラッパー（セッションID自動保持）
+COPY scripts/codex-second-agent /usr/local/bin/codex-second-agent
+COPY scripts/codex-second-agent-filter.py /usr/local/lib/codex-second-agent/filter.py
+RUN chmod +x /usr/local/bin/codex-second-agent
+
 # 開発ユーザー作成
 ARG USERNAME=devuser
 ARG USER_UID=1000

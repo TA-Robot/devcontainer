@@ -40,6 +40,27 @@ codex-full "リファクタリングして"
 gemini
 ```
 
+## Cursorエージェント向け: Codex セカンドエージェント用ツール
+
+このリポジトリには、`codex exec` を使って **非対話で呼べる“セカンドエージェント”口**として `codex-second-agent` を同梱しています。
+セッションID(thread_id)は **ツール側が `~/.codex` 配下に保存**するため、CursorエージェントがIDを覚えておく必要がありません。
+
+### 使い方（Cursorエージェント向け）
+
+基本的な使い方は `AGENTS.md` を参照してください。
+
+### 内部の挙動（実装の要点）
+
+- `codex-second-agent` は内部で `codex exec --json ...` を実行します
+- JSONLの `thread.started.thread_id` を抽出してセッションIDとして保存し、2回目以降は `codex exec resume <id> ...` で継続します
+- 保存先はデフォルトで `~/.codex/cursor-second-agent/<workspace_hash>/session_id` です
+  - `CODEX_SA_STATE_DIR` で保存先ルートを変更できます
+
+### 運用上の注意
+
+- `codex-second-agent` は **常に `--dangerously-bypass-approvals-and-sandbox` と `--search` を有効化**します（運用方針として固定）
+- `--dangerously-bypass-approvals-and-sandbox` は危険です。外部サンドボックスがある前提でのみ使用してください
+
 ## プリインストールツール
 
 | カテゴリ | ツール |
