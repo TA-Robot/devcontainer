@@ -1,21 +1,37 @@
-# AGENTS_TEMPLATE.md（このdevcontainer基盤を使って「別プロジェクト」を開発するためのテンプレ）
+# AGENTS_TEMPLATE.md（別プロジェクト開発用テンプレ）
 
-このファイルは、**このリポジトリ（devcontainer基盤）を使って開発する“別プロジェクト”側**に置くためのテンプレです。  
-対象プロジェクトの `AGENTS.md` としてコピーして使ってください（必要に応じて要件に合わせて編集）。
+このファイルは、**このdevcontainer基盤を使って開発する“別プロジェクト”側**に置くためのテンプレです。  
+対象プロジェクトに `AGENTS.md` としてコピーし、`<<...>>` を埋めて使ってください。
 
 ---
 
-## マルチエージェント運用ポリシー（重要）
+## このプロジェクト情報（埋める）
 
-- **メインエージェント（管理者）は実装しない**
-  - 変更案の整理、タスクの切り出し、サブエージェントへの依頼、ログ/差分レビュー、取り込み判断に徹する
-  - `git add/commit` の実行主体も原則サブエージェント（または明示的に「管理者が取り込む」工程のみ）
-- **サブエージェントは役割で分ける**
-  - `implementer`: 実装・テスト・コミット
-  - `reviewer`: レビュー・指摘・リスク洗い出し
-  - `triage`: 調査・原因切り分け・影響範囲特定（必要なら）
-- **待ち時間削減のため “基本バックグラウンド実行”**
-  - サブエージェント起動はバックグラウンドで走らせ、ログ（`events.jsonl` / `transcript.jsonl`）を見ながら次の作業を進める
+- **project名**: `<<project-name>>`
+- **projectの実体ディレクトリ**: `project/<<name>>/`（例: `project/app/`）
+- **実行/テストコマンド**:
+  - `<<test-cmd>>`（例: `python -m unittest -v` / `npm test`）
+  - `<<lint-cmd>>`（任意）
+
+---
+
+## 役割（固定）
+
+- **管理者（main/manager）**: 実装しない。管理・判断・統合・ドキュメント整備に徹する
+- **implementer**: 実装・テスト・コミット
+- **reviewer**: レビュー（Must/Should/Nice）・リスク洗い出し
+- **triage**: 調査・原因切り分け（必要時）
+
+---
+
+## project/docs（管理者が整備する前提）
+
+このテンプレ運用では、管理者が `project/docs/` を継続的に整備します。
+
+- **管理者が書く**（推奨）:
+  - `project/docs/runbook.md`: 実行手順・リリース手順・よくある事故と対処
+  - `project/docs/decisions.md`: 重要な設計判断（短い箇条書きでOK）
+- **サブエージェントは参照OK**だが、**更新は原則しない**（更新が必要なら管理者に提案）
 
 ---
 
@@ -37,7 +53,7 @@ codex-second-agent workspace init project/<name>
 
 mkdir -p .codex-second-agent/nohup
 cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - -- --cd project > .codex-second-agent/nohup/implementer.out 2>&1 &
-project/<name>/ 配下のみを対象に実装して。
+project/<name>/ 配下のみを対象に実装して（project/docs を参照し、逸脱するなら管理者へ質問）。
 PROMPT
 ```
 
@@ -158,6 +174,20 @@ cat <<'PROMPT' | nohup timeout 120s codex-second-agent --agent reviewer - > .cod
 PROMPT
 echo "pid=$!"
 ```
+
+---
+
+## 管理者のチェックリスト（短縮版）
+
+- **依頼前**:
+  - `project/docs/runbook.md` に「実行/テスト/確認方法」が書かれている
+  - `workspace init` が対象プロジェクトを指している
+- **依頼後**:
+  - `transcript.jsonl` で進捗確認（`nohup` が空でも慌てない）
+  - 必要なら `--post-git-status` で未コミット滞留を早期検知
+- **取り込み前**:
+  - `<<test-cmd>>` を実行してOK
+  - reviewer の Must が潰れている
 
 ---
 

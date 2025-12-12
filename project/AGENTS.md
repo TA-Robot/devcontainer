@@ -20,6 +20,11 @@
   - リポジトリルート配下の `scripts/` / `.devcontainer/` / `docs/` / `README.md` / `AGENTS*.md` など
   - project外のファイルを参照してよいか迷ったら、必ず管理者へ質問して止まる
 
+## project/docs（管理者が整備する前提）
+
+- 管理者は `project/docs/` を整備します（runbook/decision log）
+- サブエージェントは **参照してよい**（ただし更新が必要なら管理者に提案）
+
 ## 役割別の期待
 
 - **implementer**
