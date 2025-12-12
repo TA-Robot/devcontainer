@@ -3,6 +3,21 @@
 メインエージェントから **「セカンドエージェント」的に呼び出す**ための入口として `codex-second-agent` を提供します。
 目的は次の2点です:
 
+- **マルチエージェント運用**: エージェントごとにセッション/ログ/作業ディレクトリを分離して並行作業できる
+- **管理者（メイン）と実装者（サブ）の分業**: メインは管理・判断に徹し、実装はサブエージェントに委譲できる
+
+## 運用ポリシー（重要）
+
+- **メインエージェント（管理者）は実装しない**
+  - 変更案の整理、タスクの切り出し、サブエージェントへの依頼、ログ/差分レビュー、取り込み判断に徹する
+  - `git add/commit` の実行主体も原則サブエージェント（または明示的に「管理者が取り込む」工程のみ）
+- **サブエージェントは役割で分ける**
+  - `implementer`: 実装・テスト・コミット
+  - `reviewer`: レビュー・指摘・リスク洗い出し
+  - `triage`: 調査・原因切り分け・影響範囲特定（必要なら）
+- **待ち時間削減のため “基本バックグラウンド実行”**
+  - サブエージェント起動はバックグラウンドで走らせ、ログ（`events.jsonl` / `transcript.jsonl`）を見ながら次の依頼やレビュー準備を進める
+
 ## 使い方
 ### 基本
 ```bash
@@ -68,6 +83,7 @@ PROMPT
 codex-second-agent status
 codex-second-agent status --verbose
 codex-second-agent paths
+codex-second-agent doctor
 codex-second-agent reset
 ```
 
@@ -88,5 +104,79 @@ codex-second-agent reset
 
 - `CODEX_SA_WORKTREES_MODE=workspace` を設定する
 - `codex-second-agent --worktrees-in-workspace ...` を使う
+
+## バックグラウンド実行（推奨）
+
+### ねらい
+
+- サブエージェントの応答待ちで手が止まるのを避ける
+- メイン（管理者）が「次の依頼文」「レビュー観点」「差分取り込み手順」を並行で準備できる
+
+### 起動テンプレ（nohup）
+
+```bash
+# implementer に実装を投げる（バックグラウンド）
+cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > /tmp/implementer.out 2>&1 &
+要件:
+- ...
+制約:
+- ...
+成果物:
+- ...
+PROMPT
+echo "pid=$!"
+```
+
+### ログの見方（重要）
+
+- **実体パスの確認**:
+
+```bash
+codex-second-agent --agent implementer paths
+```
+
+- **会話ログ（読みやすい）**: `transcript.jsonl` を tail
+
+```bash
+# 例: 最後の応答を見る（1行=1リクエスト）
+tail -n 5 ~/.codex/cursor-second-agent/<workspace_hash>/agents/implementer/logs/transcript.jsonl
+```
+
+- **生イベント（デバッグ向け）**: `events.jsonl`
+
+```bash
+tail -n 50 ~/.codex/cursor-second-agent/<workspace_hash>/agents/implementer/logs/events.jsonl
+```
+
+## 典型フロー（管理者がやること / サブがやること）
+
+### 1) 管理者: 要件を固めて implementer に依頼（バックグラウンド）
+
+- **依頼文に必ず含める**:
+  - 目的/スコープ（何をどこまでやるか）
+  - 制約（触ってよいディレクトリ、追加依存可否、危険操作禁止など）
+  - 成果物（ファイル/コマンド/テスト）
+  - 完了条件（例: `bash -n ...` / `python -m pytest` / `npm test` など）
+
+### 2) implementer: 実装→テスト→コミット
+
+- `--post-git-status`（または `CODEX_SA_POST_GIT_STATUS=1`）を使うと、**未コミット滞留**が早期に見つかります
+
+### 3) 管理者: reviewer にレビュー依頼（バックグラウンド）
+
+- commit hash / ブランチ名 / 変更範囲 を明示して依頼
+- 指摘は Must/Should/Nice に分けてもらう
+
+### 4) implementer: 指摘反映→再テスト→追加コミット
+
+### 5) 管理者: 取り込み判断・統合・後片付け
+
+- パス確認: `codex-second-agent paths`
+- 不要になった worktree は削除:
+
+```bash
+codex-second-agent worktree remove <agent>        # ブランチも整理（既定）
+codex-second-agent worktree remove <agent> --keep-branch
+```
 
 
