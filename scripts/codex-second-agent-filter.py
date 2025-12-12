@@ -2,6 +2,7 @@
 import json
 import os
 import sys
+from datetime import datetime, timezone
 
 
 def safe_write_session(session_file: str, tid: str) -> None:
@@ -14,14 +15,26 @@ def safe_write_session(session_file: str, tid: str) -> None:
 
 
 def main() -> int:
-    if len(sys.argv) < 3:
-        print("usage: codex-second-agent-filter.py <session_file> <raw_json:0|1>", file=sys.stderr)
+    if len(sys.argv) < 5:
+        print(
+            "usage: codex-second-agent-filter.py <session_file> <raw_json:0|1> <prompt_file> <transcript_log>",
+            file=sys.stderr,
+        )
         return 2
 
     session_file = sys.argv[1]
     raw_json = sys.argv[2] == "1"
+    prompt_file = sys.argv[3]
+    transcript_log = sys.argv[4]
+
+    try:
+        with open(prompt_file, "r", encoding="utf-8") as f:
+            prompt = f.read()
+    except Exception:
+        prompt = ""
 
     thread_id = None
+    agent_texts: list[str] = []
 
     for line in sys.stdin:
         line = line.rstrip("\n")
@@ -51,10 +64,22 @@ def main() -> int:
             if item.get("type") == "agent_message":
                 text = item.get("text")
                 if isinstance(text, str) and text:
+                    agent_texts.append(text)
                     print(text, flush=True)
 
     # raw_json=0 で agent_message が無いケースでもエラーにはしない
-    _ = thread_id
+    try:
+        os.makedirs(os.path.dirname(transcript_log), exist_ok=True)
+        record = {
+            "ts": datetime.now(timezone.utc).isoformat(),
+            "thread_id": thread_id,
+            "prompt": prompt,
+            "response": "\n\n".join(agent_texts).strip(),
+        }
+        with open(transcript_log, "a", encoding="utf-8") as f:
+            f.write(json.dumps(record, ensure_ascii=False) + "\n")
+    except Exception:
+        pass
     return 0
 
 

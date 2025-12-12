@@ -90,9 +90,15 @@ sanitize_codex_args "${codex_args[@]}"
 
 workspace_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 workspace_key="$(printf '%s' "$workspace_root" | sha256sum | awk '{print $1}')"
-session_file="${state_dir}/${workspace_key}/session_id"
+workspace_state_dir="${state_dir}/${workspace_key}"
+session_file="${workspace_state_dir}/session_id"
 
-mkdir -p "$(dirname "$session_file")"
+# 会話ログ保存先（メイン→サブ / サブ→メイン）
+logs_dir="${CODEX_SA_LOG_DIR:-${workspace_state_dir}/logs}"
+events_log="${logs_dir}/events.jsonl"
+transcript_log="${logs_dir}/transcript.jsonl"
+
+mkdir -p "$(dirname "$session_file")" "$logs_dir"
 chmod 700 "$state_dir" 2>/dev/null || true
 
 if [[ "$prompt" == "status" ]]; then
@@ -146,6 +152,15 @@ if [[ ! -f "$filter_py" && -f "/usr/local/lib/codex-second-agent/filter.py" ]]; 
   filter_py="/usr/local/lib/codex-second-agent/filter.py"
 fi
 
-run_codex | python3 "$filter_py" "$session_file" "$raw_json"
+prompt_tmp="$(mktemp -t codex-second-agent-prompt.XXXXXX)"
+cleanup() {
+  rm -f "$prompt_tmp"
+}
+trap cleanup EXIT
+printf '%s' "$prompt" >"$prompt_tmp"
+
+# - events.jsonl: codexのJSONLイベントをそのまま追記
+# - transcript.jsonl: 1リクエスト=1行で、prompt/responseをまとめて追記
+run_codex | tee -a "$events_log" | python3 "$filter_py" "$session_file" "$raw_json" "$prompt_tmp" "$transcript_log"
 
 

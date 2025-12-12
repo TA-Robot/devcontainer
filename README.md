@@ -55,6 +55,10 @@ gemini
 - JSONLの `thread.started.thread_id` を抽出してセッションIDとして保存し、2回目以降は `codex exec resume <id> ...` で継続します
 - 保存先はデフォルトで `~/.codex/cursor-second-agent/<workspace_hash>/session_id` です
   - `CODEX_SA_STATE_DIR` で保存先ルートを変更できます
+- メインエージェント↔サブエージェントの会話ログは `~/.codex/cursor-second-agent/<workspace_hash>/logs/` に保存されます
+  - `events.jsonl`: `codex --json` の生イベント（JSONL）を追記
+  - `transcript.jsonl`: 1リクエスト=1行で `prompt` / `response` をまとめたログ（JSONL）
+  - `CODEX_SA_LOG_DIR` でログ保存先ディレクトリを変更できます
 
 ### 運用上の注意
 
