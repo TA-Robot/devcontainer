@@ -15,6 +15,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   codex-second-agent reset             # 現在エージェントのセッションIDを削除（次回は新規セッション）
   codex-second-agent worktree create NAME  # エージェント用worktree作成
   codex-second-agent worktree list         # worktree一覧（エージェント名/パス）
+  codex-second-agent worktree remove NAME  # エージェント用worktreeを削除（必要ならブランチも）
 
 オプション:
   --agent NAME         エージェント名（セッション/ログ/作業ディレクトリを分離）
@@ -42,6 +43,8 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   codex-second-agent doctor
   CODEX_SA_WORKTREES_MODE=workspace codex-second-agent paths
   codex-second-agent --worktrees-in-workspace paths
+  codex-second-agent worktree remove reviewer
+  codex-second-agent worktree remove reviewer --keep-branch
 USAGE
 }
 
@@ -268,8 +271,60 @@ if [[ "$primary_cmd" == "worktree" ]]; then
       done
       exit 0
       ;;
+    remove|rm|delete)
+      name="$sub_arg"
+      if [[ -z "$name" ]]; then
+        echo "error: worktree remove requires NAME" >&2
+        exit 2
+      fi
+      keep_branch=0
+      # 追加オプション（厳密なパーサは要らないので最小限）
+      for extra in "${prompt_parts[@]:3}"; do
+        case "$extra" in
+          --keep-branch)
+            keep_branch=1
+            ;;
+        esac
+      done
+      mkdir -p "$worktrees_dir"
+      wt="${worktrees_dir}/${name}"
+      if [[ ! -e "$wt" ]]; then
+        echo "error: worktree path does not exist: $wt" >&2
+        exit 1
+      fi
+      # 事故防止: workspace_root 自体は絶対に消さない
+      if [[ "$wt" == "$workspace_root" ]]; then
+        echo "error: refusing to remove workspace root: $wt" >&2
+        exit 2
+      fi
+      # git repoでなければ worktree remove はできない。ここでは安全のため削除しない。
+      if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+        echo "error: not a git repository; refusing to remove: $wt" >&2
+        exit 2
+      fi
+      # worktreeをGit経由で削除（ディレクトリも消える）
+      if ! git worktree remove --force "$wt" >/dev/null 2>&1; then
+        echo "error: failed to remove git worktree: $wt" >&2
+        exit 1
+      fi
+      # 念のためディレクトリが残っていれば消す（これも失敗したらエラーにする）
+      if [[ -e "$wt" ]]; then
+        rm -rf "$wt"
+      fi
+      if [[ -e "$wt" ]]; then
+        echo "error: worktree path still exists after removal: $wt" >&2
+        exit 1
+      fi
+      # ブランチも消す（必要なら keep）
+      if [[ $keep_branch -eq 0 ]]; then
+        branch="agent/${name}"
+        git branch -D "$branch" >/dev/null 2>&1 || true
+      fi
+      echo "$name	$wt"
+      exit 0
+      ;;
     *)
-      echo "error: worktree subcommand must be create|list" >&2
+      echo "error: worktree subcommand must be create|list|remove" >&2
       exit 2
       ;;
   esac
