@@ -36,7 +36,7 @@
 codex-second-agent workspace init project/<name>
 
 mkdir -p .codex-second-agent/nohup
-cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > .codex-second-agent/nohup/implementer.out 2>&1 &
+cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - -- --cd project > .codex-second-agent/nohup/implementer.out 2>&1 &
 project/<name>/ 配下のみを対象に実装して。
 PROMPT
 ```

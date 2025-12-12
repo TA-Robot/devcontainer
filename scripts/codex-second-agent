@@ -335,6 +335,51 @@ done
 
 ensure_worktree
 
+# `--cd project` のような相対パス指定は、worktree隔離を壊しやすい。
+# worktreeがある場合は「worktree配下の相対パス」として解釈して絶対パスに補正する。
+rewrite_relative_cd_to_worktree() {
+  [[ -d "$agent_worktree" ]] || return 0
+
+  local -a out=()
+  local i=0
+  while [[ $i -lt ${#codex_args[@]} ]]; do
+    local a="${codex_args[$i]}"
+    case "$a" in
+      -C|--cd)
+        local v="${codex_args[$((i+1))]:-}"
+        if [[ -n "$v" && "$v" != /* && "$v" != "~"* ]]; then
+          out+=("$a" "${agent_worktree}/${v}")
+          i=$((i+2))
+          continue
+        fi
+        out+=("$a" "$v")
+        i=$((i+2))
+        continue
+        ;;
+      --cd=*)
+        local v="${a#--cd=}"
+        if [[ -n "$v" && "$v" != /* && "$v" != "~"* ]]; then
+          out+=("--cd=${agent_worktree}/${v}")
+        else
+          out+=("$a")
+        fi
+        i=$((i+1))
+        continue
+        ;;
+      *)
+        out+=("$a")
+        i=$((i+1))
+        continue
+        ;;
+    esac
+  done
+  codex_args=("${out[@]}")
+}
+
+if [[ $has_cd_arg -ne 0 ]]; then
+  rewrite_relative_cd_to_worktree
+fi
+
 if [[ $has_cd_arg -eq 0 && -d "$agent_worktree" ]]; then
   codex_args=(--cd "$agent_worktree" "${codex_args[@]}")
 fi
