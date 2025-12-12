@@ -59,9 +59,19 @@ gemini
   - `events.jsonl`: `codex --json` の生イベント（JSONL）を追記
   - `transcript.jsonl`: 1リクエスト=1行で `agent` / `cd` / `prompt` / `response` をまとめたログ（JSONL）
   - `CODEX_SA_LOG_DIR` でログ保存先ディレクトリを変更できます
-- エージェント用の作業ディレクトリ（git worktree）は `~/.codex/cursor-second-agent/<workspace_hash>/worktrees/<agent>/`（デフォルト）に作成します
-  - `CODEX_SA_WORKTREES_DIR` で変更できます
+- エージェント用の作業ディレクトリ（git worktree）は次のいずれかに作成します
+  - **デフォルト**: `~/.codex/cursor-second-agent/<workspace_hash>/worktrees/<agent>/`
+  - `CODEX_SA_WORKTREES_MODE=workspace` または `--worktrees-in-workspace` を使う場合: `<repo>/.codex-worktrees/<agent>/`
+  - `CODEX_SA_WORKTREES_DIR` を指定した場合: 指定パス配下
   - **非defaultエージェントは、未作成なら自動でworktreeを作成**してそこで実行します（`CODEX_SA_AUTO_WORKTREE=0` または `--no-auto-worktree` で無効化）
+
+### 運用に効くコマンド（抜粋）
+
+- `codex-second-agent paths`: state/log/worktree の実体パスと `effective_cd` を表示
+- `codex-second-agent status --verbose`: session_id と各種パスをまとめて表示
+- `codex-second-agent doctor`: 環境/パス/設定の簡易診断（トラブル切り分け）
+- `codex-second-agent worktree remove <agent> [--keep-branch]`: worktree削除（必要なら `agent/<agent>` ブランチも整理）
+- `codex-second-agent --post-git-status ...`（または `CODEX_SA_POST_GIT_STATUS=1`）: 実行後に未コミット変更を要約して検知
 
 ### 運用上の注意
 
