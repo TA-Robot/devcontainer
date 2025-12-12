@@ -8,6 +8,9 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
 使い方:
   codex-second-agent [--agent NAME] "プロンプト..."
   codex-second-agent -                 # プロンプトをstdinから読む
+  codex-second-agent workspace init PATH   # サブエージェント実行対象のworkspace（=git repo root）を保存
+  codex-second-agent workspace show        # 保存済みworkspaceを表示
+  codex-second-agent workspace clear       # 保存済みworkspaceを削除
   codex-second-agent agents            # エージェント一覧
   codex-second-agent status [--verbose] # 現在エージェントの保存セッションID（と各種パス）を表示
   codex-second-agent paths             # 各種ディレクトリ（state/log/worktree等）の場所を表示
@@ -24,6 +27,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   --raw-json          codexのJSONLイベントをそのまま出力（デバッグ用）
   --post-git-status   実行後に `git status --porcelain` を要約表示する（未コミット滞留の検知）
   --worktrees-in-workspace worktreeをworkspace配下（.codex-worktrees）に作成する
+  --workspace PATH    実行対象workspace（git repo）を一時的に指定（保存しない）
   --                 以降は codex exec にそのまま渡す（例: --model o3 --sandbox read-only）
 
 環境変数:
@@ -34,6 +38,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   CODEX_SA_LOG_DIR    ログ保存先（デフォルト: <state>/agents/<agent>/logs）
   CODEX_SA_WORKTREES_MODE worktreeの配置モード（workspace|state）。未指定は state
   CODEX_SA_POST_GIT_STATUS 実行後にgit status要約を出す（0|1、既定0）
+  CODEX_SA_TARGET_WORKSPACE 保存済みworkspaceを上書きする（デバッグ用、通常は workspace init を使う）
 
 例:
   codex-second-agent "このリポジトリのREADMEを要約して"
@@ -55,6 +60,7 @@ agent_name="${CODEX_SA_AGENT:-default}"
 auto_worktree="${CODEX_SA_AUTO_WORKTREE:-}"
 worktrees_mode="${CODEX_SA_WORKTREES_MODE:-}"
 post_git_status="${CODEX_SA_POST_GIT_STATUS:-0}"
+workspace_override="${CODEX_SA_TARGET_WORKSPACE:-}"
 prompt_parts=()
 codex_args=()
 
@@ -98,6 +104,22 @@ while [[ $# -gt 0 ]]; do
       ;;
     --worktrees-in-workspace)
       worktrees_mode="workspace"
+      shift
+      ;;
+    --workspace)
+      workspace_override="${2:-}"
+      if [[ -z "$workspace_override" ]]; then
+        echo "error: --workspace requires a value" >&2
+        exit 2
+      fi
+      shift 2
+      ;;
+    --workspace=*)
+      workspace_override="${1#--workspace=}"
+      if [[ -z "$workspace_override" ]]; then
+        echo "error: --workspace requires a value" >&2
+        exit 2
+      fi
       shift
       ;;
     --)
@@ -148,7 +170,93 @@ sanitize_codex_args() {
 
 sanitize_codex_args "${codex_args[@]}"
 
-workspace_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+# 「設定保存（workspace init）」を行う親側のコンテキスト（どこから起動しても一意になるように）
+control_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+control_key="$(printf '%s' "$control_root" | sha256sum | awk '{print $1}')"
+control_state_dir="${state_dir}/${control_key}"
+control_config_dir="${control_state_dir}/config"
+target_workspace_file="${control_config_dir}/target_workspace_root"
+
+resolve_git_root() {
+  local path="${1:-}"
+  if [[ -z "$path" ]]; then
+    return 1
+  fi
+  git -C "$path" rev-parse --show-toplevel 2>/dev/null
+}
+
+if [[ "$primary_cmd" == "workspace" ]]; then
+  mkdir -p "$control_config_dir"
+  case "$sub_cmd" in
+    init)
+      if [[ -z "$sub_arg" ]]; then
+        echo "error: workspace init requires PATH" >&2
+        exit 2
+      fi
+      resolved="$(resolve_git_root "$sub_arg" || true)"
+      if [[ -z "$resolved" ]]; then
+        echo "error: not a git repository: $sub_arg" >&2
+        exit 2
+      fi
+      printf '%s\n' "$resolved" >"$target_workspace_file"
+      echo "$resolved"
+      exit 0
+      ;;
+    show)
+      if [[ -f "$target_workspace_file" ]]; then
+        cat "$target_workspace_file"
+        exit 0
+      fi
+      echo "(not configured)" >&2
+      exit 1
+      ;;
+    clear|reset)
+      rm -f "$target_workspace_file"
+      echo "cleared: target workspace for control root: $control_root" >&2
+      exit 0
+      ;;
+    *)
+      echo "error: workspace subcommand must be init|show|clear" >&2
+      exit 2
+      ;;
+  esac
+fi
+
+workspace_configured=0
+target_workspace_root=""
+if [[ -n "$workspace_override" ]]; then
+  target_workspace_root="$(resolve_git_root "$workspace_override" || true)"
+  if [[ -z "$target_workspace_root" ]]; then
+    echo "error: not a git repository: $workspace_override" >&2
+    exit 2
+  fi
+  workspace_configured=1
+elif [[ -f "$target_workspace_file" ]]; then
+  target_workspace_root="$(cat "$target_workspace_file" || true)"
+  if [[ -n "$target_workspace_root" ]]; then
+    workspace_configured=1
+  fi
+fi
+
+# 実行対象workspace（worktree/ログ/stateの基準）: 明示指定 or 保存済み or その場のgit root
+workspace_root="${target_workspace_root:-$control_root}"
+
+# サブエージェントは必ず target workspace を設定してから使う（事故防止）
+if [[ "$agent_name" != "default" ]]; then
+  if [[ $workspace_configured -ne 1 ]]; then
+    case "$primary_cmd" in
+      agents|status|paths|doctor|reset|worktree|workspace)
+        # 管理系コマンドは許可（設定前でも状態確認できるようにする）
+        ;;
+      *)
+        echo "error: target workspace is not configured for sub-agent '$agent_name'." >&2
+        echo "hint: run 'codex-second-agent workspace init <path-to-project-git>' or pass '--workspace <path>'." >&2
+        exit 2
+        ;;
+    esac
+  fi
+fi
+
 workspace_key="$(printf '%s' "$workspace_root" | sha256sum | awk '{print $1}')"
 workspace_state_dir="${state_dir}/${workspace_key}"
 agents_root="${workspace_state_dir}/agents"
@@ -198,15 +306,15 @@ ensure_worktree() {
   fi
 
   # git repoでなければ作れない
-  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if ! git -C "$workspace_root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
     return 0
   fi
 
   branch="agent/${agent_name}"
-  if git show-ref --verify --quiet "refs/heads/${branch}"; then
-    git worktree add "$agent_worktree" "$branch" >/dev/null
+  if git -C "$workspace_root" show-ref --verify --quiet "refs/heads/${branch}"; then
+    git -C "$workspace_root" worktree add "$agent_worktree" "$branch" >/dev/null
   else
-    git worktree add -b "$branch" "$agent_worktree" >/dev/null
+    git -C "$workspace_root" worktree add -b "$branch" "$agent_worktree" >/dev/null
   fi
 }
 
@@ -262,10 +370,10 @@ if [[ "$primary_cmd" == "worktree" ]]; then
         exit 1
       fi
       branch="agent/${name}"
-      if git show-ref --verify --quiet "refs/heads/${branch}"; then
-        git worktree add "$wt" "$branch"
+      if git -C "$workspace_root" show-ref --verify --quiet "refs/heads/${branch}"; then
+        git -C "$workspace_root" worktree add "$wt" "$branch"
       else
-        git worktree add -b "$branch" "$wt"
+        git -C "$workspace_root" worktree add -b "$branch" "$wt"
       fi
       echo "$name	$wt"
       exit 0
@@ -305,12 +413,12 @@ if [[ "$primary_cmd" == "worktree" ]]; then
         exit 2
       fi
       # git repoでなければ worktree remove はできない。ここでは安全のため削除しない。
-      if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+      if ! git -C "$workspace_root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
         echo "error: not a git repository; refusing to remove: $wt" >&2
         exit 2
       fi
       # worktreeをGit経由で削除（ディレクトリも消える）
-      if ! git worktree remove --force "$wt" >/dev/null 2>&1; then
+      if ! git -C "$workspace_root" worktree remove --force "$wt" >/dev/null 2>&1; then
         echo "error: failed to remove git worktree: $wt" >&2
         exit 1
       fi
@@ -325,7 +433,7 @@ if [[ "$primary_cmd" == "worktree" ]]; then
       # ブランチも消す（必要なら keep）
       if [[ $keep_branch -eq 0 ]]; then
         branch="agent/${name}"
-        git branch -D "$branch" >/dev/null 2>&1 || true
+        git -C "$workspace_root" branch -D "$branch" >/dev/null 2>&1 || true
       fi
       echo "$name	$wt"
       exit 0
@@ -365,7 +473,9 @@ fi
 
 if [[ "$primary_cmd" == "paths" ]]; then
   echo "agent_name: $agent_name"
+  echo "control_root: $control_root"
   echo "workspace_root: $workspace_root"
+  echo "workspace_configured: $( [[ $workspace_configured -eq 1 ]] && echo yes || echo no )"
   echo "state_dir: $state_dir"
   echo "workspace_state_dir: $workspace_state_dir"
   echo "agents_root: $agents_root"
@@ -403,8 +513,10 @@ fi
 if [[ "$primary_cmd" == "doctor" ]]; then
   echo "codex-second-agent doctor"
   echo "agent_name: $agent_name"
+  echo "control_root: $control_root"
   echo "workspace_root: $workspace_root"
-  echo "in_git_repo: $(git rev-parse --is-inside-work-tree >/dev/null 2>&1 && echo yes || echo no)"
+  echo "workspace_configured: $( [[ $workspace_configured -eq 1 ]] && echo yes || echo no )"
+  echo "in_git_repo: $(git -C "$workspace_root" rev-parse --is-inside-work-tree >/dev/null 2>&1 && echo yes || echo no)"
   echo "codex_in_path: $(command -v codex >/dev/null 2>&1 && echo yes || echo no)"
   if command -v codex >/dev/null 2>&1; then
     echo "codex_path: $(command -v codex)"

@@ -24,14 +24,19 @@
 サブエージェントは、リポジトリ全体を見せるのではなく **project配下のみ**を対象にすると安全です。
 
 - このテンプレと合わせて、対象リポジトリに **`project/AGENTS.md`（サブ向け指示）**を置く運用を推奨します
-- `codex-second-agent` 実行時は `-- --cd project` を付けて **実行ディレクトリも project に固定**します
-  - 重要: これは「実行ディレクトリを project にする」だけで、技術的な強制隔離ではありません（ルールで縛る運用）
+- `codex-second-agent` は通常「起動場所の git root」をworkspaceとして扱いますが、**サブエージェントは project 側のGitをworkspaceとして固定**するのが安全です
+  - まず `codex-second-agent workspace init <path-to-project-git>` を実行し、対象プロジェクト（git repo root）を保存します
+  - 以降、サブエージェント実行はそのworkspaceを基準に worktree/log/state を作るようになります
+  - 重要: これは技術的な強制隔離ではありません（ルールで縛る運用）。ただし、親リポジトリのworktreeを誤って作る事故は防げます
 
 例（implementer を project 固定で起動）:
 
 ```bash
-cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status -- --cd project - > /tmp/implementer.out 2>&1 &
-project/ 配下のみを対象に実装して。
+# まず最初に、対象プロジェクト（git repo root）を保存しておく
+codex-second-agent workspace init project/<name>
+
+cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > /tmp/implementer.out 2>&1 &
+project/<name>/ 配下のみを対象に実装して。
 PROMPT
 ```
 

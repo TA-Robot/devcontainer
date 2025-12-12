@@ -4,7 +4,7 @@
 目的は「サブエージェントが **project配下だけ**を見て作業する」運用を徹底することです。
 
 > 注意: 技術的に“強制隔離”するものではなく、運用ルールとしてスコープを縛ります。  
-> `codex-second-agent` 実行時に `-- --cd project` を付けて **実行ディレクトリも project に固定**してください。
+> ただし、`codex-second-agent workspace init <path>` を必須にすることで「親リポジトリのworktreeを誤って作る事故」は防げます。
 
 ## codex-second-agent とは？（簡単に）
 
@@ -35,9 +35,12 @@
 ### implementer を project 固定で起動
 
 ```bash
-cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status -- --cd project - > /tmp/implementer.out 2>&1 &
+# 最初に一度だけ、対象プロジェクト（git repo root）を保存する
+codex-second-agent workspace init project/<name>
+
+cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > /tmp/implementer.out 2>&1 &
 あなたは implementer です。
-- 作業対象は project/ 配下のみ
+- 作業対象は project/<name>/ 配下のみ
 - 変更は project/ 配下のみに限定
 
 要件:
@@ -53,7 +56,10 @@ echo "pid=$!"
 ### reviewer を project 固定で起動
 
 ```bash
-cat <<'PROMPT' | nohup codex-second-agent --agent reviewer -- --cd project - > /tmp/reviewer.out 2>&1 &
+# 対象プロジェクトを保存済みであること（未設定なら init する）
+codex-second-agent workspace init project/<name>
+
+cat <<'PROMPT' | nohup codex-second-agent --agent reviewer - > /tmp/reviewer.out 2>&1 &
 あなたは reviewer です。
 - レビュー対象は project/ 配下の差分のみ
 - 指摘は Must/Should/Nice に分ける
@@ -75,6 +81,6 @@ codex-second-agent --agent implementer doctor
 
 - **worktreeが project 配下に作られるわけではありません**  
   `codex-second-agent` は基本的に「workspace（git root）単位」で agent worktree を作ります。  
-  `-- --cd project` は *実行ディレクトリ* を `project/` にする指定です。
+  `codex-second-agent workspace init project/<name>` を使うと、**project/<name> 側のGitをworkspaceとして扱う**ようになります。
 
 
