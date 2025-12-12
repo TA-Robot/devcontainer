@@ -31,7 +31,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   --                 以降は codex exec にそのまま渡す（例: --model o3 --sandbox read-only）
 
 環境変数:
-  CODEX_SA_STATE_DIR  セッションID保存先（デフォルト: ~/.codex/cursor-second-agent）
+  CODEX_SA_STATE_DIR  セッションID保存先（デフォルト: <repo>/.codex-second-agent）
   CODEX_SA_AGENT      既定のエージェント名（デフォルト: default）
   CODEX_SA_AUTO_WORKTREE  worktree自動作成（未指定なら default=off / 非default=on）
   CODEX_SA_WORKTREES_DIR  worktreeの保存先（デフォルト: <state>/worktrees）
@@ -138,7 +138,8 @@ primary_cmd="${prompt_parts[0]:-}"
 sub_cmd="${prompt_parts[1]:-}"
 sub_arg="${prompt_parts[2]:-}"
 
-state_dir="${CODEX_SA_STATE_DIR:-$HOME/.codex/cursor-second-agent}"
+# 既定の保存先は「実行したリポジトリ内」にする（外部を汚さない）
+state_dir="${CODEX_SA_STATE_DIR:-}"
 # 常に使うモデル（ユーザー要望: gpt-5.2固定）
 forced_model="${CODEX_SA_MODEL:-gpt-5.2}"
 
@@ -172,6 +173,10 @@ sanitize_codex_args "${codex_args[@]}"
 
 # 「設定保存（workspace init）」を行う親側のコンテキスト（どこから起動しても一意になるように）
 control_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+if [[ -z "$state_dir" ]]; then
+  state_dir="${control_root}/.codex-second-agent"
+fi
+mkdir -p "$state_dir"
 control_key="$(printf '%s' "$control_root" | sha256sum | awk '{print $1}')"
 control_state_dir="${state_dir}/${control_key}"
 control_config_dir="${control_state_dir}/config"

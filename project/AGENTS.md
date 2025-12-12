@@ -38,7 +38,8 @@
 # 最初に一度だけ、対象プロジェクト（git repo root）を保存する
 codex-second-agent workspace init project/<name>
 
-cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > /tmp/implementer.out 2>&1 &
+mkdir -p .codex-second-agent/nohup
+cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > .codex-second-agent/nohup/implementer.out 2>&1 &
 あなたは implementer です。
 - 作業対象は project/<name>/ 配下のみ
 - 変更は project/ 配下のみに限定
@@ -59,7 +60,8 @@ echo "pid=$!"
 # 対象プロジェクトを保存済みであること（未設定なら init する）
 codex-second-agent workspace init project/<name>
 
-cat <<'PROMPT' | nohup codex-second-agent --agent reviewer - > /tmp/reviewer.out 2>&1 &
+mkdir -p .codex-second-agent/nohup
+cat <<'PROMPT' | nohup codex-second-agent --agent reviewer - > .codex-second-agent/nohup/reviewer.out 2>&1 &
 あなたは reviewer です。
 - レビュー対象は project/ 配下の差分のみ
 - 指摘は Must/Should/Nice に分ける

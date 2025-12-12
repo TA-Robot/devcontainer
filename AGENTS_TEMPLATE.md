@@ -35,7 +35,8 @@
 # まず最初に、対象プロジェクト（git repo root）を保存しておく
 codex-second-agent workspace init project/<name>
 
-cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > /tmp/implementer.out 2>&1 &
+mkdir -p .codex-second-agent/nohup
+cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > .codex-second-agent/nohup/implementer.out 2>&1 &
 project/<name>/ 配下のみを対象に実装して。
 PROMPT
 ```
@@ -76,7 +77,7 @@ codex-second-agent doctor
 
 ### worktree の配置
 
-- デフォルトは `~/.codex/cursor-second-agent/<workspace_hash>/worktrees/<agent>/`
+- デフォルトは `<repo>/.codex-second-agent/<workspace_hash>/worktrees/<agent>/`
 - ホーム配下に増えるのが気になる場合は、workspace配下に置けます:
 
 ```bash
@@ -107,7 +108,8 @@ CODEX_SA_POST_GIT_STATUS=1 codex-second-agent --agent implementer "..."
 ### 起動テンプレ（nohup）
 
 ```bash
-cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > /tmp/implementer.out 2>&1 &
+mkdir -p .codex-second-agent/nohup
+cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > .codex-second-agent/nohup/implementer.out 2>&1 &
 要件:
 - ...
 制約:
@@ -131,13 +133,13 @@ codex-second-agent --agent implementer paths
 - 会話ログ（読みやすい）: `transcript.jsonl`
 
 ```bash
-tail -n 5 ~/.codex/cursor-second-agent/<workspace_hash>/agents/implementer/logs/transcript.jsonl
+tail -n 5 .codex-second-agent/<workspace_hash>/agents/implementer/logs/transcript.jsonl
 ```
 
 - 生イベント（デバッグ向け）: `events.jsonl`
 
 ```bash
-tail -n 50 ~/.codex/cursor-second-agent/<workspace_hash>/agents/implementer/logs/events.jsonl
+tail -n 50 .codex-second-agent/<workspace_hash>/agents/implementer/logs/events.jsonl
 ```
 
 ---

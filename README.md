@@ -53,9 +53,9 @@ gemini
 
 - `codex-second-agent` は内部で `codex exec --json ...` を実行します
 - JSONLの `thread.started.thread_id` を抽出してセッションIDとして保存し、2回目以降は `codex exec resume <id> ...` で継続します
-- 保存先はデフォルトで `~/.codex/cursor-second-agent/<workspace_hash>/agents/<agent>/session_id` です
+- 保存先はデフォルトで `<repo>/.codex-second-agent/<workspace_hash>/agents/<agent>/session_id` です（外部を汚さない方針）
   - `CODEX_SA_STATE_DIR` で保存先ルートを変更できます
-- メインエージェント↔サブエージェントの会話ログは `~/.codex/cursor-second-agent/<workspace_hash>/agents/<agent>/logs/` に保存されます
+- メインエージェント↔サブエージェントの会話ログは `<repo>/.codex-second-agent/<workspace_hash>/agents/<agent>/logs/` に保存されます
   - `events.jsonl`: `codex --json` の生イベント（JSONL）を追記
   - `transcript.jsonl`: 1リクエスト=1行で `agent` / `cd` / `prompt` / `response` をまとめたログ（JSONL）
   - `CODEX_SA_LOG_DIR` でログ保存先ディレクトリを変更できます
