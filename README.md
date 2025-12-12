@@ -60,6 +60,7 @@ gemini
 
 - `codex-second-agent` は **常に `--dangerously-bypass-approvals-and-sandbox` と `--search` を有効化**します（運用方針として固定）
 - `--dangerously-bypass-approvals-and-sandbox` は危険です。外部サンドボックスがある前提でのみ使用してください
+- 使用モデルは **常に `gpt-5.2`** です（必要があれば `CODEX_SA_MODEL` で上書きできます）
 
 ## プリインストールツール
 

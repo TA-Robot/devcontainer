@@ -57,6 +57,36 @@ done
 prompt="${prompt_parts[*]:-}"
 
 state_dir="${CODEX_SA_STATE_DIR:-$HOME/.codex/cursor-second-agent}"
+# 常に使うモデル（ユーザー要望: gpt-5.2固定）
+forced_model="${CODEX_SA_MODEL:-gpt-5.2}"
+
+sanitize_codex_args() {
+  # `--` 以降で `--model/-m` を渡しても反映させない（事故防止: 常に forced_model を使用）
+  local -a in=("$@")
+  local -a out=()
+  local i=0
+  while [[ $i -lt ${#in[@]} ]]; do
+    local a="${in[$i]}"
+    case "$a" in
+      -m|--model)
+        i=$((i+2))
+        continue
+        ;;
+      --model=*)
+        i=$((i+1))
+        continue
+        ;;
+      *)
+        out+=("$a")
+        i=$((i+1))
+        ;;
+    esac
+  done
+  # 参照渡し: 呼び出し側の配列を上書き
+  codex_args=("${out[@]}")
+}
+
+sanitize_codex_args "${codex_args[@]}"
 
 workspace_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 workspace_key="$(printf '%s' "$workspace_root" | sha256sum | awk '{print $1}')"
@@ -102,9 +132,9 @@ run_codex() {
     # - `--search` はトップレベルオプションなので `codex --search exec ...` の形で付与
     # - `--dangerously-bypass-approvals-and-sandbox` は常に有効化（ユーザー要求）
     # - `--json` は `codex exec` のオプションなので `exec` の後に置く
-    codex --dangerously-bypass-approvals-and-sandbox --search exec "${codex_args[@]}" --json resume "$session_id" "$prompt"
+    codex --dangerously-bypass-approvals-and-sandbox --search --model "$forced_model" exec "${codex_args[@]}" --json resume "$session_id" "$prompt"
   else
-    codex --dangerously-bypass-approvals-and-sandbox --search exec "${codex_args[@]}" --json "$prompt"
+    codex --dangerously-bypass-approvals-and-sandbox --search --model "$forced_model" exec "${codex_args[@]}" --json "$prompt"
   fi
 }
 

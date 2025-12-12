@@ -9,6 +9,7 @@
 codex-second-agent "このリポジトリのREADMEを要約して"
 ```
 2回目以降は、同じワークスペース（Gitルート）であれば自動的に前回セッションを `resume` します。
+モデルは **常に `gpt-5.2`** を使用します。
 ### stdin からプロンプトを渡す（長文向け）
 ```bash
 cat <<'PROMPT' | codex-second-agent -
