@@ -24,24 +24,32 @@
   - state/log/worktree の実体パスと、実行時に使われる `effective_cd` を表示
 - **`status --verbose`**
   - session_idに加えて、関連パスもまとめて表示
+- **`doctor` コマンド**
+  - `codex` の存在/バージョン、git判定、paths要約を一括で表示（トラブル切り分け用）
 - **worktreeをworkspace配下に置けるモード**
   - `CODEX_SA_WORKTREES_MODE=workspace` または `--worktrees-in-workspace` で、`<repo>/.codex-worktrees/` に作成できる
+- **`worktree remove <agent>`**
+  - worktreeを安全に削除（`--keep-branch` を付けない限り `agent/<agent>` ブランチも削除）
+- **実行後に `git status` の要約を出す（任意）**
+  - `--post-git-status` または `CODEX_SA_POST_GIT_STATUS=1` で有効化
 
 ## 運用の推奨手順（最低限）
 
 - **場所確認**
   - `codex-second-agent paths`
   - `codex-second-agent status --verbose`
+  - 困ったら `codex-second-agent doctor`
 - **レビュー前の確認（sub-agent側でやるべき）**
   - `git status -sb` で untracked/modified が残っていないか
   - 必要なら `git add -A && git commit` してブランチ先端を進める
+  - 未コミット滞留が心配なら `--post-git-status` を付けて実行する
 - **テストの実行方法**
   - Python: `python -m pytest`（PATH依存を避ける）
 
 ## 次の改善候補（未実装）
 
-- **`doctor` コマンド**: `codex` の存在/バージョン、worktree/state/logパス、git判定などを一括診断
-- **`worktree remove <agent>`**: worktree削除＋必要なら `agent/<agent>` ブランチ整理
-- **実行後に `git status` の要約を出す**（任意フラグ）: 未コミット滞留の早期発見
+- **`doctor --verbose`**: state/log/worktreeの詳細や、代表的なトラブル（認証未設定など）の推測を表示
+- **`worktree remove <agent>` の拡張**: `--dry-run` / `--force` / `--keep-session` 等（運用ポリシーに応じて）
+- **未コミット滞留の自動検知強化**: `--post-git-status` を非defaultでデフォルトONにする等（ノイズとのトレードオフ）
 
 
