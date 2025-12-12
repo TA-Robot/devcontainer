@@ -9,7 +9,30 @@
 codex-second-agent "このリポジトリのREADMEを要約して"
 ```
 2回目以降は、同じワークスペース（Gitルート）であれば自動的に前回セッションを `resume` します。
-モデルは **常に `gpt-5.2`** を使用します。
+
+## 運用イメージ（どの段階で worktree？）
+
+- **worktreeを使わない段階（軽い相談/調査）**
+  - 例: README要約、仕様質問、エラー原因の切り分け、方針検討
+  - コマンド例:
+
+```bash
+codex-second-agent --agent default "このエラーの原因を推測して。次に見るべきファイルも挙げて。"
+```
+
+- **worktreeを使う段階（実装/修正を伴う“長い作業”）**
+  - 例: issue実装、リファクタ、バグ修正、テスト追加
+  - **エージェント名を切ると、そのエージェント専用worktreeで作業**する運用（デフォルト）
+  - コマンド例:
+
+```bash
+codex-second-agent --agent implementer "このissueを実装して。小さなコミットに分けて。"
+```
+
+## なぜコマンドで呼ぶの？
+
+- Cursorのメインエージェントから「外部のサブエージェント（Codex CLI）」を安定して呼ぶための **入口**です
+- ただしメイン側は基本 **この1コマンドを呼ぶだけ**で、sessionやworktreeはツール側で面倒を見ます
 
 ### エージェントを分ける（マルチエージェント）
 
@@ -27,7 +50,7 @@ codex-second-agent agents
 ### エージェント用 worktree
 
 ```bash
-codex-second-agent worktree create reviewer
+codex-second-agent worktree create reviewer   # 事前に作る場合（任意）
 codex-second-agent worktree list
 ```
 

@@ -16,12 +16,15 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
 
 オプション:
   --agent NAME         エージェント名（セッション/ログ/作業ディレクトリを分離）
+  --auto-worktree      エージェント用worktreeを自動作成してそこで実行する
+  --no-auto-worktree   自動worktree作成を無効化する
   --raw-json          codexのJSONLイベントをそのまま出力（デバッグ用）
   --                 以降は codex exec にそのまま渡す（例: --model o3 --sandbox read-only）
 
 環境変数:
   CODEX_SA_STATE_DIR  セッションID保存先（デフォルト: ~/.codex/cursor-second-agent）
   CODEX_SA_AGENT      既定のエージェント名（デフォルト: default）
+  CODEX_SA_AUTO_WORKTREE  worktree自動作成（未指定なら default=off / 非default=on）
   CODEX_SA_WORKTREES_DIR  worktreeの保存先（デフォルト: <state>/worktrees）
 
 例:
@@ -34,6 +37,7 @@ USAGE
 
 raw_json=0
 agent_name="${CODEX_SA_AGENT:-default}"
+auto_worktree="${CODEX_SA_AUTO_WORKTREE:-}"
 prompt_parts=()
 codex_args=()
 
@@ -57,6 +61,14 @@ while [[ $# -gt 0 ]]; do
         echo "error: --agent requires a value" >&2
         exit 2
       fi
+      shift
+      ;;
+    --auto-worktree)
+      auto_worktree="1"
+      shift
+      ;;
+    --no-auto-worktree)
+      auto_worktree="0"
       shift
       ;;
     --raw-json)
@@ -132,6 +144,39 @@ ensure_agent_dirs() {
   mkdir -p "$(dirname "$session_file")" "$logs_dir"
 }
 
+ensure_worktree() {
+  # 非defaultエージェントは「基本 worktree で隔離して開発」する運用を想定し、
+  # 何も指定が無ければ自動で worktree を作る（ユーザーが明示的に無効化可能）。
+  if [[ -z "$auto_worktree" ]]; then
+    if [[ "$agent_name" == "default" ]]; then
+      auto_worktree="0"
+    else
+      auto_worktree="1"
+    fi
+  fi
+
+  if [[ "$auto_worktree" != "1" ]]; then
+    return 0
+  fi
+
+  mkdir -p "$worktrees_dir"
+  if [[ -d "$agent_worktree" ]]; then
+    return 0
+  fi
+
+  # git repoでなければ作れない
+  if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    return 0
+  fi
+
+  branch="agent/${agent_name}"
+  if git show-ref --verify --quiet "refs/heads/${branch}"; then
+    git worktree add "$agent_worktree" "$branch" >/dev/null
+  else
+    git worktree add -b "$branch" "$agent_worktree" >/dev/null
+  fi
+}
+
 has_cd_arg=0
 for a in "${codex_args[@]}"; do
   case "$a" in
@@ -141,6 +186,8 @@ for a in "${codex_args[@]}"; do
       ;;
   esac
 done
+
+ensure_worktree
 
 if [[ $has_cd_arg -eq 0 && -d "$agent_worktree" ]]; then
   codex_args=(--cd "$agent_worktree" "${codex_args[@]}")

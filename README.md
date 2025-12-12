@@ -61,6 +61,7 @@ gemini
   - `CODEX_SA_LOG_DIR` でログ保存先ディレクトリを変更できます
 - エージェント用の作業ディレクトリ（git worktree）は `~/.codex/cursor-second-agent/<workspace_hash>/worktrees/<agent>/`（デフォルト）に作成します
   - `CODEX_SA_WORKTREES_DIR` で変更できます
+  - **非defaultエージェントは、未作成なら自動でworktreeを作成**してそこで実行します（`CODEX_SA_AUTO_WORKTREE=0` または `--no-auto-worktree` で無効化）
 
 ### 運用上の注意
 
