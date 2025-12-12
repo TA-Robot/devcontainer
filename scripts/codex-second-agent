@@ -9,7 +9,8 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   codex-second-agent [--agent NAME] "プロンプト..."
   codex-second-agent -                 # プロンプトをstdinから読む
   codex-second-agent agents            # エージェント一覧
-  codex-second-agent status            # 現在エージェントの保存セッションIDを表示
+  codex-second-agent status [--verbose] # 現在エージェントの保存セッションID（と各種パス）を表示
+  codex-second-agent paths             # 各種ディレクトリ（state/log/worktree等）の場所を表示
   codex-second-agent reset             # 現在エージェントのセッションIDを削除（次回は新規セッション）
   codex-second-agent worktree create NAME  # エージェント用worktree作成
   codex-second-agent worktree list         # worktree一覧（エージェント名/パス）
@@ -19,6 +20,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   --auto-worktree      エージェント用worktreeを自動作成してそこで実行する
   --no-auto-worktree   自動worktree作成を無効化する
   --raw-json          codexのJSONLイベントをそのまま出力（デバッグ用）
+  --worktrees-in-workspace worktreeをworkspace配下（.codex-worktrees）に作成する
   --                 以降は codex exec にそのまま渡す（例: --model o3 --sandbox read-only）
 
 環境変数:
@@ -26,18 +28,25 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   CODEX_SA_AGENT      既定のエージェント名（デフォルト: default）
   CODEX_SA_AUTO_WORKTREE  worktree自動作成（未指定なら default=off / 非default=on）
   CODEX_SA_WORKTREES_DIR  worktreeの保存先（デフォルト: <state>/worktrees）
+  CODEX_SA_LOG_DIR    ログ保存先（デフォルト: <state>/agents/<agent>/logs）
+  CODEX_SA_WORKTREES_MODE worktreeの配置モード（workspace|state）。未指定は state
 
 例:
   codex-second-agent "このリポジトリのREADMEを要約して"
   codex-second-agent --agent reviewer "この差分をレビューして"
   codex-second-agent worktree create reviewer
   codex-second-agent --agent reviewer "worktree上で作業して"
+  codex-second-agent status --verbose
+  codex-second-agent paths
+  CODEX_SA_WORKTREES_MODE=workspace codex-second-agent paths
+  codex-second-agent --worktrees-in-workspace paths
 USAGE
 }
 
 raw_json=0
 agent_name="${CODEX_SA_AGENT:-default}"
 auto_worktree="${CODEX_SA_AUTO_WORKTREE:-}"
+worktrees_mode="${CODEX_SA_WORKTREES_MODE:-}"
 prompt_parts=()
 codex_args=()
 
@@ -73,6 +82,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --raw-json)
       raw_json=1
+      shift
+      ;;
+    --worktrees-in-workspace)
+      worktrees_mode="workspace"
       shift
       ;;
     --)
@@ -137,7 +150,15 @@ transcript_log="${logs_dir}/transcript.jsonl"
 
 chmod 700 "$state_dir" 2>/dev/null || true
 
-worktrees_dir="${CODEX_SA_WORKTREES_DIR:-${workspace_state_dir}/worktrees}"
+if [[ -n "${CODEX_SA_WORKTREES_DIR:-}" ]]; then
+  worktrees_dir="${CODEX_SA_WORKTREES_DIR}"
+else
+  if [[ "$worktrees_mode" == "workspace" ]]; then
+    worktrees_dir="${workspace_root}/.codex-worktrees"
+  else
+    worktrees_dir="${workspace_state_dir}/worktrees"
+  fi
+fi
 agent_worktree="${worktrees_dir}/${agent_name}"
 
 ensure_agent_dirs() {
@@ -253,12 +274,66 @@ if [[ "$primary_cmd" == "worktree" ]]; then
 fi
 
 if [[ "$primary_cmd" == "status" ]]; then
+  if [[ "$sub_cmd" == "--verbose" || "$sub_cmd" == "verbose" ]]; then
+    echo "agent_name: $agent_name"
+    echo "workspace_root: $workspace_root"
+    echo "state_dir: $state_dir"
+    echo "workspace_state_dir: $workspace_state_dir"
+    echo "agent_state_dir: $agent_state_dir"
+    echo "logs_dir: $logs_dir"
+    echo "worktrees_dir: $worktrees_dir"
+    echo "agent_worktree: $agent_worktree"
+    echo -n "session_id: "
+    if [[ -f "$session_file" ]]; then
+      cat "$session_file"
+    else
+      echo "(no session)"
+    fi
+    exit 0
+  fi
   if [[ -f "$session_file" ]]; then
     cat "$session_file"
     exit 0
   fi
   echo "(no session)" >&2
   exit 1
+fi
+
+if [[ "$primary_cmd" == "paths" ]]; then
+  echo "agent_name: $agent_name"
+  echo "workspace_root: $workspace_root"
+  echo "state_dir: $state_dir"
+  echo "workspace_state_dir: $workspace_state_dir"
+  echo "agents_root: $agents_root"
+  echo "agent_state_dir: $agent_state_dir"
+  echo "logs_dir: $logs_dir"
+  echo "worktrees_dir: $worktrees_dir"
+  echo "agent_worktree: $agent_worktree"
+  # `effective_cd` は codex exec の実行ディレクトリとして使われる（--cd 指定が優先）。
+  effective_cd="$workspace_root"
+  i=0
+  while [[ $i -lt ${#codex_args[@]} ]]; do
+    a="${codex_args[$i]}"
+    case "$a" in
+      -C|--cd)
+        v="${codex_args[$((i+1))]:-}"
+        if [[ -n "$v" ]]; then
+          effective_cd="$v"
+          break
+        fi
+        ;;
+      --cd=*)
+        effective_cd="${a#--cd=}"
+        break
+        ;;
+    esac
+    i=$((i+1))
+  done
+  if [[ "$effective_cd" == "$workspace_root" && -d "$agent_worktree" ]]; then
+    effective_cd="$agent_worktree"
+  fi
+  echo "effective_cd: $effective_cd"
+  exit 0
 fi
 
 if [[ "$primary_cmd" == "reset" ]]; then

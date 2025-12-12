@@ -66,7 +66,27 @@ PROMPT
 ### 状態確認 / リセット
 ```bash
 codex-second-agent status
+codex-second-agent status --verbose
+codex-second-agent paths
 codex-second-agent reset
 ```
+
+## worktree / state / logs の場所（迷子防止）
+
+`codex-second-agent` は、ワークスペース（Gitルート）ごとにハッシュ化したディレクトリ配下に状態を保存します。
+場所が気になったら `codex-second-agent paths` で **state/log/worktree の実体パス**を確認できます。
+
+特に worktree の既定位置は次です（必要なら環境変数で変更可能）:
+
+- `CODEX_SA_STATE_DIR`: 既定 `~/.codex/cursor-second-agent`
+- `CODEX_SA_WORKTREES_DIR`: 既定 `<state>/<workspace_hash>/worktrees`
+- `CODEX_SA_LOG_DIR`: 既定 `<state>/<workspace_hash>/agents/<agent>/logs`
+
+### worktreeをworkspace配下に置きたい場合
+
+ホーム配下に worktree が増えるのが気になる場合、次のどちらかで **workspace配下**（例: `<repo>/.codex-worktrees/`）にできます。
+
+- `CODEX_SA_WORKTREES_MODE=workspace` を設定する
+- `codex-second-agent --worktrees-in-workspace ...` を使う
 
 
