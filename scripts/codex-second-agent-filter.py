@@ -26,6 +26,8 @@ def main() -> int:
     raw_json = sys.argv[2] == "1"
     prompt_file = sys.argv[3]
     transcript_log = sys.argv[4]
+    agent_name = sys.argv[5] if len(sys.argv) >= 6 else None
+    effective_cd = sys.argv[6] if len(sys.argv) >= 7 else None
 
     try:
         with open(prompt_file, "r", encoding="utf-8") as f:
@@ -73,6 +75,8 @@ def main() -> int:
         record = {
             "ts": datetime.now(timezone.utc).isoformat(),
             "thread_id": thread_id,
+            "agent": agent_name,
+            "cd": effective_cd,
             "prompt": prompt,
             "response": "\n\n".join(agent_texts).strip(),
         }

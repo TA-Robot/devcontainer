@@ -6,38 +6,59 @@ usage() {
 codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼び出すラッパー
 
 使い方:
-  codex-second-agent "プロンプト..."
+  codex-second-agent [--agent NAME] "プロンプト..."
   codex-second-agent -                 # プロンプトをstdinから読む
-  codex-second-agent status            # 現在の保存セッションIDを表示
-  codex-second-agent reset             # セッションIDを削除（次回は新規セッション）
+  codex-second-agent agents            # エージェント一覧
+  codex-second-agent status            # 現在エージェントの保存セッションIDを表示
+  codex-second-agent reset             # 現在エージェントのセッションIDを削除（次回は新規セッション）
+  codex-second-agent worktree create NAME  # エージェント用worktree作成
+  codex-second-agent worktree list         # worktree一覧（エージェント名/パス）
 
 オプション:
+  --agent NAME         エージェント名（セッション/ログ/作業ディレクトリを分離）
   --raw-json          codexのJSONLイベントをそのまま出力（デバッグ用）
   --                 以降は codex exec にそのまま渡す（例: --model o3 --sandbox read-only）
 
 環境変数:
   CODEX_SA_STATE_DIR  セッションID保存先（デフォルト: ~/.codex/cursor-second-agent）
+  CODEX_SA_AGENT      既定のエージェント名（デフォルト: default）
+  CODEX_SA_WORKTREES_DIR  worktreeの保存先（デフォルト: <state>/worktrees）
 
 例:
   codex-second-agent "このリポジトリのREADMEを要約して"
-  codex-second-agent "次はAGENTS.mdを書いて" -- --model o3 --sandbox read-only
+  codex-second-agent --agent reviewer "この差分をレビューして"
+  codex-second-agent worktree create reviewer
+  codex-second-agent --agent reviewer "worktree上で作業して"
 USAGE
 }
 
-cmd="${1:-}"
-case "$cmd" in
-  -h|--help|help)
-    usage
-    exit 0
-    ;;
-esac
-
 raw_json=0
+agent_name="${CODEX_SA_AGENT:-default}"
 prompt_parts=()
 codex_args=()
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
+    -h|--help|help)
+      usage
+      exit 0
+      ;;
+    --agent)
+      agent_name="${2:-}"
+      if [[ -z "$agent_name" ]]; then
+        echo "error: --agent requires a value" >&2
+        exit 2
+      fi
+      shift 2
+      ;;
+    --agent=*)
+      agent_name="${1#--agent=}"
+      if [[ -z "$agent_name" ]]; then
+        echo "error: --agent requires a value" >&2
+        exit 2
+      fi
+      shift
+      ;;
     --raw-json)
       raw_json=1
       shift
@@ -54,7 +75,9 @@ while [[ $# -gt 0 ]]; do
   esac
 done
 
-prompt="${prompt_parts[*]:-}"
+primary_cmd="${prompt_parts[0]:-}"
+sub_cmd="${prompt_parts[1]:-}"
+sub_arg="${prompt_parts[2]:-}"
 
 state_dir="${CODEX_SA_STATE_DIR:-$HOME/.codex/cursor-second-agent}"
 # 常に使うモデル（ユーザー要望: gpt-5.2固定）
@@ -91,17 +114,98 @@ sanitize_codex_args "${codex_args[@]}"
 workspace_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
 workspace_key="$(printf '%s' "$workspace_root" | sha256sum | awk '{print $1}')"
 workspace_state_dir="${state_dir}/${workspace_key}"
-session_file="${workspace_state_dir}/session_id"
+agents_root="${workspace_state_dir}/agents"
+agent_state_dir="${agents_root}/${agent_name}"
+session_file="${agent_state_dir}/session_id"
 
 # 会話ログ保存先（メイン→サブ / サブ→メイン）
-logs_dir="${CODEX_SA_LOG_DIR:-${workspace_state_dir}/logs}"
+logs_dir="${CODEX_SA_LOG_DIR:-${agent_state_dir}/logs}"
 events_log="${logs_dir}/events.jsonl"
 transcript_log="${logs_dir}/transcript.jsonl"
 
-mkdir -p "$(dirname "$session_file")" "$logs_dir"
 chmod 700 "$state_dir" 2>/dev/null || true
 
-if [[ "$prompt" == "status" ]]; then
+worktrees_dir="${CODEX_SA_WORKTREES_DIR:-${workspace_state_dir}/worktrees}"
+agent_worktree="${worktrees_dir}/${agent_name}"
+
+ensure_agent_dirs() {
+  mkdir -p "$(dirname "$session_file")" "$logs_dir"
+}
+
+has_cd_arg=0
+for a in "${codex_args[@]}"; do
+  case "$a" in
+    -C|--cd|--cd=*)
+      has_cd_arg=1
+      break
+      ;;
+  esac
+done
+
+if [[ $has_cd_arg -eq 0 && -d "$agent_worktree" ]]; then
+  codex_args=(--cd "$agent_worktree" "${codex_args[@]}")
+fi
+
+list_agents() {
+  mkdir -p "$agents_root" "$worktrees_dir"
+  declare -A seen
+  for d in "$agents_root"/*; do
+    [[ -d "$d" ]] || continue
+    seen["$(basename "$d")"]=1
+  done
+  for d in "$worktrees_dir"/*; do
+    [[ -d "$d" ]] || continue
+    seen["$(basename "$d")"]=1
+  done
+  for k in "${!seen[@]}"; do
+    printf '%s\n' "$k"
+  done | sort
+}
+
+if [[ "$primary_cmd" == "agents" ]]; then
+  list_agents
+  exit 0
+fi
+
+if [[ "$primary_cmd" == "worktree" ]]; then
+  case "$sub_cmd" in
+    create)
+      name="$sub_arg"
+      if [[ -z "$name" ]]; then
+        echo "error: worktree create requires NAME" >&2
+        exit 2
+      fi
+      mkdir -p "$worktrees_dir"
+      wt="${worktrees_dir}/${name}"
+      if [[ -e "$wt" ]]; then
+        echo "error: worktree path already exists: $wt" >&2
+        exit 1
+      fi
+      branch="agent/${name}"
+      if git show-ref --verify --quiet "refs/heads/${branch}"; then
+        git worktree add "$wt" "$branch"
+      else
+        git worktree add -b "$branch" "$wt"
+      fi
+      echo "$name	$wt"
+      exit 0
+      ;;
+    list)
+      mkdir -p "$worktrees_dir"
+      for d in "$worktrees_dir"/*; do
+        [[ -d "$d" ]] || continue
+        echo "$(basename "$d")	$d"
+      done
+      exit 0
+      ;;
+    *)
+      echo "error: worktree subcommand must be create|list" >&2
+      exit 2
+      ;;
+  esac
+fi
+
+if [[ "$primary_cmd" == "status" ]]; then
   if [[ -f "$session_file" ]]; then
     cat "$session_file"
     exit 0
@@ -110,13 +214,15 @@ if [[ "$prompt" == "status" ]]; then
   exit 1
 fi
 
-if [[ "$prompt" == "reset" ]]; then
+if [[ "$primary_cmd" == "reset" ]]; then
   rm -f "$session_file"
-  echo "reset: removed session_id for workspace: $workspace_root" >&2
+  echo "reset: removed session_id for agent '${agent_name}' in workspace: $workspace_root" >&2
   exit 0
 fi
 
-if [[ -z "$prompt" || "$prompt" == "-" ]]; then
+prompt="${prompt_parts[*]:-}"
+
+if [[ -z "$prompt" || "$primary_cmd" == "-" ]]; then
   # stdin からプロンプト（Cursorエージェントは heredoc/パイプで渡せる）
   prompt="$(cat)"
 fi
@@ -131,6 +237,32 @@ session_id=""
 if [[ -f "$session_file" ]]; then
   session_id="$(cat "$session_file" || true)"
 fi
+
+extract_effective_cd() {
+  local i=0
+  while [[ $i -lt ${#codex_args[@]} ]]; do
+    local a="${codex_args[$i]}"
+    case "$a" in
+      -C|--cd)
+        local v="${codex_args[$((i+1))]:-}"
+        if [[ -n "$v" ]]; then
+          printf '%s' "$v"
+          return 0
+        fi
+        ;;
+      --cd=*)
+        printf '%s' "${a#--cd=}"
+        return 0
+        ;;
+    esac
+    i=$((i+1))
+  done
+  if [[ -d "$agent_worktree" ]]; then
+    printf '%s' "$agent_worktree"
+    return 0
+  fi
+  printf '%s' "$workspace_root"
+}
 
 run_codex() {
   if [[ -n "$session_id" ]]; then
@@ -158,9 +290,11 @@ cleanup() {
 }
 trap cleanup EXIT
 printf '%s' "$prompt" >"$prompt_tmp"
+effective_cd="$(extract_effective_cd)"
+ensure_agent_dirs
 
 # - events.jsonl: codexのJSONLイベントをそのまま追記
 # - transcript.jsonl: 1リクエスト=1行で、prompt/responseをまとめて追記
-run_codex | tee -a "$events_log" | python3 "$filter_py" "$session_file" "$raw_json" "$prompt_tmp" "$transcript_log"
+run_codex | tee -a "$events_log" | python3 "$filter_py" "$session_file" "$raw_json" "$prompt_tmp" "$transcript_log" "$agent_name" "$effective_cd"
 
 

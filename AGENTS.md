@@ -10,6 +10,27 @@ codex-second-agent "このリポジトリのREADMEを要約して"
 ```
 2回目以降は、同じワークスペース（Gitルート）であれば自動的に前回セッションを `resume` します。
 モデルは **常に `gpt-5.2`** を使用します。
+
+### エージェントを分ける（マルチエージェント）
+
+```bash
+codex-second-agent --agent reviewer "この差分をレビューして"
+codex-second-agent --agent implementer "このissueを実装して"
+```
+
+### エージェント一覧
+
+```bash
+codex-second-agent agents
+```
+
+### エージェント用 worktree
+
+```bash
+codex-second-agent worktree create reviewer
+codex-second-agent worktree list
+```
+
 ### stdin からプロンプトを渡す（長文向け）
 ```bash
 cat <<'PROMPT' | codex-second-agent -
