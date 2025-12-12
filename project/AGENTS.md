@@ -79,6 +79,20 @@ codex-second-agent --agent implementer doctor
 
 `paths` の `effective_cd` が `.../project` になっていることを必ず確認してください。
 
+## 実運用メモ（ハマりどころ）
+
+- `nohup` の標準出力ファイルは **空のまま**になることがあります。進捗・成果物の回収は基本 **`transcript.jsonl` を見る**運用が安定します。
+- reviewer は長引くことがあるので、バックグラウンド実行では `timeout` 付きにするのがおすすめです:
+
+```bash
+mkdir -p .codex-second-agent/nohup
+cat <<'PROMPT' | nohup timeout 120s codex-second-agent --agent reviewer - > .codex-second-agent/nohup/reviewer.out 2>&1 &
+対象コミット: <hash>
+出力: Must/Should/Nice
+PROMPT
+echo "pid=$!"
+```
+
 ## 補足（よくある誤解）
 
 - **worktreeが project 配下に作られるわけではありません**  

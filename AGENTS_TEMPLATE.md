@@ -124,6 +124,10 @@ echo "pid=$!"
 
 ### ログの見方（重要）
 
+- **最優先（推奨）**: `transcript.jsonl`（1リクエスト=1行）
+- **次点**: `events.jsonl`（デバッグ向け、生イベント）
+- `nohup` の標準出力ファイルは **空のまま**になることがあります（モデル出力はログに集約される前提で運用する）
+
 - 実体パスの確認:
 
 ```bash
@@ -140,6 +144,19 @@ tail -n 5 .codex-second-agent/<workspace_hash>/agents/implementer/logs/transcrip
 
 ```bash
 tail -n 50 .codex-second-agent/<workspace_hash>/agents/implementer/logs/events.jsonl
+```
+
+### reviewer は timeout を付けるのが現実的
+
+レビューは長引くことがあるので、バックグラウンド実行では `timeout` を付けて「必ず終了してログが取れる」形にするのがおすすめです。
+
+```bash
+mkdir -p .codex-second-agent/nohup
+cat <<'PROMPT' | nohup timeout 120s codex-second-agent --agent reviewer - > .codex-second-agent/nohup/reviewer.out 2>&1 &
+対象コミット: <hash>
+出力: Must/Should/Nice
+PROMPT
+echo "pid=$!"
 ```
 
 ---
