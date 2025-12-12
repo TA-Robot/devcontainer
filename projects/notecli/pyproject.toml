@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "notecli"
+version = "0.1.0"
+description = "ローカルにメモを保存して管理するCLIツール"
+readme = "README.md"
+requires-python = ">=3.9"
+authors = [{ name = "notecli contributors" }]
+dependencies = []
+
+[project.optional-dependencies]
+dev = ["pytest"]
+
+[project.scripts]
+notecli = "notecli.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["notecli*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
