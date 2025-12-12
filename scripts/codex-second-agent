@@ -22,6 +22,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   --auto-worktree      エージェント用worktreeを自動作成してそこで実行する
   --no-auto-worktree   自動worktree作成を無効化する
   --raw-json          codexのJSONLイベントをそのまま出力（デバッグ用）
+  --post-git-status   実行後に `git status --porcelain` を要約表示する（未コミット滞留の検知）
   --worktrees-in-workspace worktreeをworkspace配下（.codex-worktrees）に作成する
   --                 以降は codex exec にそのまま渡す（例: --model o3 --sandbox read-only）
 
@@ -32,6 +33,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   CODEX_SA_WORKTREES_DIR  worktreeの保存先（デフォルト: <state>/worktrees）
   CODEX_SA_LOG_DIR    ログ保存先（デフォルト: <state>/agents/<agent>/logs）
   CODEX_SA_WORKTREES_MODE worktreeの配置モード（workspace|state）。未指定は state
+  CODEX_SA_POST_GIT_STATUS 実行後にgit status要約を出す（0|1、既定0）
 
 例:
   codex-second-agent "このリポジトリのREADMEを要約して"
@@ -52,6 +54,7 @@ raw_json=0
 agent_name="${CODEX_SA_AGENT:-default}"
 auto_worktree="${CODEX_SA_AUTO_WORKTREE:-}"
 worktrees_mode="${CODEX_SA_WORKTREES_MODE:-}"
+post_git_status="${CODEX_SA_POST_GIT_STATUS:-0}"
 prompt_parts=()
 codex_args=()
 
@@ -87,6 +90,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --raw-json)
       raw_json=1
+      shift
+      ;;
+    --post-git-status)
+      post_git_status="1"
       shift
       ;;
     --worktrees-in-workspace)
@@ -480,6 +487,27 @@ run_codex() {
   fi
 }
 
+print_post_git_status_summary() {
+  if [[ "$post_git_status" != "1" ]]; then
+    return 0
+  fi
+  if ! git -C "$effective_cd" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+    return 0
+  fi
+  local out
+  out="$(git -C "$effective_cd" status --porcelain=v1 2>/dev/null || true)"
+  if [[ -z "$out" ]]; then
+    return 0
+  fi
+  echo "post-git-status: uncommitted changes detected in: $effective_cd" >&2
+  # 大量出力を避ける（先頭だけ）
+  echo "$out" | sed -n '1,50p' >&2
+  if [[ $(echo "$out" | wc -l | tr -d ' ') -gt 50 ]]; then
+    echo "(truncated)" >&2
+  fi
+  echo "hint: git status -sb && git add -A && git commit" >&2
+}
+
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 filter_py="${script_dir}/codex-second-agent-filter.py"
 
@@ -499,6 +527,11 @@ ensure_agent_dirs
 
 # - events.jsonl: codexのJSONLイベントをそのまま追記
 # - transcript.jsonl: 1リクエスト=1行で、prompt/responseをまとめて追記
+set +e
 run_codex | tee -a "$events_log" | python3 "$filter_py" "$session_file" "$raw_json" "$prompt_tmp" "$transcript_log" "$agent_name" "$effective_cd"
+rc=$?
+set -e
+print_post_git_status_summary || true
+exit $rc
 
 
