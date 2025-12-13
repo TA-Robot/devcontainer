@@ -1,32 +1,45 @@
 # AGENTS_TEMPLATE.md（別プロジェクト開発用テンプレ）
 
-このファイルは、**このdevcontainer基盤を使って開発する“別プロジェクト”側**に置くためのテンプレです。  
+このファイルは、**この devcontainer 基盤を使って開発する“別プロジェクト”側**に置くためのテンプレです。  
 対象プロジェクトに `AGENTS.md` としてコピーし、`<<...>>` を埋めて使ってください。
 
 ---
 
 ## このプロジェクト情報（埋める）
 
-- **project名**: `<<project-name>>`
-- **projectの実体ディレクトリ**: `project/<<name>>/`（例: `project/app/`）
+- **project 名**: `<<project-name>>`
+- **project の実体ディレクトリ**: `project/<<name>>/`（例: `project/app/`）
 - **実行/テストコマンド**:
   - `<<test-cmd>>`（例: `python -m unittest -v` / `npm test`）
   - `<<lint-cmd>>`（任意）
 
 ---
 
-## 役割（固定）
+## 役割（最小固定 + タスク派生）
 
-- **管理者（main/manager）**: 実装しない。管理・判断・統合・ドキュメント整備に徹する
-- **implementer**: 実装・テスト・コミット
-- **reviewer**: レビュー（Must/Should/Nice）・リスク洗い出し
-- **triage**: 調査・原因切り分け（必要時）
+このテンプレでは、役割名を「固定の数種類」に縛らず、**タスク単位で役割（= agent 名）を派生させて並列稼働**させる運用を推奨します。
+
+- **固定（最小）**
+  - **管理者（main/manager）**: 実装しない。管理・判断・統合・ドキュメント整備に徹する
+- **タスク派生（並列実行の主役）**
+  - **`implementer-taskXXXX`**: 実装・テスト・コミット（task ごとに分割し、同時に複数走らせる）
+  - **`reviewer-taskXXXX`**: レビュー（Must/Should/Nice）・リスク洗い出し（task ごとに分割して並列レビュー可）
+  - **`triage-taskXXXX`**: 調査・原因切り分け（ログ/再現/最小ケース作成）。実装に入る場合は `implementer-*` へ引き継ぐ
+  - **`newbie-taskXXXX`**: 新人。**質問だけ**して前提/仕様/運用知識を掘り起こす（原則コードは触らない）
+
+### 命名ルール（例）
+
+- **粒度**: “1 タスク=1 agent” を基本にする（衝突や手戻りを減らし、worktree を自然に分離できる）
+- **推奨フォーマット**: `<role>-<topic>-<id>`
+  - 例: `implementer-auth-0123`, `triage-flakytest-045`, `reviewer-api-0123`, `newbie-onboarding-001`
+- **依頼文の先頭に必ず書く**:
+  - 対象タスク ID / 対象ディレクトリ / 完了条件 / 成果物（差分 or コミット）/ 相談事項
 
 ---
 
-## 開発方針: t-wada式TDD（推奨）
+## 開発方針: t-wada 式 TDD（推奨）
 
-このテンプレの基本スタイルは **t-wada式TDD** を前提にします。
+このテンプレの基本スタイルは **t-wada 式 TDD** を前提にします。
 
 - **基本サイクル**: Red → Green → Refactor
   - **Red**: まず小さな失敗テストを書く（仕様を一つだけ表現）
@@ -34,15 +47,15 @@
   - **Refactor**: ふるまいを変えずに整理する（重複排除・命名改善・責務分離）
 - **粒度**: “小さく・早く” を優先（コミットも小さく）
 - **テストの責務**:
-  - 仕様の表明（例: 入力→出力、エラー条件）
+  - 仕様の表明（例: 入力 → 出力、エラー条件）
   - 変更検知（回帰防止）
 - **モックの方針**:
   - 最初からモックありきにしない（まず純粋関数化/設計でテスト容易に）
-  - I/O境界（HTTP/DB/FSなど）だけを最小限に切り出して必要ならモック
+  - I/O 境界（HTTP/DB/FS など）だけを最小限に切り出して必要ならモック
 - **既存コード改修の入口**:
   - 仕様が曖昧なら「characterization test（現状のふるまい固定）」から入る
 
-管理者は依頼文に **テストコマンド（<<test-cmd>>）**と **TDD前提**を明記してください。
+管理者は依頼文に **テストコマンド（<<test-cmd>>）**と **TDD 前提**を明記してください。
 
 ---
 
@@ -52,20 +65,30 @@
 
 - **管理者が書く**（推奨）:
   - `project/docs/runbook.md`: 実行手順・リリース手順・よくある事故と対処
-  - `project/docs/decisions.md`: 重要な設計判断（短い箇条書きでOK）
-- **サブエージェントは参照OK**だが、**更新は原則しない**（更新が必要なら管理者に提案）
+  - `project/docs/decisions.md`: 重要な設計判断（短い箇条書きで OK）
+- **サブエージェントは参照 OK**だが、**更新は原則しない**（更新が必要なら管理者に提案）
+
+### 改善ループ（新人エージェントで質問 → ドキュメント追記）
+
+運用が安定してくるほど「暗黙知」が増えるので、定期的に **`newbie-*`** を立てて **質問させ、回答を管理者が `project/docs/` に追記**して整備します。
+
+- **頻度（例）**: 週 1 / スプリント末 / 大きな変更の直後（どれかで OK）
+- **進め方**
+  - `newbie-*` に「プロジェクトを理解するための質問を _10〜20 個_ 出す」依頼をする（コード改変は禁止）
+  - 管理者が回答し、**恒久情報は `project/docs/runbook.md` / `project/docs/decisions.md` に追記**する
+  - 依頼テンプレや注意事項（スコープ、危険操作、標準コマンド等）は必要に応じて `AGENTS.md` に反映する
 
 ---
 
-## 「project配下だけを見せる」運用（推奨）
+## 「project 配下だけを見せる」運用（推奨）
 
-サブエージェントは、リポジトリ全体を見せるのではなく **project配下のみ**を対象にすると安全です。
+サブエージェントは、リポジトリ全体を見せるのではなく **project 配下のみ**を対象にすると安全です。
 
 - このテンプレと合わせて、対象リポジトリに **`project/AGENTS.md`（サブ向け指示）**を置く運用を推奨します
-- `codex-second-agent` は通常「起動場所の git root」をworkspaceとして扱いますが、**サブエージェントは project 側のGitをworkspaceとして固定**するのが安全です
+- `codex-second-agent` は通常「起動場所の git root」を workspace として扱いますが、**サブエージェントは project 側の Git を workspace として固定**するのが安全です
   - まず `codex-second-agent workspace init <path-to-project-git>` を実行し、対象プロジェクト（git repo root）を保存します
-  - 以降、サブエージェント実行はそのworkspaceを基準に worktree/log/state を作るようになります
-  - 重要: これは技術的な強制隔離ではありません（ルールで縛る運用）。ただし、親リポジトリのworktreeを誤って作る事故は防げます
+  - 以降、サブエージェント実行はその workspace を基準に worktree/log/state を作るようになります
+  - 重要: これは技術的な強制隔離ではありません（ルールで縛る運用）。ただし、親リポジトリの worktree を誤って作る事故は防げます
 
 例（implementer を project 固定で起動）:
 
@@ -85,9 +108,9 @@ PROMPT
 
 ### codex-second-agent とは？どこにある？
 
-- **何か**: `codex exec` を「セッションID自動保持」「agent別worktree」「ログ保存」付きで呼び出すラッパー
+- **何か**: `codex exec` を「セッション ID 自動保持」「agent 別 worktree」「ログ保存」付きで呼び出すラッパー
 - **この基盤リポジトリでの実装**: `scripts/codex-second-agent`
-- **コンテナ内のPATH**: 環境によっては `codex-second-agent` がPATHに入っていないことがあります（その場合は `scripts/codex-second-agent` を直接実行）
+- **コンテナ内の PATH**: 環境によっては `codex-second-agent` が PATH に入っていないことがあります（その場合は `scripts/codex-second-agent` を直接実行）
 
 ### 基本
 
@@ -95,7 +118,7 @@ PROMPT
 codex-second-agent "READMEを要約して"
 ```
 
-2回目以降は、同じワークスペース（Gitルート）であれば自動的に前回セッションを `resume` します。
+2 回目以降は、同じワークスペース（Git ルート）であれば自動的に前回セッションを `resume` します。
 
 ### エージェントを分ける（マルチエージェント）
 
@@ -116,7 +139,7 @@ codex-second-agent doctor
 ### worktree の配置
 
 - デフォルトは `<repo>/.codex-second-agent/<workspace_hash>/worktrees/<agent>/`
-- ホーム配下に増えるのが気になる場合は、workspace配下に置けます:
+- ホーム配下に増えるのが気になる場合は、workspace 配下に置けます:
 
 ```bash
 CODEX_SA_WORKTREES_MODE=workspace codex-second-agent paths
@@ -162,7 +185,7 @@ echo "pid=$!"
 
 ### ログの見方（重要）
 
-- **最優先（推奨）**: `transcript.jsonl`（1リクエスト=1行）
+- **最優先（推奨）**: `transcript.jsonl`（1 リクエスト=1 行）
 - **次点**: `events.jsonl`（デバッグ向け、生イベント）
 - `nohup` の標準出力ファイルは **空のまま**になることがあります（モデル出力はログに集約される前提で運用する）
 
@@ -204,19 +227,19 @@ echo "pid=$!"
 - **依頼前**:
   - `project/docs/runbook.md` に「実行/テスト/確認方法」が書かれている
   - `workspace init` が対象プロジェクトを指している
-  - **TDD前提**（Red/Green/Refactor、最小ステップ、テストを先に）を依頼文に明記
+  - **TDD 前提**（Red/Green/Refactor、最小ステップ、テストを先に）を依頼文に明記
 - **依頼後**:
   - `transcript.jsonl` で進捗確認（`nohup` が空でも慌てない）
   - 必要なら `--post-git-status` で未コミット滞留を早期検知
 - **取り込み前**:
-  - `<<test-cmd>>` を実行してOK
+  - `<<test-cmd>>` を実行して OK
   - reviewer の Must が潰れている
 
 ---
 
 ## 典型フロー（管理者 / サブ）
 
-### 1) 管理者: 要件→依頼（バックグラウンド）
+### 1) 管理者: 要件 → 依頼（バックグラウンド）
 
 - 依頼文に必ず含める:
   - 目的/スコープ
@@ -224,7 +247,7 @@ echo "pid=$!"
   - 成果物（ファイル/コマンド/テスト）
   - 完了条件（例: `bash -n ...` / `python -m pytest` / `npm test` など）
 
-### 2) implementer: 実装→テスト→コミット
+### 2) implementer: 実装 → テスト → コミット
 
 - `--post-git-status` を付けると未コミット滞留が早期に見つかります
 
@@ -233,10 +256,8 @@ echo "pid=$!"
 - commit hash / ブランチ名 / 変更範囲 を明示
 - 指摘は Must/Should/Nice に分けてもらう
 
-### 4) implementer: 指摘反映→再テスト→追加コミット
+### 4) implementer: 指摘反映 → 再テスト → 追加コミット
 
 ### 5) 管理者: 取り込み判断・統合・後片付け
 
 - 不要になった worktree は削除（上記 `worktree remove`）
-
-
