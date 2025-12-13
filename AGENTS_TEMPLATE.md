@@ -96,10 +96,33 @@
 # まず最初に、対象プロジェクト（git repo root）を保存しておく
 codex-second-agent workspace init project/<name>
 
-mkdir -p .codex-second-agent/nohup
-cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - -- --cd project > .codex-second-agent/nohup/implementer.out 2>&1 &
-project/<name>/ 配下のみを対象に実装して（project/docs を参照し、逸脱するなら管理者へ質問）。
-PROMPT
+mkdir -p .codex-second-agent/nohup .codex-second-agent/tickets
+
+# 1) 要件チケット（ファイル）を作る
+ticket=.codex-second-agent/tickets/task-0001.md
+cat > "$ticket" <<'TICKET'
+あなたは implementer-task0001 です。
+- 作業対象は project/<name>/ 配下のみ
+- project/docs を参照し、逸脱が必要なら管理者へ質問して止まる
+
+要件:
+- ...
+制約:
+- ...
+成果物:
+- ...
+完了条件:
+- ...
+TICKET
+
+# 2) 起動時に「チケットをstdinで渡す」（必要なら envsubst 等で展開して渡す）
+agent=implementer-task0001
+out=.codex-second-agent/nohup/${agent}.out
+cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - -- --cd project > "$out" 2>&1 &
+echo "pid=$!"
+
+# 3) 回収後にチケットを削除（終了確認・ログ回収が済んでから）
+# rm -f "$ticket"
 ```
 
 ---
@@ -166,11 +189,14 @@ CODEX_SA_POST_GIT_STATUS=1 codex-second-agent --agent implementer "..."
 
 ## バックグラウンド実行（推奨）
 
-### 起動テンプレ（nohup）
+### 起動テンプレ（チケットファイル → stdin で起動）
 
 ```bash
-mkdir -p .codex-second-agent/nohup
-cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > .codex-second-agent/nohup/implementer.out 2>&1 &
+mkdir -p .codex-second-agent/nohup .codex-second-agent/tickets
+
+# 1) 要件チケット（ファイル）を作る
+ticket=.codex-second-agent/tickets/task-0001.md
+cat > "$ticket" <<'TICKET'
 要件:
 - ...
 制約:
@@ -179,8 +205,16 @@ cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status 
 - ...
 完了条件:
 - ...
-PROMPT
+TICKET
+
+# 2) チケットを stdin で渡して起動する（タスクごとに agent 名を分ける）
+agent=implementer-task0001
+out=.codex-second-agent/nohup/${agent}.out
+cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - > "$out" 2>&1 &
 echo "pid=$!"
+
+# 3) 回収後にチケットを削除（終了確認・ログ回収が済んでから）
+# rm -f "$ticket"
 ```
 
 ### ログの見方（重要）
@@ -212,12 +246,23 @@ tail -n 50 .codex-second-agent/<workspace_hash>/agents/implementer/logs/events.j
 レビューは長引くことがあるので、バックグラウンド実行では `timeout` を付けて「必ず終了してログが取れる」形にするのがおすすめです。
 
 ```bash
-mkdir -p .codex-second-agent/nohup
-cat <<'PROMPT' | nohup timeout 120s codex-second-agent --agent reviewer - > .codex-second-agent/nohup/reviewer.out 2>&1 &
+mkdir -p .codex-second-agent/nohup .codex-second-agent/tickets
+
+# 1) レビューチケット（ファイル）を作る
+ticket=.codex-second-agent/tickets/review-0001.md
+cat > "$ticket" <<'TICKET'
 対象コミット: <hash>
 出力: Must/Should/Nice
-PROMPT
+TICKET
+
+# 2) stdin で渡して起動する（必要なら task ごとに reviewer-taskXXXX を作る）
+agent=reviewer-task0001
+out=.codex-second-agent/nohup/${agent}.out
+cat "$ticket" | nohup timeout 120s codex-second-agent --agent "$agent" - > "$out" 2>&1 &
 echo "pid=$!"
+
+# 3) 回収後にチケットを削除（終了確認・ログ回収が済んでから）
+# rm -f "$ticket"
 ```
 
 ---
@@ -234,6 +279,8 @@ echo "pid=$!"
 - **取り込み前**:
   - `<<test-cmd>>` を実行して OK
   - reviewer の Must が潰れている
+- **後片付け**:
+  - 回収が済んだチケット（`.codex-second-agent/tickets/*.md`）を削除する
 
 ---
 
@@ -246,6 +293,7 @@ echo "pid=$!"
   - 制約（触ってよいディレクトリ、依存追加可否、危険操作禁止など）
   - 成果物（ファイル/コマンド/テスト）
   - 完了条件（例: `bash -n ...` / `python -m pytest` / `npm test` など）
+  - （推奨）要件はチケットファイル（`.codex-second-agent/tickets/...`）として残し、起動時に stdin で渡す
 
 ### 2) implementer: 実装 → テスト → コミット
 
@@ -261,3 +309,4 @@ echo "pid=$!"
 ### 5) 管理者: 取り込み判断・統合・後片付け
 
 - 不要になった worktree は削除（上記 `worktree remove`）
+- 回収が済んだチケットは削除（`.codex-second-agent/tickets/`）
