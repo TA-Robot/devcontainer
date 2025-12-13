@@ -98,22 +98,11 @@ codex-second-agent workspace init project/<name>
 
 mkdir -p .codex-second-agent/nohup .codex-second-agent/tickets
 
-# 1) 要件チケット（ファイル）を作る
+# 1) 要件チケット（ファイル）を用意する（テンプレからコピーして“ちゃんと編集”する）
 ticket=.codex-second-agent/tickets/task-0001.md
-cat > "$ticket" <<'TICKET'
-あなたは implementer-task0001 です。
-- 作業対象は project/<name>/ 配下のみ
-- project/docs を参照し、逸脱が必要なら管理者へ質問して止まる
-
-要件:
-- ...
-制約:
-- ...
-成果物:
-- ...
-完了条件:
-- ...
-TICKET
+cp project/docs/tickets/task-ticket.template.md "$ticket"
+# エディタで開いて埋める（例）
+# ${EDITOR:-vi} "$ticket"
 
 # 2) 起動時に「チケットをstdinで渡す」（必要なら envsubst 等で展開して渡す）
 agent=implementer-task0001
@@ -194,18 +183,11 @@ CODEX_SA_POST_GIT_STATUS=1 codex-second-agent --agent implementer "..."
 ```bash
 mkdir -p .codex-second-agent/nohup .codex-second-agent/tickets
 
-# 1) 要件チケット（ファイル）を作る
+# 1) 要件チケット（ファイル）を用意する（テンプレからコピーして“ちゃんと編集”する）
 ticket=.codex-second-agent/tickets/task-0001.md
-cat > "$ticket" <<'TICKET'
-要件:
-- ...
-制約:
-- ...
-成果物:
-- ...
-完了条件:
-- ...
-TICKET
+cp project/docs/tickets/task-ticket.template.md "$ticket"
+# エディタで開いて埋める（例）
+# ${EDITOR:-vi} "$ticket"
 
 # 2) チケットを stdin で渡して起動する（タスクごとに agent 名を分ける）
 agent=implementer-task0001
@@ -248,12 +230,14 @@ tail -n 50 .codex-second-agent/<workspace_hash>/agents/implementer/logs/events.j
 ```bash
 mkdir -p .codex-second-agent/nohup .codex-second-agent/tickets
 
-# 1) レビューチケット（ファイル）を作る
+# 1) レビューチケット（ファイル）を用意する（テンプレからコピーして“ちゃんと編集”する）
 ticket=.codex-second-agent/tickets/review-0001.md
-cat > "$ticket" <<'TICKET'
-対象コミット: <hash>
-出力: Must/Should/Nice
-TICKET
+cp project/docs/tickets/task-ticket.template.md "$ticket"
+# ${EDITOR:-vi} "$ticket"
+# （埋め方の例）
+# - role/agent: reviewer-task0001
+# - related.commits: <hash>
+# - Acceptance Criteria: Must/Should/Nice で出す、など
 
 # 2) stdin で渡して起動する（必要なら task ごとに reviewer-taskXXXX を作る）
 agent=reviewer-task0001
