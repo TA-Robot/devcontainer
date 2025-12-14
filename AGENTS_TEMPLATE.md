@@ -9,6 +9,9 @@
 
 - **project 名**: `<<project-name>>`
 - **project の実体ディレクトリ**: `project/<<name>>/`（例: `project/app/`）
+- **サブエージェントの作業ディレクトリ（effective cd）**: `<<workdir>>`
+  - 例: `project`（親リポジトリを workspace にして `project/` 配下だけ触らせたい場合）
+  - 例: `.`（`workspace init project/<<name>>` で **project 側 Git を workspace** にしている場合）
 - **実行/テストコマンド**:
   - `<<test-cmd>>`（例: `python -m unittest -v` / `npm test`）
   - `<<lint-cmd>>`（任意）
@@ -152,29 +155,14 @@ graph TD
   - 以降、サブエージェント実行はその workspace を基準に worktree/log/state を作るようになります
   - 重要: これは技術的な強制隔離ではありません（ルールで縛る運用）。ただし、親リポジトリの worktree を誤って作る事故は防げます
 
-例（implementer を project 固定で起動）:
+例（project 側 Git を workspace として固定する）:
 
 ```bash
-# まず最初に、対象プロジェクト（git repo root）を保存しておく
 codex-second-agent workspace init project/<name>
-
-mkdir -p .codex-second-agent/nohup .codex-second-agent/tickets
-
-# 1) 要件チケット（ファイル）を用意する（テンプレからコピーして“ちゃんと編集”する）
-ticket=.codex-second-agent/tickets/task-0001.md
-cp project/docs/tickets/task-ticket.template.md "$ticket"
-# エディタで開いて埋める（例）
-# ${EDITOR:-vi} "$ticket"
-
-# 2) 起動時に「チケットをstdinで渡す」（必要なら envsubst 等で展開して渡す）
-agent=implementer-task0001
-out=.codex-second-agent/nohup/${agent}.out
-cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - -- --cd project > "$out" 2>&1 &
-echo "pid=$!"
-
-# 3) 回収後にチケットを削除（終了確認・ログ回収が済んでから）
-# rm -f "$ticket"
 ```
+
+以降の **チケット作成/起動/回収** は、下の「開発サイクル」「バックグラウンド実行（ログの見方を含む）」を正本として参照してください。  
+（ここに同じ起動テンプレを重複して置かない）
 
 ---
 
@@ -240,26 +228,10 @@ CODEX_SA_POST_GIT_STATUS=1 codex-second-agent --agent implementer "..."
 
 ## バックグラウンド実行（推奨）
 
-### 起動テンプレ（チケットファイル → stdin で起動）
+### 位置づけ
 
-```bash
-mkdir -p .codex-second-agent/nohup .codex-second-agent/tickets
-
-# 1) 要件チケット（ファイル）を用意する（テンプレからコピーして“ちゃんと編集”する）
-ticket=.codex-second-agent/tickets/task-0001.md
-cp project/docs/tickets/task-ticket.template.md "$ticket"
-# エディタで開いて埋める（例）
-# ${EDITOR:-vi} "$ticket"
-
-# 2) チケットを stdin で渡して起動する（タスクごとに agent 名を分ける）
-agent=implementer-task0001
-out=.codex-second-agent/nohup/${agent}.out
-cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - > "$out" 2>&1 &
-echo "pid=$!"
-
-# 3) 回収後にチケットを削除（終了確認・ログ回収が済んでから）
-# rm -f "$ticket"
-```
+この章は「**バックグラウンドで回すときの落とし穴**」と「**ログの見方（正本）**」をまとめます。  
+チケットの作り方/状態遷移/統合までの一連は「開発サイクル（管理者主導で回す）」を参照してください。
 
 ### ログの見方（重要）
 
@@ -289,27 +261,7 @@ tail -n 50 .codex-second-agent/<workspace_hash>/agents/implementer/logs/events.j
 
 レビューは長引くことがあるので、バックグラウンド実行では `timeout` を付けて「必ず終了してログが取れる」形にするのがおすすめです。
 
-```bash
-mkdir -p .codex-second-agent/nohup .codex-second-agent/tickets
-
-# 1) レビューチケット（ファイル）を用意する（テンプレからコピーして“ちゃんと編集”する）
-ticket=.codex-second-agent/tickets/review-0001.md
-cp project/docs/tickets/task-ticket.template.md "$ticket"
-# ${EDITOR:-vi} "$ticket"
-# （埋め方の例）
-# - role/agent: reviewer-task0001
-# - related.commits: <hash>
-# - Acceptance Criteria: Must/Should/Nice で出す、など
-
-# 2) stdin で渡して起動する（必要なら task ごとに reviewer-taskXXXX を作る）
-agent=reviewer-task0001
-out=.codex-second-agent/nohup/${agent}.out
-cat "$ticket" | nohup timeout 120s codex-second-agent --agent "$agent" - > "$out" 2>&1 &
-echo "pid=$!"
-
-# 3) 回収後にチケットを削除（終了確認・ログ回収が済んでから）
-# rm -f "$ticket"
-```
+（起動例は「開発サイクル > サブエージェントにタスクを投げる」を参照。ここでは timeout を付ける、という運用上の要点だけ覚える）
 
 ---
 
@@ -326,11 +278,8 @@ echo "pid=$!"
 
 ### 1) タスク設計（クリティカルパス＋並列化の再確認）
 
-- `project/docs/plan.md`（新規作成で OK）に以下を更新する:
-  - タスク一覧（ID付き）
-  - 依存関係（DAG、Mermaid 推奨）
-  - クリティカルパス（CP）
-  - いま投げるタスク（Ready）
+- 「タスク設計（クリティカルパスで整理して並列化する）」の手順どおりに、`project/docs/plan.md` を更新する:
+  - タスク一覧（ID付き） / 依存関係（DAG、Mermaid 推奨） / クリティカルパス（CP） / Ready
 
 ポイント:
 - **Ready 条件が曖昧なタスクは投げない**（triage を先に投げて情報を揃える）
@@ -379,7 +328,22 @@ out=.codex-second-agent/nohup/${agent}.out
 mv "$ticket" .codex-second-agent/tickets/running/
 ticket=.codex-second-agent/tickets/running/task-0001.md
 
-cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - > "$out" 2>&1 &
+cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - -- --cd <<workdir>> > "$out" 2>&1 &
+echo "pid=$!"
+```
+
+reviewer（timeout 付き）の例:
+
+```bash
+agent=reviewer-task0001
+ticket=.codex-second-agent/tickets/ready/review-0001.md
+out=.codex-second-agent/nohup/${agent}.out
+
+mv "$ticket" .codex-second-agent/tickets/running/
+ticket=.codex-second-agent/tickets/running/review-0001.md
+
+# チケット内の related.commits / Review focus / Output format を必ず埋める
+cat "$ticket" | nohup timeout 120s codex-second-agent --agent "$agent" - -- --cd <<workdir>> > "$out" 2>&1 &
 echo "pid=$!"
 ```
 
@@ -408,6 +372,8 @@ echo "pid=$!"
   - `transcript.jsonl`（最優先）
   - `events.jsonl`（詰まった時だけ）
   - `nohup` は空のことがある（前提にしない）
+
+詳細（どこを見ればいいか・パスの確認・tail の例）は「バックグラウンド実行 > ログの見方（重要）」を正本にしてください。
 
 ポイント:
 - **「終わった」宣言だけで判断しない**。必ず成果物（コミット/差分/パッチ）を確認する
@@ -473,12 +439,9 @@ echo "pid=$!"
 
 ### 1) 管理者: plan 更新 → チケット作成 → 起動（バックグラウンド）
 
-- 依頼文に必ず含める:
-  - 目的/スコープ
-  - 制約（触ってよいディレクトリ、依存追加可否、危険操作禁止など）
-  - 成果物（ファイル/コマンド/テスト）
-  - 完了条件（例: `bash -n ...` / `python -m pytest` / `npm test` など）
-  - （推奨）要件はチケットファイル（`.codex-second-agent/tickets/...`）として残し、起動時に stdin で渡す
+- **チケットテンプレ（`project/docs/tickets/task-ticket.template.md`）を埋める**:
+  - 特に: **Scope / Acceptance Criteria / Commands / Deliverables / TDD Plan** を空にしない
+  - “短さ”より **誤解の余地を潰す**（並列化しても衝突しない依頼にする）
 
 ### 2) implementer: 実装 → テスト → コミット
 
@@ -488,6 +451,7 @@ echo "pid=$!"
 
 - commit hash / ブランチ名 / 変更範囲 を明示
 - 指摘は Must/Should/Nice に分けてもらう
+ - （推奨）timeout 付きで起動して、回収できる形にする（理由は「バックグラウンド実行」を参照）
 
 ### 4) implementer: 指摘反映 → 再テスト → 追加コミット
 
