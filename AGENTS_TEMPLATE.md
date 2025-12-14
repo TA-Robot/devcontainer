@@ -336,17 +336,54 @@ echo "pid=$!"
 - **Ready 条件が曖昧なタスクは投げない**（triage を先に投げて情報を揃える）
 - **同じファイルを複数 implementer に触らせない**（衝突・手戻りの原因）
 
-### 2) サブエージェントにタスクを投げる（バックグラウンド）
+### 2) チケット化（必須：タスク→チケット→実行）
+
+この運用では、**サブエージェントへの依頼=チケットファイル**です。  
+管理者は「plan を更新して終わり」ではなく、Ready なタスクを **必ずチケット化**してから投げます。
+
+- チケット置き場: `.codex-second-agent/tickets/`
+- 推奨する状態遷移（ディレクトリで管理）:
+  - `tickets/ready/` → `tickets/running/` → `tickets/done/`
+
+```bash
+mkdir -p .codex-second-agent/tickets/{ready,running,done} .codex-second-agent/nohup
+
+# テンプレからチケットを起こす（“ちゃんと編集”する）
+ticket=.codex-second-agent/tickets/ready/task-0001.md
+cp project/docs/tickets/task-ticket.template.md "$ticket"
+# ${EDITOR:-vi} "$ticket"
+```
+
+ポイント:
+- チケットには **スコープ/成果物/完了条件/相談事項** を必ず入れる（口頭依頼禁止）
+- チケットに **agent名（例: implementer-task0001）**を固定で書く（ログ/branch/作業単位が一致する）
+- `project/docs/plan.md` から **チケットへの参照（ファイルパス）**を貼る（行き来しやすくする）
+
+### 3) サブエージェントにタスクを投げる（チケット起点・バックグラウンド）
 
 - **triage**（先行）: 調査・影響範囲・仕様の穴を `project/docs/` に提案
 - **implementer**（並列）: タスク単位で実装・テスト・コミット
 - **reviewer**（先行 or 後追い）: レビュー観点の作成 / 差分レビュー
 
 ポイント:
-- 依頼文には必ず **スコープ/成果物/完了条件/相談事項** を含める
+- 依頼文（チケット）には必ず **スコープ/成果物/完了条件/相談事項** を含める
 - reviewer は **timeout** 付き推奨（必ず終わって回収できるようにする）
 
-### 3) 進捗の回収（ログ駆動）
+チケットから起動する例:
+
+```bash
+agent=implementer-task0001
+ticket=.codex-second-agent/tickets/ready/task-0001.md
+out=.codex-second-agent/nohup/${agent}.out
+
+mv "$ticket" .codex-second-agent/tickets/running/
+ticket=.codex-second-agent/tickets/running/task-0001.md
+
+cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - > "$out" 2>&1 &
+echo "pid=$!"
+```
+
+### 4) 進捗の回収（ログ駆動＋チケット更新）
 
 管理者は待たない。ログで回収して次の判断に進む。
 
@@ -358,8 +395,9 @@ echo "pid=$!"
 ポイント:
 - **「終わった」宣言だけで判断しない**。必ず成果物（コミット/差分/パッチ）を確認する
 - `--post-git-status` で **未コミット滞留**が出たら、次の指示は「コミットしてから報告」に寄せる
+- 回収したら、チケットに **結果（commit hash / 変更概要 / 実行したテスト / 残課題）**を追記する（次の人が見て分かる状態にする）
 
-### 4) ドキュメント整備（管理者の仕事）
+### 5) ドキュメント整備（管理者の仕事）
 
 サブの成果を受けて、管理者が `project/docs/` を更新して“次が速くなる状態”にする。
 
@@ -369,7 +407,7 @@ echo "pid=$!"
 ポイント:
 - 「この判断は次も使う」ものは必ず残す（口頭/チャットで消える知識を減らす）
 
-### 5) 統合（タスクが終わったら取り込む）
+### 6) 統合（タスクが終わったら取り込む＝チケットを閉じる）
 
 統合の基本は **小さく・頻繁に**。
 
@@ -381,8 +419,9 @@ echo "pid=$!"
 ポイント:
 - implementer が「パッチ」しか出せない場合もある（環境/権限/制約）。その時は管理者が取り込む
 - worktree の後片付け（不要なら `worktree remove`）
+- 取り込みが終わったらチケットを `tickets/done/` に移動し、内容が十分なら最後に削除してよい（削除は“回収・統合が完了してから”）
 
-### 6) 次のタスクへ（plan 更新→再投入）
+### 7) 次のタスクへ（plan 更新→新チケット化→再投入）
 
 統合したら `project/docs/plan.md` の Ready/CP を更新して、次のタスク群を投げる。
 
@@ -398,14 +437,16 @@ echo "pid=$!"
   - `project/docs/runbook.md` に「実行/テスト/確認方法」が書かれている
   - `workspace init` が対象プロジェクトを指している
   - **TDD 前提**（Red/Green/Refactor、最小ステップ、テストを先に）を依頼文に明記
+  - Ready なタスクが **チケット化**されている（`.codex-second-agent/tickets/ready/`）
 - **依頼後**:
   - `transcript.jsonl` で進捗確認（`nohup` が空でも慌てない）
   - 必要なら `--post-git-status` で未コミット滞留を早期検知
+  - 回収結果（commit/test/残課題）が **チケットに追記**されている
 - **取り込み前**:
   - `<<test-cmd>>` を実行して OK
   - reviewer の Must が潰れている
 - **後片付け**:
-  - 回収が済んだチケット（`.codex-second-agent/tickets/*.md`）を削除する
+  - 統合済みチケットを `tickets/done/` に移動 → 必要なら削除（回収・統合が完了してから）
 
 ---
 
@@ -413,7 +454,7 @@ echo "pid=$!"
 
 上の「開発サイクル」の **最短版**です。迷ったらまず開発サイクルに戻り、ここは“手元の確認用”として使ってください。
 
-### 1) 管理者: 要件 → 依頼（バックグラウンド）
+### 1) 管理者: plan 更新 → チケット作成 → 起動（バックグラウンド）
 
 - 依頼文に必ず含める:
   - 目的/スコープ
@@ -436,4 +477,4 @@ echo "pid=$!"
 ### 5) 管理者: 取り込み判断・統合・後片付け
 
 - 不要になった worktree は削除（上記 `worktree remove`）
-- 回収が済んだチケットは削除（`.codex-second-agent/tickets/`）
+- 統合済みチケットは `tickets/done/` に移動（必要なら削除）
