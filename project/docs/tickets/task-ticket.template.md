@@ -129,6 +129,18 @@
 - **No big bang refactor**: 既存のふるまいを壊さず小さく進める
 - **TDD preference**: 可能なら Red→Green→Refactor（既存改修なら characterization test から）
 
+### TDD Plan（Red→Green→Refactor を運用に落とす）
+
+このタスクを **どの“最小ステップ”で進めるか**を具体的に書く（曖昧なら manager に相談して止まる）。
+
+- **Red（先に書くテスト）**:
+  - `<<追加するテストの名前 / ケース>>`
+  - `<<最初に落ちることを確認する観点>>`
+- **Green（最小実装）**:
+  - `<<最小の実装方針>>`
+- **Refactor（ふるまいを変えずに整理）**:
+  - `<<重複排除/命名/責務分離など>>`
+
 ### Files / Modules to touch（触る可能性のある箇所）
 
 - `<<path>>`
