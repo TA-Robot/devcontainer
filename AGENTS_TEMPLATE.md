@@ -290,15 +290,15 @@ tail -n 50 .codex-second-agent/<workspace_hash>/agents/implementer/logs/events.j
 この運用では、**サブエージェントへの依頼=チケットファイル**です。  
 管理者は「plan を更新して終わり」ではなく、Ready なタスクを **必ずチケット化**してから投げます。
 
-- チケット置き場: `.codex-second-agent/tickets/`
+- チケット置き場（ためていく/履歴を残す）: `project/docs/tickets/`
 - 推奨する状態遷移（ディレクトリで管理）:
-  - `tickets/ready/` → `tickets/running/` → `tickets/done/`
+  - `project/docs/tickets/ready/` → `project/docs/tickets/running/` → `project/docs/tickets/done/`
 
 ```bash
-mkdir -p .codex-second-agent/tickets/{ready,running,done} .codex-second-agent/nohup
+mkdir -p project/docs/tickets/{ready,running,done} .codex-second-agent/nohup
 
 # テンプレからチケットを起こす（“ちゃんと編集”する）
-ticket=.codex-second-agent/tickets/ready/task-0001.md
+ticket=project/docs/tickets/ready/task-0001.md
 cp project/docs/tickets/task-ticket.template.md "$ticket"
 # ${EDITOR:-vi} "$ticket"
 ```
@@ -322,11 +322,11 @@ cp project/docs/tickets/task-ticket.template.md "$ticket"
 
 ```bash
 agent=implementer-task0001
-ticket=.codex-second-agent/tickets/ready/task-0001.md
+ticket=project/docs/tickets/ready/task-0001.md
 out=.codex-second-agent/nohup/${agent}.out
 
-mv "$ticket" .codex-second-agent/tickets/running/
-ticket=.codex-second-agent/tickets/running/task-0001.md
+mv "$ticket" project/docs/tickets/running/
+ticket=project/docs/tickets/running/task-0001.md
 
 cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - -- --cd <<workdir>> > "$out" 2>&1 &
 echo "pid=$!"
@@ -336,11 +336,11 @@ reviewer（timeout 付き）の例:
 
 ```bash
 agent=reviewer-task0001
-ticket=.codex-second-agent/tickets/ready/review-0001.md
+ticket=project/docs/tickets/ready/review-0001.md
 out=.codex-second-agent/nohup/${agent}.out
 
-mv "$ticket" .codex-second-agent/tickets/running/
-ticket=.codex-second-agent/tickets/running/review-0001.md
+mv "$ticket" project/docs/tickets/running/
+ticket=project/docs/tickets/running/review-0001.md
 
 # チケット内の related.commits / Review focus / Output format を必ず埋める
 cat "$ticket" | nohup timeout 120s codex-second-agent --agent "$agent" - -- --cd <<workdir>> > "$out" 2>&1 &
@@ -402,7 +402,7 @@ echo "pid=$!"
 ポイント:
 - implementer が「パッチ」しか出せない場合もある（環境/権限/制約）。その時は管理者が取り込む
 - worktree の後片付け（不要なら `worktree remove`）
-- 取り込みが終わったらチケットを `tickets/done/` に移動し、内容が十分なら最後に削除してよい（削除は“回収・統合が完了してから”）
+- 取り込みが終わったらチケットを `project/docs/tickets/done/` に移動して履歴として残す（削除は原則しない。どうしても消すなら“回収・統合が完了してから”）
 
 ### 8) 次のタスクへ（plan 更新→新チケット化→再投入）
 
@@ -420,7 +420,7 @@ echo "pid=$!"
   - `project/docs/runbook.md` に「実行/テスト/確認方法」が書かれている
   - `workspace init` が対象プロジェクトを指している
   - **TDD 前提**（Red/Green/Refactor、最小ステップ、テストを先に）を依頼文に明記
-  - Ready なタスクが **チケット化**されている（`.codex-second-agent/tickets/ready/`）
+  - Ready なタスクが **チケット化**されている（`project/docs/tickets/ready/`）
 - **依頼後**:
   - `transcript.jsonl` で進捗確認（`nohup` が空でも慌てない）
   - 必要なら `--post-git-status` で未コミット滞留を早期検知
@@ -429,7 +429,7 @@ echo "pid=$!"
   - `<<test-cmd>>` を実行して OK
   - reviewer の Must が潰れている
 - **後片付け**:
-  - 統合済みチケットを `tickets/done/` に移動 → 必要なら削除（回収・統合が完了してから）
+  - 統合済みチケットを `project/docs/tickets/done/` に移動（原則は履歴として残す）
 
 ---
 
@@ -458,4 +458,4 @@ echo "pid=$!"
 ### 5) 管理者: 取り込み判断・統合・後片付け
 
 - 不要になった worktree は削除（上記 `worktree remove`）
-- 統合済みチケットは `tickets/done/` に移動（必要なら削除）
+- 統合済みチケットは `project/docs/tickets/done/` に移動（原則は履歴として残す）
