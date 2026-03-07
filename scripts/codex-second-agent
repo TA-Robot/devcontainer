@@ -31,7 +31,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   --                 以降は codex exec にそのまま渡す（例: --sandbox read-only）
 
 環境変数:
-  CODEX_SA_STATE_DIR  セッションID保存先（デフォルト: <repo>/.codex-second-agent）
+  CODEX_SA_STATE_DIR  実行状態保存先（デフォルト: <workspace>/.codex-second-agent）
   CODEX_SA_AGENT      既定のエージェント名（デフォルト: default）
   CODEX_SA_AUTO_WORKTREE  worktree自動作成（未指定なら default=off / 非default=on）
   CODEX_SA_WORKTREES_DIR  worktreeの保存先（デフォルト: <state>/worktrees）
@@ -39,6 +39,10 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   CODEX_SA_WORKTREES_MODE worktreeの配置モード（workspace|state）。未指定は state
   CODEX_SA_POST_GIT_STATUS 実行後にgit status要約を出す（0|1、既定0）
   CODEX_SA_TARGET_WORKSPACE 保存済みworkspaceを上書きする（デバッグ用、通常は workspace init を使う）
+
+補足:
+  - `workspace init` の設定保存は control repo 側（<control>/.codex-second-agent/control/...）に置く
+  - session/log/worktree は target workspace 側に置く
 
 例:
   codex-second-agent "このリポジトリのREADMEを要約して"
@@ -141,8 +145,9 @@ primary_cmd="${prompt_parts[0]:-}"
 sub_cmd="${prompt_parts[1]:-}"
 sub_arg="${prompt_parts[2]:-}"
 
-# 既定の保存先は「実行したリポジトリ内」にする（外部を汚さない）
-state_dir="${CODEX_SA_STATE_DIR:-}"
+# 実行状態（session/log/worktree）の保存先ルート。
+# 未指定なら target workspace 配下に置き、同じ workspace を別の control repo から叩いても共有する。
+state_root_override="${CODEX_SA_STATE_DIR:-}"
 # 常に使うモデル（運用方針として固定）
 forced_model="gpt-5.4"
 
@@ -222,12 +227,13 @@ sanitize_codex_args "${codex_args[@]}"
 
 # 「設定保存（workspace init）」を行う親側のコンテキスト（どこから起動しても一意になるように）
 control_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
-if [[ -z "$state_dir" ]]; then
-  state_dir="${control_root}/.codex-second-agent"
+if [[ -n "$state_root_override" ]]; then
+  control_state_root="$state_root_override"
+else
+  control_state_root="${control_root}/.codex-second-agent"
 fi
-mkdir -p "$state_dir"
 control_key="$(printf '%s' "$control_root" | sha256sum | awk '{print $1}')"
-control_state_dir="${state_dir}/${control_key}"
+control_state_dir="${control_state_root}/control/${control_key}"
 control_config_dir="${control_state_dir}/config"
 target_workspace_file="${control_config_dir}/target_workspace_root"
 
@@ -240,7 +246,6 @@ resolve_git_root() {
 }
 
 if [[ "$primary_cmd" == "workspace" ]]; then
-  mkdir -p "$control_config_dir"
   case "$sub_cmd" in
     init)
       if [[ -z "$sub_arg" ]]; then
@@ -252,6 +257,7 @@ if [[ "$primary_cmd" == "workspace" ]]; then
         echo "error: not a git repository: $sub_arg" >&2
         exit 2
       fi
+      mkdir -p "$control_config_dir"
       printf '%s\n' "$resolved" >"$target_workspace_file"
       echo "$resolved"
       exit 0
@@ -306,6 +312,12 @@ fi
 workspace_root="${target_workspace_root:-$control_root}"
 if [[ $workspace_configured -eq 0 ]]; then
   workspace_valid=1
+fi
+
+if [[ -n "$state_root_override" ]]; then
+  state_dir="$state_root_override"
+else
+  state_dir="${workspace_root}/.codex-second-agent"
 fi
 
 # サブエージェントは必ず target workspace を設定してから使う（事故防止）
@@ -575,16 +587,19 @@ extract_effective_cd() {
 rewrite_workspace_path_args_to_effective_workspace
 
 list_agents() {
-  mkdir -p "$agents_root" "$worktrees_dir"
   declare -A seen
-  for d in "$agents_root"/*; do
-    [[ -d "$d" ]] || continue
-    seen["$(basename "$d")"]=1
-  done
-  for d in "$worktrees_dir"/*; do
-    [[ -d "$d" ]] || continue
-    seen["$(basename "$d")"]=1
-  done
+  if [[ -d "$agents_root" ]]; then
+    for d in "$agents_root"/*; do
+      [[ -d "$d" ]] || continue
+      seen["$(basename "$d")"]=1
+    done
+  fi
+  if [[ -d "$worktrees_dir" ]]; then
+    for d in "$worktrees_dir"/*; do
+      [[ -d "$d" ]] || continue
+      seen["$(basename "$d")"]=1
+    done
+  fi
   for k in "${!seen[@]}"; do
     printf '%s\n' "$k"
   done | sort
@@ -709,6 +724,9 @@ if [[ "$primary_cmd" == "status" ]]; then
     if [[ -n "$workspace_error" ]]; then
       echo "workspace_error: $workspace_error"
     fi
+    echo "control_state_root: $control_state_root"
+    echo "control_state_dir: $control_state_dir"
+    echo "control_config_dir: $control_config_dir"
     echo "state_dir: $state_dir"
     echo "workspace_state_dir: $workspace_state_dir"
     echo "agent_state_dir: $agent_state_dir"
@@ -734,6 +752,9 @@ fi
 if [[ "$primary_cmd" == "paths" ]]; then
   echo "agent_name: $agent_name"
   echo "control_root: $control_root"
+  echo "control_state_root: $control_state_root"
+  echo "control_state_dir: $control_state_dir"
+  echo "control_config_dir: $control_config_dir"
   echo "workspace_root: $workspace_root"
   echo "workspace_configured: $( [[ $workspace_configured -eq 1 ]] && echo yes || echo no )"
   echo "workspace_valid: $( [[ $workspace_valid -eq 1 ]] && echo yes || echo no )"
@@ -757,6 +778,9 @@ if [[ "$primary_cmd" == "doctor" ]]; then
   echo "codex-second-agent doctor"
   echo "agent_name: $agent_name"
   echo "control_root: $control_root"
+  echo "control_state_root: $control_state_root"
+  echo "control_state_dir: $control_state_dir"
+  echo "control_config_dir: $control_config_dir"
   echo "workspace_root: $workspace_root"
   echo "workspace_configured: $( [[ $workspace_configured -eq 1 ]] && echo yes || echo no )"
   echo "workspace_valid: $( [[ $workspace_valid -eq 1 ]] && echo yes || echo no )"

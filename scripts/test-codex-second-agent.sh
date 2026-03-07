@@ -74,7 +74,7 @@ assert_not_contains() {
 }
 
 test_management_commands_are_side_effect_free() {
-  local repo out err rc count
+  local repo out err rc count state_count
   repo="$(new_repo)"
   out="$(new_temp_file)"
   err="$(new_temp_file)"
@@ -96,6 +96,17 @@ test_management_commands_are_side_effect_free() {
   assert_eq "0" "$rc" "paths succeeds before workspace init"
   count="$(git -C "$repo" worktree list | wc -l | tr -d ' ')"
   assert_eq "1" "$count" "paths must not create a worktree"
+
+  if (cd "$repo" && "$sa" agents >"$out" 2>"$err"); then
+    rc=0
+  else
+    rc=$?
+  fi
+  assert_eq "0" "$rc" "agents succeeds before workspace init"
+  count="$(git -C "$repo" worktree list | wc -l | tr -d ' ')"
+  assert_eq "1" "$count" "agents must not create a worktree"
+  state_count="$(find "$repo" -maxdepth 2 -name '.codex-second-agent' | wc -l | tr -d ' ')"
+  assert_eq "0" "$state_count" "agents must not create state directories"
   printf 'ok - management commands stay side-effect free\n'
 }
 
@@ -374,6 +385,62 @@ EOF
   printf 'ok - nondefault execution creates worktree and session state\n'
 }
 
+test_target_workspace_state_is_shared_across_control_repos() {
+  local control1 control2 target stub_dir capture1 capture2 out err rc argv
+  local key target_session_count control1_session_count control2_session_count
+  control1="$(new_repo)"
+  control2="$(new_repo)"
+  target="$(new_repo)"
+  stub_dir="$(new_temp_dir)"
+  capture1="$(new_temp_file)"
+  capture2="$(new_temp_file)"
+  out="$(new_temp_file)"
+  err="$(new_temp_file)"
+
+  cat >"$stub_dir/codex" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$@" > "$CAPTURE_PATH"
+printf '%s\n' '{"type":"thread.started","thread_id":"tid-123"}'
+printf '%s\n' '{"type":"item.completed","item":{"type":"agent_message","text":"hello"}}'
+EOF
+  chmod +x "$stub_dir/codex"
+
+  (
+    cd "$control1"
+    "$sa" workspace init "$target" >/dev/null
+  )
+  (
+    cd "$control2"
+    "$sa" workspace init "$target" >/dev/null
+  )
+
+  if (cd "$control1" && CAPTURE_PATH="$capture1" PATH="$stub_dir:$PATH" "$sa" "hello" >"$out" 2>"$err"); then
+    rc=0
+  else
+    rc=$?
+  fi
+  assert_eq "0" "$rc" "first control repo execution should succeed"
+
+  if (cd "$control2" && CAPTURE_PATH="$capture2" PATH="$stub_dir:$PATH" "$sa" "hello" >"$out" 2>"$err"); then
+    rc=0
+  else
+    rc=$?
+  fi
+  assert_eq "0" "$rc" "second control repo execution should succeed"
+
+  key="$(printf '%s' "$target" | sha256sum | awk '{print $1}')"
+  target_session_count="$(find "$target/.codex-second-agent/$key" -name session_id -type f | wc -l | tr -d ' ')"
+  control1_session_count="$(find "$control1/.codex-second-agent" -name session_id -type f 2>/dev/null | wc -l | tr -d ' ')"
+  control2_session_count="$(find "$control2/.codex-second-agent" -name session_id -type f 2>/dev/null | wc -l | tr -d ' ')"
+  argv="$(tr '\n' ' ' <"$capture2" | sed 's/  */ /g')"
+
+  assert_eq "1" "$target_session_count" "session state should live under the target workspace"
+  assert_eq "0" "$control1_session_count" "control repo must not own runtime session state"
+  assert_eq "0" "$control2_session_count" "other control repo must not own runtime session state"
+  assert_contains "$argv" "resume tid-123" "second control repo should resume the shared target-workspace session"
+  printf 'ok - target workspace runtime state is shared across control repos\n'
+}
+
 main() {
   test_management_commands_are_side_effect_free
   test_parent_workspace_cd_maps_into_agent_worktree
@@ -385,6 +452,7 @@ main() {
   test_model_overrides_are_stripped
   test_filter_failure_returns_nonzero
   test_nondefault_execution_creates_worktree_and_session
+  test_target_workspace_state_is_shared_across_control_repos
 }
 
 main "$@"
