@@ -29,6 +29,14 @@
 
 ```bash
 bash -n scripts/codex-second-agent
+PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile scripts/codex-second-agent-filter.py
+scripts/test-codex-second-agent.sh
+```
+
+`.devcontainer/` を触ったら:
+
+```bash
+docker build -f .devcontainer/Dockerfile -t devcontainer-smoke:latest .
 ```
 
 ## 参照（別プロジェクト向けテンプレ）
@@ -45,5 +53,3 @@ bash -n scripts/codex-second-agent
 
 - 実体: `scripts/codex-second-agent`
 - 使い方/運用: `README.md` / `docs/` / `AGENTS_TEMPLATE.md`
-
-

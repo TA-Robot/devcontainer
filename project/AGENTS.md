@@ -44,7 +44,7 @@
 codex-second-agent workspace init project/<name>
 
 mkdir -p .codex-second-agent/nohup
-cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - -- --cd project > .codex-second-agent/nohup/implementer.out 2>&1 &
+cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > .codex-second-agent/nohup/implementer.out 2>&1 &
 あなたは implementer です。
 - 作業対象は project/<name>/ 配下のみ
 - 変更は project/ 配下のみに限定
@@ -66,7 +66,7 @@ echo "pid=$!"
 codex-second-agent workspace init project/<name>
 
 mkdir -p .codex-second-agent/nohup
-cat <<'PROMPT' | nohup codex-second-agent --agent reviewer - -- --cd project > .codex-second-agent/nohup/reviewer.out 2>&1 &
+cat <<'PROMPT' | nohup codex-second-agent --agent reviewer - > .codex-second-agent/nohup/reviewer.out 2>&1 &
 あなたは reviewer です。
 - レビュー対象は project/ 配下の差分のみ
 - 指摘は Must/Should/Nice に分ける
@@ -82,7 +82,9 @@ codex-second-agent --agent implementer status --verbose
 codex-second-agent --agent implementer doctor
 ```
 
-`paths` の `effective_cd` が `.../project` になっていることを必ず確認してください。
+`workspace init project/<name>` を使っている場合、`paths` の `effective_cd` は **対象 project 用 worktree のルート** を指します。  
+親リポジトリを workspace にしたまま `project/` 配下へ絞る運用では、`-- --cd project` を付け、その場合は `effective_cd` が `.../project` になります。
+`workspace_valid: no` が出たら、保存済み workspace が壊れているので `workspace init project/<name>` をやり直してください。
 
 ## 実運用メモ（ハマりどころ）
 
@@ -103,5 +105,5 @@ echo "pid=$!"
 - **worktreeが project 配下に作られるわけではありません**  
   `codex-second-agent` は基本的に「workspace（git root）単位」で agent worktree を作ります。  
   `codex-second-agent workspace init project/<name>` を使うと、**project/<name> 側のGitをworkspaceとして扱う**ようになります。
-
-
+- `workspace init project/<name>` を使った後に `-- --cd project` を付けると、`project/<name>/project` 相当を指してしまうので誤りです。
+  project 側 Git を workspace にした場合は、通常 `--cd` を付けません。

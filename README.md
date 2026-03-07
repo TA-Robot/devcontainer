@@ -43,7 +43,7 @@ gemini
 ## Cursorエージェント向け: Codex セカンドエージェント用ツール
 
 このリポジトリには、`codex exec` を使って **非対話で呼べる“セカンドエージェント”口**として `codex-second-agent` を同梱しています。
-セッションID(thread_id)は **ツール側が `~/.codex` 配下に保存**するため、CursorエージェントがIDを覚えておく必要がありません。
+セッションID(thread_id)は **ツール側が workspace ごとの state ディレクトリに保存**するため、CursorエージェントがIDを覚えておく必要がありません。
 
 ### 使い方（Cursorエージェント向け）
 
@@ -60,10 +60,16 @@ gemini
   - `transcript.jsonl`: 1リクエスト=1行で `agent` / `cd` / `prompt` / `response` をまとめたログ（JSONL）
   - `CODEX_SA_LOG_DIR` でログ保存先ディレクトリを変更できます
 - エージェント用の作業ディレクトリ（git worktree）は次のいずれかに作成します
-  - **デフォルト**: `~/.codex/cursor-second-agent/<workspace_hash>/worktrees/<agent>/`
+  - **デフォルト**: `<repo>/.codex-second-agent/<workspace_hash>/worktrees/<agent>/`
   - `CODEX_SA_WORKTREES_MODE=workspace` または `--worktrees-in-workspace` を使う場合: `<repo>/.codex-worktrees/<agent>/`
   - `CODEX_SA_WORKTREES_DIR` を指定した場合: 指定パス配下
   - **非defaultエージェントは、未作成なら自動でworktreeを作成**してそこで実行します（`CODEX_SA_AUTO_WORKTREE=0` または `--no-auto-worktree` で無効化）
+
+### `workspace init` と `--cd` の使い分け
+
+- `workspace init .` のように **親リポジトリを workspace** にした場合は、必要に応じて `-- --cd project/...` を付けます
+- `workspace init project/<name>` のように **対象プロジェクトの Git ルート自体を workspace** にした場合は、通常 `--cd` は不要です
+  - この場合の `effective_cd` は agent worktree のルートになります
 
 ### 運用に効くコマンド（抜粋）
 
@@ -77,9 +83,13 @@ gemini
 
 - `codex-second-agent` は **常に `--dangerously-bypass-approvals-and-sandbox` と `--search` を有効化**します（運用方針として固定）
 - `--dangerously-bypass-approvals-and-sandbox` は危険です。外部サンドボックスがある前提でのみ使用してください
-- 使用モデルは **常に `gpt-5.2`** です（必要があれば `CODEX_SA_MODEL` で上書きできます）
+- 使用モデルは **常に `gpt-5.4`** です
+  - `--model` / `--config model=...` / `--oss` / `--profile` などのモデル選択系オプションは無視されます
+- 保存済み workspace が移動・削除されて無効になった場合、実行は止まり、`paths` / `doctor` に `workspace_valid: no` が表示されます
 
 ## プリインストールツール
+
+AI CLI のバージョンは Dockerfile で固定しています（再ビルド時の挙動差分を減らすため）。
 
 | カテゴリ | ツール |
 |----------|--------|
@@ -168,5 +178,3 @@ Dockerfile の `USER_UID` を調整するか、ホスト側のファイル権限
 ## ライセンス
 
 MIT
-
-

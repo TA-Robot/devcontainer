@@ -9,9 +9,9 @@
 
 - **project 名**: `<<project-name>>`
 - **project の実体ディレクトリ**: `project/<<name>>/`（例: `project/app/`）
-- **サブエージェントの作業ディレクトリ（effective cd）**: `<<workdir>>`
+- **サブエージェントの作業ディレクトリ指定（必要なら `--cd` に渡す値）**: `<<workdir>>`
   - 例: `project`（親リポジトリを workspace にして `project/` 配下だけ触らせたい場合）
-  - 例: `.`（`workspace init project/<<name>>` で **project 側 Git を workspace** にしている場合）
+  - 例: 空欄 / `<<omit>>`（`workspace init project/<<name>>` で **project 側 Git を workspace** にしている場合。通常 `--cd` は不要）
 - **実行/テストコマンド**:
   - `<<test-cmd>>`（例: `python -m unittest -v` / `npm test`）
   - `<<lint-cmd>>`（任意）
@@ -154,6 +154,7 @@ graph TD
   - まず `codex-second-agent workspace init <path-to-project-git>` を実行し、対象プロジェクト（git repo root）を保存します
   - 以降、サブエージェント実行はその workspace を基準に worktree/log/state を作るようになります
   - 重要: これは技術的な強制隔離ではありません（ルールで縛る運用）。ただし、親リポジトリの worktree を誤って作る事故は防げます
+  - このモードでは通常 `--cd` は不要です。`--cd` を使うのは「親リポジトリを workspace にしたまま、`project/` 配下へ絞る」場合だけです
 
 例（project 側 Git を workspace として固定する）:
 
@@ -185,6 +186,7 @@ codex-second-agent "READMEを要約して"
 ### エージェントを分ける（マルチエージェント）
 
 ```bash
+codex-second-agent workspace init project/<name>
 codex-second-agent --agent reviewer "この差分をレビューして"
 codex-second-agent --agent implementer "このissueを実装して"
 ```
@@ -197,6 +199,9 @@ codex-second-agent status --verbose
 codex-second-agent paths
 codex-second-agent doctor
 ```
+
+`paths` / `doctor` に `workspace_valid: no` が出たら、保存済み workspace が壊れています。  
+`codex-second-agent workspace init <path>` をやり直すか、不要なら `workspace clear` で消してから再実行してください。
 
 ### worktree の配置
 
@@ -320,6 +325,9 @@ cp project/docs/tickets/task-ticket.template.md "$ticket"
 
 チケットから起動する例:
 
+- **workspace が親リポジトリ** の場合: `-- --cd <<workdir>>` を付ける
+- **workspace が対象プロジェクトの Git ルート** の場合: `--cd` は付けない
+
 ```bash
 agent=implementer-task0001
 ticket=project/docs/tickets/ready/task-0001.md
@@ -328,7 +336,14 @@ out=.codex-second-agent/nohup/${agent}.out
 mv "$ticket" project/docs/tickets/running/
 ticket=project/docs/tickets/running/task-0001.md
 
-cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - -- --cd <<workdir>> > "$out" 2>&1 &
+cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - > "$out" 2>&1 &
+echo "pid=$!"
+```
+
+親リポジトリを workspace にしたまま `project/` 配下へ絞るなら、次のように `--cd` を付けます。
+
+```bash
+cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - -- --cd project > "$out" 2>&1 &
 echo "pid=$!"
 ```
 
@@ -343,9 +358,11 @@ mv "$ticket" project/docs/tickets/running/
 ticket=project/docs/tickets/running/review-0001.md
 
 # チケット内の related.commits / Review focus / Output format を必ず埋める
-cat "$ticket" | nohup timeout 120s codex-second-agent --agent "$agent" - -- --cd <<workdir>> > "$out" 2>&1 &
+cat "$ticket" | nohup timeout 120s codex-second-agent --agent "$agent" - > "$out" 2>&1 &
 echo "pid=$!"
 ```
+
+reviewer でも、親リポジトリを workspace にしたまま対象を `project/` に絞る場合だけ `-- --cd project` を付けます。
 
 ### 4) TDD マイクロサイクル（各チケットで必ず回す）
 
