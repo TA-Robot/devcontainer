@@ -9,13 +9,15 @@
 ## codex-second-agent とは？（簡単に）
 
 - `codex exec` を「セッションID自動保持」「agent別worktree」「ログ保存」付きで呼び出すラッパーです
-- この基盤リポジトリでは `scripts/codex-second-agent` が実体です（PATHに無い場合はこれを直接実行）
+- この基盤リポジトリでは `scripts/codex-second-agent` が実体です
+- 実運用では通常 `codex-second-agent` を PATH から実行します
+  - PATH に無い場合は、管理者が基盤リポジトリ側の実体パスを指定して起動してください
 
 ---
 
 ## スコープ（最重要）
 
-- **見てよい/触ってよい**: `project/` 配下のみ
+- **見てよい/触ってよい**: `project/` に相当する **現在の workspace 配下のみ**
 - **見ない/触らない**:
   - リポジトリルート配下の `scripts/` / `.devcontainer/` / `docs/` / `README.md` / `AGENTS*.md` など
   - project外のファイルを参照してよいか迷ったら、必ず管理者へ質問して止まる
@@ -24,16 +26,18 @@
 
 - 管理者は `project/docs/` を整備します（runbook/decision log）
 - サブエージェントは **参照してよい**（ただし更新が必要なら管理者に提案）
+- `workspace init project/<name>` で対象 project の Git ルートに入る運用では、`project/docs/` が workspace 外にあることがあります
+  - その場合、必要な情報は管理者がチケット本文に転記するか、workspace 内で見える場所へ別途ミラーしてください
 
 ## 役割別の期待
 
 - **implementer**
-  - `project/` 配下のみで実装し、`project/` 配下のテスト/ビルドが通る状態まで持っていく
+  - 現在の workspace 直下のみで実装し、対象プロジェクトのテスト/ビルドが通る状態まで持っていく
   - `git status -sb` を確認し、必要ならコミットしてブランチ先端を進める
 - **reviewer**
-  - `project/` 配下だけの差分レビューを行う（Must/Should/Nice）
+  - 現在の workspace 直下だけの差分レビューを行う（Must/Should/Nice）
 - **triage**
-  - `project/` 配下のログ/コードから原因切り分け。必要な追加情報があれば管理者に要求
+  - 現在の workspace 直下のログ/コードから原因切り分け。必要な追加情報があれば管理者に要求
 
 ## 実行コマンド（管理者が使う想定）
 
@@ -46,15 +50,15 @@ codex-second-agent workspace init project/<name>
 mkdir -p .codex-second-agent/nohup
 cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > .codex-second-agent/nohup/implementer.out 2>&1 &
 あなたは implementer です。
-- 作業対象は project/<name>/ 配下のみ
-- 変更は project/ 配下のみに限定
+- 作業対象は workspace 直下のみ（= 管理者が `workspace init project/<name>` で固定した対象プロジェクト）
+- 変更は現在の worktree 配下のみに限定
 
 要件:
 - ...
 制約:
 - 依存追加は事前承認
 完了条件:
-- project/ 配下のテストが通る
+- 対象プロジェクトのテストが通る
 PROMPT
 echo "pid=$!"
 ```
@@ -68,7 +72,7 @@ codex-second-agent workspace init project/<name>
 mkdir -p .codex-second-agent/nohup
 cat <<'PROMPT' | nohup codex-second-agent --agent reviewer - > .codex-second-agent/nohup/reviewer.out 2>&1 &
 あなたは reviewer です。
-- レビュー対象は project/ 配下の差分のみ
+- レビュー対象は workspace 直下（= 対象プロジェクト worktree）の差分のみ
 - 指摘は Must/Should/Nice に分ける
 PROMPT
 echo "pid=$!"

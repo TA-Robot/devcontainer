@@ -132,6 +132,8 @@ graph TD
   - `project/docs/runbook.md`: 実行手順・リリース手順・よくある事故と対処
   - `project/docs/decisions.md`: 重要な設計判断（短い箇条書きで OK）
 - **サブエージェントは参照 OK**だが、**更新は原則しない**（更新が必要なら管理者に提案）
+- `workspace init project/<name>` で **対象プロジェクトの Git ルート** を sub-agent workspace にする場合、`project/docs/` は workspace 外にあることがあります
+  - その場合、manager は必要な前提をチケット本文へ転記するか、workspace 内の参照可能な場所へ同期してください
 
 ### 改善ループ（新人エージェントで質問 → ドキュメント追記）
 
@@ -173,7 +175,8 @@ codex-second-agent workspace init project/<name>
 
 - **何か**: `codex exec` を「セッション ID 自動保持」「agent 別 worktree」「ログ保存」付きで呼び出すラッパー
 - **この基盤リポジトリでの実装**: `scripts/codex-second-agent`
-- **コンテナ内の PATH**: 環境によっては `codex-second-agent` が PATH に入っていないことがあります（その場合は `scripts/codex-second-agent` を直接実行）
+- **コンテナ内の PATH**: 通常は `codex-second-agent` をそのまま実行します
+  - PATH に無い場合は、この基盤リポジトリ側に置いた実体パスを **管理者が明示して** 呼び出してください
 
 ### 基本
 
@@ -190,6 +193,9 @@ codex-second-agent workspace init project/<name>
 codex-second-agent --agent reviewer "この差分をレビューして"
 codex-second-agent --agent implementer "このissueを実装して"
 ```
+
+`workspace init project/<name>` を使った後は、sub-agent の作業ルートは **対象プロジェクトの Git ルート worktree** です。  
+依頼文のスコープ説明も `project/` ではなく「workspace 直下」または実際のモジュール名で書いてください。
 
 ### 状態/場所確認（迷子防止）
 

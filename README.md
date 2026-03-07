@@ -47,7 +47,7 @@ gemini
 
 ### 使い方（Cursorエージェント向け）
 
-基本的な使い方は `AGENTS.md` を参照してください。
+この基盤リポジトリ自身の開発ルールは `AGENTS.md`、別プロジェクトでの運用手順は `AGENTS_TEMPLATE.md` と `project/AGENTS.md` を参照してください。
 
 ### 内部の挙動（実装の要点）
 

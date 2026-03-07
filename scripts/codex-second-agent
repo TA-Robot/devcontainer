@@ -53,6 +53,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   codex-second-agent --worktrees-in-workspace paths
   codex-second-agent worktree remove reviewer
   codex-second-agent worktree remove reviewer --keep-branch
+  # NOTE: 非defaultエージェントの worktree 管理は workspace init 後に使う
 USAGE
 }
 
