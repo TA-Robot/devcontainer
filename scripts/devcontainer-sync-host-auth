@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+sync_dir() {
+  local src="$1"
+  local dest="$2"
+
+  if [[ ! -d "$src" ]]; then
+    return 0
+  fi
+
+  mkdir -p "$dest"
+  find "$dest" -mindepth 1 -maxdepth 1 -exec rm -rf -- {} +
+  cp -a "$src"/. "$dest"/
+  chown -R "$(id -u)":"$(id -g)" "$dest"
+}
+
+mkdir -p "$HOME/.config"
+sync_dir "/mnt/host-auth/codex" "$HOME/.codex"
+sync_dir "/mnt/host-auth/gemini" "$HOME/.config/gemini"

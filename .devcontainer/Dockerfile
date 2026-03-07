@@ -61,7 +61,8 @@ RUN npm install -g \
 # Codex セカンドエージェント用ラッパー（セッションID自動保持）
 COPY scripts/codex-second-agent /usr/local/bin/codex-second-agent
 COPY scripts/codex-second-agent-filter.py /usr/local/lib/codex-second-agent/filter.py
-RUN chmod +x /usr/local/bin/codex-second-agent
+COPY scripts/devcontainer-sync-host-auth /usr/local/bin/devcontainer-sync-host-auth
+RUN chmod +x /usr/local/bin/codex-second-agent /usr/local/bin/devcontainer-sync-host-auth
 
 # 開発ユーザー作成
 ARG USERNAME=devuser
