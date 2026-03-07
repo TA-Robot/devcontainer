@@ -28,7 +28,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   --post-git-status   実行後に `git status --porcelain` を要約表示する（未コミット滞留の検知）
   --worktrees-in-workspace worktreeをworkspace配下（.codex-worktrees）に作成する
   --workspace PATH    実行対象workspace（git repo）を一時的に指定（保存しない）
-  --                 以降は codex exec にそのまま渡す（例: --add-dir ../shared --sandbox read-only）
+  --                 以降は codex exec にそのまま渡す（例: --sandbox read-only）
 
 環境変数:
   CODEX_SA_STATE_DIR  セッションID保存先（デフォルト: <repo>/.codex-second-agent）
@@ -42,7 +42,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
 
 例:
   codex-second-agent "このリポジトリのREADMEを要約して"
-  codex-second-agent workspace init project/app
+  codex-second-agent workspace init <path-to-project-git>
   codex-second-agent --agent reviewer "この差分をレビューして"
   codex-second-agent worktree create reviewer
   codex-second-agent --agent reviewer "worktree上で作業して"
@@ -175,11 +175,7 @@ sanitize_codex_args() {
         i=$((i+1))
         continue
         ;;
-      -p|--profile)
-        i=$((i+2))
-        continue
-        ;;
-      --profile=*|--oss|--local-provider=*)
+      --oss|--local-provider=*)
         i=$((i+1))
         continue
         ;;
@@ -419,36 +415,79 @@ ensure_worktree() {
 }
 
 normalize_cd_arg() {
-  local value="${1:-}"
-  if [[ -z "$value" || "$value" == /* || "$value" == "~"* ]]; then
-    printf '%s' "$value"
-    return 0
-  fi
-  realpath -m -- "${invocation_pwd}/${value}"
+  normalize_path_arg "${1:-}"
 }
 
-# 相対 `--cd` は「呼び出し元ディレクトリ基準」で絶対化し、workspace内を指す場合だけ
-# agent worktree 配下の対応パスへ写像する。
-map_cd_to_effective_workspace() {
+normalize_path_arg() {
   local value="${1:-}"
-  local normalized
-  normalized="$(normalize_cd_arg "$value")"
+  case "$value" in
+    "")
+      printf '%s' "$value"
+      ;;
+    "~")
+      printf '%s' "$HOME"
+      ;;
+    "~/"*)
+      printf '%s' "$HOME/${value#~/}"
+      ;;
+    "~"*)
+      printf '%s' "$value"
+      ;;
+    /*)
+      realpath -m -- "$value"
+      ;;
+    *)
+      realpath -m -- "${invocation_pwd}/${value}"
+      ;;
+  esac
+}
 
-  if will_use_agent_worktree; then
+path_is_within_base() {
+  local normalized="${1:-}"
+  local base="${2:-}"
+  if [[ -z "$normalized" || -z "$base" ]]; then
+    return 1
+  fi
+  if [[ "$normalized" != /* || "$base" != /* ]]; then
+    return 1
+  fi
+  if [[ "$normalized" == "$base" || "$normalized" == "$base/"* ]]; then
+    return 0
+  fi
+  return 1
+}
+
+map_workspace_path_or_fail() {
+  local value="${1:-}"
+  local flag_name="${2:-path}"
+  local normalized
+  normalized="$(normalize_path_arg "$value")"
+
+  if [[ "$agent_name" != "default" ]]; then
+    if ! path_is_within_base "$normalized" "$workspace_root"; then
+      echo "error: ${flag_name} must stay within configured workspace for sub-agent '${agent_name}': $value" >&2
+      echo "hint: mirror shared context into the workspace, or inline it in the prompt/ticket." >&2
+      exit 2
+    fi
+  fi
+
+  if will_use_agent_worktree && path_is_within_base "$normalized" "$workspace_root"; then
     if [[ "$normalized" == "$workspace_root" ]]; then
       printf '%s' "$agent_worktree"
       return 0
     fi
-    if [[ "$normalized" == "$workspace_root/"* ]]; then
-      printf '%s' "${agent_worktree}${normalized#$workspace_root}"
-      return 0
-    fi
+    printf '%s' "${agent_worktree}${normalized#$workspace_root}"
+    return 0
   fi
 
   printf '%s' "$normalized"
 }
 
-rewrite_cd_args_to_effective_workspace() {
+map_cd_to_effective_workspace() {
+  map_workspace_path_or_fail "${1:-}" "--cd"
+}
+
+rewrite_workspace_path_args_to_effective_workspace() {
   local -a out=()
   local i=0
   while [[ $i -lt ${#codex_args[@]} ]]; do
@@ -468,6 +507,26 @@ rewrite_cd_args_to_effective_workspace() {
         local v="${a#--cd=}"
         if [[ -n "$v" ]]; then
           out+=("--cd=$(map_cd_to_effective_workspace "$v")")
+        else
+          out+=("$a")
+        fi
+        i=$((i+1))
+        continue
+        ;;
+      --add-dir)
+        local v="${codex_args[$((i+1))]:-}"
+        if [[ -n "$v" ]]; then
+          out+=("$a" "$(map_workspace_path_or_fail "$v" "--add-dir")")
+        else
+          out+=("$a" "$v")
+        fi
+        i=$((i+2))
+        continue
+        ;;
+      --add-dir=*)
+        local v="${a#--add-dir=}"
+        if [[ -n "$v" ]]; then
+          out+=("--add-dir=$(map_workspace_path_or_fail "$v" "--add-dir")")
         else
           out+=("$a")
         fi
@@ -512,6 +571,8 @@ extract_effective_cd() {
   fi
   printf '%s' "$workspace_root"
 }
+
+rewrite_workspace_path_args_to_effective_workspace
 
 list_agents() {
   mkdir -p "$agents_root" "$worktrees_dir"
@@ -806,10 +867,6 @@ for a in "${codex_args[@]}"; do
       ;;
   esac
 done
-
-if [[ $has_cd_arg -ne 0 ]]; then
-  rewrite_cd_args_to_effective_workspace
-fi
 
 if will_use_agent_worktree; then
   ensure_worktree

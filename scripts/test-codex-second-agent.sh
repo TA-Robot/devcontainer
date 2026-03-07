@@ -185,6 +185,91 @@ test_subagent_worktree_create_requires_workspace_init() {
   printf 'ok - sub-agent worktree management requires explicit workspace\n'
 }
 
+test_subagent_rejects_external_paths() {
+  local repo other stub_dir capture out err rc stderr_text
+  repo="$(new_repo init project/file.txt)"
+  other="$(new_repo)"
+  stub_dir="$(new_temp_dir)"
+  capture="$(new_temp_file)"
+  out="$(new_temp_file)"
+  err="$(new_temp_file)"
+
+  cat >"$stub_dir/codex" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "\$@" > "$capture"
+printf '%s\n' '{"type":"thread.started","thread_id":"tid-123"}'
+EOF
+  chmod +x "$stub_dir/codex"
+
+  (
+    cd "$repo"
+    "$sa" workspace init . >/dev/null
+  )
+
+  if (cd "$repo" && PATH="$stub_dir:$PATH" "$sa" --agent reviewer - -- --cd "$other" <<'EOF' >"$out" 2>"$err"
+hello
+EOF
+  ); then
+    rc=0
+  else
+    rc=$?
+  fi
+
+  stderr_text="$(tr '\n' ' ' <"$err" | sed 's/  */ /g')"
+  assert_eq "2" "$rc" "sub-agent should reject external --cd"
+  assert_contains "$stderr_text" "--cd must stay within configured workspace" "external --cd should be rejected explicitly"
+
+  if (cd "$repo" && PATH="$stub_dir:$PATH" "$sa" --agent reviewer - -- --add-dir "$other" <<'EOF' >"$out" 2>"$err"
+hello
+EOF
+  ); then
+    rc=0
+  else
+    rc=$?
+  fi
+
+  stderr_text="$(tr '\n' ' ' <"$err" | sed 's/  */ /g')"
+  assert_eq "2" "$rc" "sub-agent should reject external --add-dir"
+  assert_contains "$stderr_text" "--add-dir must stay within configured workspace" "external --add-dir should be rejected explicitly"
+  printf 'ok - sub-agent rejects external filesystem paths\n'
+}
+
+test_subagent_rewrites_internal_add_dir_into_worktree() {
+  local repo stub_dir capture out err rc argv
+  repo="$(new_repo init project/shared.txt)"
+  stub_dir="$(new_temp_dir)"
+  capture="$(new_temp_file)"
+  out="$(new_temp_file)"
+  err="$(new_temp_file)"
+
+  cat >"$stub_dir/codex" <<EOF
+#!/usr/bin/env bash
+printf '%s\n' "\$@" > "$capture"
+printf '%s\n' '{"type":"thread.started","thread_id":"tid-123"}'
+EOF
+  chmod +x "$stub_dir/codex"
+
+  (
+    cd "$repo"
+    "$sa" workspace init . >/dev/null
+  )
+
+  if (cd "$repo" && PATH="$stub_dir:$PATH" "$sa" --agent reviewer - -- --add-dir project <<'EOF' >"$out" 2>"$err"
+hello
+EOF
+  ); then
+    rc=0
+  else
+    rc=$?
+  fi
+
+  argv="$(tr '\n' ' ' <"$capture" | sed 's/  */ /g')"
+  assert_eq "0" "$rc" "sub-agent should allow workspace-internal --add-dir"
+  assert_contains "$argv" "--add-dir $repo/.codex-second-agent/" "internal --add-dir should be rewritten into the agent worktree"
+  assert_contains "$argv" "/worktrees/reviewer/project" "internal --add-dir should point inside the reviewer worktree"
+  printf 'ok - workspace-internal add-dir is rewritten into worktree path\n'
+}
+
 test_model_overrides_are_stripped() {
   local repo stub_dir capture out err rc argv
   repo="$(new_repo)"
@@ -215,7 +300,7 @@ EOF
   assert_not_contains "$argv" 'model="o3"' "model config override should be stripped"
   assert_not_contains "$argv" "model_provider=\"oss\"" "model provider override should be stripped"
   assert_not_contains "$argv" "--oss" "oss shortcut should be stripped"
-  assert_not_contains "$argv" "--profile" "profile should be stripped"
+  assert_contains "$argv" "--profile alt" "non-model profile settings should be preserved"
   assert_not_contains "$argv" "ollama" "local provider should be stripped"
   printf 'ok - model selection overrides are stripped and gpt-5.4 is forced\n'
 }
@@ -295,6 +380,8 @@ main() {
   test_project_workspace_without_cd_uses_worktree_root
   test_stale_workspace_is_rejected
   test_subagent_worktree_create_requires_workspace_init
+  test_subagent_rejects_external_paths
+  test_subagent_rewrites_internal_add_dir_into_worktree
   test_model_overrides_are_stripped
   test_filter_failure_returns_nonzero
   test_nondefault_execution_creates_worktree_and_session
