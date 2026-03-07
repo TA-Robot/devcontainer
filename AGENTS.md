@@ -11,7 +11,7 @@
 ## 対象ディレクトリ
 
 - **実装**: `scripts/`
-- **ドキュメント**: `README.md` / `AGENTS.md` / `AGENTS_TEMPLATE.md` / `project/docs/`
+- **ドキュメント**: `README.md` / `AGENTS.md` / `AGENTS_TEMPLATE.md` / `docs/` / `project/docs/`
 - **コンテナ定義**: `.devcontainer/`
 
 ## ルール（このリポジトリ開発向け）
@@ -42,7 +42,7 @@ docker build -f .devcontainer/Dockerfile -t devcontainer-smoke:latest .
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: マルチエージェント運用（管理者/実装者の分業、バックグラウンド実行、ログ追跡）用テンプレ
-- `project/AGENTS.md`: サブエージェントを **project配下だけ**で動かすための指示テンプレ（対象プロジェクトへコピーして利用）
+- `project/AGENTS.md`: サブエージェントを **configured workspace 内だけ**で動かすための指示テンプレ（対象プロジェクトへコピーして利用）
 
 ## 模擬運用で得た知見（反映先）
 
@@ -52,4 +52,4 @@ docker build -f .devcontainer/Dockerfile -t devcontainer-smoke:latest .
 ## codex-second-agent はどこにある？
 
 - 実体: `scripts/codex-second-agent`
-- 使い方/運用: `README.md` / `AGENTS_TEMPLATE.md` / `project/AGENTS.md`
+- 使い方/運用: `README.md` / `docs/architecture.md` / `AGENTS_TEMPLATE.md` / `project/AGENTS.md`

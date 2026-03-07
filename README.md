@@ -1,6 +1,6 @@
 # Cursor Dev Container
 
-Cursor / VS Code 用の開発コンテナ環境。AI コーディングツール（Codex CLI、Gemini CLI）を統合した安全な開発環境を提供します。
+Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツール（Codex CLI、Gemini CLI）を統合し、**信頼済みのローカル開発環境**で素早く作業するための基盤を提供します。
 
 ## 特徴
 
@@ -40,6 +40,26 @@ codex-full "リファクタリングして"
 gemini
 ```
 
+## Trust Model
+
+この devcontainer は **sandbox ではありません**。利便性を優先した、信頼済みホスト向けの構成です。
+
+- ホストの SSH / Git / AI 認証情報をマウントします
+- `docker-in-docker` を前提にした高権限設定です
+- `codex-second-agent` は常に `--dangerously-bypass-approvals-and-sandbox` を付けます
+
+使いどころ:
+
+- 信頼しているコードベースを、信頼しているローカルマシン上で素早く開発したい場合
+
+使うべきでない場面:
+
+- 未検証コードを隔離したい場合
+- ホスト資格情報をコンテナへ渡したくない場合
+- 強いマルチテナント隔離が必要な場合
+
+設計方針と推奨レイアウトは [docs/architecture.md](/home/asakura/devcontainer/docs/architecture.md) を参照してください。
+
 ## Cursorエージェント向け: Codex セカンドエージェント用ツール
 
 このリポジトリには、`codex exec` を使って **非対話で呼べる“セカンドエージェント”口**として `codex-second-agent` を同梱しています。
@@ -64,12 +84,15 @@ gemini
   - `CODEX_SA_WORKTREES_MODE=workspace` または `--worktrees-in-workspace` を使う場合: `<repo>/.codex-worktrees/<agent>/`
   - `CODEX_SA_WORKTREES_DIR` を指定した場合: 指定パス配下
   - **非defaultエージェントは、未作成なら自動でworktreeを作成**してそこで実行します（`CODEX_SA_AUTO_WORKTREE=0` または `--no-auto-worktree` で無効化）
+  - **非defaultエージェントの path 系オプション（`--cd` / `--add-dir`）は configured workspace 内だけ**を許可し、必要なら対応する worktree パスへ写像します
 
 ### `workspace init` と `--cd` の使い分け
 
-- `workspace init .` のように **親リポジトリを workspace** にした場合は、必要に応じて `-- --cd project/...` を付けます
-- `workspace init project/<name>` のように **対象プロジェクトの Git ルート自体を workspace** にした場合は、通常 `--cd` は不要です
+- `workspace init .` のように **親リポジトリを workspace** にした場合は、必要に応じて `-- --cd <workspace-relative-subdir>` を付けます
+- `workspace init <path-to-project-git>` のように **対象プロジェクトの Git ルート自体を workspace** にした場合は、通常 `--cd` は不要です
   - この場合の `effective_cd` は agent worktree のルートになります
+- sub-agent に共有コンテキストを渡したい場合も、`--add-dir` で workspace 外は渡せません
+  - 共有したい runbook / ticket / decision log は対象 workspace 側へミラーするか、prompt に要点を転記してください
 
 ### 運用に効くコマンド（抜粋）
 
@@ -82,9 +105,10 @@ gemini
 ### 運用上の注意
 
 - `codex-second-agent` は **常に `--dangerously-bypass-approvals-and-sandbox` と `--search` を有効化**します（運用方針として固定）
-- `--dangerously-bypass-approvals-and-sandbox` は危険です。外部サンドボックスがある前提でのみ使用してください
+- `--dangerously-bypass-approvals-and-sandbox` は危険です。隔離環境ではなく、信頼済みホスト上の高権限運用として扱ってください
 - 使用モデルは **常に `gpt-5.4`** です
-  - `--model` / `--config model=...` / `--oss` / `--profile` などのモデル選択系オプションは無視されます
+  - `--model` / `--config model=...` / `--config model_provider=...` / `--oss` / `--local-provider` などのモデル選択系オプションは無視されます
+- `--profile` は通りますが、wrapper が固定しているモデル / provider 方針は上書きできません
 - 保存済み workspace が移動・削除されて無効になった場合、実行は止まり、`paths` / `doctor` に `workspace_valid: no` が表示されます
 
 ## プリインストールツール
@@ -97,7 +121,7 @@ AI CLI のバージョンは Dockerfile で固定しています（再ビルド�
 | **AI CLI** | @openai/codex, @google/gemini-cli |
 | **開発ツール** | TypeScript, ESLint, Prettier |
 | **ユーティリティ** | Git, GitHub CLI, ripgrep, jq, vim |
-| **シェル** | Bash, Zsh (Oh My Zsh) |
+| **シェル** | Bash, Zsh |
 
 ## マウント設定
 

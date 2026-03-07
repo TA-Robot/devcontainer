@@ -10,7 +10,7 @@
 
 ## 0) How to Use（運用手順）
 
-1. `project/docs/tickets/task-ticket.template.md` を `project/docs/tickets/ready/` にコピーする
+1. この基盤リポジトリの `project/docs/tickets/task-ticket.template.md` を、target workspace 内の `docs/agents/tickets/task-ticket.template.md` として配置し、`docs/agents/tickets/ready/` にコピーする
 2. このチケットを **最後まで埋める**（未確定は “未確定” と明示する）
 3. サブエージェント起動時に `cat ticket.md | codex-second-agent ... -` で渡す
 4. 起動したら `running/` に移動し、完了したら `done/` に移動して履歴として残す（原則削除しない）
@@ -25,7 +25,7 @@
 - **created_at**: `YYYY-MM-DD`
 - **priority**: `P0 | P1 | P2`
 - **timebox**: `<<例: 90minで一次成果 / 30minで調査>>`
-- **workspace_scope**: `project/<name>/`（原則ここだけ）
+- **workspace_scope**: `<<workspace-relative-path or .>>`（原則ここだけ）
 - **related**
   - issue: `<<link-or-id>>`
   - pr/branch: `<<link-or-branch>>`
@@ -48,7 +48,7 @@
 > 現状、ユーザー登録 API が 400/500 を混同して返しており、クライアント側で誤った再試行が起きる。  
 > このタスクでは、入力バリデーションエラーは常に 400（詳細はエラーコード）で返し、サーバ内部エラーは 500 に統一する。  
 > さらに、ログに request_id と validation_error_code を残し、再発時に原因追跡できるようにする。  
-> 完了時点で、該当 API のテストが追加され、`<<test-cmd>>` が通り、変更理由が `project/docs/decisions.md` に短く追記されている。
+> 完了時点で、該当 API のテストが追加され、`<<test-cmd>>` が通り、変更理由が `docs/agents/decisions.md` に短く追記されている。
 
 ---
 
@@ -113,7 +113,7 @@
 - [ ] **Tests**: `<<test-cmd>>` が通る（新規テストが追加されている）
 - [ ] **No regression**: 既存の `<<重要フロー>>` が壊れていない（確認手順も書く）
 - [ ] **Logs/Observability**: `<<必要なログ/メトリクス>>` が追加され、追跡できる
-- [ ] **Docs**: 変更理由/運用上の注意が `project/docs/<<...>>` に追記されている（必要な場合）
+- [ ] **Docs**: 変更理由/運用上の注意が `docs/agents/<<...>>` に追記されている（必要な場合）
 
 ---
 
@@ -152,7 +152,7 @@
 最低でも「再現」「テスト」「フォーマット/静的解析」が書かれている状態にする。
 
 ```bash
-cd project
+# commands run from the sub-agent workspace root unless noted otherwise
 
 # reproduce (optional)
 <<commands to reproduce>>
@@ -200,7 +200,7 @@ cd project
 
 ## 12) Constraints / Guardrails（運用・安全上の制約）
 
-- **Allowed paths**: `project/<name>/` のみ（迷ったら manager に質問して止まる）
+- **Allowed paths**: `workspace_scope` に書いた範囲のみ（迷ったら manager に質問して止まる）
 - **Dependency changes**: `<<可/不可。可なら承認手順>>`
 - **Dangerous operations**: `<<例: 本番DB操作禁止 / destructive禁止>>`
 - **Secrets**: `.env` / token をログに出さない、貼らない

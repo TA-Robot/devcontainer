@@ -8,10 +8,12 @@
 ## このプロジェクト情報（埋める）
 
 - **project 名**: `<<project-name>>`
-- **project の実体ディレクトリ**: `project/<<name>>/`（例: `project/app/`）
-- **サブエージェントの作業ディレクトリ指定（必要なら `--cd` に渡す値）**: `<<workdir>>`
-  - 例: `project`（親リポジトリを workspace にして `project/` 配下だけ触らせたい場合）
-  - 例: 空欄 / `<<omit>>`（`workspace init project/<<name>>` で **project 側 Git を workspace** にしている場合。通常 `--cd` は不要）
+- **管理者が `workspace init` に渡す対象 Git ルート**: `<<path-to-project-git>>`
+- **サブエージェントの追加作業ディレクトリ指定（必要なら `--cd` に渡す値）**: `<<workdir>>`
+  - 例: `packages/api`（親リポジトリを workspace にして、その一部だけ触らせたい場合）
+  - 例: 空欄 / `<<omit>>`（`workspace init <<path-to-project-git>>` で **対象 project 側 Git** を workspace にしている場合。通常 `--cd` は不要）
+- **管理者ドキュメント置き場（workspace 内を推奨）**: `docs/agents/`
+  - 例: `docs/agents/runbook.md` / `docs/agents/decisions.md` / `docs/agents/plan.md`
 - **実行/テストコマンド**:
   - `<<test-cmd>>`（例: `python -m unittest -v` / `npm test`）
   - `<<lint-cmd>>`（任意）
@@ -61,9 +63,9 @@
 
 ### 出力フォーマット（例: plan）
 
-管理者は `project/docs/plan.md`（新規作成でOK）に次のように整理します。
+管理者は `docs/agents/plan.md`（新規作成でOK）に次のように整理します。
 
-- **T-0001: 仕様確定（入力/出力）** → deps: なし → owner: `triage-*` → artifacts: `project/docs/decisions.md`
+- **T-0001: 仕様確定（入力/出力）** → deps: なし → owner: `triage-*` → artifacts: `docs/agents/decisions.md`
 - **T-0002: テスト設計（Red）** → deps: T-0001 → owner: `implementer-*` → artifacts: `tests/...`
 - **T-0003: 実装（Green）** → deps: T-0002 → owner: `implementer-*` → artifacts: `src/...`
 - **T-0004: リファクタ（Refactor）** → deps: T-0003 → owner: `implementer-*`
@@ -73,14 +75,14 @@
 
 ### 依頼の組み立て（並列に投げる）
 
-- **triage を先行**: 仕様/制約/既存構造の調査 → `project/docs/` を整備
+- **triage を先行**: 仕様/制約/既存構造の調査 → `docs/agents/` を整備
 - **reviewer を先行**: 変更予定箇所のリスク洗い出し、レビュー観点の作成（実装前レビュー）
 - **implementer を並列**: タスク単位で worktree を分け、1タスク=1 agent で進める
 
 ### Mermaid で依存関係を図示（推奨）
 
 クリティカルパスや並列化ポイントは、文章だけだとズレやすいので **Mermaid** で依存関係（DAG）を図示するのがおすすめです。
-管理者は `project/docs/plan.md` に Mermaid を貼り、サブエージェントにはその図を前提に指示します。
+管理者は `docs/agents/plan.md` に Mermaid を貼り、サブエージェントにはその図を前提に指示します。
 
 例（依存関係の図）:
 
@@ -124,44 +126,48 @@ graph TD
 
 ---
 
-## project/docs（管理者が整備する前提）
+## docs/agents（管理者が整備する前提）
 
-このテンプレ運用では、管理者が `project/docs/` を継続的に整備します。
+このテンプレ運用では、管理者が **target workspace 内の** `docs/agents/` を継続的に整備します。
 
 - **管理者が書く**（推奨）:
-  - `project/docs/runbook.md`: 実行手順・リリース手順・よくある事故と対処
-  - `project/docs/decisions.md`: 重要な設計判断（短い箇条書きで OK）
+  - `docs/agents/runbook.md`: 実行手順・リリース手順・よくある事故と対処
+  - `docs/agents/decisions.md`: 重要な設計判断（短い箇条書きで OK）
+  - `docs/agents/plan.md`: DAG / クリティカルパス / Ready タスク
+- この基盤リポジトリの template source は `project/docs/` にあります
+  - target project ではそれらを `docs/agents/` へコピーして使ってください
 - **サブエージェントは参照 OK**だが、**更新は原則しない**（更新が必要なら管理者に提案）
-- `workspace init project/<name>` で **対象プロジェクトの Git ルート** を sub-agent workspace にする場合、`project/docs/` は workspace 外にあることがあります
-  - その場合、manager は必要な前提をチケット本文へ転記するか、workspace 内の参照可能な場所へ同期してください
+- `docs/agents/` は **sub-agent workspace から見える場所**に置くのを既定にします
+  - 親リポジトリ側の別ディレクトリに置く運用は、context の複製漏れを起こしやすいので非推奨です
+  - 別 repo / 別ディレクトリで管理するなら、manager が必要な前提をチケット本文へ転記するか、workspace 内へ同期してください
 
 ### 改善ループ（新人エージェントで質問 → ドキュメント追記）
 
-運用が安定してくるほど「暗黙知」が増えるので、定期的に **`newbie-*`** を立てて **質問させ、回答を管理者が `project/docs/` に追記**して整備します。
+運用が安定してくるほど「暗黙知」が増えるので、定期的に **`newbie-*`** を立てて **質問させ、回答を管理者が `docs/agents/` に追記**して整備します。
 
 - **頻度（例）**: 週 1 / スプリント末 / 大きな変更の直後（どれかで OK）
 - **進め方**
   - `newbie-*` に「プロジェクトを理解するための質問を _10〜20 個_ 出す」依頼をする（コード改変は禁止）
-  - 管理者が回答し、**恒久情報は `project/docs/runbook.md` / `project/docs/decisions.md` に追記**する
+  - 管理者が回答し、**恒久情報は `docs/agents/runbook.md` / `docs/agents/decisions.md` に追記**する
   - 依頼テンプレや注意事項（スコープ、危険操作、標準コマンド等）は必要に応じて `AGENTS.md` に反映する
 
 ---
 
-## 「project 配下だけを見せる」運用（推奨）
+## 「configured workspace だけを見せる」運用（推奨）
 
-サブエージェントは、リポジトリ全体を見せるのではなく **project 配下のみ**を対象にすると安全です。
+サブエージェントは、リポジトリ全体を見せるのではなく **configured workspace の内側だけ**を対象にすると安全です。
 
-- このテンプレと合わせて、対象リポジトリに **`project/AGENTS.md`（サブ向け指示）**を置く運用を推奨します
-- `codex-second-agent` は通常「起動場所の git root」を workspace として扱いますが、**サブエージェントは project 側の Git を workspace として固定**するのが安全です
+- このテンプレと合わせて、この基盤リポジトリの **`project/AGENTS.md` を対象リポジトリの `AGENTS.md` としてコピー**し、サブ向け指示を分離する運用を推奨します
+- `codex-second-agent` は通常「起動場所の git root」を workspace として扱いますが、**サブエージェントは対象 project 側の Git を workspace として固定**するのが安全です
   - まず `codex-second-agent workspace init <path-to-project-git>` を実行し、対象プロジェクト（git repo root）を保存します
   - 以降、サブエージェント実行はその workspace を基準に worktree/log/state を作るようになります
-  - 重要: これは技術的な強制隔離ではありません（ルールで縛る運用）。ただし、親リポジトリの worktree を誤って作る事故は防げます
-  - このモードでは通常 `--cd` は不要です。`--cd` を使うのは「親リポジトリを workspace にしたまま、`project/` 配下へ絞る」場合だけです
+  - 重要: これは OS レベルの sandbox ではありませんが、**sub-agent の `--cd` / `--add-dir` は workspace 外を拒否**します
+  - このモードでは通常 `--cd` は不要です。`--cd` を使うのは「親リポジトリを workspace にしたまま、その一部へ絞る」場合だけです
 
 例（project 側 Git を workspace として固定する）:
 
 ```bash
-codex-second-agent workspace init project/<name>
+codex-second-agent workspace init <path-to-project-git>
 ```
 
 以降の **チケット作成/起動/回収** は、下の「開発サイクル」「バックグラウンド実行（ログの見方を含む）」を正本として参照してください。  
@@ -189,13 +195,13 @@ codex-second-agent "READMEを要約して"
 ### エージェントを分ける（マルチエージェント）
 
 ```bash
-codex-second-agent workspace init project/<name>
+codex-second-agent workspace init <path-to-project-git>
 codex-second-agent --agent reviewer "この差分をレビューして"
 codex-second-agent --agent implementer "このissueを実装して"
 ```
 
-`workspace init project/<name>` を使った後は、sub-agent の作業ルートは **対象プロジェクトの Git ルート worktree** です。  
-依頼文のスコープ説明も `project/` ではなく「workspace 直下」または実際のモジュール名で書いてください。
+`workspace init <path-to-project-git>` を使った後は、sub-agent の作業ルートは **対象プロジェクトの Git ルート worktree** です。  
+依頼文のスコープ説明も固定パス名ではなく、「workspace 直下」または実際のモジュール名で書いてください。
 
 ### 状態/場所確認（迷子防止）
 
@@ -283,13 +289,14 @@ tail -n 50 .codex-second-agent/<workspace_hash>/agents/implementer/logs/events.j
 
 ### 0) サイクル開始前の準備（最初の1回だけ）
 
-- `project/docs/runbook.md` に **最低限の実行/テスト手順**を書いておく
-- `project/docs/decisions.md` に **重要な判断は残す**運用にする
-- `codex-second-agent workspace init project/<name>` を実行して、対象プロジェクト（git repo root）を固定する
+- `docs/agents/runbook.md` に **最低限の実行/テスト手順**を書いておく
+- `docs/agents/decisions.md` に **重要な判断は残す**運用にする
+- 必要なら template source（この基盤 repo の `project/docs/`）を target project の `docs/agents/` にコピーして初期化する
+- `codex-second-agent workspace init <path-to-project-git>` を実行して、対象プロジェクト（git repo root）を固定する
 
 ### 1) タスク設計（クリティカルパス＋並列化の再確認）
 
-- 「タスク設計（クリティカルパスで整理して並列化する）」の手順どおりに、`project/docs/plan.md` を更新する:
+- 「タスク設計（クリティカルパスで整理して並列化する）」の手順どおりに、`docs/agents/plan.md` を更新する:
   - タスク一覧（ID付き） / 依存関係（DAG、Mermaid 推奨） / クリティカルパス（CP） / Ready
 
 ポイント:
@@ -301,27 +308,27 @@ tail -n 50 .codex-second-agent/<workspace_hash>/agents/implementer/logs/events.j
 この運用では、**サブエージェントへの依頼=チケットファイル**です。  
 管理者は「plan を更新して終わり」ではなく、Ready なタスクを **必ずチケット化**してから投げます。
 
-- チケット置き場（ためていく/履歴を残す）: `project/docs/tickets/`
+- チケット置き場（ためていく/履歴を残す）: `docs/agents/tickets/`
 - 推奨する状態遷移（ディレクトリで管理）:
-  - `project/docs/tickets/ready/` → `project/docs/tickets/running/` → `project/docs/tickets/done/`
+  - `docs/agents/tickets/ready/` → `docs/agents/tickets/running/` → `docs/agents/tickets/done/`
 
 ```bash
-mkdir -p project/docs/tickets/{ready,running,done} .codex-second-agent/nohup
+mkdir -p docs/agents/tickets/{ready,running,done} .codex-second-agent/nohup
 
 # テンプレからチケットを起こす（“ちゃんと編集”する）
-ticket=project/docs/tickets/ready/task-0001.md
-cp project/docs/tickets/task-ticket.template.md "$ticket"
+ticket=docs/agents/tickets/ready/task-0001.md
+cp docs/agents/tickets/task-ticket.template.md "$ticket"
 # ${EDITOR:-vi} "$ticket"
 ```
 
 ポイント:
 - チケットには **スコープ/成果物/完了条件/相談事項** を必ず入れる（口頭依頼禁止）
 - チケットに **agent名（例: implementer-task0001）**を固定で書く（ログ/branch/作業単位が一致する）
-- `project/docs/plan.md` から **チケットへの参照（ファイルパス）**を貼る（行き来しやすくする）
+- `docs/agents/plan.md` から **チケットへの参照（ファイルパス）**を貼る（行き来しやすくする）
 
 ### 3) サブエージェントにタスクを投げる（チケット起点・バックグラウンド）
 
-- **triage**（先行）: 調査・影響範囲・仕様の穴を `project/docs/` に提案
+- **triage**（先行）: 調査・影響範囲・仕様の穴を `docs/agents/` に提案
 - **implementer**（並列）: タスク単位で実装・テスト・コミット
 - **reviewer**（先行 or 後追い）: レビュー観点の作成 / 差分レビュー
 
@@ -336,20 +343,20 @@ cp project/docs/tickets/task-ticket.template.md "$ticket"
 
 ```bash
 agent=implementer-task0001
-ticket=project/docs/tickets/ready/task-0001.md
+ticket=docs/agents/tickets/ready/task-0001.md
 out=.codex-second-agent/nohup/${agent}.out
 
-mv "$ticket" project/docs/tickets/running/
-ticket=project/docs/tickets/running/task-0001.md
+mv "$ticket" docs/agents/tickets/running/
+ticket=docs/agents/tickets/running/task-0001.md
 
 cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - > "$out" 2>&1 &
 echo "pid=$!"
 ```
 
-親リポジトリを workspace にしたまま `project/` 配下へ絞るなら、次のように `--cd` を付けます。
+親リポジトリを workspace にしたまま対象サブディレクトリへ絞るなら、次のように `--cd` を付けます。
 
 ```bash
-cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - -- --cd project > "$out" 2>&1 &
+cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - -- --cd <<workdir>> > "$out" 2>&1 &
 echo "pid=$!"
 ```
 
@@ -357,18 +364,18 @@ reviewer（timeout 付き）の例:
 
 ```bash
 agent=reviewer-task0001
-ticket=project/docs/tickets/ready/review-0001.md
+ticket=docs/agents/tickets/ready/review-0001.md
 out=.codex-second-agent/nohup/${agent}.out
 
-mv "$ticket" project/docs/tickets/running/
-ticket=project/docs/tickets/running/review-0001.md
+mv "$ticket" docs/agents/tickets/running/
+ticket=docs/agents/tickets/running/review-0001.md
 
 # チケット内の related.commits / Review focus / Output format を必ず埋める
 cat "$ticket" | nohup timeout 120s codex-second-agent --agent "$agent" - > "$out" 2>&1 &
 echo "pid=$!"
 ```
 
-reviewer でも、親リポジトリを workspace にしたまま対象を `project/` に絞る場合だけ `-- --cd project` を付けます。
+reviewer でも、親リポジトリを workspace にしたまま対象サブディレクトリに絞る場合だけ `-- --cd <<workdir>>` を付けます。
 
 ### 4) TDD マイクロサイクル（各チケットで必ず回す）
 
@@ -405,7 +412,7 @@ reviewer でも、親リポジトリを workspace にしたまま対象を `proj
 
 ### 6) ドキュメント整備（管理者の仕事）
 
-サブの成果を受けて、管理者が `project/docs/` を更新して“次が速くなる状態”にする。
+サブの成果を受けて、管理者が `docs/agents/` を更新して“次が速くなる状態”にする。
 
 - `runbook.md`: 実行/テスト/デバッグの手順を追記（手戻り防止）
 - `decisions.md`: 重要判断（採用/却下した代替案）を追記（ブレ防止）
@@ -425,11 +432,11 @@ reviewer でも、親リポジトリを workspace にしたまま対象を `proj
 ポイント:
 - implementer が「パッチ」しか出せない場合もある（環境/権限/制約）。その時は管理者が取り込む
 - worktree の後片付け（不要なら `worktree remove`）
-- 取り込みが終わったらチケットを `project/docs/tickets/done/` に移動して履歴として残す（削除は原則しない。どうしても消すなら“回収・統合が完了してから”）
+- 取り込みが終わったらチケットを `docs/agents/tickets/done/` に移動して履歴として残す（削除は原則しない。どうしても消すなら“回収・統合が完了してから”）
 
 ### 8) 次のタスクへ（plan 更新→新チケット化→再投入）
 
-統合したら `project/docs/plan.md` の Ready/CP を更新して、次のタスク群を投げる。
+統合したら `docs/agents/plan.md` の Ready/CP を更新して、次のタスク群を投げる。
 
 ポイント:
 - “やり残し”は plan に戻す（チャットの記憶に頼らない）
@@ -440,10 +447,10 @@ reviewer でも、親リポジトリを workspace にしたまま対象を `proj
 ## 管理者のチェックリスト（短縮版）
 
 - **依頼前**:
-  - `project/docs/runbook.md` に「実行/テスト/確認方法」が書かれている
+  - `docs/agents/runbook.md` に「実行/テスト/確認方法」が書かれている
   - `workspace init` が対象プロジェクトを指している
   - **TDD 前提**（Red/Green/Refactor、最小ステップ、テストを先に）を依頼文に明記
-  - Ready なタスクが **チケット化**されている（`project/docs/tickets/ready/`）
+  - Ready なタスクが **チケット化**されている（`docs/agents/tickets/ready/`）
 - **依頼後**:
   - `transcript.jsonl` で進捗確認（`nohup` が空でも慌てない）
   - 必要なら `--post-git-status` で未コミット滞留を早期検知
@@ -452,7 +459,7 @@ reviewer でも、親リポジトリを workspace にしたまま対象を `proj
   - `<<test-cmd>>` を実行して OK
   - reviewer の Must が潰れている
 - **後片付け**:
-  - 統合済みチケットを `project/docs/tickets/done/` に移動（原則は履歴として残す）
+  - 統合済みチケットを `docs/agents/tickets/done/` に移動（原則は履歴として残す）
 
 ---
 
@@ -462,7 +469,7 @@ reviewer でも、親リポジトリを workspace にしたまま対象を `proj
 
 ### 1) 管理者: plan 更新 → チケット作成 → 起動（バックグラウンド）
 
-- **チケットテンプレ（`project/docs/tickets/task-ticket.template.md`）を埋める**:
+- **チケットテンプレ（`docs/agents/tickets/task-ticket.template.md`）を埋める**:
   - 特に: **Scope / Acceptance Criteria / Commands / Deliverables / TDD Plan** を空にしない
   - “短さ”より **誤解の余地を潰す**（並列化しても衝突しない依頼にする）
 
@@ -481,4 +488,4 @@ reviewer でも、親リポジトリを workspace にしたまま対象を `proj
 ### 5) 管理者: 取り込み判断・統合・後片付け
 
 - 不要になった worktree は削除（上記 `worktree remove`）
-- 統合済みチケットは `project/docs/tickets/done/` に移動（原則は履歴として残す）
+- 統合済みチケットは `docs/agents/tickets/done/` に移動（原則は履歴として残す）
