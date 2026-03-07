@@ -37,6 +37,7 @@ def main() -> int:
 
     thread_id = None
     agent_texts: list[str] = []
+    errors: list[str] = []
 
     for line in sys.stdin:
         line = line.rstrip("\n")
@@ -55,8 +56,10 @@ def main() -> int:
                 thread_id = tid
                 try:
                     safe_write_session(session_file, tid)
-                except Exception:
-                    pass
+                except Exception as exc:
+                    errors.append(
+                        f"error: failed to persist session_id to {session_file}: {exc}"
+                    )
 
         if raw_json:
             continue
@@ -82,12 +85,14 @@ def main() -> int:
         }
         with open(transcript_log, "a", encoding="utf-8") as f:
             f.write(json.dumps(record, ensure_ascii=False) + "\n")
-    except Exception:
-        pass
-    return 0
+    except Exception as exc:
+        errors.append(f"error: failed to append transcript to {transcript_log}: {exc}")
+
+    for message in errors:
+        print(message, file=sys.stderr, flush=True)
+    return 1 if errors else 0
 
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
 

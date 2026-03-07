@@ -28,7 +28,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
   --post-git-status   実行後に `git status --porcelain` を要約表示する（未コミット滞留の検知）
   --worktrees-in-workspace worktreeをworkspace配下（.codex-worktrees）に作成する
   --workspace PATH    実行対象workspace（git repo）を一時的に指定（保存しない）
-  --                 以降は codex exec にそのまま渡す（例: --model o3 --sandbox read-only）
+  --                 以降は codex exec にそのまま渡す（例: --add-dir ../shared --sandbox read-only）
 
 環境変数:
   CODEX_SA_STATE_DIR  セッションID保存先（デフォルト: <repo>/.codex-second-agent）
@@ -42,6 +42,7 @@ codex-second-agent: Codex CLI を「セッションID自動保持付き」で呼
 
 例:
   codex-second-agent "このリポジトリのREADMEを要約して"
+  codex-second-agent workspace init project/app
   codex-second-agent --agent reviewer "この差分をレビューして"
   codex-second-agent worktree create reviewer
   codex-second-agent --agent reviewer "worktree上で作業して"
@@ -63,6 +64,7 @@ post_git_status="${CODEX_SA_POST_GIT_STATUS:-0}"
 workspace_override="${CODEX_SA_TARGET_WORKSPACE:-}"
 prompt_parts=()
 codex_args=()
+invocation_pwd="$(pwd -P)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -140,11 +142,24 @@ sub_arg="${prompt_parts[2]:-}"
 
 # 既定の保存先は「実行したリポジトリ内」にする（外部を汚さない）
 state_dir="${CODEX_SA_STATE_DIR:-}"
-# 常に使うモデル（ユーザー要望: gpt-5.2固定）
-forced_model="${CODEX_SA_MODEL:-gpt-5.2}"
+# 常に使うモデル（運用方針として固定）
+forced_model="gpt-5.4"
+
+is_model_related_config_key() {
+  local raw_key="${1:-}"
+  local key="${raw_key//[[:space:]]/}"
+  case "$key" in
+    model|model_provider|local_provider)
+      return 0
+      ;;
+    *)
+      return 1
+      ;;
+  esac
+}
 
 sanitize_codex_args() {
-  # `--` 以降で `--model/-m` を渡しても反映させない（事故防止: 常に forced_model を使用）
+  # `--` 以降でモデル選択系オプションを渡しても反映させない。
   local -a in=("$@")
   local -a out=()
   local i=0
@@ -156,6 +171,43 @@ sanitize_codex_args() {
         continue
         ;;
       --model=*)
+        i=$((i+1))
+        continue
+        ;;
+      -p|--profile)
+        i=$((i+2))
+        continue
+        ;;
+      --profile=*|--oss|--local-provider=*)
+        i=$((i+1))
+        continue
+        ;;
+      --local-provider)
+        i=$((i+2))
+        continue
+        ;;
+      -c|--config)
+        local v="${in[$((i+1))]:-}"
+        local key="${v%%=*}"
+        if [[ -n "$v" ]] && is_model_related_config_key "$key"; then
+          i=$((i+2))
+          continue
+        fi
+        out+=("$a")
+        if [[ -n "$v" ]]; then
+          out+=("$v")
+        fi
+        i=$((i+2))
+        continue
+        ;;
+      --config=*)
+        local v="${a#--config=}"
+        local key="${v%%=*}"
+        if is_model_related_config_key "$key"; then
+          i=$((i+1))
+          continue
+        fi
+        out+=("$a")
         i=$((i+1))
         continue
         ;;
@@ -228,7 +280,9 @@ if [[ "$primary_cmd" == "workspace" ]]; then
 fi
 
 workspace_configured=0
+workspace_valid=0
 target_workspace_root=""
+workspace_error=""
 if [[ -n "$workspace_override" ]]; then
   target_workspace_root="$(resolve_git_root "$workspace_override" || true)"
   if [[ -z "$target_workspace_root" ]]; then
@@ -236,21 +290,32 @@ if [[ -n "$workspace_override" ]]; then
     exit 2
   fi
   workspace_configured=1
+  workspace_valid=1
 elif [[ -f "$target_workspace_file" ]]; then
-  target_workspace_root="$(cat "$target_workspace_file" || true)"
-  if [[ -n "$target_workspace_root" ]]; then
+  configured_workspace_raw="$(cat "$target_workspace_file" || true)"
+  if [[ -n "$configured_workspace_raw" ]]; then
     workspace_configured=1
+    target_workspace_root="$(resolve_git_root "$configured_workspace_raw" || true)"
+    if [[ -n "$target_workspace_root" ]]; then
+      workspace_valid=1
+    else
+      target_workspace_root="$configured_workspace_raw"
+      workspace_error="configured workspace is no longer a git repository: $configured_workspace_raw"
+    fi
   fi
 fi
 
 # 実行対象workspace（worktree/ログ/stateの基準）: 明示指定 or 保存済み or その場のgit root
 workspace_root="${target_workspace_root:-$control_root}"
+if [[ $workspace_configured -eq 0 ]]; then
+  workspace_valid=1
+fi
 
 # サブエージェントは必ず target workspace を設定してから使う（事故防止）
 if [[ "$agent_name" != "default" ]]; then
   if [[ $workspace_configured -ne 1 ]]; then
     case "$primary_cmd" in
-      agents|status|paths|doctor|reset|worktree|workspace)
+      agents|status|paths|doctor|reset|workspace)
         # 管理系コマンドは許可（設定前でも状態確認できるようにする）
         ;;
       *)
@@ -260,6 +325,19 @@ if [[ "$agent_name" != "default" ]]; then
         ;;
     esac
   fi
+fi
+
+if [[ $workspace_configured -eq 1 && $workspace_valid -ne 1 ]]; then
+  case "$primary_cmd" in
+    status|paths|doctor|workspace)
+      # 状態確認系は許可（stale config の診断に使えるようにする）
+      ;;
+    *)
+      echo "error: $workspace_error" >&2
+      echo "hint: run 'codex-second-agent workspace init <path-to-project-git>' or 'codex-second-agent workspace clear'." >&2
+      exit 2
+      ;;
+  esac
 fi
 
 workspace_key="$(printf '%s' "$workspace_root" | sha256sum | awk '{print $1}')"
@@ -286,22 +364,38 @@ else
 fi
 agent_worktree="${worktrees_dir}/${agent_name}"
 
+resolve_auto_worktree_setting() {
+  if [[ -n "$auto_worktree" ]]; then
+    printf '%s' "$auto_worktree"
+    return 0
+  fi
+  if [[ "$agent_name" == "default" ]]; then
+    printf '0'
+  else
+    printf '1'
+  fi
+}
+
+resolved_auto_worktree="$(resolve_auto_worktree_setting)"
+
+workspace_is_git_repo() {
+  git -C "$workspace_root" rev-parse --is-inside-work-tree >/dev/null 2>&1
+}
+
+will_use_agent_worktree() {
+  if [[ -d "$agent_worktree" ]]; then
+    return 0
+  fi
+  [[ "$resolved_auto_worktree" == "1" ]] || return 1
+  workspace_is_git_repo
+}
+
 ensure_agent_dirs() {
   mkdir -p "$(dirname "$session_file")" "$logs_dir"
 }
 
 ensure_worktree() {
-  # 非defaultエージェントは「基本 worktree で隔離して開発」する運用を想定し、
-  # 何も指定が無ければ自動で worktree を作る（ユーザーが明示的に無効化可能）。
-  if [[ -z "$auto_worktree" ]]; then
-    if [[ "$agent_name" == "default" ]]; then
-      auto_worktree="0"
-    else
-      auto_worktree="1"
-    fi
-  fi
-
-  if [[ "$auto_worktree" != "1" ]]; then
+  if [[ "$resolved_auto_worktree" != "1" ]]; then
     return 0
   fi
 
@@ -311,7 +405,7 @@ ensure_worktree() {
   fi
 
   # git repoでなければ作れない
-  if ! git -C "$workspace_root" rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  if ! workspace_is_git_repo; then
     return 0
   fi
 
@@ -323,23 +417,37 @@ ensure_worktree() {
   fi
 }
 
-has_cd_arg=0
-for a in "${codex_args[@]}"; do
-  case "$a" in
-    -C|--cd|--cd=*)
-      has_cd_arg=1
-      break
-      ;;
-  esac
-done
+normalize_cd_arg() {
+  local value="${1:-}"
+  if [[ -z "$value" || "$value" == /* || "$value" == "~"* ]]; then
+    printf '%s' "$value"
+    return 0
+  fi
+  realpath -m -- "${invocation_pwd}/${value}"
+}
 
-ensure_worktree
+# 相対 `--cd` は「呼び出し元ディレクトリ基準」で絶対化し、workspace内を指す場合だけ
+# agent worktree 配下の対応パスへ写像する。
+map_cd_to_effective_workspace() {
+  local value="${1:-}"
+  local normalized
+  normalized="$(normalize_cd_arg "$value")"
 
-# `--cd project` のような相対パス指定は、worktree隔離を壊しやすい。
-# worktreeがある場合は「worktree配下の相対パス」として解釈して絶対パスに補正する。
-rewrite_relative_cd_to_worktree() {
-  [[ -d "$agent_worktree" ]] || return 0
+  if will_use_agent_worktree; then
+    if [[ "$normalized" == "$workspace_root" ]]; then
+      printf '%s' "$agent_worktree"
+      return 0
+    fi
+    if [[ "$normalized" == "$workspace_root/"* ]]; then
+      printf '%s' "${agent_worktree}${normalized#$workspace_root}"
+      return 0
+    fi
+  fi
 
+  printf '%s' "$normalized"
+}
+
+rewrite_cd_args_to_effective_workspace() {
   local -a out=()
   local i=0
   while [[ $i -lt ${#codex_args[@]} ]]; do
@@ -347,19 +455,18 @@ rewrite_relative_cd_to_worktree() {
     case "$a" in
       -C|--cd)
         local v="${codex_args[$((i+1))]:-}"
-        if [[ -n "$v" && "$v" != /* && "$v" != "~"* ]]; then
-          out+=("$a" "${agent_worktree}/${v}")
-          i=$((i+2))
-          continue
+        if [[ -n "$v" ]]; then
+          out+=("$a" "$(map_cd_to_effective_workspace "$v")")
+        else
+          out+=("$a" "$v")
         fi
-        out+=("$a" "$v")
         i=$((i+2))
         continue
         ;;
       --cd=*)
         local v="${a#--cd=}"
-        if [[ -n "$v" && "$v" != /* && "$v" != "~"* ]]; then
-          out+=("--cd=${agent_worktree}/${v}")
+        if [[ -n "$v" ]]; then
+          out+=("--cd=$(map_cd_to_effective_workspace "$v")")
         else
           out+=("$a")
         fi
@@ -376,13 +483,34 @@ rewrite_relative_cd_to_worktree() {
   codex_args=("${out[@]}")
 }
 
-if [[ $has_cd_arg -ne 0 ]]; then
-  rewrite_relative_cd_to_worktree
-fi
-
-if [[ $has_cd_arg -eq 0 && -d "$agent_worktree" ]]; then
-  codex_args=(--cd "$agent_worktree" "${codex_args[@]}")
-fi
+extract_effective_cd() {
+  local i=0
+  while [[ $i -lt ${#codex_args[@]} ]]; do
+    local a="${codex_args[$i]}"
+    case "$a" in
+      -C|--cd)
+        local v="${codex_args[$((i+1))]:-}"
+        if [[ -n "$v" ]]; then
+          printf '%s' "$(map_cd_to_effective_workspace "$v")"
+          return 0
+        fi
+        ;;
+      --cd=*)
+        local v="${a#--cd=}"
+        if [[ -n "$v" ]]; then
+          printf '%s' "$(map_cd_to_effective_workspace "$v")"
+          return 0
+        fi
+        ;;
+    esac
+    i=$((i+1))
+  done
+  if will_use_agent_worktree; then
+    printf '%s' "$agent_worktree"
+    return 0
+  fi
+  printf '%s' "$workspace_root"
+}
 
 list_agents() {
   mkdir -p "$agents_root" "$worktrees_dir"
@@ -406,11 +534,27 @@ if [[ "$primary_cmd" == "agents" ]]; then
 fi
 
 if [[ "$primary_cmd" == "worktree" ]]; then
+  if [[ "$agent_name" != "default" ]]; then
+    if [[ $workspace_configured -ne 1 ]]; then
+      echo "error: target workspace is not configured for sub-agent '$agent_name'." >&2
+      echo "hint: run 'codex-second-agent workspace init <path-to-project-git>' or pass '--workspace <path>'." >&2
+      exit 2
+    fi
+    if [[ $workspace_valid -ne 1 ]]; then
+      echo "error: $workspace_error" >&2
+      echo "hint: run 'codex-second-agent workspace init <path-to-project-git>' or 'codex-second-agent workspace clear'." >&2
+      exit 2
+    fi
+  fi
   case "$sub_cmd" in
     create)
       name="$sub_arg"
       if [[ -z "$name" ]]; then
         echo "error: worktree create requires NAME" >&2
+        exit 2
+      fi
+      if ! workspace_is_git_repo; then
+        echo "error: not a git repository: $workspace_root" >&2
         exit 2
       fi
       mkdir -p "$worktrees_dir"
@@ -499,6 +643,10 @@ if [[ "$primary_cmd" == "status" ]]; then
   if [[ "$sub_cmd" == "--verbose" || "$sub_cmd" == "verbose" ]]; then
     echo "agent_name: $agent_name"
     echo "workspace_root: $workspace_root"
+    echo "workspace_valid: $( [[ $workspace_valid -eq 1 ]] && echo yes || echo no )"
+    if [[ -n "$workspace_error" ]]; then
+      echo "workspace_error: $workspace_error"
+    fi
     echo "state_dir: $state_dir"
     echo "workspace_state_dir: $workspace_state_dir"
     echo "agent_state_dir: $agent_state_dir"
@@ -526,6 +674,10 @@ if [[ "$primary_cmd" == "paths" ]]; then
   echo "control_root: $control_root"
   echo "workspace_root: $workspace_root"
   echo "workspace_configured: $( [[ $workspace_configured -eq 1 ]] && echo yes || echo no )"
+  echo "workspace_valid: $( [[ $workspace_valid -eq 1 ]] && echo yes || echo no )"
+  if [[ -n "$workspace_error" ]]; then
+    echo "workspace_error: $workspace_error"
+  fi
   echo "state_dir: $state_dir"
   echo "workspace_state_dir: $workspace_state_dir"
   echo "agents_root: $agents_root"
@@ -533,29 +685,8 @@ if [[ "$primary_cmd" == "paths" ]]; then
   echo "logs_dir: $logs_dir"
   echo "worktrees_dir: $worktrees_dir"
   echo "agent_worktree: $agent_worktree"
-  # `effective_cd` は codex exec の実行ディレクトリとして使われる（--cd 指定が優先）。
-  effective_cd="$workspace_root"
-  i=0
-  while [[ $i -lt ${#codex_args[@]} ]]; do
-    a="${codex_args[$i]}"
-    case "$a" in
-      -C|--cd)
-        v="${codex_args[$((i+1))]:-}"
-        if [[ -n "$v" ]]; then
-          effective_cd="$v"
-          break
-        fi
-        ;;
-      --cd=*)
-        effective_cd="${a#--cd=}"
-        break
-        ;;
-    esac
-    i=$((i+1))
-  done
-  if [[ "$effective_cd" == "$workspace_root" && -d "$agent_worktree" ]]; then
-    effective_cd="$agent_worktree"
-  fi
+  # `effective_cd` は codex exec の実行ディレクトリとして使われる。
+  effective_cd="$(extract_effective_cd)"
   echo "effective_cd: $effective_cd"
   exit 0
 fi
@@ -566,15 +697,21 @@ if [[ "$primary_cmd" == "doctor" ]]; then
   echo "control_root: $control_root"
   echo "workspace_root: $workspace_root"
   echo "workspace_configured: $( [[ $workspace_configured -eq 1 ]] && echo yes || echo no )"
+  echo "workspace_valid: $( [[ $workspace_valid -eq 1 ]] && echo yes || echo no )"
+  if [[ -n "$workspace_error" ]]; then
+    echo "workspace_error: $workspace_error"
+  fi
   echo "in_git_repo: $(git -C "$workspace_root" rev-parse --is-inside-work-tree >/dev/null 2>&1 && echo yes || echo no)"
   echo "codex_in_path: $(command -v codex >/dev/null 2>&1 && echo yes || echo no)"
   if command -v codex >/dev/null 2>&1; then
     echo "codex_path: $(command -v codex)"
     echo "codex_version: $(codex --version 2>/dev/null || echo unknown)"
   fi
+  echo "forced_model: $forced_model"
   echo "state_dir: $state_dir"
   echo "workspace_state_dir: $workspace_state_dir"
   echo "logs_dir: $logs_dir"
+  echo "auto_worktree: $resolved_auto_worktree"
   echo "worktrees_mode: ${worktrees_mode:-state}"
   echo "worktrees_dir: $worktrees_dir"
   echo "agent_worktree: $agent_worktree"
@@ -610,32 +747,6 @@ session_id=""
 if [[ -f "$session_file" ]]; then
   session_id="$(cat "$session_file" || true)"
 fi
-
-extract_effective_cd() {
-  local i=0
-  while [[ $i -lt ${#codex_args[@]} ]]; do
-    local a="${codex_args[$i]}"
-    case "$a" in
-      -C|--cd)
-        local v="${codex_args[$((i+1))]:-}"
-        if [[ -n "$v" ]]; then
-          printf '%s' "$v"
-          return 0
-        fi
-        ;;
-      --cd=*)
-        printf '%s' "${a#--cd=}"
-        return 0
-        ;;
-    esac
-    i=$((i+1))
-  done
-  if [[ -d "$agent_worktree" ]]; then
-    printf '%s' "$agent_worktree"
-    return 0
-  fi
-  printf '%s' "$workspace_root"
-}
 
 run_codex() {
   if [[ -n "$session_id" ]]; then
@@ -684,6 +795,29 @@ cleanup() {
 }
 trap cleanup EXIT
 printf '%s' "$prompt" >"$prompt_tmp"
+
+has_cd_arg=0
+for a in "${codex_args[@]}"; do
+  case "$a" in
+    -C|--cd|--cd=*)
+      has_cd_arg=1
+      break
+      ;;
+  esac
+done
+
+if [[ $has_cd_arg -ne 0 ]]; then
+  rewrite_cd_args_to_effective_workspace
+fi
+
+if will_use_agent_worktree; then
+  ensure_worktree
+fi
+
+if [[ $has_cd_arg -eq 0 && -d "$agent_worktree" ]]; then
+  codex_args=(--cd "$agent_worktree" "${codex_args[@]}")
+fi
+
 effective_cd="$(extract_effective_cd)"
 ensure_agent_dirs
 
@@ -695,5 +829,3 @@ rc=$?
 set -e
 print_post_git_status_summary || true
 exit $rc
-
-
