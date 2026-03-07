@@ -1,5 +1,5 @@
 # Cursor Dev Container用 Dockerfile
-FROM ubuntu:22.04
+FROM ubuntu:22.04@sha256:3ba65aa20f86a0fad9df2b2c259c613df006b2e6d0bfcc8a146afb8c525a9751
 
 # 環境変数設定
 ENV DEBIAN_FRONTEND=noninteractive \
@@ -37,9 +37,11 @@ RUN locale-gen en_US.UTF-8
 
 # Node.js 22.x インストール
 ENV NODE_VERSION=22.19.0
+ARG NODE_LINUX_X64_SHA256=c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2
 ARG CODEX_CLI_VERSION=0.101.0
 ARG GEMINI_CLI_VERSION=0.17.1
 RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" -o /tmp/node.tar.xz \
+    && echo "${NODE_LINUX_X64_SHA256}  /tmp/node.tar.xz" | sha256sum -c - \
     && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 \
     && rm /tmp/node.tar.xz \
     && ln -sf /usr/local/bin/node /usr/bin/node \
@@ -71,11 +73,8 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
-# Oh My Zsh のインストール（オプション - 快適なシェル環境）
-USER $USERNAME
-RUN sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended || true
-
 # Codex/Gemini用エイリアス設定
+USER $USERNAME
 RUN echo '# Codex CLI aliases' >> ~/.bashrc \
     && echo 'alias codex-auto="codex --dangerously-bypass-approvals-and-sandbox"' >> ~/.bashrc \
     && echo 'alias codex-full="codex --full-auto"' >> ~/.bashrc

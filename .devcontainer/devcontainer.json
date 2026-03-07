@@ -4,6 +4,9 @@
     "dockerfile": "Dockerfile",
     "context": ".."
   },
+
+  // Trusted local development profile: privileged container + host credential mounts.
+  // This configuration optimizes for convenience, not sandbox isolation.
   
   // コンテナ設定
   "workspaceFolder": "/workspace",
@@ -74,4 +77,3 @@
     "seccomp=unconfined"
   ]
 }
-
