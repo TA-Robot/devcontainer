@@ -14,6 +14,7 @@
 この基盤の前提は次のとおりです。
 
 - devcontainer はホスト資格情報をマウントする
+- AI 認証情報は read-only mount し、container local へコピーして使う
 - devcontainer は `docker-in-docker` 前提の高権限設定で動く
 - `codex-second-agent` は常に `--dangerously-bypass-approvals-and-sandbox` を付ける
 
@@ -24,6 +25,8 @@
 `codex-second-agent` の sub-agent (`--agent` が `default` 以外) は、configured workspace を基準に動かします。
 
 - `workspace init <path-to-project-git>` を必須にする
+- runtime state (session / logs / worktrees) は target workspace 側へ置く
+- `workspace init` の設定は control repo 側へ置く
 - sub-agent の `--cd` / `--add-dir` は workspace 内だけを許可する
 - workspace 内の相対パスは agent worktree 側へ写像する
 
@@ -51,6 +54,7 @@ target project 側では、sub-agent が読む運用情報を **workspace 内** 
 理由:
 
 - `workspace init <path-to-project-git>` 後も runbook / tickets / decisions をそのまま参照できる
+- runtime state が target workspace 側へまとまり、別 control repo からでも resume できる
 - `--add-dir` で workspace 外を追加する必要がない
 - manager と sub-agent で参照する正本がズレにくい
 
@@ -65,6 +69,7 @@ codex-second-agent --agent implementer "..."
 
 - 通常 `--cd` は不要
 - docs / tickets も workspace 内に置く
+- `.gitignore` には `.codex-second-agent/` と `.codex-worktrees/` を入れる
 
 ### 2. Allowed: parent repo as workspace, subdir via `--cd`
 

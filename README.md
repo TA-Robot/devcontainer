@@ -45,6 +45,7 @@ gemini
 この devcontainer は **sandbox ではありません**。利便性を優先した、信頼済みホスト向けの構成です。
 
 - ホストの SSH / Git / AI 認証情報をマウントします
+- AI 認証情報は **read-only mount + container local copy** として扱い、ホスト側へは書き戻しません
 - `docker-in-docker` を前提にした高権限設定です
 - `codex-second-agent` は常に `--dangerously-bypass-approvals-and-sandbox` を付けます
 
@@ -63,7 +64,7 @@ gemini
 ## Cursorエージェント向け: Codex セカンドエージェント用ツール
 
 このリポジトリには、`codex exec` を使って **非対話で呼べる“セカンドエージェント”口**として `codex-second-agent` を同梱しています。
-セッションID(thread_id)は **ツール側が workspace ごとの state ディレクトリに保存**するため、CursorエージェントがIDを覚えておく必要がありません。
+セッションID(thread_id)は **ツール側が target workspace ごとの state ディレクトリに保存**するため、CursorエージェントがIDを覚えておく必要がありません。
 
 ### 使い方（Cursorエージェント向け）
 
@@ -73,15 +74,17 @@ gemini
 
 - `codex-second-agent` は内部で `codex exec --json ...` を実行します
 - JSONLの `thread.started.thread_id` を抽出してセッションIDとして保存し、2回目以降は `codex exec resume <id> ...` で継続します
-- 保存先はデフォルトで `<repo>/.codex-second-agent/<workspace_hash>/agents/<agent>/session_id` です（外部を汚さない方針）
+- 実行状態の保存先はデフォルトで `<workspace>/.codex-second-agent/<workspace_hash>/agents/<agent>/session_id` です
+  - 同じ target workspace を別の control repo から呼んでも、session / logs / worktrees を共有します
   - `CODEX_SA_STATE_DIR` で保存先ルートを変更できます
-- メインエージェント↔サブエージェントの会話ログは `<repo>/.codex-second-agent/<workspace_hash>/agents/<agent>/logs/` に保存されます
+- `workspace init` の設定自体は control repo 側の `.codex-second-agent/control/<control_hash>/config/` に保存します
+- メインエージェント↔サブエージェントの会話ログは `<workspace>/.codex-second-agent/<workspace_hash>/agents/<agent>/logs/` に保存されます
   - `events.jsonl`: `codex --json` の生イベント（JSONL）を追記
   - `transcript.jsonl`: 1リクエスト=1行で `agent` / `cd` / `prompt` / `response` をまとめたログ（JSONL）
   - `CODEX_SA_LOG_DIR` でログ保存先ディレクトリを変更できます
 - エージェント用の作業ディレクトリ（git worktree）は次のいずれかに作成します
-  - **デフォルト**: `<repo>/.codex-second-agent/<workspace_hash>/worktrees/<agent>/`
-  - `CODEX_SA_WORKTREES_MODE=workspace` または `--worktrees-in-workspace` を使う場合: `<repo>/.codex-worktrees/<agent>/`
+  - **デフォルト**: `<workspace>/.codex-second-agent/<workspace_hash>/worktrees/<agent>/`
+  - `CODEX_SA_WORKTREES_MODE=workspace` または `--worktrees-in-workspace` を使う場合: `<workspace>/.codex-worktrees/<agent>/`
   - `CODEX_SA_WORKTREES_DIR` を指定した場合: 指定パス配下
   - **非defaultエージェントは、未作成なら自動でworktreeを作成**してそこで実行します（`CODEX_SA_AUTO_WORKTREE=0` または `--no-auto-worktree` で無効化）
   - **非defaultエージェントの path 系オプション（`--cd` / `--add-dir`）は configured workspace 内だけ**を許可し、必要なら対応する worktree パスへ写像します
@@ -93,6 +96,7 @@ gemini
   - この場合の `effective_cd` は agent worktree のルートになります
 - sub-agent に共有コンテキストを渡したい場合も、`--add-dir` で workspace 外は渡せません
   - 共有したい runbook / ticket / decision log は対象 workspace 側へミラーするか、prompt に要点を転記してください
+- target project 側の `.gitignore` には `.codex-second-agent/` と `.codex-worktrees/` を入れてください
 
 ### 運用に効くコマンド（抜粋）
 
@@ -129,8 +133,11 @@ AI CLI のバージョンは Dockerfile で固定しています（再ビルド�
 |--------|----------|------|
 | `~/.ssh` | `/home/devuser/.ssh` | SSH鍵（Git操作） |
 | `~/.gitconfig` | `/home/devuser/.gitconfig` | Git設定 |
-| `~/.codex` | `/home/devuser/.codex` | Codex認証情報 |
-| `~/.config/gemini` | `/home/devuser/.config/gemini` | Gemini設定 |
+| `~/.codex` | `/mnt/host-auth/codex` | Codex認証情報の read-only snapshot |
+| `~/.config/gemini` | `/mnt/host-auth/gemini` | Gemini設定の read-only snapshot |
+
+起動時に `devcontainer-sync-host-auth` がこれらを container local の `~/.codex` / `~/.config/gemini` へ同期します。  
+container 側の更新はホストへは書き戻されません。
 
 ## 環境変数
 
@@ -192,7 +199,11 @@ mkdir -p ~/.codex ~/.config/gemini
    codex  # 初回は認証フローが走る
    gemini # 初回は認証フローが走る
    ```
-2. コンテナを再起動
+2. コンテナ起動時に host auth snapshot が container local へ同期される
+3. コンテナを再起動
+
+補足:
+- 認証を永続化したい場合は **ホスト側で** ログインしてください。container 側の `~/.codex` / `~/.config/gemini` は local copy です。
 
 ### 権限エラー
 

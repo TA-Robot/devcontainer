@@ -25,6 +25,7 @@
 ## docs/agents（管理者が整備する前提）
 
 - 管理者は **workspace 内の** `docs/agents/` を整備します（runbook / decision log / plan / tickets）
+- 管理者は target project の `.gitignore` に `.codex-second-agent/` と `.codex-worktrees/` を入れておいてください
 - サブエージェントは **参照してよい**（ただし更新が必要なら管理者に提案）
 - wrapper は sub-agent の `--cd` / `--add-dir` を workspace 外へ出せません
   - runbook / ticket / decision log も workspace 内から読める場所に置くのを既定にしてください

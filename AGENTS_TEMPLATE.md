@@ -217,7 +217,7 @@ codex-second-agent doctor
 
 ### worktree の配置
 
-- デフォルトは `<repo>/.codex-second-agent/<workspace_hash>/worktrees/<agent>/`
+- デフォルトは `<workspace>/.codex-second-agent/<workspace_hash>/worktrees/<agent>/`
 - ホーム配下に増えるのが気になる場合は、workspace 配下に置けます:
 
 ```bash
@@ -291,6 +291,7 @@ tail -n 50 .codex-second-agent/<workspace_hash>/agents/implementer/logs/events.j
 
 - `docs/agents/runbook.md` に **最低限の実行/テスト手順**を書いておく
 - `docs/agents/decisions.md` に **重要な判断は残す**運用にする
+- target project の `.gitignore` に `.codex-second-agent/` と `.codex-worktrees/` を入れる
 - 必要なら template source（この基盤 repo の `project/docs/`）を target project の `docs/agents/` にコピーして初期化する
 - `codex-second-agent workspace init <path-to-project-git>` を実行して、対象プロジェクト（git repo root）を固定する
 
@@ -409,6 +410,7 @@ reviewer でも、親リポジトリを workspace にしたまま対象サブデ
 - **「終わった」宣言だけで判断しない**。必ず成果物（コミット/差分/パッチ）を確認する
 - `--post-git-status` で **未コミット滞留**が出たら、次の指示は「コミットしてから報告」に寄せる
 - 回収したら、チケットに **結果（commit hash / 変更概要 / 実行したテスト / 残課題）**を追記する（次の人が見て分かる状態にする）
+- runtime state は target workspace 側に保存されるため、同じ workspace を別の manager repo から叩いても resume / logs は共有される
 
 ### 6) ドキュメント整備（管理者の仕事）
 
