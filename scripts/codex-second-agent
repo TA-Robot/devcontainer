@@ -650,7 +650,6 @@ if [[ "$primary_cmd" == "worktree" ]]; then
       exit 0
       ;;
     list)
-      mkdir -p "$worktrees_dir"
       for d in "$worktrees_dir"/*; do
         [[ -d "$d" ]] || continue
         echo "$(basename "$d")	$d"

@@ -107,6 +107,17 @@ test_management_commands_are_side_effect_free() {
   assert_eq "1" "$count" "agents must not create a worktree"
   state_count="$(find "$repo" -maxdepth 2 -name '.codex-second-agent' | wc -l | tr -d ' ')"
   assert_eq "0" "$state_count" "agents must not create state directories"
+
+  if (cd "$repo" && "$sa" worktree list >"$out" 2>"$err"); then
+    rc=0
+  else
+    rc=$?
+  fi
+  assert_eq "0" "$rc" "worktree list succeeds without existing worktrees"
+  count="$(git -C "$repo" worktree list | wc -l | tr -d ' ')"
+  assert_eq "1" "$count" "worktree list must not create a git worktree"
+  state_count="$(find "$repo" -maxdepth 2 -name '.codex-second-agent' | wc -l | tr -d ' ')"
+  assert_eq "0" "$state_count" "worktree list must not create state directories"
   printf 'ok - management commands stay side-effect free\n'
 }
 
@@ -350,6 +361,41 @@ EOF
   printf 'ok - persistence failures return nonzero\n'
 }
 
+test_raw_json_still_records_transcript() {
+  local repo stub_dir out err rc state key transcript_line stdout_text
+  repo="$(new_repo)"
+  stub_dir="$(new_temp_dir)"
+  out="$(new_temp_file)"
+  err="$(new_temp_file)"
+
+  cat >"$stub_dir/codex" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' '{"type":"thread.started","thread_id":"tid-123"}'
+printf '%s\n' '{"type":"item.completed","item":{"type":"agent_message","text":"hello"}}'
+EOF
+  chmod +x "$stub_dir/codex"
+
+  if (cd "$repo" && PATH="$stub_dir:$PATH" "$sa" --raw-json "hello" >"$out" 2>"$err"); then
+    rc=0
+  else
+    rc=$?
+  fi
+
+  state="$repo/.codex-second-agent"
+  key="$(printf '%s' "$repo" | sha256sum | awk '{print $1}')"
+  if [[ ! -f "$state/$key/agents/default/logs/transcript.jsonl" ]]; then
+    printf 'not ok - raw-json execution should still write transcript log\nmissing: %s\n' "$state/$key/agents/default/logs/transcript.jsonl" >&2
+    exit 1
+  fi
+  transcript_line="$(tail -n 1 "$state/$key/agents/default/logs/transcript.jsonl")"
+  stdout_text="$(cat "$out")"
+
+  assert_eq "0" "$rc" "raw-json execution should succeed"
+  assert_contains "$stdout_text" '"type":"thread.started"' "raw-json stdout should include codex events"
+  assert_contains "$transcript_line" '"response": "hello"' "raw-json execution should still record transcript text"
+  printf 'ok - raw-json execution still records transcript text\n'
+}
+
 test_nondefault_execution_creates_worktree_and_session() {
   local repo stub_dir out err rc state key count session_count
   repo="$(new_repo)"
@@ -451,6 +497,7 @@ main() {
   test_subagent_rewrites_internal_add_dir_into_worktree
   test_model_overrides_are_stripped
   test_filter_failure_returns_nonzero
+  test_raw_json_still_records_transcript
   test_nondefault_execution_creates_worktree_and_session
   test_target_workspace_state_is_shared_across_control_repos
 }

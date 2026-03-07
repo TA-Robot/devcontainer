@@ -61,9 +61,6 @@ def main() -> int:
                         f"error: failed to persist session_id to {session_file}: {exc}"
                     )
 
-        if raw_json:
-            continue
-
         if t == "item.completed":
             item = obj.get("item") or {}
             if item.get("type") == "agent_message":
@@ -95,4 +92,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-
