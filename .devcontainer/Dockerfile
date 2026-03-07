@@ -37,12 +37,13 @@ RUN locale-gen en_US.UTF-8
 
 # Node.js 22.x インストール
 ENV NODE_VERSION=22.19.0
+ARG CODEX_CLI_VERSION=0.101.0
+ARG GEMINI_CLI_VERSION=0.17.1
 RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" -o /tmp/node.tar.xz \
     && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 \
     && rm /tmp/node.tar.xz \
     && ln -sf /usr/local/bin/node /usr/bin/node \
     && ln -sf /usr/local/bin/npm /usr/bin/npm \
-    && npm install -g npm@latest \
     && npm cache clean --force
 
 # 開発用グローバルパッケージ（必要に応じて追加）
@@ -51,8 +52,8 @@ RUN npm install -g \
     ts-node \
     eslint \
     prettier \
-    @openai/codex \
-    @google/gemini-cli \
+    @openai/codex@${CODEX_CLI_VERSION} \
+    @google/gemini-cli@${GEMINI_CLI_VERSION} \
     && npm cache clean --force
 
 # Codex セカンドエージェント用ラッパー（セッションID自動保持）
@@ -87,4 +88,3 @@ USER $USERNAME
 
 # デフォルトシェル
 CMD ["bash"]
-
