@@ -36,10 +36,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN locale-gen en_US.UTF-8
 
 # Node.js 22.x インストール
-ENV NODE_VERSION=22.19.0
-ARG NODE_LINUX_X64_SHA256=c0649af18e6a24f6fe5535a3e86b341dd49a8e71117c8b68bde973ef834f16f2
-ARG CODEX_CLI_VERSION=0.101.0
-ARG GEMINI_CLI_VERSION=0.17.1
+ENV NODE_VERSION=22.22.3
+ARG NODE_LINUX_X64_SHA256=2e5d13569282d016861fae7c8f935e741693c269101a5bebcf761a5376d1f99f
+ARG CODEX_CLI_VERSION=0.138.0
+ARG GEMINI_CLI_VERSION=0.45.2
+ARG CLAUDE_CODE_VERSION=2.1.170
 RUN curl -fsSL "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-linux-x64.tar.xz" -o /tmp/node.tar.xz \
     && echo "${NODE_LINUX_X64_SHA256}  /tmp/node.tar.xz" | sha256sum -c - \
     && tar -xJf /tmp/node.tar.xz -C /usr/local --strip-components=1 \
@@ -56,6 +57,7 @@ RUN npm install -g \
     prettier \
     @openai/codex@${CODEX_CLI_VERSION} \
     @google/gemini-cli@${GEMINI_CLI_VERSION} \
+    @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
     && npm cache clean --force
 
 # Codex セカンドエージェント用ラッパー（セッションID自動保持）
@@ -78,7 +80,9 @@ RUN groupadd --gid $USER_GID $USERNAME \
 USER $USERNAME
 RUN echo '# Codex CLI aliases' >> ~/.bashrc \
     && echo 'alias codex-auto="codex --dangerously-bypass-approvals-and-sandbox"' >> ~/.bashrc \
-    && echo 'alias codex-full="codex --full-auto"' >> ~/.bashrc
+    && echo 'alias codex-full="codex --full-auto"' >> ~/.bashrc \
+    && echo '# Claude Code alias' >> ~/.bashrc \
+    && echo 'alias claude-yolo="claude --dangerously-skip-permissions"' >> ~/.bashrc
 
 # 作業ディレクトリ設定
 WORKDIR /workspace

@@ -18,3 +18,4 @@ sync_dir() {
 mkdir -p "$HOME/.config"
 sync_dir "/mnt/host-auth/codex" "$HOME/.codex"
 sync_dir "/mnt/host-auth/gemini" "$HOME/.config/gemini"
+sync_dir "/mnt/host-auth/claude" "$HOME/.claude"

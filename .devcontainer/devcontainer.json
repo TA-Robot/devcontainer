@@ -51,7 +51,9 @@
     // Codex認証情報を read-only で取り込み、container local に同期する
     "source=${localEnv:HOME}/.codex,target=/mnt/host-auth/codex,type=bind,readonly",
     // Gemini CLI設定を read-only で取り込み、container local に同期する
-    "source=${localEnv:HOME}/.config/gemini,target=/mnt/host-auth/gemini,type=bind,readonly"
+    "source=${localEnv:HOME}/.config/gemini,target=/mnt/host-auth/gemini,type=bind,readonly",
+    // Claude Code認証情報を read-only で取り込み、container local に同期する
+    "source=${localEnv:HOME}/.claude,target=/mnt/host-auth/claude,type=bind,readonly"
   ],
   
   // 環境変数
@@ -60,7 +62,8 @@
     "WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
     // APIキー（ホストに設定されていれば引き継ぐ）
     "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
-    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}"
+    "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}"
   },
   
   // コンテナ作成/起動後に host auth snapshot を container local へ反映する
