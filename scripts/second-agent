@@ -11,7 +11,7 @@ case "$sa_backend" in
   codex)
     sa_env_prefix="CODEX_SA"
     sa_binary="codex"
-    sa_default_model="gpt-5.4"
+    sa_default_model="gpt-5.5"
     sa_state_dirname=".codex-second-agent"
     sa_worktrees_workspace_dirname=".codex-worktrees"
     sa_branch_prefix="agent/"

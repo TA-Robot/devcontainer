@@ -186,7 +186,7 @@ codex-second-agent workspace init <path-to-project-git>
 
 > **Claude Code バックエンド**: 同一インターフェースの `claude-second-agent` を同梱しています。
 > 以降の `codex-second-agent` の例は `claude-second-agent` に読み替えて使えます
-> （環境変数は `CODEX_SA_*` → `CLAUDE_SA_*`、固定モデルは `gpt-5.4` → `opus`、state は `.claude-second-agent`）。
+> （環境変数は `CODEX_SA_*` → `CLAUDE_SA_*`、固定モデルは `gpt-5.5` → `opus`、state は `.claude-second-agent`）。
 > workspace スコープ / worktree / ログ運用はバックエンド共通です。
 
 ### 基本

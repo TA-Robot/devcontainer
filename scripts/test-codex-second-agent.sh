@@ -318,13 +318,13 @@ EOF
 
   argv="$(tr '\n' ' ' <"$capture" | sed 's/  */ /g')"
   assert_eq "0" "$rc" "wrapper should still execute when model override flags are supplied"
-  assert_contains "$argv" "--model gpt-5.4" "forced model should be passed"
+  assert_contains "$argv" "--model gpt-5.5" "forced model should be passed"
   assert_not_contains "$argv" 'model="o3"' "model config override should be stripped"
   assert_not_contains "$argv" "model_provider=\"oss\"" "model provider override should be stripped"
   assert_not_contains "$argv" "--oss" "oss shortcut should be stripped"
   assert_contains "$argv" "--profile alt" "non-model profile settings should be preserved"
   assert_not_contains "$argv" "ollama" "local provider should be stripped"
-  printf 'ok - model selection overrides are stripped and gpt-5.4 is forced\n'
+  printf 'ok - model selection overrides are stripped and gpt-5.5 is forced\n'
 }
 
 test_filter_failure_returns_nonzero() {

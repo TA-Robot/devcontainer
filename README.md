@@ -81,7 +81,7 @@ claude-yolo "テストを書いて"
 | 権限バイパス | `--dangerously-bypass-approvals-and-sandbox --search` | `--dangerously-skip-permissions` |
 | 作業ディレクトリ | `--cd <path>` を渡す | flag が無いため wrapper が `cd` する |
 | セッション継続 | `codex exec resume <id>` | `claude -r <id>` |
-| 固定モデル | `gpt-5.4` | `opus`（`CLAUDE_SA_MODEL` で上書き可） |
+| 固定モデル | `gpt-5.5`（`CODEX_SA_MODEL` で上書き可） | `opus`（`CLAUDE_SA_MODEL` で上書き可） |
 | 環境変数プレフィックス | `CODEX_SA_*` | `CLAUDE_SA_*` |
 | state ディレクトリ | `.codex-second-agent` | `.claude-second-agent` |
 | worktree ブランチ | `agent/<name>` | `claude-agent/<name>` |
@@ -134,7 +134,7 @@ claude-yolo "テストを書いて"
 
 - セカンドエージェントは **常に権限バイパスを有効化**します（codex: `--dangerously-bypass-approvals-and-sandbox --search` / claude: `--dangerously-skip-permissions`）。運用方針として固定です
 - 権限バイパスは危険です。隔離環境ではなく、信頼済みホスト上の高権限運用として扱ってください
-- 使用モデルは固定です（codex: 常に `gpt-5.4` / claude: 既定 `opus`、`CLAUDE_SA_MODEL` で上書き可）
+- 使用モデルは固定です（codex: 既定 `gpt-5.5`、`CODEX_SA_MODEL` で上書き可 / claude: 既定 `opus`、`CLAUDE_SA_MODEL` で上書き可）
   - `--model` などのモデル選択系オプションは passthrough から除去されます
   - codex は `--config model=...` / `--oss` / `--local-provider` も無視します
   - claude は `--output-format` / `--input-format` / `--permission-mode` / `-p` / `-r` / `--session-id` など、wrapper が固定する実行フラグを passthrough から除去します
