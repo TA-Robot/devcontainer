@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Claude Code バックエンド用の薄いシム。実体は second-agent（共通エンジン）。
+# 環境変数は CLAUDE_SA_* を使う。
+set -euo pipefail
+here="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
+export SA_BACKEND=claude
+export SA_PROG=claude-second-agent
+exec "${here}/second-agent" "$@"
