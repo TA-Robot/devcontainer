@@ -5,7 +5,7 @@
 このリポジトリは、次の 2 つを提供する基盤です。
 
 - 高権限 devcontainer
-- `codex-second-agent` による sub-agent 実行ラッパー
+- セカンドエージェント実行ラッパー（共通エンジン `second-agent` + バックエンド別シム `codex-second-agent` / `claude-second-agent`）
 
 目的は **trusted local development を速くすること** であり、未検証コードを隔離する sandbox を提供することではありません。
 
@@ -16,19 +16,21 @@
 - devcontainer はホスト資格情報をマウントする
 - AI 認証情報は read-only mount し、container local へコピーして使う
 - devcontainer は `docker-in-docker` 前提の高権限設定で動く
-- `codex-second-agent` は常に `--dangerously-bypass-approvals-and-sandbox` を付ける
+- セカンドエージェントは常に権限バイパスを付ける（codex: `--dangerously-bypass-approvals-and-sandbox` / claude: `--dangerously-skip-permissions`）
 
 したがって、「安全」は **強い隔離** ではなく **信頼済み環境の中でスコープ事故を減らす** という意味に限定されます。
 
 ## Scope Model
 
-`codex-second-agent` の sub-agent (`--agent` が `default` 以外) は、configured workspace を基準に動かします。
+セカンドエージェント（`codex-second-agent` / `claude-second-agent`）の sub-agent (`--agent` が `default` 以外) は、configured workspace を基準に動かします。スコープ制御は共通エンジン `second-agent` に実装され、両バックエンドで共有されます。
 
 - `workspace init <path-to-project-git>` を必須にする
 - runtime state (session / logs / worktrees) は target workspace 側へ置く
 - `workspace init` の設定は control repo 側へ置く
 - sub-agent の `--cd` / `--add-dir` は workspace 内だけを許可する
 - workspace 内の相対パスは agent worktree 側へ写像する
+- backend ごとに state / worktree を分離する（codex: `.codex-second-agent` + `agent/<name>` ブランチ / claude: `.claude-second-agent` + `claude-agent/<name>` ブランチ）
+- claude には `--cd` が無いため、wrapper が effective_cd へ `cd` して実行ディレクトリを合わせる
 
 これは wrapper レベルの **運用境界** です。OS-level isolation ではありません。
 
@@ -60,6 +62,8 @@ target project 側では、sub-agent が読む運用情報を **workspace 内** 
 
 ## Preferred Operating Modes
 
+どちらの例も `codex-second-agent` を `claude-second-agent` に置き換えれば Claude バックエンドで同じように動きます（CLI 表面は共通）。
+
 ### 1. Recommended: target project git root as workspace
 
 ```bash
@@ -69,7 +73,7 @@ codex-second-agent --agent implementer "..."
 
 - 通常 `--cd` は不要
 - docs / tickets も workspace 内に置く
-- `.gitignore` には `.codex-second-agent/` と `.codex-worktrees/` を入れる
+- `.gitignore` には `.codex-second-agent/` `.codex-worktrees/` `.claude-second-agent/` `.claude-worktrees/` を入れる
 
 ### 2. Allowed: parent repo as workspace, subdir via `--cd`
 
@@ -77,6 +81,9 @@ codex-second-agent --agent implementer "..."
 codex-second-agent workspace init .
 codex-second-agent --agent implementer "..." -- --cd packages/api
 ```
+
+> claude バックエンドでも `-- --cd packages/api` は同じ意味で使えます。claude 自体に `--cd`
+> フラグは無いので、wrapper が指定サブディレクトリ（worktree 内へ写像済み）へ `cd` して実行します。
 
 - monorepo の一部だけを触らせたいときに使う
 - `--cd` / `--add-dir` は workspace 内のみ許可

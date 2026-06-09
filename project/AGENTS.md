@@ -9,9 +9,14 @@
 ## codex-second-agent とは？（簡単に）
 
 - `codex exec` を「セッションID自動保持」「agent別worktree」「ログ保存」付きで呼び出すラッパーです
-- この基盤リポジトリでは `scripts/codex-second-agent` が実体です
+- この基盤リポジトリでは共通エンジン `scripts/second-agent` のシム `scripts/codex-second-agent` が実体です
 - 実運用では通常 `codex-second-agent` を PATH から実行します
   - PATH に無い場合は、管理者が基盤リポジトリ側の実体パスを指定して起動してください
+
+> **Claude Code を使う場合**: 同じインターフェースの `claude-second-agent` があります。
+> 以降の例の `codex-second-agent` を `claude-second-agent` に読み替えれば動きます。
+> 環境変数は `CODEX_SA_*` の代わりに `CLAUDE_SA_*`、state は `.claude-second-agent` を使います。
+> どちらのバックエンドでも `workspace init` とスコープ制限（`--cd` / `--add-dir`）の扱いは同じです。
 
 ---
 

@@ -67,10 +67,24 @@ claude-yolo "テストを書いて"
 
 設計方針と推奨レイアウトは [docs/architecture.md](/home/asakura/devcontainer/docs/architecture.md) を参照してください。
 
-## Cursorエージェント向け: Codex セカンドエージェント用ツール
+## Cursorエージェント向け: セカンドエージェント用ツール（Codex / Claude）
 
-このリポジトリには、`codex exec` を使って **非対話で呼べる“セカンドエージェント”口**として `codex-second-agent` を同梱しています。
-セッションID(thread_id)は **ツール側が target workspace ごとの state ディレクトリに保存**するため、CursorエージェントがIDを覚えておく必要がありません。
+このリポジトリには、**非対話で呼べる“セカンドエージェント”口**を同梱しています。Codex 用の `codex-second-agent` と Claude Code 用の `claude-second-agent` があり、どちらも共通エンジン `second-agent`（`scripts/second-agent`）の薄いシムです。CLI 表面（サブコマンド/オプション）は共通なので、`codex-second-agent` を `claude-second-agent` に置き換えるだけでバックエンドを切り替えられます。
+
+セッションIDは **ツール側が target workspace ごとの state ディレクトリに保存**するため、CursorエージェントがIDを覚えておく必要がありません。
+
+### バックエンドの違い（要点）
+
+| 項目 | `codex-second-agent` | `claude-second-agent` |
+|------|----------------------|------------------------|
+| 内部実行 | `codex exec --json` | `claude -p --output-format stream-json --verbose` |
+| 権限バイパス | `--dangerously-bypass-approvals-and-sandbox --search` | `--dangerously-skip-permissions` |
+| 作業ディレクトリ | `--cd <path>` を渡す | flag が無いため wrapper が `cd` する |
+| セッション継続 | `codex exec resume <id>` | `claude -r <id>` |
+| 固定モデル | `gpt-5.4` | `opus`（`CLAUDE_SA_MODEL` で上書き可） |
+| 環境変数プレフィックス | `CODEX_SA_*` | `CLAUDE_SA_*` |
+| state ディレクトリ | `.codex-second-agent` | `.claude-second-agent` |
+| worktree ブランチ | `agent/<name>` | `claude-agent/<name>` |
 
 ### 使い方（Cursorエージェント向け）
 
@@ -78,21 +92,22 @@ claude-yolo "テストを書いて"
 
 ### 内部の挙動（実装の要点）
 
-- `codex-second-agent` は内部で `codex exec --json ...` を実行します
-- JSONLの `thread.started.thread_id` を抽出してセッションIDとして保存し、2回目以降は `codex exec resume <id> ...` で継続します
-- 実行状態の保存先はデフォルトで `<workspace>/.codex-second-agent/<workspace_hash>/agents/<agent>/session_id` です
+以下の `<be>` は backend 名（`codex` / `claude`）、`<PREFIX>` は環境変数プレフィックス（`CODEX_SA` / `CLAUDE_SA`）を表します。workspace スコープ・worktree・state/log 管理は共通エンジン `second-agent` が担います。
+
+- バックエンドの JSONL イベントからセッションIDを抽出して保存し、2回目以降は resume で継続します
+- 実行状態の保存先はデフォルトで `<workspace>/.<be>-second-agent/<workspace_hash>/agents/<agent>/session_id` です
   - 同じ target workspace を別の control repo から呼んでも、session / logs / worktrees を共有します
-  - `CODEX_SA_STATE_DIR` で保存先ルートを変更できます
-- `workspace init` の設定自体は control repo 側の `.codex-second-agent/control/<control_hash>/config/` に保存します
-- メインエージェント↔サブエージェントの会話ログは `<workspace>/.codex-second-agent/<workspace_hash>/agents/<agent>/logs/` に保存されます
-  - `events.jsonl`: `codex --json` の生イベント（JSONL）を追記
+  - `<PREFIX>_STATE_DIR` で保存先ルートを変更できます
+- `workspace init` の設定自体は control repo 側の `.<be>-second-agent/control/<control_hash>/config/` に保存します
+- メインエージェント↔サブエージェントの会話ログは `<workspace>/.<be>-second-agent/<workspace_hash>/agents/<agent>/logs/` に保存されます
+  - `events.jsonl`: バックエンドの生イベント（JSONL）を追記
   - `transcript.jsonl`: 1リクエスト=1行で `agent` / `cd` / `prompt` / `response` をまとめたログ（JSONL）
-  - `CODEX_SA_LOG_DIR` でログ保存先ディレクトリを変更できます
+  - `<PREFIX>_LOG_DIR` でログ保存先ディレクトリを変更できます
 - エージェント用の作業ディレクトリ（git worktree）は次のいずれかに作成します
-  - **デフォルト**: `<workspace>/.codex-second-agent/<workspace_hash>/worktrees/<agent>/`
-  - `CODEX_SA_WORKTREES_MODE=workspace` または `--worktrees-in-workspace` を使う場合: `<workspace>/.codex-worktrees/<agent>/`
-  - `CODEX_SA_WORKTREES_DIR` を指定した場合: 指定パス配下
-  - **非defaultエージェントは、未作成なら自動でworktreeを作成**してそこで実行します（`CODEX_SA_AUTO_WORKTREE=0` または `--no-auto-worktree` で無効化）
+  - **デフォルト**: `<workspace>/.<be>-second-agent/<workspace_hash>/worktrees/<agent>/`
+  - `<PREFIX>_WORKTREES_MODE=workspace` または `--worktrees-in-workspace` を使う場合: `<workspace>/.<be>-worktrees/<agent>/`
+  - `<PREFIX>_WORKTREES_DIR` を指定した場合: 指定パス配下
+  - **非defaultエージェントは、未作成なら自動でworktreeを作成**してそこで実行します（`<PREFIX>_AUTO_WORKTREE=0` または `--no-auto-worktree` で無効化）
   - **非defaultエージェントの path 系オプション（`--cd` / `--add-dir`）は configured workspace 内だけ**を許可し、必要なら対応する worktree パスへ写像します
 
 ### `workspace init` と `--cd` の使い分け
@@ -100,25 +115,29 @@ claude-yolo "テストを書いて"
 - `workspace init .` のように **親リポジトリを workspace** にした場合は、必要に応じて `-- --cd <workspace-relative-subdir>` を付けます
 - `workspace init <path-to-project-git>` のように **対象プロジェクトの Git ルート自体を workspace** にした場合は、通常 `--cd` は不要です
   - この場合の `effective_cd` は agent worktree のルートになります
+- `--cd` は両バックエンド共通で使えます（claude では wrapper が指定先へ `cd` し、claude 自体には渡しません）
 - sub-agent に共有コンテキストを渡したい場合も、`--add-dir` で workspace 外は渡せません
   - 共有したい runbook / ticket / decision log は対象 workspace 側へミラーするか、prompt に要点を転記してください
-- target project 側の `.gitignore` には `.codex-second-agent/` と `.codex-worktrees/` を入れてください
+- target project 側の `.gitignore` には `.codex-second-agent/` `.codex-worktrees/` `.claude-second-agent/` `.claude-worktrees/` を入れてください
 
 ### 運用に効くコマンド（抜粋）
 
-- `codex-second-agent paths`: state/log/worktree の実体パスと `effective_cd` を表示
-- `codex-second-agent status --verbose`: session_id と各種パスをまとめて表示
-- `codex-second-agent doctor`: 環境/パス/設定の簡易診断（トラブル切り分け）
-- `codex-second-agent worktree remove <agent> [--keep-branch]`: worktree削除（必要なら `agent/<agent>` ブランチも整理）
-- `codex-second-agent --post-git-status ...`（または `CODEX_SA_POST_GIT_STATUS=1`）: 実行後に未コミット変更を要約して検知
+`codex-second-agent` は `claude-second-agent` に読み替え可。
+
+- `<be>-second-agent paths`: state/log/worktree の実体パスと `effective_cd` を表示
+- `<be>-second-agent status --verbose`: session_id と各種パスをまとめて表示
+- `<be>-second-agent doctor`: backend / 環境 / パス / 設定の簡易診断（トラブル切り分け）
+- `<be>-second-agent worktree remove <agent> [--keep-branch]`: worktree削除（必要ならブランチも整理）
+- `<be>-second-agent --post-git-status ...`（または `<PREFIX>_POST_GIT_STATUS=1`）: 実行後に未コミット変更を要約して検知
 
 ### 運用上の注意
 
-- `codex-second-agent` は **常に `--dangerously-bypass-approvals-and-sandbox` と `--search` を有効化**します（運用方針として固定）
-- `--dangerously-bypass-approvals-and-sandbox` は危険です。隔離環境ではなく、信頼済みホスト上の高権限運用として扱ってください
-- 使用モデルは **常に `gpt-5.4`** です
-  - `--model` / `--config model=...` / `--config model_provider=...` / `--oss` / `--local-provider` などのモデル選択系オプションは無視されます
-- `--profile` は通りますが、wrapper が固定しているモデル / provider 方針は上書きできません
+- セカンドエージェントは **常に権限バイパスを有効化**します（codex: `--dangerously-bypass-approvals-and-sandbox --search` / claude: `--dangerously-skip-permissions`）。運用方針として固定です
+- 権限バイパスは危険です。隔離環境ではなく、信頼済みホスト上の高権限運用として扱ってください
+- 使用モデルは固定です（codex: 常に `gpt-5.4` / claude: 既定 `opus`、`CLAUDE_SA_MODEL` で上書き可）
+  - `--model` などのモデル選択系オプションは passthrough から除去されます
+  - codex は `--config model=...` / `--oss` / `--local-provider` も無視します
+  - claude は `--output-format` / `--input-format` / `--permission-mode` / `-p` / `-r` / `--session-id` など、wrapper が固定する実行フラグを passthrough から除去します
 - 保存済み workspace が移動・削除されて無効になった場合、実行は止まり、`paths` / `doctor` に `workspace_valid: no` が表示されます
 
 ## プリインストールツール

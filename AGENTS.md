@@ -6,7 +6,7 @@
 ## このリポジトリの責務
 
 - **開発コンテナ基盤**の提供（`.devcontainer/`）
-- `codex-second-agent`（`scripts/`）の提供と運用ドキュメント整備
+- セカンドエージェント・ラッパー（`scripts/second-agent` 共通エンジン + `codex-second-agent` / `claude-second-agent` シム）の提供と運用ドキュメント整備
 
 ## 対象ディレクトリ
 
@@ -25,13 +25,21 @@
 
 ## 最低限の確認コマンド
 
-`scripts/codex-second-agent` を触ったら:
+セカンドエージェント関連（`scripts/second-agent` / `*-second-agent` / `*-filter.py`）を触ったら:
 
 ```bash
+bash -n scripts/second-agent
 bash -n scripts/codex-second-agent
+bash -n scripts/claude-second-agent
 PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile scripts/codex-second-agent-filter.py
+PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile scripts/claude-second-agent-filter.py
 scripts/test-codex-second-agent.sh
+scripts/test-claude-second-agent.sh
 ```
+
+> `codex-second-agent` / `claude-second-agent` は `second-agent` を `SA_BACKEND` 付きで呼ぶ薄いシム。
+> ロジック本体（workspace スコープ / worktree / state・log 管理）は両者で共有しているので、
+> スコープ系の修正は `scripts/second-agent` 側に入れ、両方のテストで担保すること。
 
 `.devcontainer/` を触ったら:
 
@@ -49,7 +57,9 @@ docker build -f .devcontainer/Dockerfile -t devcontainer-smoke:latest .
 運用上のハマりどころ（例: `nohup` が空になり得る、reviewer は timeout 推奨 など）は、
 `AGENTS_TEMPLATE.md` と `project/AGENTS.md` 側に集約して更新していきます。
 
-## codex-second-agent はどこにある？
+## second-agent はどこにある？
 
-- 実体: `scripts/codex-second-agent`
+- 共通エンジン: `scripts/second-agent`（`SA_BACKEND=codex|claude` で挙動を切り替え）
+- シム: `scripts/codex-second-agent`（Codex）/ `scripts/claude-second-agent`（Claude Code）
+- イベントフィルタ: `scripts/codex-second-agent-filter.py` / `scripts/claude-second-agent-filter.py`
 - 使い方/運用: `README.md` / `docs/architecture.md` / `AGENTS_TEMPLATE.md` / `project/AGENTS.md`

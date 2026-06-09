@@ -12,7 +12,7 @@
 
 1. この基盤リポジトリの `project/docs/tickets/task-ticket.template.md` を、target workspace 内の `docs/agents/tickets/task-ticket.template.md` として配置し、`docs/agents/tickets/ready/` にコピーする
 2. このチケットを **最後まで埋める**（未確定は “未確定” と明示する）
-3. サブエージェント起動時に `cat ticket.md | codex-second-agent ... -` で渡す
+3. サブエージェント起動時に `cat ticket.md | codex-second-agent ... -` で渡す（Claude を使う場合は `claude-second-agent` に読み替え）
 4. 起動したら `running/` に移動し、完了したら `done/` に移動して履歴として残す（原則削除しない）
 
 ---

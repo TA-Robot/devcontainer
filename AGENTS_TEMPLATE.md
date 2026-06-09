@@ -180,9 +180,14 @@ codex-second-agent workspace init <path-to-project-git>
 ### codex-second-agent とは？どこにある？
 
 - **何か**: `codex exec` を「セッション ID 自動保持」「agent 別 worktree」「ログ保存」付きで呼び出すラッパー
-- **この基盤リポジトリでの実装**: `scripts/codex-second-agent`
+- **この基盤リポジトリでの実装**: 共通エンジン `scripts/second-agent` + シム `scripts/codex-second-agent`
 - **コンテナ内の PATH**: 通常は `codex-second-agent` をそのまま実行します
   - PATH に無い場合は、この基盤リポジトリ側に置いた実体パスを **管理者が明示して** 呼び出してください
+
+> **Claude Code バックエンド**: 同一インターフェースの `claude-second-agent` を同梱しています。
+> 以降の `codex-second-agent` の例は `claude-second-agent` に読み替えて使えます
+> （環境変数は `CODEX_SA_*` → `CLAUDE_SA_*`、固定モデルは `gpt-5.4` → `opus`、state は `.claude-second-agent`）。
+> workspace スコープ / worktree / ログ運用はバックエンド共通です。
 
 ### 基本
 
