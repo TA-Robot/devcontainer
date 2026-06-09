@@ -1,4 +1,6 @@
 .codex-worktrees/
 .codex-second-agent/
+.claude-worktrees/
+.claude-second-agent/
 scripts/__pycache__/
 

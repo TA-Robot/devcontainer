@@ -60,11 +60,14 @@ RUN npm install -g \
     @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
     && npm cache clean --force
 
-# Codex セカンドエージェント用ラッパー（セッションID自動保持）
+# セカンドエージェント用ラッパー（共通エンジン + codex/claude シム、セッションID自動保持）
+COPY scripts/second-agent /usr/local/bin/second-agent
 COPY scripts/codex-second-agent /usr/local/bin/codex-second-agent
-COPY scripts/codex-second-agent-filter.py /usr/local/lib/codex-second-agent/filter.py
+COPY scripts/claude-second-agent /usr/local/bin/claude-second-agent
+COPY scripts/codex-second-agent-filter.py /usr/local/lib/second-agent/codex-second-agent-filter.py
+COPY scripts/claude-second-agent-filter.py /usr/local/lib/second-agent/claude-second-agent-filter.py
 COPY scripts/devcontainer-sync-host-auth /usr/local/bin/devcontainer-sync-host-auth
-RUN chmod +x /usr/local/bin/codex-second-agent /usr/local/bin/devcontainer-sync-host-auth
+RUN chmod +x /usr/local/bin/second-agent /usr/local/bin/codex-second-agent /usr/local/bin/claude-second-agent /usr/local/bin/devcontainer-sync-host-auth
 
 # 開発ユーザー作成
 ARG USERNAME=devuser
