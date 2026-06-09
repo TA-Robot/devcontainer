@@ -1,12 +1,12 @@
 # Cursor Dev Container
 
-Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツール（Codex CLI、Gemini CLI）を統合し、**信頼済みのローカル開発環境**で素早く作業するための基盤を提供します。
+Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツール（Codex CLI、Gemini CLI、Claude Code）を統合し、**信頼済みのローカル開発環境**で素早く作業するための基盤を提供します。
 
 ## 特徴
 
 - **Ubuntu 22.04** ベース
 - **Node.js 22.x** プリインストール
-- **AI ツール統合**: Codex CLI、Gemini CLI がすぐに使える
+- **AI ツール統合**: Codex CLI、Gemini CLI、Claude Code がすぐに使える
 - **Docker-in-Docker**: コンテナ内でDockerを利用可能
 - **ホスト設定の引き継ぎ**: SSH鍵、Git設定、認証情報を自動マウント
 
@@ -17,7 +17,7 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 ホスト側に以下のディレクトリを作成しておく（存在しない場合）:
 
 ```bash
-mkdir -p ~/.codex ~/.config/gemini
+mkdir -p ~/.codex ~/.config/gemini ~/.claude
 ```
 
 ### 2. コンテナを起動
@@ -38,6 +38,12 @@ codex-full "リファクタリングして"
 
 # Gemini CLI
 gemini
+
+# Claude Code（通常モード）
+claude
+
+# Claude Code（権限確認スキップモード）
+claude-yolo "テストを書いて"
 ```
 
 ## Trust Model
@@ -122,7 +128,7 @@ AI CLI のバージョンは Dockerfile で固定しています（再ビルド�
 | カテゴリ | ツール |
 |----------|--------|
 | **ランタイム** | Node.js 22.x, Python 3 |
-| **AI CLI** | @openai/codex, @google/gemini-cli |
+| **AI CLI** | @openai/codex, @google/gemini-cli, @anthropic-ai/claude-code |
 | **開発ツール** | TypeScript, ESLint, Prettier |
 | **ユーティリティ** | Git, GitHub CLI, ripgrep, jq, vim |
 | **シェル** | Bash, Zsh |
@@ -135,8 +141,9 @@ AI CLI のバージョンは Dockerfile で固定しています（再ビルド�
 | `~/.gitconfig` | `/home/devuser/.gitconfig` | Git設定 |
 | `~/.codex` | `/mnt/host-auth/codex` | Codex認証情報の read-only snapshot |
 | `~/.config/gemini` | `/mnt/host-auth/gemini` | Gemini設定の read-only snapshot |
+| `~/.claude` | `/mnt/host-auth/claude` | Claude Code認証情報の read-only snapshot |
 
-起動時に `devcontainer-sync-host-auth` がこれらを container local の `~/.codex` / `~/.config/gemini` へ同期します。  
+起動時に `devcontainer-sync-host-auth` がこれらを container local の `~/.codex` / `~/.config/gemini` / `~/.claude` へ同期します。  
 container 側の更新はホストへは書き戻されません。
 
 ## 環境変数
@@ -145,6 +152,7 @@ container 側の更新はホストへは書き戻されません。
 
 - `OPENAI_API_KEY`
 - `GEMINI_API_KEY`
+- `ANTHROPIC_API_KEY`
 
 ## エイリアス
 
@@ -152,6 +160,7 @@ container 側の更新はホストへは書き戻されません。
 |------------|------|
 | `codex-auto` | `codex --dangerously-bypass-approvals-and-sandbox` |
 | `codex-full` | `codex --full-auto` |
+| `claude-yolo` | `claude --dangerously-skip-permissions` |
 
 ## カスタマイズ
 
@@ -189,7 +198,7 @@ RUN npm install -g \
 ホスト側にディレクトリが存在しない可能性があります:
 
 ```bash
-mkdir -p ~/.codex ~/.config/gemini
+mkdir -p ~/.codex ~/.config/gemini ~/.claude
 ```
 
 ### 認証が効かない
@@ -198,12 +207,13 @@ mkdir -p ~/.codex ~/.config/gemini
    ```bash
    codex  # 初回は認証フローが走る
    gemini # 初回は認証フローが走る
+   claude # 初回は認証フローが走る
    ```
 2. コンテナ起動時に host auth snapshot が container local へ同期される
 3. コンテナを再起動
 
 補足:
-- 認証を永続化したい場合は **ホスト側で** ログインしてください。container 側の `~/.codex` / `~/.config/gemini` は local copy です。
+- 認証を永続化したい場合は **ホスト側で** ログインしてください。container 側の `~/.codex` / `~/.config/gemini` / `~/.claude` は local copy です。
 
 ### 権限エラー
 
