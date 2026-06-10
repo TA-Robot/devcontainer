@@ -239,7 +239,7 @@ EOF
 
   stderr_text="$(tr '\n' ' ' <"$err" | sed 's/  */ /g')"
   assert_eq "2" "$rc" "sub-agent should reject external --cd"
-  assert_contains "$stderr_text" "--cd must stay within configured workspace" "external --cd should be rejected explicitly"
+  assert_contains "$stderr_text" "--cd must stay within workspace" "external --cd should be rejected explicitly"
 
   if (cd "$repo" && PATH="$stub_dir:$PATH" "$sa" --agent reviewer - -- --add-dir "$other" <<'EOF' >"$out" 2>"$err"
 hello
@@ -252,7 +252,7 @@ EOF
 
   stderr_text="$(tr '\n' ' ' <"$err" | sed 's/  */ /g')"
   assert_eq "2" "$rc" "sub-agent should reject external --add-dir"
-  assert_contains "$stderr_text" "--add-dir must stay within configured workspace" "external --add-dir should be rejected explicitly"
+  assert_contains "$stderr_text" "--add-dir must stay within workspace" "external --add-dir should be rejected explicitly"
   printf 'ok - sub-agent rejects external filesystem paths\n'
 }
 
@@ -532,12 +532,45 @@ test_invalid_worktree_name_is_rejected() {
   printf 'ok - invalid worktree name is rejected\n'
 }
 
+test_default_agent_paths_are_scoped() {
+  local repo other stub_dir out err rc stderr_text
+  repo="$(new_repo)"
+  other="$(new_repo)"
+  stub_dir="$(new_temp_dir)"
+  out="$(new_temp_file)"
+  err="$(new_temp_file)"
+
+  cat >"$stub_dir/codex" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' '{"type":"thread.started","thread_id":"tid-123"}'
+EOF
+  chmod +x "$stub_dir/codex"
+
+  # default agent: workspace 外の --add-dir は既定で拒否
+  if (cd "$repo" && PATH="$stub_dir:$PATH" "$sa" - -- --add-dir "$other" <<'EOF' >"$out" 2>"$err"
+hello
+EOF
+  ); then rc=0; else rc=$?; fi
+  stderr_text="$(tr '\n' ' ' <"$err" | sed 's/  */ /g')"
+  assert_eq "2" "$rc" "default agent should reject paths outside its repo"
+  assert_contains "$stderr_text" "must stay within workspace" "default scope rejection should be explicit"
+
+  # --allow-outside-workspace を付ければ許可される
+  if (cd "$repo" && PATH="$stub_dir:$PATH" "$sa" --allow-outside-workspace - -- --add-dir "$other" <<'EOF' >"$out" 2>"$err"
+hello
+EOF
+  ); then rc=0; else rc=$?; fi
+  assert_eq "0" "$rc" "default agent should allow outside paths with --allow-outside-workspace"
+  printf 'ok - default agent paths are scoped unless explicitly allowed\n'
+}
+
 main() {
   test_management_commands_are_side_effect_free
   test_parent_workspace_cd_maps_into_agent_worktree
   test_effective_cd_is_not_doubled
   test_invalid_agent_name_is_rejected
   test_invalid_worktree_name_is_rejected
+  test_default_agent_paths_are_scoped
   test_project_workspace_without_cd_uses_worktree_root
   test_stale_workspace_is_rejected
   test_subagent_worktree_create_requires_workspace_init

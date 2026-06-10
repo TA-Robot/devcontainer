@@ -88,6 +88,7 @@ NOTE: workspace/agents/status/paths/doctor/reset/worktree は予約済みサブ�
   --agent NAME         エージェント名（セッション/ログ/作業ディレクトリを分離）
   --auto-worktree      エージェント用worktreeを自動作成してそこで実行する
   --no-auto-worktree   自動worktree作成を無効化する
+  --allow-outside-workspace  default エージェントが workspace 外の --cd/--add-dir を使うのを許可する
   --raw-json          ${sa_binary}のJSONLイベントをそのまま出力（デバッグ用）
   --post-git-status   実行後に \`git status --porcelain\` を要約表示する（未コミット滞留の検知）
   --worktrees-in-workspace worktreeをworkspace配下（${sa_worktrees_workspace_dirname}）に作成する
@@ -135,6 +136,8 @@ worktrees_mode="$(sa_get_env WORKTREES_MODE)"
 post_git_status="$(sa_get_env POST_GIT_STATUS)"
 post_git_status="${post_git_status:-0}"
 workspace_override="$(sa_get_env TARGET_WORKSPACE)"
+# default エージェントの --cd/--add-dir を workspace 外へ出すことを許すか（既定は不可）。
+allow_outside="$(sa_get_env ALLOW_OUTSIDE)"
 prompt_parts=()
 # codex_args: `--` 以降のバックエンド passthrough 引数（codex/claude 共通で使う作業用配列）。
 codex_args=()
@@ -168,6 +171,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --no-auto-worktree)
       auto_worktree="0"
+      shift
+      ;;
+    --allow-outside-workspace)
+      allow_outside="1"
       shift
       ;;
     --raw-json)
@@ -622,10 +629,16 @@ map_workspace_path_or_fail() {
   local normalized
   normalized="$(normalize_path_arg "$value")"
 
-  if [[ "$agent_name" != "default" ]]; then
+  # sub-agent は常に workspace 内へ制限。default も既定で制限し、
+  # --allow-outside-workspace / <PREFIX>_ALLOW_OUTSIDE=1 のときだけ外を許す。
+  if [[ "$agent_name" != "default" || "$allow_outside" != "1" ]]; then
     if ! path_is_within_base "$normalized" "$workspace_root"; then
-      echo "error: ${flag_name} must stay within configured workspace for sub-agent '${agent_name}': $value" >&2
-      echo "hint: mirror shared context into the workspace, or inline it in the prompt/ticket." >&2
+      echo "error: ${flag_name} must stay within workspace '${workspace_root}': $value" >&2
+      if [[ "$agent_name" == "default" ]]; then
+        echo "hint: pass --allow-outside-workspace (or ${sa_env_prefix}_ALLOW_OUTSIDE=1) to permit paths outside the current repo." >&2
+      else
+        echo "hint: mirror shared context into the workspace, or inline it in the prompt/ticket." >&2
+      fi
       exit 2
     fi
   fi
@@ -1027,14 +1040,15 @@ run_backend() {
   fi
   case "$sa_backend" in
     codex)
+      # NOTE:
+      # - `--search` はトップレベルオプションなので `codex --search exec ...` の形で付与
+      # - `--dangerously-bypass-approvals-and-sandbox` は常に有効化（ユーザー要求）
+      # - `--json` は `codex exec` のオプションなので `exec` の後に置く
+      # - プロンプトは末尾 `-` で stdin から渡す（`ps` にプロンプトが露出しないように）
       if [[ -n "$session_id" ]]; then
-        # NOTE:
-        # - `--search` はトップレベルオプションなので `codex --search exec ...` の形で付与
-        # - `--dangerously-bypass-approvals-and-sandbox` は常に有効化（ユーザー要求）
-        # - `--json` は `codex exec` のオプションなので `exec` の後に置く
-        "${tmo[@]}" codex --dangerously-bypass-approvals-and-sandbox --search --model "$forced_model" exec "${codex_args[@]}" --json resume "$session_id" "$prompt"
+        printf '%s' "$prompt" | "${tmo[@]}" codex --dangerously-bypass-approvals-and-sandbox --search --model "$forced_model" exec "${codex_args[@]}" --json resume "$session_id" -
       else
-        "${tmo[@]}" codex --dangerously-bypass-approvals-and-sandbox --search --model "$forced_model" exec "${codex_args[@]}" --json "$prompt"
+        printf '%s' "$prompt" | "${tmo[@]}" codex --dangerously-bypass-approvals-and-sandbox --search --model "$forced_model" exec "${codex_args[@]}" --json -
       fi
       ;;
     claude)

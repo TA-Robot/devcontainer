@@ -190,7 +190,7 @@ EOF
   ); then rc=0; else rc=$?; fi
   stderr_text="$(tr '\n' ' ' <"$err" | sed 's/  */ /g')"
   assert_eq "2" "$rc" "sub-agent should reject external --cd"
-  assert_contains "$stderr_text" "--cd must stay within configured workspace" "external --cd should be rejected"
+  assert_contains "$stderr_text" "--cd must stay within workspace" "external --cd should be rejected"
 
   if (cd "$repo" && PATH="$stub_dir:$PATH" "$sa" --agent reviewer - -- --add-dir "$other" <<'EOF' >"$out" 2>"$err"
 hello
@@ -198,7 +198,7 @@ EOF
   ); then rc=0; else rc=$?; fi
   stderr_text="$(tr '\n' ' ' <"$err" | sed 's/  */ /g')"
   assert_eq "2" "$rc" "sub-agent should reject external --add-dir"
-  assert_contains "$stderr_text" "--add-dir must stay within configured workspace" "external --add-dir should be rejected"
+  assert_contains "$stderr_text" "--add-dir must stay within workspace" "external --add-dir should be rejected"
   printf 'ok - sub-agent rejects external filesystem paths\n'
 }
 
