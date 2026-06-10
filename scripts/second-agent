@@ -1,6 +1,18 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# bash 4.4 未満では `set -u` 下の空配列展開（"${arr[@]}"）が落ちるため早期に弾く。
+if (( BASH_VERSINFO[0] < 4 || (BASH_VERSINFO[0] == 4 && BASH_VERSINFO[1] < 4) )); then
+  echo "error: second-agent requires bash >= 4.4 (found ${BASH_VERSION})" >&2
+  exit 1
+fi
+
+# state/log/transcript/一時ファイルを所有者のみ読めるようにする（prompt/response は機微になり得る）。
+umask 077
+
+# state レイアウトのスキーマ版。レイアウトを変えたら上げる。
+sa_state_version=1
+
 # second-agent: Codex / Claude のどちらかを「セッションID自動保持付き」で呼び出す共通エンジン。
 # バックエンドは SA_BACKEND（codex|claude）で選ぶ。実体は codex-second-agent /
 # claude-second-agent という薄いシム経由で呼ぶことを想定している。
@@ -38,6 +50,17 @@ sa_get_env() {
   printf '%s' "${!name-}"
 }
 
+# agent 名 / worktree 名はファイルパスと git ブランチ名に直挿入されるため、
+# パストラバーサルや不正ブランチ名を防ぐために厳しく検証する。
+validate_name() {
+  local kind="$1" name="$2"
+  if [[ -z "$name" || "$name" == .* || "$name" == *"/"* || "$name" == *$'\n'* || ! "$name" =~ ^[A-Za-z0-9._-]+$ ]]; then
+    echo "error: invalid ${kind} name: '${name}'" >&2
+    echo "hint: allowed chars [A-Za-z0-9._-], no leading dot, no slash." >&2
+    exit 2
+  fi
+}
+
 usage() {
   cat <<USAGE
 ${prog}: ${sa_binary} CLI を「セッションID自動保持付き」で呼び出すラッパー
@@ -56,6 +79,10 @@ ${prog}: ${sa_binary} CLI を「セッションID自動保持付き」で呼び�
   ${prog} worktree create NAME  # エージェント用worktree作成
   ${prog} worktree list         # worktree一覧（エージェント名/パス）
   ${prog} worktree remove NAME  # エージェント用worktreeを削除（必要ならブランチも）
+  ${prog} worktree prune        # 実体が消えたworktree登録を掃除（git worktree prune）
+
+NOTE: workspace/agents/status/paths/doctor/reset/worktree は予約済みサブコマンドです。
+      これらの語で始まるプロンプトを渡したいときは \`-\`（stdin）経由で渡してください。
 
 オプション:
   --agent NAME         エージェント名（セッション/ログ/作業ディレクトリを分離）
@@ -76,6 +103,7 @@ ${prog}: ${sa_binary} CLI を「セッションID自動保持付き」で呼び�
   ${sa_env_prefix}_LOG_DIR    ログ保存先（デフォルト: <state>/agents/<agent>/logs）
   ${sa_env_prefix}_WORKTREES_MODE worktreeの配置モード（workspace|state）。未指定は state
   ${sa_env_prefix}_POST_GIT_STATUS 実行後にgit status要約を出す（0|1、既定0）
+  ${sa_env_prefix}_TIMEOUT    実行タイムアウト（GNU timeout形式、例: 120s/5m）。未指定は無制限
   ${sa_env_prefix}_TARGET_WORKSPACE 保存済みworkspaceを上書きする（デバッグ用、通常は workspace init を使う）
 
 補足:
@@ -108,12 +136,13 @@ post_git_status="$(sa_get_env POST_GIT_STATUS)"
 post_git_status="${post_git_status:-0}"
 workspace_override="$(sa_get_env TARGET_WORKSPACE)"
 prompt_parts=()
+# codex_args: `--` 以降のバックエンド passthrough 引数（codex/claude 共通で使う作業用配列）。
 codex_args=()
 invocation_pwd="$(pwd -P)"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
-    -h|--help|help)
+    -h|--help)
       usage
       exit 0
       ;;
@@ -185,12 +214,17 @@ primary_cmd="${prompt_parts[0]:-}"
 sub_cmd="${prompt_parts[1]:-}"
 sub_arg="${prompt_parts[2]:-}"
 
+# agent 名は全コマンドでパス/ブランチに使うため、ここで一度だけ検証する。
+validate_name agent "$agent_name"
+
 # 実行状態（session/log/worktree）の保存先ルート。
 # 未指定なら target workspace 配下に置き、同じ workspace を別の control repo から叩いても共有する。
 state_root_override="$(sa_get_env STATE_DIR)"
 # 常に使うモデル（運用方針として固定 / <PREFIX>_MODEL で上書き可）
 forced_model="$(sa_get_env MODEL)"
 forced_model="${forced_model:-$sa_default_model}"
+# 実行タイムアウト（GNU timeout 形式、例: 120s / 5m）。未指定なら無制限。
+sa_timeout="$(sa_get_env TIMEOUT)"
 
 is_model_related_config_key() {
   local raw_key="${1:-}"
@@ -275,8 +309,19 @@ sanitize_claude_args() {
   while [[ $i -lt ${#in[@]} ]]; do
     local a="${in[$i]}"
     case "$a" in
-      -m|--model|--permission-mode|--output-format|--input-format|-r|--resume|--session-id)
+      -m|--model|--permission-mode|--output-format|--input-format|--session-id)
+        # 値を必ず取るフラグ: フラグ＋値の2つを除去
         i=$((i+2))
+        continue
+        ;;
+      -r|--resume)
+        # 値が任意のフラグ: 次トークンがオプションでない場合のみ値として一緒に除去
+        local nxt="${in[$((i+1))]:-}"
+        if [[ -n "$nxt" && "$nxt" != -* ]]; then
+          i=$((i+2))
+        else
+          i=$((i+1))
+        fi
         continue
         ;;
       --model=*|--permission-mode=*|--output-format=*|--input-format=*|--resume=*|--session-id=*)
@@ -307,6 +352,9 @@ esac
 
 # 「設定保存（workspace init）」を行う親側のコンテキスト（どこから起動しても一意になるように）
 control_root="$(git rev-parse --show-toplevel 2>/dev/null || pwd)"
+if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  echo "warning: not inside a git repository; using '${control_root}' as control root (state may scatter across directories)." >&2
+fi
 if [[ -n "$state_root_override" ]]; then
   control_state_root="$state_root_override"
 else
@@ -339,13 +387,30 @@ if [[ "$primary_cmd" == "workspace" ]]; then
       fi
       mkdir -p "$control_config_dir"
       printf '%s\n' "$resolved" >"$target_workspace_file"
+      # 対象 repo の作業ツリーに state/worktree が誤コミットされないよう .gitignore を補う。
+      gi="${resolved}/.gitignore"
+      added=0
+      for pat in .codex-second-agent/ .codex-worktrees/ .claude-second-agent/ .claude-worktrees/; do
+        if [[ ! -f "$gi" ]] || ! grep -qxF "$pat" "$gi" 2>/dev/null; then
+          printf '%s\n' "$pat" >>"$gi"
+          added=$((added+1))
+        fi
+      done
+      if [[ $added -gt 0 ]]; then
+        echo "note: added ${added} second-agent ignore pattern(s) to ${gi}" >&2
+      fi
       echo "$resolved"
       exit 0
       ;;
     show)
       if [[ -f "$target_workspace_file" ]]; then
-        cat "$target_workspace_file"
-        exit 0
+        show_content="$(cat "$target_workspace_file")"
+        if [[ "$show_content" == /* && "$show_content" != *$'\n'* ]]; then
+          printf '%s\n' "$show_content"
+          exit 0
+        fi
+        echo "error: stored workspace is malformed (expected a single absolute path): $target_workspace_file" >&2
+        exit 1
       fi
       echo "(not configured)" >&2
       exit 1
@@ -570,7 +635,7 @@ map_workspace_path_or_fail() {
       printf '%s' "$agent_worktree"
       return 0
     fi
-    printf '%s' "${agent_worktree}${normalized#$workspace_root}"
+    printf '%s' "${agent_worktree}${normalized#"$workspace_root"}"
     return 0
   fi
 
@@ -638,6 +703,8 @@ rewrite_workspace_path_args_to_effective_workspace() {
 }
 
 extract_effective_cd() {
+  # codex_args は rewrite_workspace_path_args_to_effective_workspace で既に
+  # worktree パスへ写像済みなので、ここでは --cd の値をそのまま読む（二重写像しない）。
   local i=0
   while [[ $i -lt ${#codex_args[@]} ]]; do
     local a="${codex_args[$i]}"
@@ -645,14 +712,14 @@ extract_effective_cd() {
       -C|--cd)
         local v="${codex_args[$((i+1))]:-}"
         if [[ -n "$v" ]]; then
-          printf '%s' "$(map_cd_to_effective_workspace "$v")"
+          printf '%s' "$v"
           return 0
         fi
         ;;
       --cd=*)
         local v="${a#--cd=}"
         if [[ -n "$v" ]]; then
-          printf '%s' "$(map_cd_to_effective_workspace "$v")"
+          printf '%s' "$v"
           return 0
         fi
         ;;
@@ -712,6 +779,7 @@ if [[ "$primary_cmd" == "worktree" ]]; then
         echo "error: worktree create requires NAME" >&2
         exit 2
       fi
+      validate_name worktree "$name"
       if ! workspace_is_git_repo; then
         echo "error: not a git repository: $workspace_root" >&2
         exit 2
@@ -744,6 +812,7 @@ if [[ "$primary_cmd" == "worktree" ]]; then
         echo "error: worktree remove requires NAME" >&2
         exit 2
       fi
+      validate_name worktree "$name"
       keep_branch=0
       # 追加オプション（厳密なパーサは要らないので最小限）
       for extra in "${prompt_parts[@]:3}"; do
@@ -790,8 +859,18 @@ if [[ "$primary_cmd" == "worktree" ]]; then
       echo "$name	$wt"
       exit 0
       ;;
+    prune)
+      # 実体ディレクトリが消えた worktree 登録を git 側で掃除する。
+      if ! workspace_is_git_repo; then
+        echo "error: not a git repository: $workspace_root" >&2
+        exit 2
+      fi
+      git -C "$workspace_root" worktree prune
+      echo "pruned stale worktree registrations for: $workspace_root" >&2
+      exit 0
+      ;;
     *)
-      echo "error: worktree subcommand must be create|list|remove" >&2
+      echo "error: worktree subcommand must be create|list|remove|prune" >&2
       exit 2
       ;;
   esac
@@ -941,6 +1020,11 @@ strip_cd_args() {
 }
 
 run_backend() {
+  # 任意: <PREFIX>_TIMEOUT が指定され GNU timeout が使えるなら、実行をタイムアウトで包む。
+  local -a tmo=()
+  if [[ -n "$sa_timeout" ]] && command -v timeout >/dev/null 2>&1; then
+    tmo=(timeout "$sa_timeout")
+  fi
   case "$sa_backend" in
     codex)
       if [[ -n "$session_id" ]]; then
@@ -948,9 +1032,9 @@ run_backend() {
         # - `--search` はトップレベルオプションなので `codex --search exec ...` の形で付与
         # - `--dangerously-bypass-approvals-and-sandbox` は常に有効化（ユーザー要求）
         # - `--json` は `codex exec` のオプションなので `exec` の後に置く
-        codex --dangerously-bypass-approvals-and-sandbox --search --model "$forced_model" exec "${codex_args[@]}" --json resume "$session_id" "$prompt"
+        "${tmo[@]}" codex --dangerously-bypass-approvals-and-sandbox --search --model "$forced_model" exec "${codex_args[@]}" --json resume "$session_id" "$prompt"
       else
-        codex --dangerously-bypass-approvals-and-sandbox --search --model "$forced_model" exec "${codex_args[@]}" --json "$prompt"
+        "${tmo[@]}" codex --dangerously-bypass-approvals-and-sandbox --search --model "$forced_model" exec "${codex_args[@]}" --json "$prompt"
       fi
       ;;
     claude)
@@ -961,12 +1045,27 @@ run_backend() {
       # - プロンプトは stdin で渡す（`--add-dir` 等の可変長オプションに食われないように）
       # - セッション継続は `-r <session-id>`、初回は session_id を付けずイベントから取得する
       if [[ -n "$session_id" ]]; then
-        printf '%s' "$prompt" | ( cd "$effective_cd" && claude -p --output-format stream-json --verbose --dangerously-skip-permissions --model "$forced_model" -r "$session_id" "${codex_args[@]}" )
+        printf '%s' "$prompt" | ( cd "$effective_cd" && "${tmo[@]}" claude -p --output-format stream-json --verbose --dangerously-skip-permissions --model "$forced_model" -r "$session_id" "${codex_args[@]}" )
       else
-        printf '%s' "$prompt" | ( cd "$effective_cd" && claude -p --output-format stream-json --verbose --dangerously-skip-permissions --model "$forced_model" "${codex_args[@]}" )
+        printf '%s' "$prompt" | ( cd "$effective_cd" && "${tmo[@]}" claude -p --output-format stream-json --verbose --dangerously-skip-permissions --model "$forced_model" "${codex_args[@]}" )
       fi
       ;;
   esac
+}
+
+# state ディレクトリのスキーマ版を確認・記録する（互換性の早期検知）。
+ensure_state_version() {
+  local vf="${state_dir}/VERSION"
+  if [[ -f "$vf" ]]; then
+    local v
+    v="$(cat "$vf" 2>/dev/null || true)"
+    if [[ -n "$v" && "$v" != "$sa_state_version" ]]; then
+      echo "warning: state schema version '${v}' != expected '${sa_state_version}' at ${state_dir}" >&2
+    fi
+  else
+    mkdir -p "$state_dir" 2>/dev/null || true
+    printf '%s\n' "$sa_state_version" >"$vf" 2>/dev/null || true
+  fi
 }
 
 print_post_git_status_summary() {
@@ -1015,6 +1114,17 @@ for a in "${codex_args[@]}"; do
   esac
 done
 
+# 同一 agent の同時実行で session_id / worktree が競合しないよう直列化する（flock があれば）。
+# ロックは agent 単位。state ルートが書けない異常時はベストエフォートで素通しする。
+# NOTE: `exec 9>file 2>/dev/null` はスクリプトの stderr を恒久的に潰すため、
+#       先に append でロックファイルを開けるか確認してから（その確認に 2> を限定）exec する。
+mkdir -p "$workspace_state_dir" 2>/dev/null || true
+lock_file="${workspace_state_dir}/.lock-${agent_name}"
+if command -v flock >/dev/null 2>&1 && : >>"$lock_file" 2>/dev/null; then
+  exec 9>"$lock_file"
+  flock 9 2>/dev/null || true
+fi
+
 if will_use_agent_worktree; then
   ensure_worktree
 fi
@@ -1032,12 +1142,23 @@ if [[ "$sa_backend" == "claude" ]]; then
 fi
 
 ensure_agent_dirs
+ensure_state_version
 
 # - events.jsonl: バックエンドのJSONLイベントをそのまま追記
 # - transcript.jsonl: 1リクエスト=1行で、prompt/responseをまとめて追記
 set +e
 run_backend | tee -a "$events_log" | python3 "$filter_py" "$session_file" "$raw_json" "$prompt_tmp" "$transcript_log" "$agent_name" "$effective_cd"
-rc=$?
+pipe_status=("${PIPESTATUS[@]}")
 set -e
+# backend（先頭）と filter（末尾）の失敗を明示的に拾う。pipefail 依存にしない。
+backend_rc="${pipe_status[0]:-0}"
+filter_rc="${pipe_status[2]:-0}"
+rc=0
+if [[ "$backend_rc" != 0 ]]; then
+  rc="$backend_rc"
+fi
+if [[ "$filter_rc" != 0 ]]; then
+  rc="$filter_rc"
+fi
 print_post_git_status_summary || true
-exit $rc
+exit "$rc"

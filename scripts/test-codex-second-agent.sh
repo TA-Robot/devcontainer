@@ -487,9 +487,57 @@ EOF
   printf 'ok - target workspace runtime state is shared across control repos\n'
 }
 
+test_effective_cd_is_not_doubled() {
+  local repo out err effective
+  repo="$(new_repo init project/file.txt)"
+  out="$(new_temp_file)"
+  err="$(new_temp_file)"
+
+  (
+    cd "$repo"
+    "$sa" workspace init . >/dev/null
+    "$sa" --agent reviewer paths -- --cd project >"$out" 2>"$err"
+  )
+
+  effective="$(grep '^effective_cd:' "$out" | sed 's/^effective_cd: //')"
+  assert_contains "$effective" "/worktrees/reviewer/project" "effective_cd should point inside the worktree"
+  assert_not_contains "$effective" "reviewer/.codex-second-agent" "effective_cd must not be doubled (re-mapped twice)"
+  printf 'ok - effective_cd is computed once (no double mapping)\n'
+}
+
+test_invalid_agent_name_is_rejected() {
+  local repo out err rc stderr_text
+  repo="$(new_repo)"
+  out="$(new_temp_file)"
+  err="$(new_temp_file)"
+
+  if (cd "$repo" && "$sa" --agent "../evil" status >"$out" 2>"$err"); then rc=0; else rc=$?; fi
+  stderr_text="$(tr '\n' ' ' <"$err" | sed 's/  */ /g')"
+  assert_eq "2" "$rc" "invalid agent name should be rejected"
+  assert_contains "$stderr_text" "invalid agent name" "rejection should be explicit"
+  printf 'ok - invalid agent name is rejected\n'
+}
+
+test_invalid_worktree_name_is_rejected() {
+  local repo out err rc stderr_text
+  repo="$(new_repo)"
+  out="$(new_temp_file)"
+  err="$(new_temp_file)"
+
+  (cd "$repo" && "$sa" workspace init . >/dev/null)
+  if (cd "$repo" && "$sa" worktree create "../evil" >"$out" 2>"$err"); then rc=0; else rc=$?; fi
+  stderr_text="$(tr '\n' ' ' <"$err" | sed 's/  */ /g')"
+  assert_eq "2" "$rc" "invalid worktree name should be rejected"
+  assert_contains "$stderr_text" "invalid worktree name" "rejection should be explicit"
+  printf 'ok - invalid worktree name is rejected\n'
+}
+
 main() {
   test_management_commands_are_side_effect_free
   test_parent_workspace_cd_maps_into_agent_worktree
+  test_effective_cd_is_not_doubled
+  test_invalid_agent_name_is_rejected
+  test_invalid_worktree_name_is_rejected
   test_project_workspace_without_cd_uses_worktree_root
   test_stale_workspace_is_rejected
   test_subagent_worktree_create_requires_workspace_init
