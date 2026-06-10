@@ -46,7 +46,7 @@ scripts/test-second-agent-contract.sh   # 実 CLI のフラグ表面を確認（
 
 - **bash >= 4.4 必須**（`set -u` 下の空配列展開）。エンジン冒頭で版チェックして弾く。
 - **agent 名 / worktree 名は `[A-Za-z0-9._-]`・先頭ドット不可・スラッシュ不可**（パストラバーサル防止）。`validate_name` で検証。
-- **default エージェントはスコープ制限外**。スコープ事故防止は `--agent <name>` 前提。
+- **`--cd`/`--add-dir` の workspace 内制限は default にも効く**（opt-out: `--allow-outside-workspace` / `<PREFIX>_ALLOW_OUTSIDE=1`）。worktree 隔離・workspace 必須化・セッション分離は `--agent` 非 default のときのみ。
 - **中核のパス計算が bash**・**バックエンド抽象が `case` 分岐**で、3 つ目のバックエンドを足すならアダプタ化を先に検討する。
 - 設計上のトレードオフ一覧は `docs/architecture.md` の Known Limitations を参照。
 

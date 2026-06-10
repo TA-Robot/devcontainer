@@ -137,14 +137,14 @@ claude-yolo "テストを書いて"
 - セカンドエージェントは **常に権限バイパスを有効化**します（codex: `--dangerously-bypass-approvals-and-sandbox --search` / claude: `--dangerously-skip-permissions`）。運用方針として固定です
 - 権限バイパスは危険です。隔離環境ではなく、信頼済みホスト上の高権限運用として扱ってください
 - **workspace スコープ制限は「事故低減」であって隔離（security boundary）ではありません。** 実行は常にホスト権限フルです
-- **`--agent` を指定しない既定エージェント（`default`）はスコープ制限の対象外**です（workspace 未設定でも動き、`--cd`/`--add-dir` も制限されません）。サブエージェント運用では必ず `--agent <name>` を使ってください
+- 既定エージェント（`default`）も `--cd`/`--add-dir` は**既定で実行対象 repo の中だけ**に制限されます。外を触らせたいときだけ `--allow-outside-workspace`（または `<PREFIX>_ALLOW_OUTSIDE=1`）を付けてください。なお worktree 隔離・セッション分離が欲しいサブエージェント運用では `--agent <name>` を使います
 - 使用モデルは固定です（codex: 既定 `gpt-5.5`、`CODEX_SA_MODEL` で上書き可 / claude: 既定 `opus`、`CLAUDE_SA_MODEL` で上書き可）。既定値はコード直書きのため陳腐化し得ます（env でピン留め推奨）
   - `--model` などのモデル選択系オプションは passthrough から除去されます
   - codex は `--config model=...` / `--oss` / `--local-provider` も無視します
   - claude は `--output-format` / `--input-format` / `--permission-mode` / `-p` / `-r` / `--session-id` など、wrapper が固定する実行フラグを passthrough から除去します
   - claude はプロンプトを stdin で受けます。`--` 以降に位置引数（裸の文字列）を置くと二重プロンプトになるため避けてください
 - ログ（`events.jsonl` / `transcript.jsonl`）は prompt/response 全文を含み、ローテーションしません。**機微情報をプロンプトに載せない**でください。state 配下は `umask 077`（所有者のみ）で作成します
-- codex はプロンプトを CLI 引数で渡すため `ps` で他ユーザに見え得ます（claude は stdin）。マルチユーザ環境では注意
+- プロンプトは codex / claude とも stdin で渡します（`ps` のプロセス一覧に本文が出ません）
 - 同一 agent の同時実行は `flock`（利用可能な場合）で直列化します
 - state レイアウトは `<state>/VERSION` で版管理され、不一致時は警告します
 - 保存済み workspace が移動・削除されて無効になった場合、実行は止まり、`paths` / `doctor` に `workspace_valid: no` が表示されます

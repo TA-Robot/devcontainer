@@ -103,7 +103,7 @@ codex-second-agent --agent implementer "..." -- --cd packages/api
 これらは「trusted local development を速くする」目的のために受け入れているトレードオフです。
 
 - **スコープ ≠ 隔離**: workspace 制限は accident-reduction であり security boundary ではない。実行は常にホスト権限フル。
-- **default エージェントは無制限**: スコープ制限・worktree・workspace 必須化は `--agent` 非 default のときだけ効く。default は事故防止の対象外。
+- **default エージェントのスコープ**: `--cd`/`--add-dir` は default でも既定で実行対象 repo 内に制限する（`--allow-outside-workspace` / `<PREFIX>_ALLOW_OUTSIDE=1` で opt-out）。ただし worktree 隔離・workspace 必須化・セッション分離は `--agent` 非 default のときだけ効く。
 - **状態は対象 repo の作業ツリー内に同居させる（意図的な設計）**: `.<be>-second-agent/` 等を target workspace 配下に置く。これは「その repo の開発に必要なデータを、その repo に同居させる」という方針であり、中央集約（例: `~/.local/state`）にしない。集約は際限なく貯まって管理不能になりやすく、どのデータがどの repo のものか追えなくなるため。誤コミットは `workspace init` の `.gitignore` 自動補完で防ぐ。
 - **セッション同一性はパスの sha256**: repo を移動/rename すると key が変わり既存セッションが孤立する。シンボリックリンク経由など別パスで同一 repo を指すと resume 共有が壊れ得る。
 - **固定モデルはコード直書きの既定**: 陳腐化し得る（`<PREFIX>_MODEL` で上書き可）。

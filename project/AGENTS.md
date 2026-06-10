@@ -5,7 +5,7 @@
 
 > 注意: OS レベルの強制隔離ではありません。  
 > ただし、`codex-second-agent workspace init <path>` を必須にし、sub-agent の `--cd` / `--add-dir` を workspace 内だけに制限することで、誤ったスコープ拡張を防ぎます。  
-> **重要**: スコープ制限が効くのは `--agent <name>` を付けた sub-agent のときだけです。`--agent` を省いた既定エージェント（`default`）は制限の対象外なので、本テンプレの運用では必ず `--agent` を付けてください。
+> **重要**: `--cd` / `--add-dir` の workspace 内制限は既定エージェント（`default`）にも効きます（外を許すには `--allow-outside-workspace`）。ただし **worktree 隔離・セッション分離・workspace 必須化は `--agent <name>` を付けた sub-agent のときだけ**なので、本テンプレの運用では必ず `--agent` を付けてください。
 
 ## codex-second-agent とは？（簡単に）
 
