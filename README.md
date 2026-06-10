@@ -118,7 +118,7 @@ claude-yolo "テストを書いて"
 - `--cd` は両バックエンド共通で使えます（claude では wrapper が指定先へ `cd` し、claude 自体には渡しません）
 - sub-agent に共有コンテキストを渡したい場合も、`--add-dir` で workspace 外は渡せません
   - 共有したい runbook / ticket / decision log は対象 workspace 側へミラーするか、prompt に要点を転記してください
-- target project 側の `.gitignore` には `.codex-second-agent/` `.codex-worktrees/` `.claude-second-agent/` `.claude-worktrees/` を入れてください
+- `workspace init` 時に対象 repo の `.gitignore` へ `.codex-second-agent/` `.codex-worktrees/` `.claude-second-agent/` `.claude-worktrees/` を**自動追記**します（不足分のみ。手動で入れてもOK）
 
 ### 運用に効くコマンド（抜粋）
 
@@ -128,17 +128,27 @@ claude-yolo "テストを書いて"
 - `<be>-second-agent status --verbose`: session_id と各種パスをまとめて表示
 - `<be>-second-agent doctor`: backend / 環境 / パス / 設定の簡易診断（トラブル切り分け）
 - `<be>-second-agent worktree remove <agent> [--keep-branch]`: worktree削除（必要ならブランチも整理）
+- `<be>-second-agent worktree prune`: 実体が消えた worktree 登録を掃除（`git worktree prune`）
 - `<be>-second-agent --post-git-status ...`（または `<PREFIX>_POST_GIT_STATUS=1`）: 実行後に未コミット変更を要約して検知
+- `<PREFIX>_TIMEOUT=120s <be>-second-agent ...`: 実行をタイムアウトで包む（GNU `timeout` 形式）
 
 ### 運用上の注意
 
 - セカンドエージェントは **常に権限バイパスを有効化**します（codex: `--dangerously-bypass-approvals-and-sandbox --search` / claude: `--dangerously-skip-permissions`）。運用方針として固定です
 - 権限バイパスは危険です。隔離環境ではなく、信頼済みホスト上の高権限運用として扱ってください
-- 使用モデルは固定です（codex: 既定 `gpt-5.5`、`CODEX_SA_MODEL` で上書き可 / claude: 既定 `opus`、`CLAUDE_SA_MODEL` で上書き可）
+- **workspace スコープ制限は「事故低減」であって隔離（security boundary）ではありません。** 実行は常にホスト権限フルです
+- **`--agent` を指定しない既定エージェント（`default`）はスコープ制限の対象外**です（workspace 未設定でも動き、`--cd`/`--add-dir` も制限されません）。サブエージェント運用では必ず `--agent <name>` を使ってください
+- 使用モデルは固定です（codex: 既定 `gpt-5.5`、`CODEX_SA_MODEL` で上書き可 / claude: 既定 `opus`、`CLAUDE_SA_MODEL` で上書き可）。既定値はコード直書きのため陳腐化し得ます（env でピン留め推奨）
   - `--model` などのモデル選択系オプションは passthrough から除去されます
   - codex は `--config model=...` / `--oss` / `--local-provider` も無視します
   - claude は `--output-format` / `--input-format` / `--permission-mode` / `-p` / `-r` / `--session-id` など、wrapper が固定する実行フラグを passthrough から除去します
+  - claude はプロンプトを stdin で受けます。`--` 以降に位置引数（裸の文字列）を置くと二重プロンプトになるため避けてください
+- ログ（`events.jsonl` / `transcript.jsonl`）は prompt/response 全文を含み、ローテーションしません。**機微情報をプロンプトに載せない**でください。state 配下は `umask 077`（所有者のみ）で作成します
+- codex はプロンプトを CLI 引数で渡すため `ps` で他ユーザに見え得ます（claude は stdin）。マルチユーザ環境では注意
+- 同一 agent の同時実行は `flock`（利用可能な場合）で直列化します
+- state レイアウトは `<state>/VERSION` で版管理され、不一致時は警告します
 - 保存済み workspace が移動・削除されて無効になった場合、実行は止まり、`paths` / `doctor` に `workspace_valid: no` が表示されます
+- 実体は `bash >= 4.4` を要求します（`set -u` 下の空配列展開のため）
 
 ## プリインストールツール
 

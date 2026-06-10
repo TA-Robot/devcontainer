@@ -97,3 +97,17 @@ codex-second-agent --agent implementer "..." -- --cd packages/api
 - policy enforcement を越えたセキュアコンテナ境界の提供
 
 それが必要なら、credential mount を外した別 devcontainer / VM / remote sandbox を使うべきです。
+
+## Known Limitations（既知の限界・設計上のトレードオフ）
+
+これらは「trusted local development を速くする」目的のために受け入れているトレードオフです。
+
+- **スコープ ≠ 隔離**: workspace 制限は accident-reduction であり security boundary ではない。実行は常にホスト権限フル。
+- **default エージェントは無制限**: スコープ制限・worktree・workspace 必須化は `--agent` 非 default のときだけ効く。default は事故防止の対象外。
+- **状態を対象 repo の作業ツリー内に置く**: `.<be>-second-agent/` 等を target workspace 配下に置く（別 control からの resume 共有のため）。`workspace init` で `.gitignore` を自動補完するが、汚染面はゼロではない。
+- **セッション同一性はパスの sha256**: repo を移動/rename すると key が変わり既存セッションが孤立する。シンボリックリンク経由など別パスで同一 repo を指すと resume 共有が壊れ得る。
+- **固定モデルはコード直書きの既定**: 陳腐化し得る（`<PREFIX>_MODEL` で上書き可）。
+- **ログは無制限・機微を含み得る**: ローテーションなし。prompt/response 全文を保存。`umask 077` で所有者限定にはする。
+- **バックエンド抽象はアドホック**: 変数群 + `case` 分岐。3 つ目を足す前にアダプタ化を検討する余地がある。
+- **中核ロジックが bash**: パス正規化・スコープ判定など間違えてはいけない処理を bash で実装している。将来はパス計算を別言語ヘルパへ切り出す候補。
+- **並行性**: 同一 agent の同時実行は `flock` で直列化（flock が無い環境はベストエフォート）。

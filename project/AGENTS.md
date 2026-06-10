@@ -4,7 +4,8 @@
 目的は「サブエージェントが **configured workspace 内だけ**を見て作業する」運用を徹底することです。
 
 > 注意: OS レベルの強制隔離ではありません。  
-> ただし、`codex-second-agent workspace init <path>` を必須にし、sub-agent の `--cd` / `--add-dir` を workspace 内だけに制限することで、誤ったスコープ拡張を防ぎます。
+> ただし、`codex-second-agent workspace init <path>` を必須にし、sub-agent の `--cd` / `--add-dir` を workspace 内だけに制限することで、誤ったスコープ拡張を防ぎます。  
+> **重要**: スコープ制限が効くのは `--agent <name>` を付けた sub-agent のときだけです。`--agent` を省いた既定エージェント（`default`）は制限の対象外なので、本テンプレの運用では必ず `--agent` を付けてください。
 
 ## codex-second-agent とは？（簡単に）
 

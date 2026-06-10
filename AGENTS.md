@@ -35,11 +35,20 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile scripts/codex-second-agent-filte
 PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile scripts/claude-second-agent-filter.py
 scripts/test-codex-second-agent.sh
 scripts/test-claude-second-agent.sh
+scripts/test-second-agent-contract.sh   # 実 CLI のフラグ表面を確認（codex/claude が無ければskip）
 ```
 
 > `codex-second-agent` / `claude-second-agent` は `second-agent` を `SA_BACKEND` 付きで呼ぶ薄いシム。
 > ロジック本体（workspace スコープ / worktree / state・log 管理）は両者で共有しているので、
 > スコープ系の修正は `scripts/second-agent` 側に入れ、両方のテストで担保すること。
+
+### 既知の制約（second-agent）
+
+- **bash >= 4.4 必須**（`set -u` 下の空配列展開）。エンジン冒頭で版チェックして弾く。
+- **agent 名 / worktree 名は `[A-Za-z0-9._-]`・先頭ドット不可・スラッシュ不可**（パストラバーサル防止）。`validate_name` で検証。
+- **default エージェントはスコープ制限外**。スコープ事故防止は `--agent <name>` 前提。
+- **中核のパス計算が bash**・**バックエンド抽象が `case` 分岐**で、3 つ目のバックエンドを足すならアダプタ化を先に検討する。
+- 設計上のトレードオフ一覧は `docs/architecture.md` の Known Limitations を参照。
 
 `.devcontainer/` を触ったら:
 
