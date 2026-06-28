@@ -60,6 +60,14 @@ RUN npm install -g \
     @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
     && npm cache clean --force
 
+# Codex / Claude Code は devcontainer 内では既定で確認プロンプトを出さない。
+# 実体は *-real に退避し、PATH 上の通常コマンド名を wrapper で上書きする。
+RUN mv /usr/local/bin/codex /usr/local/bin/codex-real \
+    && mv /usr/local/bin/claude /usr/local/bin/claude-real
+COPY scripts/devcontainer-codex /usr/local/bin/codex
+COPY scripts/devcontainer-claude /usr/local/bin/claude
+RUN chmod +x /usr/local/bin/codex /usr/local/bin/claude
+
 # セカンドエージェント用ラッパー（共通エンジン + codex/claude シム、セッションID自動保持）
 COPY scripts/second-agent /usr/local/bin/second-agent
 COPY scripts/codex-second-agent /usr/local/bin/codex-second-agent
@@ -79,16 +87,18 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME
 
-# Codex/Gemini用エイリアス設定
+# AI CLI用エイリアス設定
 USER $USERNAME
 RUN mkdir -p ~/.config ~/.codex ~/.claude \
     && echo '# Codex CLI aliases' >> ~/.bashrc \
     && echo 'alias codex-auto="codex --dangerously-bypass-approvals-and-sandbox"' >> ~/.bashrc \
     && echo 'alias codex-full="codex --full-auto"' >> ~/.bashrc \
+    && echo 'alias codex-ask="DEVCONTAINER_CODEX_DANGEROUS_DEFAULT=0 codex"' >> ~/.bashrc \
     && echo '# Fugu via Codex CLI' >> ~/.bashrc \
     && echo 'alias fugu-ultra="fugu --model fugu-ultra"' >> ~/.bashrc \
     && echo '# Claude Code alias' >> ~/.bashrc \
-    && echo 'alias claude-yolo="claude --dangerously-skip-permissions"' >> ~/.bashrc
+    && echo 'alias claude-yolo="claude --dangerously-skip-permissions"' >> ~/.bashrc \
+    && echo 'alias claude-ask="DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT=0 claude"' >> ~/.bashrc
 
 # 作業ディレクトリ設定
 WORKDIR /workspace

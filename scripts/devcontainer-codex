@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+real_codex_bin="${DEVCONTAINER_CODEX_REAL_BIN:-/usr/local/bin/codex-real}"
+dangerous_flag="--dangerously-bypass-approvals-and-sandbox"
+
+if [[ ! -x "$real_codex_bin" ]]; then
+  echo "error: codex real binary not found or not executable: $real_codex_bin" >&2
+  exit 127
+fi
+
+if [[ "${DEVCONTAINER_CODEX_DANGEROUS_DEFAULT:-1}" == "0" ]]; then
+  exec "$real_codex_bin" "$@"
+fi
+
+for argument in "$@"; do
+  if [[ "$argument" == "$dangerous_flag" ]]; then
+    exec "$real_codex_bin" "$@"
+  fi
+done
+
+exec "$real_codex_bin" "$dangerous_flag" "$@"

@@ -18,7 +18,10 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 
 ```bash
 mkdir -p ~/.codex ~/.config/gemini ~/.claude
+[ -s ~/.claude.json ] || printf '{}\n' > ~/.claude.json
 ```
+
+`~/.claude.json` は devcontainer 起動前にも自動作成されますが、手動で mount 元を確認したい場合は上記を実行してください。
 
 ### 2. コンテナを起動
 
@@ -27,14 +30,17 @@ Cursor / VS Code でこのフォルダを開き、「Reopen in Container」を�
 ### 3. AI ツールを使う
 
 ```bash
-# Codex CLI（通常モード）
+# Codex CLI（devcontainer 内では既定で確認スキップ）
 codex "ファイルを整理して"
 
-# Codex CLI（自動承認モード）
+# Codex CLI（互換 alias: 明示的な自動承認モード）
 codex-auto "テストを書いて"
 
 # Codex CLI（フルオートモード）
 codex-full "リファクタリングして"
+
+# Codex CLI（確認を戻したい場合）
+codex-ask "差分を確認しながら進めて"
 
 # Fugu（Codex CLI + Sakana provider、既定モデルは fugu-ultra）
 fugu exec "READMEを要約して"
@@ -43,11 +49,14 @@ fugu --model fugu exec "軽めのタスク"
 # Gemini CLI
 gemini
 
-# Claude Code（通常モード）
+# Claude Code（devcontainer 内では既定で権限確認スキップ）
 claude
 
-# Claude Code（権限確認スキップモード）
+# Claude Code（互換 alias: 明示的な権限確認スキップモード）
 claude-yolo "テストを書いて"
+
+# Claude Code（確認を戻したい場合）
+claude-ask "差分を確認しながら進めて"
 ```
 
 ## Trust Model
@@ -55,9 +64,10 @@ claude-yolo "テストを書いて"
 この devcontainer は **sandbox ではありません**。利便性を優先した、信頼済みホスト向けの構成です。
 
 - ホストの SSH / Git / AI 認証情報をマウントします
-- AI 認証情報は **ホスト側ディレクトリを直接 bind mount** します。ホスト側の更新はコンテナへ即時反映され、コンテナ側の更新もホスト側へ書き戻されます
+- AI 認証情報は **ホスト側ディレクトリ/ファイルを直接 bind mount** します。ホスト側の更新はコンテナへ即時反映され、コンテナ側の更新もホスト側へ書き戻されます
 - `docker-in-docker` を前提にした高権限設定です
-- `codex-second-agent` は常に `--dangerously-bypass-approvals-and-sandbox` を付けます
+- devcontainer 内の `codex` / `claude` は wrapper により既定で確認プロンプトをスキップします
+- `codex-second-agent` / `claude-second-agent` も常に権限バイパス用フラグを付けます
 
 使いどころ:
 
@@ -194,10 +204,11 @@ API key は次の順で使います。
 | `~/.gitconfig` | `/home/devuser/.gitconfig` | Git設定 |
 | `~/.codex` | `/home/devuser/.codex` | Codex認証情報・設定 |
 | `~/.config/gemini` | `/home/devuser/.config/gemini` | Gemini CLI設定 |
+| `~/.claude.json` | `/home/devuser/.claude.json` | Claude Codeグローバル設定・アカウント情報 |
 | `~/.claude` | `/home/devuser/.claude` | Claude Code認証情報・設定 |
 
-AI CLI の認証ディレクトリは CLI の標準パスへ直接 mount するため、ホスト側でログインし直した token 更新はコンテナ内からそのまま見えます。  
-コンテナ内でログイン・token refresh が発生した場合も、同じホスト側ディレクトリへ書き戻されます。
+AI CLI の認証ディレクトリ/ファイルは CLI の標準パスへ直接 mount するため、ホスト側でログインし直した token 更新はコンテナ内からそのまま見えます。
+コンテナ内でログイン・token refresh が発生した場合も、同じホスト側パスへ書き戻されます。
 
 ## 環境変数
 
@@ -208,14 +219,30 @@ AI CLI の認証ディレクトリは CLI の標準パスへ直接 mount する�
 - `GEMINI_API_KEY`
 - `ANTHROPIC_API_KEY`
 
+devcontainer 内の `codex` / `claude` は wrapper 経由で次のフラグを自動付与します。
+
+- `codex`: `--dangerously-bypass-approvals-and-sandbox`
+- `claude`: `--dangerously-skip-permissions`
+
+一時的に確認を戻したい場合は、次のいずれかを使います。
+
+```bash
+DEVCONTAINER_CODEX_DANGEROUS_DEFAULT=0 codex
+DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT=0 claude
+```
+
+実体の CLI は `/usr/local/bin/codex-real` / `/usr/local/bin/claude-real` に退避しています。
+
 ## エイリアス
 
 | エイリアス | 展開 |
 |------------|------|
 | `codex-auto` | `codex --dangerously-bypass-approvals-and-sandbox` |
 | `codex-full` | `codex --full-auto` |
+| `codex-ask` | `DEVCONTAINER_CODEX_DANGEROUS_DEFAULT=0 codex` |
 | `fugu-ultra` | `fugu --model fugu-ultra` |
 | `claude-yolo` | `claude --dangerously-skip-permissions` |
+| `claude-ask` | `DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT=0 claude` |
 
 ## カスタマイズ
 
@@ -254,6 +281,7 @@ RUN npm install -g \
 
 ```bash
 mkdir -p ~/.codex ~/.config/gemini ~/.claude
+[ -s ~/.claude.json ] || printf '{}\n' > ~/.claude.json
 ```
 
 ### 認証が効かない
@@ -264,7 +292,9 @@ mkdir -p ~/.codex ~/.config/gemini ~/.claude
    gemini # 初回は認証フローが走る
    claude # 初回は認証フローが走る
    ```
-2. それでも反映されない場合は、ホスト側の `~/.codex` / `~/.config/gemini` / `~/.claude` が存在することを確認し、devcontainer を開き直してください
+2. それでも反映されない場合は、ホスト側の `~/.codex` / `~/.config/gemini` / `~/.claude` / `~/.claude.json` が存在することを確認し、devcontainer を開き直してください
+3. Claude Code の対話モードだけが login を求める場合は、`~/.claude.json` が `/home/devuser/.claude.json` に mount されているか確認してください
+4. `~/.claude.json` が 0 byte だと Claude Code は「corrupted」と判定し onboarding/login に戻ります。空なら `printf '{}\n' > ~/.claude.json` で初期化してください（`initializeCommand` が自動で行いますが、手動でも可）
 
 ### 権限エラー
 

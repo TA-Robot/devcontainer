@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+real_claude_bin="${DEVCONTAINER_CLAUDE_REAL_BIN:-/usr/local/bin/claude-real}"
+dangerous_flag="--dangerously-skip-permissions"
+
+if [[ ! -x "$real_claude_bin" ]]; then
+  echo "error: claude real binary not found or not executable: $real_claude_bin" >&2
+  exit 127
+fi
+
+if [[ "${DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT:-1}" == "0" ]]; then
+  exec "$real_claude_bin" "$@"
+fi
+
+for argument in "$@"; do
+  if [[ "$argument" == "$dangerous_flag" ]]; then
+    exec "$real_claude_bin" "$@"
+  fi
+done
+
+exec "$real_claude_bin" "$dangerous_flag" "$@"

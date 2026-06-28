@@ -14,6 +14,13 @@
   
   // ユーザー設定
   "remoteUser": "devuser",
+
+  // bind mount するホスト側ファイル/ディレクトリを事前作成する。
+  // Claude Code は対話モードで ~/.claude だけでなく ~/.claude.json も読むため、
+  // ファイル mount 元が無い状態でコンテナ作成に進まないようにする。
+  // 空ファイル（0 byte）は Claude Code が「corrupted」と見なして onboarding/login に戻るため、
+  // 欠落時だけでなく空のときも `{}` で初期化する（-s で size>0 を判定）。中身のある既存ファイルは保持する。
+  "initializeCommand": "sh -c 'set -eu; mkdir -p \"$HOME/.codex\" \"$HOME/.config/gemini\" \"$HOME/.claude\"; if [ -d \"$HOME/.claude.json\" ]; then echo \"error: $HOME/.claude.json must be a file, but is a directory\" >&2; exit 1; fi; [ -s \"$HOME/.claude.json\" ] || printf \"{}\\n\" > \"$HOME/.claude.json\"'",
   
   // 機能追加（必要に応じてコメントアウト解除）
   "features": {
@@ -48,9 +55,10 @@
     "source=${localEnv:HOME}/.ssh,target=/home/devuser/.ssh,type=bind,readonly",
     // ホストのGit設定を共有
     "source=${localEnv:HOME}/.gitconfig,target=/home/devuser/.gitconfig,type=bind,readonly",
-    // AI CLI認証情報はホスト側ディレクトリを直接参照する（token更新も相互に反映される）
+    // AI CLI認証情報はホスト側ディレクトリ/ファイルを直接参照する（token更新も相互に反映される）
     "source=${localEnv:HOME}/.codex,target=/home/devuser/.codex,type=bind",
     "source=${localEnv:HOME}/.config/gemini,target=/home/devuser/.config/gemini,type=bind",
+    "source=${localEnv:HOME}/.claude.json,target=/home/devuser/.claude.json,type=bind",
     "source=${localEnv:HOME}/.claude,target=/home/devuser/.claude,type=bind"
   ],
   

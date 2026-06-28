@@ -14,9 +14,10 @@
 この基盤の前提は次のとおりです。
 
 - devcontainer はホスト資格情報をマウントする
-- AI 認証情報は CLI の標準パスへ直接 bind mount して使う
+- AI 認証情報は CLI の標準パスへ直接 bind mount して使う（Claude Code は `~/.claude` に加えて `~/.claude.json` も mount する）
 - devcontainer は `docker-in-docker` 前提の高権限設定で動く
-- セカンドエージェントは常に権限バイパスを付ける（codex: `--dangerously-bypass-approvals-and-sandbox` / claude: `--dangerously-skip-permissions`）
+- devcontainer 内の通常 `codex` / `claude` は wrapper 経由で既定の確認プロンプトをスキップする（codex: `--dangerously-bypass-approvals-and-sandbox` / claude: `--dangerously-skip-permissions`）
+- セカンドエージェントも常に権限バイパスを付ける
 
 したがって、「安全」は **強い隔離** ではなく **信頼済み環境の中でスコープ事故を減らす** という意味に限定されます。
 
