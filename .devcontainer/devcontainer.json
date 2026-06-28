@@ -5,7 +5,7 @@
     "context": ".."
   },
 
-  // Trusted local development profile: privileged container + read-only host credential snapshots.
+  // Trusted local development profile: privileged container + direct host credential mounts.
   // This configuration optimizes for convenience, not sandbox isolation.
   
   // コンテナ設定
@@ -48,12 +48,10 @@
     "source=${localEnv:HOME}/.ssh,target=/home/devuser/.ssh,type=bind,readonly",
     // ホストのGit設定を共有
     "source=${localEnv:HOME}/.gitconfig,target=/home/devuser/.gitconfig,type=bind,readonly",
-    // Codex認証情報を read-only で取り込み、container local に同期する
-    "source=${localEnv:HOME}/.codex,target=/mnt/host-auth/codex,type=bind,readonly",
-    // Gemini CLI設定を read-only で取り込み、container local に同期する
-    "source=${localEnv:HOME}/.config/gemini,target=/mnt/host-auth/gemini,type=bind,readonly",
-    // Claude Code認証情報を read-only で取り込み、container local に同期する
-    "source=${localEnv:HOME}/.claude,target=/mnt/host-auth/claude,type=bind,readonly"
+    // AI CLI認証情報はホスト側ディレクトリを直接参照する（token更新も相互に反映される）
+    "source=${localEnv:HOME}/.codex,target=/home/devuser/.codex,type=bind",
+    "source=${localEnv:HOME}/.config/gemini,target=/home/devuser/.config/gemini,type=bind",
+    "source=${localEnv:HOME}/.claude,target=/home/devuser/.claude,type=bind"
   ],
   
   // 環境変数
@@ -66,9 +64,7 @@
     "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}"
   },
   
-  // コンテナ作成/起動後に host auth snapshot を container local へ反映する
-  "postCreateCommand": "devcontainer-sync-host-auth && echo '✅ Dev Container is ready!' && git --version && node --version 2>/dev/null || true",
-  "postStartCommand": "devcontainer-sync-host-auth",
+  "postCreateCommand": "echo '✅ Dev Container is ready!' && git --version && node --version 2>/dev/null || true",
   
   // 追加のrunArgs（必要に応じて調整）
   "runArgs": [

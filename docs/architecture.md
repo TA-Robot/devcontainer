@@ -14,7 +14,7 @@
 この基盤の前提は次のとおりです。
 
 - devcontainer はホスト資格情報をマウントする
-- AI 認証情報は read-only mount し、container local へコピーして使う
+- AI 認証情報は CLI の標準パスへ直接 bind mount して使う
 - devcontainer は `docker-in-docker` 前提の高権限設定で動く
 - セカンドエージェントは常に権限バイパスを付ける（codex: `--dangerously-bypass-approvals-and-sandbox` / claude: `--dangerously-skip-permissions`）
 

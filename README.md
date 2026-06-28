@@ -6,7 +6,7 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 
 - **Ubuntu 22.04** ベース
 - **Node.js 22.x** プリインストール
-- **AI ツール統合**: Codex CLI、Gemini CLI、Claude Code がすぐに使える
+- **AI ツール統合**: Codex CLI、Fugu wrapper、Gemini CLI、Claude Code がすぐに使える
 - **Docker-in-Docker**: コンテナ内でDockerを利用可能
 - **ホスト設定の引き継ぎ**: SSH鍵、Git設定、認証情報を自動マウント
 
@@ -36,6 +36,10 @@ codex-auto "テストを書いて"
 # Codex CLI（フルオートモード）
 codex-full "リファクタリングして"
 
+# Fugu（Codex CLI + Sakana provider、既定モデルは fugu-ultra）
+fugu exec "READMEを要約して"
+fugu --model fugu exec "軽めのタスク"
+
 # Gemini CLI
 gemini
 
@@ -51,7 +55,7 @@ claude-yolo "テストを書いて"
 この devcontainer は **sandbox ではありません**。利便性を優先した、信頼済みホスト向けの構成です。
 
 - ホストの SSH / Git / AI 認証情報をマウントします
-- AI 認証情報は **read-only mount + container local copy** として扱い、ホスト側へは書き戻しません
+- AI 認証情報は **ホスト側ディレクトリを直接 bind mount** します。ホスト側の更新はコンテナへ即時反映され、コンテナ側の更新もホスト側へ書き戻されます
 - `docker-in-docker` を前提にした高権限設定です
 - `codex-second-agent` は常に `--dangerously-bypass-approvals-and-sandbox` を付けます
 
@@ -162,24 +166,45 @@ AI CLI のバージョンは Dockerfile で固定しています（再ビルド�
 | **ユーティリティ** | Git, GitHub CLI, ripgrep, jq, vim |
 | **シェル** | Bash, Zsh |
 
+## Fugu wrapper
+
+`fugu` は Codex CLI に Sakana API の provider 設定を付けて起動する薄い wrapper です。既定モデルは `fugu-ultra` です。
+
+```bash
+fugu exec "READMEを要約して"
+fugu exec --json "この差分をレビューして"
+fugu --model fugu exec "軽めのタスク"
+fugu --model fugu-ultra exec "重めのレビュー"
+```
+
+API key は次の順で使います。
+
+1. 環境変数 `SAKANA_API_KEY`
+2. `--api-key-file PATH`
+3. `/workspace/fugu-api`
+4. 実行ディレクトリの `./fugu-api`
+
+`fugu-api` は秘密情報なので `.gitignore` に入れています。ホスト側のこのリポジトリ直下に置くと、devcontainer 内では `/workspace/fugu-api` として参照されます。
+
 ## マウント設定
 
 | ホスト | コンテナ | 用途 |
 |--------|----------|------|
 | `~/.ssh` | `/home/devuser/.ssh` | SSH鍵（Git操作） |
 | `~/.gitconfig` | `/home/devuser/.gitconfig` | Git設定 |
-| `~/.codex` | `/mnt/host-auth/codex` | Codex認証情報の read-only snapshot |
-| `~/.config/gemini` | `/mnt/host-auth/gemini` | Gemini設定の read-only snapshot |
-| `~/.claude` | `/mnt/host-auth/claude` | Claude Code認証情報の read-only snapshot |
+| `~/.codex` | `/home/devuser/.codex` | Codex認証情報・設定 |
+| `~/.config/gemini` | `/home/devuser/.config/gemini` | Gemini CLI設定 |
+| `~/.claude` | `/home/devuser/.claude` | Claude Code認証情報・設定 |
 
-起動時に `devcontainer-sync-host-auth` がこれらを container local の `~/.codex` / `~/.config/gemini` / `~/.claude` へ同期します。  
-container 側の更新はホストへは書き戻されません。
+AI CLI の認証ディレクトリは CLI の標準パスへ直接 mount するため、ホスト側でログインし直した token 更新はコンテナ内からそのまま見えます。  
+コンテナ内でログイン・token refresh が発生した場合も、同じホスト側ディレクトリへ書き戻されます。
 
 ## 環境変数
 
 ホスト側で以下の環境変数が設定されていれば、コンテナに引き継がれます:
 
 - `OPENAI_API_KEY`
+- `SAKANA_API_KEY`
 - `GEMINI_API_KEY`
 - `ANTHROPIC_API_KEY`
 
@@ -189,6 +214,7 @@ container 側の更新はホストへは書き戻されません。
 |------------|------|
 | `codex-auto` | `codex --dangerously-bypass-approvals-and-sandbox` |
 | `codex-full` | `codex --full-auto` |
+| `fugu-ultra` | `fugu --model fugu-ultra` |
 | `claude-yolo` | `claude --dangerously-skip-permissions` |
 
 ## カスタマイズ
@@ -232,17 +258,13 @@ mkdir -p ~/.codex ~/.config/gemini ~/.claude
 
 ### 認証が効かない
 
-1. ホスト側で先にログインしておく:
+1. ホスト側またはコンテナ側でログインする:
    ```bash
    codex  # 初回は認証フローが走る
    gemini # 初回は認証フローが走る
    claude # 初回は認証フローが走る
    ```
-2. コンテナ起動時に host auth snapshot が container local へ同期される
-3. コンテナを再起動
-
-補足:
-- 認証を永続化したい場合は **ホスト側で** ログインしてください。container 側の `~/.codex` / `~/.config/gemini` / `~/.claude` は local copy です。
+2. それでも反映されない場合は、ホスト側の `~/.codex` / `~/.config/gemini` / `~/.claude` が存在することを確認し、devcontainer を開き直してください
 
 ### 権限エラー
 

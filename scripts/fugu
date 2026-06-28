@@ -1,0 +1,116 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: fugu [--model MODEL] [--api-key-file PATH] [codex args...]
+
+Run Codex CLI through Sakana Fugu's OpenAI-compatible API.
+
+Defaults:
+  model:        fugu-ultra
+  api key env:  SAKANA_API_KEY
+  api key file: /workspace/fugu-api
+
+Examples:
+  fugu exec "READMEを要約して"
+  fugu exec --json "この差分をレビューして"
+  fugu --model fugu exec "軽めのタスク"
+  fugu --api-key-file ./fugu-api exec "Reply exactly: fugu-ok"
+EOF
+}
+
+trim_first_nonempty_line() {
+  local file="$1"
+  sed -n 's/\r$//; /^[[:space:]]*$/d; s/^[[:space:]]*//; s/[[:space:]]*$//; p; q' "$file"
+}
+
+model="${FUGU_MODEL:-fugu-ultra}"
+api_key_file="${FUGU_API_KEY_FILE:-}"
+codex_args=()
+
+if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
+  usage
+  exit 0
+fi
+
+while [[ $# -gt 0 ]]; do
+  case "$1" in
+    --api-key-file)
+      if [[ $# -lt 2 || -z "${2:-}" ]]; then
+        echo "fugu: --api-key-file requires a path" >&2
+        exit 2
+      fi
+      api_key_file="$2"
+      shift 2
+      ;;
+    --api-key-file=*)
+      api_key_file="${1#*=}"
+      shift
+      ;;
+    -m|--model)
+      if [[ $# -lt 2 || -z "${2:-}" ]]; then
+        echo "fugu: $1 requires a model" >&2
+        exit 2
+      fi
+      model="$2"
+      shift 2
+      ;;
+    --model=*)
+      model="${1#*=}"
+      shift
+      ;;
+    --)
+      shift
+      codex_args+=("$@")
+      break
+      ;;
+    *)
+      codex_args+=("$1")
+      shift
+      ;;
+  esac
+done
+
+if [[ -z "${SAKANA_API_KEY:-}" ]]; then
+  key_file=""
+  candidates=()
+
+  if [[ -n "$api_key_file" ]]; then
+    candidates+=("$api_key_file")
+  else
+    candidates+=("/workspace/fugu-api")
+    candidates+=("$PWD/fugu-api")
+  fi
+
+  for candidate in "${candidates[@]}"; do
+    if [[ -f "$candidate" ]]; then
+      key_file="$candidate"
+      break
+    fi
+  done
+
+  if [[ -z "$key_file" ]]; then
+    echo "fugu: SAKANA_API_KEY is not set and no API key file was found" >&2
+    echo "fugu: expected /workspace/fugu-api, ./fugu-api, or --api-key-file PATH" >&2
+    exit 1
+  fi
+
+  SAKANA_API_KEY="$(trim_first_nonempty_line "$key_file")"
+  export SAKANA_API_KEY
+fi
+
+if [[ -z "${SAKANA_API_KEY:-}" ]]; then
+  echo "fugu: API key is empty" >&2
+  exit 1
+fi
+
+exec codex \
+  --disable image_generation \
+  --model "$model" \
+  --config 'model_provider="sakana"' \
+  --config 'model_providers.sakana.name="Sakana API"' \
+  --config 'model_providers.sakana.base_url="https://api.sakana.ai/v1"' \
+  --config 'model_providers.sakana.env_key="SAKANA_API_KEY"' \
+  --config 'model_providers.sakana.wire_api="responses"' \
+  "${codex_args[@]}"

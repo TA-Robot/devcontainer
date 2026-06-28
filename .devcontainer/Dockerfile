@@ -64,10 +64,10 @@ RUN npm install -g \
 COPY scripts/second-agent /usr/local/bin/second-agent
 COPY scripts/codex-second-agent /usr/local/bin/codex-second-agent
 COPY scripts/claude-second-agent /usr/local/bin/claude-second-agent
+COPY scripts/fugu /usr/local/bin/fugu
 COPY scripts/codex-second-agent-filter.py /usr/local/lib/second-agent/codex-second-agent-filter.py
 COPY scripts/claude-second-agent-filter.py /usr/local/lib/second-agent/claude-second-agent-filter.py
-COPY scripts/devcontainer-sync-host-auth /usr/local/bin/devcontainer-sync-host-auth
-RUN chmod +x /usr/local/bin/second-agent /usr/local/bin/codex-second-agent /usr/local/bin/claude-second-agent /usr/local/bin/devcontainer-sync-host-auth
+RUN chmod +x /usr/local/bin/second-agent /usr/local/bin/codex-second-agent /usr/local/bin/claude-second-agent /usr/local/bin/fugu
 
 # 開発ユーザー作成
 ARG USERNAME=devuser
@@ -81,9 +81,12 @@ RUN groupadd --gid $USER_GID $USERNAME \
 
 # Codex/Gemini用エイリアス設定
 USER $USERNAME
-RUN echo '# Codex CLI aliases' >> ~/.bashrc \
+RUN mkdir -p ~/.config ~/.codex ~/.claude \
+    && echo '# Codex CLI aliases' >> ~/.bashrc \
     && echo 'alias codex-auto="codex --dangerously-bypass-approvals-and-sandbox"' >> ~/.bashrc \
     && echo 'alias codex-full="codex --full-auto"' >> ~/.bashrc \
+    && echo '# Fugu via Codex CLI' >> ~/.bashrc \
+    && echo 'alias fugu-ultra="fugu --model fugu-ultra"' >> ~/.bashrc \
     && echo '# Claude Code alias' >> ~/.bashrc \
     && echo 'alias claude-yolo="claude --dangerously-skip-permissions"' >> ~/.bashrc
 
