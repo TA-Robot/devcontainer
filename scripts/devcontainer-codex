@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-real_codex_bin="${DEVCONTAINER_CODEX_REAL_BIN:-/usr/local/bin/codex-real}"
+ai_cli_prefix="${DEVCONTAINER_AI_CLI_PREFIX:-/opt/devcontainer-ai-cli}"
+real_codex_bin="${DEVCONTAINER_CODEX_REAL_BIN:-$ai_cli_prefix/bin/codex}"
 dangerous_flag="--dangerously-bypass-approvals-and-sandbox"
 
 if [[ ! -x "$real_codex_bin" ]]; then

@@ -15,12 +15,10 @@
   // ユーザー設定
   "remoteUser": "devuser",
 
-  // bind mount するホスト側ファイル/ディレクトリを事前作成する。
-  // Claude Code は対話モードで ~/.claude だけでなく ~/.claude.json も読むため、
-  // ファイル mount 元が無い状態でコンテナ作成に進まないようにする。
-  // 空ファイル（0 byte）は Claude Code が「corrupted」と見なして onboarding/login に戻るため、
-  // 欠落時だけでなく空のときも `{}` で初期化する（-s で size>0 を判定）。中身のある既存ファイルは保持する。
-  "initializeCommand": "sh -c 'set -eu; mkdir -p \"$HOME/.codex\" \"$HOME/.config/gemini\" \"$HOME/.claude\"; if [ -d \"$HOME/.claude.json\" ]; then echo \"error: $HOME/.claude.json must be a file, but is a directory\" >&2; exit 1; fi; [ -s \"$HOME/.claude.json\" ] || printf \"{}\\n\" > \"$HOME/.claude.json\"'",
+  // bind mount 元を用意し、ホストにある AI CLI のバージョン番号を記録する。
+  // 実行ファイル自体は OS/CPU が異なり得るため mount せず、postStartCommand で
+  // コンテナ向けの同一 npm version を導入する。
+  "initializeCommand": "sh \"${localWorkspaceFolder}/.devcontainer/initialize-host.sh\"",
   
   // 機能追加（必要に応じてコメントアウト解除）
   "features": {
@@ -59,20 +57,26 @@
     "source=${localEnv:HOME}/.codex,target=/home/devuser/.codex,type=bind",
     "source=${localEnv:HOME}/.config/gemini,target=/home/devuser/.config/gemini,type=bind",
     "source=${localEnv:HOME}/.claude.json,target=/home/devuser/.claude.json,type=bind",
-    "source=${localEnv:HOME}/.claude,target=/home/devuser/.claude,type=bind"
+    "source=${localEnv:HOME}/.claude,target=/home/devuser/.claude,type=bind",
+    // initializeCommand が生成したバージョン番号だけを共有する（credential は含まない）
+    "source=${localEnv:HOME}/.cache/devcontainer-ai-cli,target=/opt/devcontainer-host-ai-cli,type=bind,readonly"
   ],
   
   // 環境変数
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",
     "WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
+    // 0 にするとホスト AI CLI バージョン同期を無効化できる
+    "DEVCONTAINER_AI_CLI_SYNC": "${localEnv:DEVCONTAINER_AI_CLI_SYNC}",
     // APIキー（ホストに設定されていれば引き継ぐ）
     "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "SAKANA_API_KEY": "${localEnv:SAKANA_API_KEY}",
     "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
     "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}"
   },
   
   "postCreateCommand": "echo '✅ Dev Container is ready!' && git --version && node --version 2>/dev/null || true",
+  "postStartCommand": "bash /workspace/scripts/sync-host-ai-cli-versions",
   
   // 追加のrunArgs（必要に応じて調整）
   "runArgs": [

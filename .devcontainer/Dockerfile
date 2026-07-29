@@ -55,27 +55,33 @@ RUN npm install -g \
     ts-node \
     eslint \
     prettier \
+    && npm cache clean --force
+
+# AI CLI は通常の global package と分離し、コンテナ起動時にホストと同じ
+# npm version へ安全に更新できるようにする（native package はコンテナ向けに導入）。
+ENV DEVCONTAINER_AI_CLI_PREFIX=/opt/devcontainer-ai-cli
+RUN npm install -g --prefix "${DEVCONTAINER_AI_CLI_PREFIX}" \
     @openai/codex@${CODEX_CLI_VERSION} \
     @google/gemini-cli@${GEMINI_CLI_VERSION} \
     @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
     && npm cache clean --force
 
 # Codex / Claude Code は devcontainer 内では既定で確認プロンプトを出さない。
-# 実体は *-real に退避し、PATH 上の通常コマンド名を wrapper で上書きする。
-RUN mv /usr/local/bin/codex /usr/local/bin/codex-real \
-    && mv /usr/local/bin/claude /usr/local/bin/claude-real
+# 実体は専用 prefix に置き、PATH 上の通常コマンド名は wrapper にする。
 COPY scripts/devcontainer-codex /usr/local/bin/codex
 COPY scripts/devcontainer-claude /usr/local/bin/claude
-RUN chmod +x /usr/local/bin/codex /usr/local/bin/claude
+RUN chmod +x /usr/local/bin/codex /usr/local/bin/claude \
+    && ln -s "${DEVCONTAINER_AI_CLI_PREFIX}/bin/gemini" /usr/local/bin/gemini
 
 # セカンドエージェント用ラッパー（共通エンジン + codex/claude シム、セッションID自動保持）
 COPY scripts/second-agent /usr/local/bin/second-agent
 COPY scripts/codex-second-agent /usr/local/bin/codex-second-agent
 COPY scripts/claude-second-agent /usr/local/bin/claude-second-agent
-COPY scripts/fugu /usr/local/bin/fugu
+COPY scripts/devcontainer-fugu /usr/local/bin/fugu
+COPY scripts/fugu /usr/local/lib/devcontainer/fugu
 COPY scripts/codex-second-agent-filter.py /usr/local/lib/second-agent/codex-second-agent-filter.py
 COPY scripts/claude-second-agent-filter.py /usr/local/lib/second-agent/claude-second-agent-filter.py
-RUN chmod +x /usr/local/bin/second-agent /usr/local/bin/codex-second-agent /usr/local/bin/claude-second-agent /usr/local/bin/fugu
+RUN chmod +x /usr/local/bin/second-agent /usr/local/bin/codex-second-agent /usr/local/bin/claude-second-agent /usr/local/bin/fugu /usr/local/lib/devcontainer/fugu
 
 # 開発ユーザー作成
 ARG USERNAME=devuser
@@ -85,7 +91,8 @@ ARG USER_GID=$USER_UID
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -s /bin/bash \
     && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
+    && chown -R $USERNAME:$USERNAME "${DEVCONTAINER_AI_CLI_PREFIX}"
 
 # AI CLI用エイリアス設定
 USER $USERNAME

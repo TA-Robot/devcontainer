@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${DEVCONTAINER_AI_CLI_SYNC:-1}" == "0" ]]; then
+  echo "devcontainer: host AI CLI version sync is disabled"
+  exit 0
+fi
+
+version_file="${DEVCONTAINER_AI_CLI_VERSION_FILE:-/opt/devcontainer-host-ai-cli/versions.env}"
+install_prefix="${DEVCONTAINER_AI_CLI_PREFIX:-/opt/devcontainer-ai-cli}"
+npm_bin="${DEVCONTAINER_AI_CLI_NPM_BIN:-npm}"
+
+if [[ ! -f "$version_file" ]]; then
+  echo "devcontainer: host AI CLI version manifest not found; keeping image versions"
+  exit 0
+fi
+
+declare -A desired_versions=()
+while IFS='=' read -r key value; do
+  case "$key" in
+    CODEX_CLI_VERSION|CLAUDE_CODE_VERSION|GEMINI_CLI_VERSION)
+      if [[ ! "$value" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
+        echo "error: invalid $key in $version_file: $value" >&2
+        exit 1
+      fi
+      desired_versions["$key"]="$value"
+      ;;
+  esac
+done <"$version_file"
+
+if [[ ${#desired_versions[@]} -eq 0 ]]; then
+  echo "devcontainer: host has no supported AI CLI version to sync; keeping image versions"
+  exit 0
+fi
+
+mkdir -p "$install_prefix"
+
+read_installed_version() {
+  local package_name="$1"
+  local package_json="$install_prefix/lib/node_modules/$package_name/package.json"
+
+  if [[ -f "$package_json" ]]; then
+    node -e 'process.stdout.write(require(process.argv[1]).version || "")' "$package_json"
+  fi
+}
+
+packages=(
+  "CODEX_CLI_VERSION|@openai/codex|codex"
+  "CLAUDE_CODE_VERSION|@anthropic-ai/claude-code|claude"
+  "GEMINI_CLI_VERSION|@google/gemini-cli|gemini"
+)
+
+install_specs=()
+for package_entry in "${packages[@]}"; do
+  IFS='|' read -r version_key package_name command_name <<<"$package_entry"
+  desired_version="${desired_versions[$version_key]:-}"
+  [[ -n "$desired_version" ]] || continue
+
+  installed_version="$(read_installed_version "$package_name")"
+  if [[ "$installed_version" == "$desired_version" ]]; then
+    printf 'devcontainer: %s %s already matches the host\n' "$command_name" "$installed_version"
+  else
+    printf 'devcontainer: syncing %s %s -> %s\n' \
+      "$command_name" "${installed_version:-not-installed}" "$desired_version"
+    install_specs+=("${package_name}@${desired_version}")
+  fi
+done
+
+if [[ ${#install_specs[@]} -eq 0 ]]; then
+  exit 0
+fi
+
+"$npm_bin" install --global --prefix "$install_prefix" --no-audit --no-fund "${install_specs[@]}"
+
+for package_entry in "${packages[@]}"; do
+  IFS='|' read -r version_key package_name command_name <<<"$package_entry"
+  desired_version="${desired_versions[$version_key]:-}"
+  [[ -n "$desired_version" ]] || continue
+
+  installed_version="$(read_installed_version "$package_name")"
+  if [[ "$installed_version" != "$desired_version" ]]; then
+    echo "error: $command_name version is ${installed_version:-missing}; expected $desired_version" >&2
+    exit 1
+  fi
+done
+
+echo "devcontainer: host AI CLI versions synchronized"

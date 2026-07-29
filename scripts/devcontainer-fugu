@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+workspace_fugu="${DEVCONTAINER_FUGU_REAL_BIN:-/workspace/scripts/fugu}"
+bundled_fugu="/usr/local/lib/devcontainer/fugu"
+
+# The repository is bind-mounted at /workspace, so wrapper changes made on the
+# host become available without rebuilding the image.
+if [[ -x "$workspace_fugu" ]]; then
+  exec "$workspace_fugu" "$@"
+fi
+
+if [[ -x "$bundled_fugu" ]]; then
+  exec "$bundled_fugu" "$@"
+fi
+
+echo "error: fugu implementation not found: $workspace_fugu or $bundled_fugu" >&2
+exit 127

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-real_claude_bin="${DEVCONTAINER_CLAUDE_REAL_BIN:-/usr/local/bin/claude-real}"
+ai_cli_prefix="${DEVCONTAINER_AI_CLI_PREFIX:-/opt/devcontainer-ai-cli}"
+real_claude_bin="${DEVCONTAINER_CLAUDE_REAL_BIN:-$ai_cli_prefix/bin/claude}"
 dangerous_flag="--dangerously-skip-permissions"
 
 if [[ ! -x "$real_claude_bin" ]]; then
