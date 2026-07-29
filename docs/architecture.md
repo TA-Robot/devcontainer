@@ -15,11 +15,27 @@
 
 - devcontainer はホスト資格情報をマウントする
 - AI 認証情報は CLI の標準パスへ直接 bind mount して使う（Claude Code は `~/.claude` に加えて `~/.claude.json` も mount する）
+- AI CLI 本体はホストから直接 mount せず、検出した npm version だけを read-only mount してコンテナ向け package を起動時に導入する
 - devcontainer は `docker-in-docker` 前提の高権限設定で動く
 - devcontainer 内の通常 `codex` / `claude` は wrapper 経由で既定の確認プロンプトをスキップする（codex: `--dangerously-bypass-approvals-and-sandbox` / claude: `--dangerously-skip-permissions`）
 - セカンドエージェントも常に権限バイパスを付ける
 
 したがって、「安全」は **強い隔離** ではなく **信頼済み環境の中でスコープ事故を減らす** という意味に限定されます。
+
+## Host CLI Version Sync
+
+認証情報の bind mount と CLI version の同期は別レイヤーです。
+
+```text
+host CLI --version
+  -> ~/.cache/devcontainer-ai-cli/versions.env
+  -> read-only bind mount
+  -> postStartCommand
+  -> /opt/devcontainer-ai-cli (container OS/CPU向け npm package)
+  -> /usr/local/bin/codex|claude wrapper
+```
+
+ホストの package directory や executable を直接共有しない理由は、ホストとコンテナで OS / CPU / Node.js の配置が異なり得るためです。Dockerfile の固定 version は offline / CLI 未導入時の fallback とし、通常の実行 version はホストに合わせます。Fugu は repository 内の shell wrapper を `/workspace` から実行し、Codex CLI を engine として使います。
 
 ## Scope Model
 
@@ -108,6 +124,7 @@ codex-second-agent --agent implementer "..." -- --cd packages/api
 - **状態は対象 repo の作業ツリー内に同居させる（意図的な設計）**: `.<be>-second-agent/` 等を target workspace 配下に置く。これは「その repo の開発に必要なデータを、その repo に同居させる」という方針であり、中央集約（例: `~/.local/state`）にしない。集約は際限なく貯まって管理不能になりやすく、どのデータがどの repo のものか追えなくなるため。誤コミットは `workspace init` の `.gitignore` 自動補完で防ぐ。
 - **セッション同一性はパスの sha256**: repo を移動/rename すると key が変わり既存セッションが孤立する。シンボリックリンク経由など別パスで同一 repo を指すと resume 共有が壊れ得る。
 - **固定モデルはコード直書きの既定**: 陳腐化し得る（`<PREFIX>_MODEL` で上書き可）。
+- **CLI version 同期は起動時**: 実行中の container はホスト CLI update を即時検知しない。devcontainer を開き直す必要があり、同期対象 version が未取得なら npm registry 接続も必要。
 - **ログは無制限・機微を含み得る**: ローテーションなし。prompt/response 全文を保存。`umask 077` で所有者限定にはする。
 - **バックエンド抽象はアドホック**: 変数群 + `case` 分岐。3 つ目を足す前にアダプタ化を検討する余地がある。
 - **中核ロジックが bash**: パス正規化・スコープ判定など間違えてはいけない処理を bash で実装している。将来はパス計算を別言語ヘルパへ切り出す候補。

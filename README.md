@@ -7,6 +7,7 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 - **Ubuntu 22.04** ベース
 - **Node.js 22.x** プリインストール
 - **AI ツール統合**: Codex CLI、Fugu wrapper、Gemini CLI、Claude Code がすぐに使える
+- **CLI バージョン同期**: コンテナ起動時にホストの Codex / Gemini / Claude Code と同じ npm version へ自動同期
 - **Docker-in-Docker**: コンテナ内でDockerを利用可能
 - **ホスト設定の引き継ぎ**: SSH鍵、Git設定、認証情報を自動マウント
 
@@ -166,7 +167,8 @@ claude-ask "差分を確認しながら進めて"
 
 ## プリインストールツール
 
-AI CLI のバージョンは Dockerfile で固定しています（再ビルド時の挙動差分を減らすため）。
+Dockerfile の AI CLI バージョンは、ホスト側に該当 CLI がない場合や同期を無効にした場合の fallback として固定しています。
+通常はコンテナ起動時にホストの Codex / Gemini / Claude Code と同じ npm version へ同期します。
 
 | カテゴリ | ツール |
 |----------|--------|
@@ -206,9 +208,35 @@ API key は次の順で使います。
 | `~/.config/gemini` | `/home/devuser/.config/gemini` | Gemini CLI設定 |
 | `~/.claude.json` | `/home/devuser/.claude.json` | Claude Codeグローバル設定・アカウント情報 |
 | `~/.claude` | `/home/devuser/.claude` | Claude Code認証情報・設定 |
+| `~/.cache/devcontainer-ai-cli` | `/opt/devcontainer-host-ai-cli` | CLI version manifest（read-only、credential なし） |
 
 AI CLI の認証ディレクトリ/ファイルは CLI の標準パスへ直接 mount するため、ホスト側でログインし直した token 更新はコンテナ内からそのまま見えます。
 コンテナ内でログイン・token refresh が発生した場合も、同じホスト側パスへ書き戻されます。
+
+## AI CLI バージョン同期
+
+devcontainer を開くと、次の順でホスト側の CLI バージョンを反映します。
+
+1. ホストの `initializeCommand` が `codex --version` / `gemini --version` / `claude --version` を検出し、`~/.cache/devcontainer-ai-cli/versions.env` にバージョン番号だけを保存
+2. cache ディレクトリをコンテナへ read-only mount
+3. `postStartCommand` が差分のある npm package だけを `/opt/devcontainer-ai-cli` へ導入
+
+ホストの実行ファイル自体は mount しません。Codex などには OS / CPU 別の native package が含まれるため、バージョンだけを合わせてコンテナ向け package を導入します。
+
+ホスト側で CLI を update した後は、Cursor / VS Code で devcontainer を開き直してください。初回の構成変更時だけは「Dev Containers: Rebuild Container」が必要ですが、その後の CLI update では image rebuild は不要です。同期には npm registry へのネットワーク接続が必要です。
+
+確認:
+
+```bash
+codex --version
+gemini --version
+claude --version
+fugu --version  # Fugu は Codex CLI を利用するため、Codex と同じ version
+```
+
+ホストに存在しない CLI は Dockerfile の fallback version を維持します。同期を無効にする場合は、devcontainer を開く前にホスト側で `DEVCONTAINER_AI_CLI_SYNC=0` を設定します。
+
+`fugu` 自体は npm package ではなく、この repository の `scripts/fugu` を呼ぶ wrapper です。`/workspace` が bind mount されている間はホスト側 working tree の変更が即時反映され、実行エンジンの Codex version は上記の仕組みで同期されます。
 
 ## 環境変数
 
@@ -231,7 +259,7 @@ DEVCONTAINER_CODEX_DANGEROUS_DEFAULT=0 codex
 DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT=0 claude
 ```
 
-実体の CLI は `/usr/local/bin/codex-real` / `/usr/local/bin/claude-real` に退避しています。
+実体の CLI は `/opt/devcontainer-ai-cli/bin/codex` / `/opt/devcontainer-ai-cli/bin/claude` に置き、`/usr/local/bin` の wrapper から呼び出します。
 
 ## エイリアス
 
@@ -295,6 +323,14 @@ mkdir -p ~/.codex ~/.config/gemini ~/.claude
 2. それでも反映されない場合は、ホスト側の `~/.codex` / `~/.config/gemini` / `~/.claude` / `~/.claude.json` が存在することを確認し、devcontainer を開き直してください
 3. Claude Code の対話モードだけが login を求める場合は、`~/.claude.json` が `/home/devuser/.claude.json` に mount されているか確認してください
 4. `~/.claude.json` が 0 byte だと Claude Code は「corrupted」と判定し onboarding/login に戻ります。空なら `printf '{}\n' > ~/.claude.json` で初期化してください（`initializeCommand` が自動で行いますが、手動でも可）
+
+### ホストと AI CLI のバージョンが合わない
+
+1. ホスト側で `.devcontainer/initialize-host.sh` を実行し、`~/.cache/devcontainer-ai-cli/versions.env` を更新する
+2. devcontainer を開き直す
+3. 起動ログの `devcontainer: syncing ...` または `already matches the host` を確認する
+
+純粋な `docker restart` ではホスト側の `initializeCommand` は実行されない実装もあります。その場合も上記の手動実行後に再起動すれば、`postStartCommand` が同期します。
 
 ### 権限エラー
 
