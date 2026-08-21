@@ -1,8 +1,9 @@
-#!/usr/bin/env python3
-"""Translate trusted activity events into a small, sanitized Mira state file.
+#!/usr/bin/python3
+"""Translate trusted provider activity into a small, sanitized Mira state file.
 
 The executable name remains ``mira-codex-hook`` for Codex configuration
-compatibility.  It also accepts the deliberately tiny ``agentctl`` event
+compatibility.  Provider-specific symlink names select the Claude or Grok wire
+adapter, and the bridge also accepts the deliberately tiny ``agentctl`` event
 envelope emitted by the broker.
 """
 
@@ -27,6 +28,59 @@ MAX_RECENT_EVENTS = 24
 
 AGENT_PROVIDERS = {"codex", "claude", "grok"}
 AGENT_ROLES = {"implementer", "researcher", "reviewer", "tester"}
+AGENT_ROLE_ALIASES = {
+    "coder": "implementer",
+    "general-purpose": "implementer",
+    "implementation": "implementer",
+    "implementer": "implementer",
+    "explore": "researcher",
+    "research": "researcher",
+    "researcher": "researcher",
+    "plan": "reviewer",
+    "planner": "reviewer",
+    "reviewer": "reviewer",
+    "test": "tester",
+    "tester": "tester",
+    "testing": "tester",
+}
+PROVIDER_ENTRYPOINTS = {
+    "mira-codex-hook": "codex",
+    "mira-codex-hook.py": "codex",
+    "mira-claude-hook": "claude",
+    "mira-grok-hook": "grok",
+}
+DIRECT_HOOK_EVENTS = {
+    "SessionStart",
+    "SessionEnd",
+    "UserPromptSubmit",
+    "PreToolUse",
+    "PostToolUse",
+    "PostToolUseFailure",
+    "PermissionRequest",
+    "PermissionDenied",
+    "Notification",
+    "SubagentStart",
+    "SubagentStop",
+    "Stop",
+    "StopFailure",
+    "StopCancelled",
+    "TurnIdle",
+}
+GROK_EVENT_NAMES = {
+    "session_start": "SessionStart",
+    "session_end": "SessionEnd",
+    "user_prompt_submit": "UserPromptSubmit",
+    "pre_tool_use": "PreToolUse",
+    "post_tool_use": "PostToolUse",
+    "post_tool_use_failure": "PostToolUseFailure",
+    "permission_denied": "PermissionDenied",
+    "notification": "Notification",
+    "subagent_start": "SubagentStart",
+    "subagent_stop": "SubagentStop",
+    "stop": "Stop",
+    "stop_failure": "StopFailure",
+    "stop_cancelled": "StopCancelled",
+}
 AGENT_JOB_TERMINAL_EVENTS = {
     "AgentJobSucceeded": ("success", "success"),
     "AgentJobFailed": ("error", "failure"),
@@ -124,7 +178,9 @@ def atomic_json_write(path: Path, value: object) -> None:
             json.dump(value, handle, ensure_ascii=False, separators=(",", ":"))
             handle.write("\n")
             handle.flush()
-            os.fsync(handle.fileno())
+            # Mira state is reconstructable presentation data. Atomic replace
+            # prevents partial JSON reads; storage-level durability would add
+            # multiple fsync stalls to every provider tool event.
         os.replace(temporary_path, path)
     finally:
         try:
@@ -142,6 +198,72 @@ def enum_field(value: object, allowed: set[str], fallback: str = "unknown") -> s
     return normalized if normalized in allowed else fallback
 
 
+def role_field(value: object) -> str:
+    role = AGENT_ROLE_ALIASES.get(string_field(value, 40).strip().lower(), "unknown")
+    return role if role in AGENT_ROLES else "unknown"
+
+
+def invocation_provider() -> str:
+    configured = enum_field(os.environ.get("MIRA_COMPANION_PROVIDER"), AGENT_PROVIDERS)
+    if configured != "unknown":
+        return configured
+    return PROVIDER_ENTRYPOINTS.get(Path(sys.argv[0]).name, "codex")
+
+
+def canonical_hook_event(value: object) -> str:
+    event = string_field(value, 80)
+    if event in DIRECT_HOOK_EVENTS:
+        return event
+    return GROK_EVENT_NAMES.get(event.lower(), "Unknown")
+
+
+def normalize_hook_payload(payload: dict[str, Any], provider: str) -> dict[str, Any]:
+    """Keep only bridge inputs and adapt Grok's camelCase hook wire format."""
+
+    if payload.get("mira_source") == "agentctl":
+        return payload
+
+    if provider == "grok":
+        event = canonical_hook_event(
+            payload.get("hookEventName") or os.environ.get("GROK_HOOK_EVENT")
+        )
+        notification_type = string_field(payload.get("notificationType"), 80)
+        if event == "Notification" and notification_type == "permission_prompt":
+            event = "PermissionRequest"
+        elif event == "Notification" and notification_type == "idle_prompt":
+            event = "TurnIdle"
+        subagent_type = payload.get("subagentType") or payload.get("agentType")
+        subagent_id = (
+            payload.get("subagentId")
+            or payload.get("agentId")
+            or subagent_type
+            or payload.get("toolUseId")
+            or payload.get("promptId")
+        )
+        return {
+            "_mira_provider": provider,
+            "hook_event_name": event,
+            "session_id": payload.get("sessionId")
+            or os.environ.get("GROK_SESSION_ID"),
+            "tool_name": payload.get("toolName"),
+            "tool_input": payload.get("toolInput"),
+            "tool_response": payload.get("toolResult"),
+            "agent_id": subagent_id,
+            "agent_type": subagent_type,
+        }
+
+    return {
+        "_mira_provider": provider,
+        "hook_event_name": canonical_hook_event(payload.get("hook_event_name")),
+        "session_id": payload.get("session_id"),
+        "tool_name": payload.get("tool_name"),
+        "tool_input": payload.get("tool_input"),
+        "tool_response": payload.get("tool_response"),
+        "agent_id": payload.get("agent_id"),
+        "agent_type": payload.get("agent_type"),
+    }
+
+
 def agent_activity(role: str) -> tuple[str, str]:
     if role == "researcher":
         return "research", "read"
@@ -156,13 +278,34 @@ def tool_state(payload: dict[str, Any]) -> tuple[str, str]:
     tool_name = string_field(payload.get("tool_name"), 120)
     normalized = tool_name.lower()
 
-    if normalized in {"agent", "spawn_agent", "subagent"}:
+    if normalized in {
+        "agent",
+        "spawn_agent",
+        "spawn_subagent",
+        "subagent",
+        "task",
+    }:
         return "delegating", "agent"
-    if normalized in {"apply_patch", "edit", "write", "write_file", "replace"}:
+    if normalized in {
+        "apply_patch",
+        "edit",
+        "search_replace",
+        "write",
+        "write_file",
+        "replace",
+    }:
         return "typing", "edit"
-    if normalized == "bash":
+    if normalized in {
+        "bash",
+        "execute_command",
+        "run_shell_command",
+        "run_terminal_command",
+        "shell",
+    }:
         tool_input = payload.get("tool_input")
-        command = tool_input.get("command", "") if isinstance(tool_input, dict) else ""
+        command = ""
+        if isinstance(tool_input, dict):
+            command = tool_input.get("command") or tool_input.get("cmd") or ""
         command = str(command)
         if SECOND_AGENT_PATTERN.search(command):
             return "delegating", "agent"
@@ -215,6 +358,7 @@ def new_record(session_key: str, now: float, source: str = "codex") -> dict[str,
     return {
         "session": session_key,
         "source": source,
+        "provider": source if source in AGENT_PROVIDERS else "unknown",
         "status": "idle",
         "event": "Unknown",
         "toolCategory": None,
@@ -240,12 +384,14 @@ def apply_event(
     sessions: dict[str, dict[str, Any]], payload: dict[str, Any], now: float
 ) -> dict[str, Any]:
     event = string_field(payload.get("hook_event_name"), 80) or "Unknown"
-    session_key = opaque_id(payload.get("session_id"), "default-session")
-    source = "agentctl" if payload.get("mira_source") == "agentctl" else "codex"
+    direct_provider = enum_field(payload.get("_mira_provider"), AGENT_PROVIDERS, "codex")
+    source = "agentctl" if payload.get("mira_source") == "agentctl" else direct_provider
+    raw_session = payload.get("session_id") or "default-session"
+    session_key = opaque_id(f"{source}:{raw_session}", f"{source}:default-session")
     timeline_status = "thinking"
     timeline_category: str | None = None
     outcome = "unknown"
-    timeline_provider = "unknown"
+    timeline_provider = direct_provider if source != "agentctl" else "unknown"
     timeline_role = "unknown"
 
     if event == "SessionEnd":
@@ -258,17 +404,20 @@ def apply_event(
             "status": "idle",
             "category": None,
             "outcome": outcome,
+            "provider": timeline_provider,
+            "role": timeline_role,
         }
 
     record = sessions.setdefault(session_key, new_record(session_key, now, source))
     record["source"] = source
+    record["provider"] = direct_provider if source != "agentctl" else "unknown"
     subagents = set(str(item) for item in record.get("subagents", []))
     raw_meta = record.get("agentMeta")
     agent_meta = raw_meta if isinstance(raw_meta, dict) else {}
     agent_meta = {
         str(agent_id): {
             "provider": enum_field(metadata.get("provider"), AGENT_PROVIDERS),
-            "role": enum_field(metadata.get("role"), AGENT_ROLES),
+            "role": role_field(metadata.get("role")),
         }
         for agent_id, metadata in agent_meta.items()
         if str(agent_id) in subagents and isinstance(metadata, dict)
@@ -289,18 +438,33 @@ def apply_event(
         set_record_state(record, "approval", event, now, "approval")
         timeline_status = "approval"
         timeline_category = "approval"
-    elif event == "PostToolUse":
+    elif event in {"PostToolUse", "PostToolUseFailure"}:
         tool_status, category = tool_state(payload)
-        timeline_status = tool_status
+        outcome = (
+            "failure" if event == "PostToolUseFailure" else tool_outcome(payload)
+        )
+        timeline_status = "error" if event == "PostToolUseFailure" else tool_status
         timeline_category = category
-        outcome = tool_outcome(payload)
-        status = "delegating" if subagents else "thinking"
-        set_record_state(record, status, event, now)
+        status = (
+            "error"
+            if event == "PostToolUseFailure"
+            else "delegating"
+            if subagents
+            else "thinking"
+        )
+        set_record_state(
+            record, status, event, now, category if status == "error" else None
+        )
+    elif event == "PermissionDenied":
+        set_record_state(record, "error", event, now, "approval")
+        timeline_status = "error"
+        timeline_category = "approval"
+        outcome = "failure"
     elif event == "SubagentStart":
         agent_id = opaque_id(payload.get("agent_id"), f"agent-{len(subagents) + 1}")
         subagents.add(agent_id)
-        timeline_provider = "codex"
-        timeline_role = enum_field(payload.get("agent_type"), AGENT_ROLES)
+        timeline_provider = direct_provider
+        timeline_role = role_field(payload.get("agent_type"))
         agent_meta[agent_id] = {
             "provider": timeline_provider,
             "role": timeline_role,
@@ -312,8 +476,10 @@ def apply_event(
     elif event == "SubagentStop":
         agent_id = opaque_id(payload.get("agent_id"), "unknown-agent")
         metadata = agent_meta.pop(agent_id, {})
-        timeline_provider = enum_field(metadata.get("provider"), AGENT_PROVIDERS)
-        timeline_role = enum_field(metadata.get("role"), AGENT_ROLES)
+        timeline_provider = enum_field(
+            metadata.get("provider"), AGENT_PROVIDERS, direct_provider
+        )
+        timeline_role = role_field(metadata.get("role") or payload.get("agent_type"))
         subagents.discard(agent_id)
         record["subagents"] = sorted(subagents)
         status = "delegating" if subagents else "thinking"
@@ -326,7 +492,7 @@ def apply_event(
             f"agent-{len(subagents) + 1}",
         )
         timeline_provider = enum_field(payload.get("provider"), AGENT_PROVIDERS)
-        timeline_role = enum_field(payload.get("role"), AGENT_ROLES)
+        timeline_role = role_field(payload.get("role"))
         subagents = {agent_id}
         agent_meta = {
             agent_id: {
@@ -340,7 +506,7 @@ def apply_event(
         timeline_category = "agent"
     elif event in AGENT_JOB_TERMINAL_EVENTS and source == "agentctl":
         timeline_provider = enum_field(payload.get("provider"), AGENT_PROVIDERS)
-        timeline_role = enum_field(payload.get("role"), AGENT_ROLES)
+        timeline_role = role_field(payload.get("role"))
         status, outcome = AGENT_JOB_TERMINAL_EVENTS[event]
         subagents.clear()
         agent_meta.clear()
@@ -351,6 +517,23 @@ def apply_event(
         set_record_state(record, "success", event, now)
         timeline_status = "success"
         outcome = "success"
+    elif event == "StopFailure":
+        set_record_state(record, "error", event, now)
+        timeline_status = "error"
+        outcome = "failure"
+    elif event == "StopCancelled":
+        set_record_state(record, "ready", event, now)
+        timeline_status = "ready"
+    elif event == "TurnIdle":
+        current_status = string_field(record.get("status"), 20)
+        current_expiry = float(record.get("expiresEpoch") or 0)
+        if current_status in {"success", "error"} and current_expiry > now:
+            timeline_status = current_status
+            timeline_category = record.get("toolCategory")
+            outcome = "success" if current_status == "success" else "failure"
+        else:
+            set_record_state(record, "ready", event, now)
+            timeline_status = "ready"
     else:
         set_record_state(record, "thinking", event, now)
         timeline_status = "thinking"
@@ -431,24 +614,27 @@ def aggregate_state(sessions: dict[str, dict[str, Any]], now: float) -> dict[str
                 {
                     "id": string_field(agent_id, 32),
                     "provider": enum_field(agent.get("provider"), AGENT_PROVIDERS),
-                    "role": enum_field(agent.get("role"), AGENT_ROLES),
+                    "role": role_field(agent.get("role")),
                     "status": string_field(record.get("status"), 20),
                 }
             )
     provider_counts = {"codex": 0, "claude": 0, "grok": 0}
+    for record in active:
+        provider = enum_field(record.get("provider"), AGENT_PROVIDERS)
+        if provider in provider_counts and record.get("status") != "idle":
+            provider_counts[provider] += 1
     for agent in active_agents:
         provider = agent["provider"]
         if provider in provider_counts:
             provider_counts[provider] += 1
     active_agents = active_agents[:8]
     sources = {str(item.get("source") or "codex") for item in active}
-    state_source = (
-        "mira-activity-bridge"
-        if len(sources) > 1
-        else "agentctl"
-        if sources == {"agentctl"}
-        else "codex-hook"
-    )
+    if len(sources) > 1:
+        state_source = "mira-activity-bridge"
+    elif sources == {"agentctl"}:
+        state_source = "agentctl"
+    else:
+        state_source = f"{next(iter(sources))}-hook"
     return {
         "schemaVersion": SCHEMA_VERSION,
         "revision": time.time_ns(),
@@ -490,6 +676,9 @@ def process_payload(payload: dict[str, Any], now: float | None = None) -> None:
             recent_events = []
         event = apply_event(sessions, payload, current_time)
         state = aggregate_state(sessions, current_time)
+        event_provider = enum_field(event.get("provider"), AGENT_PROVIDERS)
+        if state["event"] == "NoActiveSession" and event_provider != "unknown":
+            state["source"] = f"{event_provider}-hook"
         event["activeSubagents"] = state["activeSubagents"]
         recent_events = [item for item in recent_events if isinstance(item, dict)]
         recent_events.append(event)
@@ -513,8 +702,8 @@ def main() -> int:
         payload = json.loads(raw) if raw.strip() else {}
         if not isinstance(payload, dict):
             payload = {}
-        process_payload(payload)
-    except Exception as error:  # Hooks must never interrupt Codex.
+        process_payload(normalize_hook_payload(payload, invocation_provider()))
+    except Exception as error:  # Presentation hooks must never interrupt a provider.
         if os.environ.get("MIRA_COMPANION_DEBUG") == "1":
             print(f"mira-codex-hook: {error}", file=sys.stderr)
     return 0

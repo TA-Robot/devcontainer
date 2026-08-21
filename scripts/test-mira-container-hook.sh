@@ -28,6 +28,34 @@ EXPECTED_EVENTS = {
     "subagentStop",
     "stop",
 }
+EXPECTED_CLAUDE_EVENTS = {
+    "SessionStart",
+    "SessionEnd",
+    "UserPromptSubmit",
+    "PreToolUse",
+    "PostToolUse",
+    "PostToolUseFailure",
+    "PermissionRequest",
+    "PermissionDenied",
+    "SubagentStart",
+    "SubagentStop",
+    "Stop",
+    "StopFailure",
+}
+REQUIRED_GROK_EVENTS = {
+    "session_start",
+    "session_end",
+    "user_prompt_submit",
+    "pre_tool_use",
+    "post_tool_use",
+    "post_tool_use_failure",
+    "permission_denied",
+    "notification",
+    "subagent_start",
+    "subagent_stop",
+    "stop",
+    "stop_failure",
+}
 
 
 def send(process: subprocess.Popen[str], message: dict[str, object]) -> None:
@@ -118,13 +146,125 @@ finally:
 
 hook_path = pathlib.Path("/usr/local/lib/mira-companion/mira-codex-hook.py")
 bridge_entrypoint = pathlib.Path("/usr/local/bin/mira-codex-hook")
+claude_entrypoint = pathlib.Path("/usr/local/bin/mira-claude-hook")
+grok_entrypoint = pathlib.Path("/usr/local/bin/mira-grok-hook")
 requirements_path = pathlib.Path("/etc/codex/requirements.toml")
+claude_settings_path = pathlib.Path(
+    "/etc/claude-code/managed-settings.d/50-mira-companion.json"
+)
+grok_config_path = pathlib.Path("/etc/grok/managed_config.toml")
 if not hook_path.is_file() or not os.access(hook_path, os.X_OK):
     raise AssertionError("managed Mira hook is missing or not executable")
 if not bridge_entrypoint.is_file() or not os.access(bridge_entrypoint, os.X_OK):
     raise AssertionError("agentctl cannot discover the Mira bridge on PATH")
+for entrypoint in (claude_entrypoint, grok_entrypoint):
+    if not entrypoint.is_file() or not os.access(entrypoint, os.X_OK):
+        raise AssertionError(f"provider Mira entrypoint is unavailable: {entrypoint}")
 if not requirements_path.is_file():
     raise AssertionError("system requirements.toml is missing")
+for config_path in (claude_settings_path, grok_config_path):
+    if not config_path.is_file() or config_path.stat().st_mode & 0o222:
+        raise AssertionError(f"managed provider config is missing or writable: {config_path}")
+
+claude_settings = json.loads(claude_settings_path.read_text(encoding="utf-8"))
+claude_hooks = claude_settings.get("hooks", {})
+if set(claude_hooks) != EXPECTED_CLAUDE_EVENTS:
+    raise AssertionError(f"unexpected Claude hook events: {sorted(claude_hooks)}")
+for event, groups in claude_hooks.items():
+    handlers = [handler for group in groups for handler in group.get("hooks", [])]
+    if len(handlers) != 1 or handlers[0].get("command") != str(claude_entrypoint):
+        raise AssertionError(f"unexpected Claude hook handler for {event}: {handlers}")
+
+claude_state_dir = pathlib.Path("/tmp/mira-claude-native")
+claude_environment = os.environ.copy()
+claude_environment["MIRA_COMPANION_STATE_DIR"] = str(claude_state_dir)
+claude_init = subprocess.run(
+    ["claude", "--init-only"],
+    cwd="/workspace",
+    env=claude_environment,
+    text=True,
+    capture_output=True,
+    timeout=20,
+    check=False,
+)
+if claude_init.returncode != 0:
+    raise AssertionError(
+        f"Claude managed hook probe failed: {claude_init.stdout}\n{claude_init.stderr}"
+    )
+claude_timeline_path = claude_state_dir / "timeline.json"
+if not claude_timeline_path.is_file():
+    raise AssertionError("Claude --init-only did not fire the managed SessionStart hook")
+claude_timeline = json.loads(claude_timeline_path.read_text(encoding="utf-8"))
+if not any(
+    event.get("event") == "SessionStart" and event.get("provider") == "claude"
+    for event in claude_timeline
+):
+    raise AssertionError(f"Claude native hook was not provider-aware: {claude_timeline}")
+
+grok_inspect = subprocess.run(
+    ["grok", "inspect", "--json"],
+    cwd="/workspace",
+    text=True,
+    capture_output=True,
+    timeout=20,
+    check=False,
+)
+if grok_inspect.returncode != 0:
+    raise AssertionError(
+        f"Grok managed hook discovery failed: {grok_inspect.stdout}\n{grok_inspect.stderr}"
+    )
+grok_discovery = json.loads(grok_inspect.stdout)
+managed_grok_hooks = [
+    hook
+    for hook in grok_discovery.get("hooks", [])
+    if hook.get("target") == str(grok_entrypoint)
+]
+actual_grok_events = {hook.get("event") for hook in managed_grok_hooks}
+if not REQUIRED_GROK_EVENTS.issubset(actual_grok_events):
+    raise AssertionError(
+        f"missing Grok managed hook events: {sorted(REQUIRED_GROK_EVENTS - actual_grok_events)}"
+    )
+if not all("managed" in str(hook.get("source", {})).lower() for hook in managed_grok_hooks):
+    raise AssertionError(f"Grok hooks were not managed: {managed_grok_hooks}")
+notification_matchers = {
+    hook.get("matcher")
+    for hook in managed_grok_hooks
+    if hook.get("event") == "notification"
+}
+if notification_matchers != {"permission_prompt", "idle_prompt"}:
+    raise AssertionError(f"unexpected Grok notification hooks: {notification_matchers}")
+
+grok_state_dir = pathlib.Path("/tmp/mira-grok-native")
+grok_environment = os.environ.copy()
+grok_environment["MIRA_COMPANION_STATE_DIR"] = str(grok_state_dir)
+grok_payload = {
+    "hookEventName": "pre_tool_use",
+    "sessionId": "private-container-grok-session",
+    "toolName": "run_terminal_command",
+    "toolInput": {"command": "pytest private-container-grok-suite"},
+}
+grok_bridge = subprocess.run(
+    [str(grok_entrypoint)],
+    input=json.dumps(grok_payload),
+    env=grok_environment,
+    text=True,
+    capture_output=True,
+    check=False,
+)
+if grok_bridge.returncode != 0:
+    raise AssertionError(f"Grok provider adapter failed: {grok_bridge.stderr}")
+grok_state_path = grok_state_dir / "state.json"
+grok_state = json.loads(grok_state_path.read_text(encoding="utf-8"))
+if (
+    grok_state["source"] != "grok-hook"
+    or grok_state["status"] != "testing"
+    or grok_state["providerCounts"] != {"codex": 0, "claude": 0, "grok": 1}
+):
+    raise AssertionError(f"unexpected Grok provider state: {grok_state}")
+if "private-container-grok" in "".join(
+    path.read_text(encoding="utf-8") for path in grok_state_dir.glob("*.json")
+):
+    raise AssertionError("private Grok hook input leaked into Mira state")
 
 payload = {
     "session_id": "container-smoke",
@@ -172,7 +312,7 @@ if result.returncode != 0:
 state = json.loads(state_path.read_text(encoding="utf-8"))
 if state["source"] != "mira-activity-bridge":
     raise AssertionError(f"unexpected mixed activity source: {state['source']}")
-if state["providerCounts"] != {"codex": 0, "claude": 0, "grok": 1}:
+if state["providerCounts"] != {"codex": 1, "claude": 0, "grok": 1}:
     raise AssertionError(f"unexpected provider counts: {state['providerCounts']}")
 if state["activeAgents"][0]["role"] != "implementer":
     raise AssertionError(f"unexpected active agent metadata: {state['activeAgents']}")
@@ -184,6 +324,6 @@ if "private-agentctl-job" in persisted or "private objective" in persisted:
     raise AssertionError("private agentctl content leaked into Mira state")
 
 print(
-    "Mira bridge OK: 9 trusted Codex events plus sanitized agentctl provider state"
+    "Mira bridge OK: native Codex / Claude / Grok hooks plus sanitized agentctl state"
 )
 PY

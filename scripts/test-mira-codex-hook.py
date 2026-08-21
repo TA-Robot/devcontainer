@@ -23,11 +23,19 @@ class MiraCodexHookTest(unittest.TestCase):
     def tearDown(self) -> None:
         self.temporary.cleanup()
 
-    def emit(self, payload: dict[str, object]) -> dict[str, object]:
+    def emit(
+        self, payload: dict[str, object], provider: str = "codex"
+    ) -> dict[str, object]:
         environment = os.environ.copy()
         environment["MIRA_COMPANION_STATE_DIR"] = str(self.state_dir)
+        command = ["python3", str(HOOK)]
+        if provider != "codex":
+            entrypoint = Path(self.temporary.name) / f"mira-{provider}-hook"
+            if not entrypoint.exists():
+                entrypoint.symlink_to(HOOK)
+            command = [str(entrypoint)]
         result = subprocess.run(
-            ["python3", str(HOOK)],
+            command,
             input=json.dumps(payload),
             text=True,
             capture_output=True,
@@ -173,7 +181,7 @@ class MiraCodexHookTest(unittest.TestCase):
                 "session_id": "session-a",
                 "hook_event_name": "SubagentStop",
                 "agent_id": "researcher",
-                "agent_type": "researcher",
+                "agent_type": "Explore",
             }
         )
         self.assertEqual(state["activeSubagents"], 1)
@@ -252,6 +260,188 @@ class MiraCodexHookTest(unittest.TestCase):
         self.assertNotIn("private-grok-attempt-id", persisted)
         self.assertNotIn("/private/customer/workspace", persisted)
 
+    def test_direct_claude_events_are_provider_aware_and_sanitized(self) -> None:
+        prompt_secret = "private-claude-prompt"
+        state = self.emit(
+            {
+                "session_id": "private-claude-session",
+                "hook_event_name": "UserPromptSubmit",
+                "prompt": prompt_secret,
+                "cwd": "/private/claude/workspace",
+            },
+            provider="claude",
+        )
+        self.assertEqual(state["status"], "thinking")
+        self.assertEqual(state["source"], "claude-hook")
+        self.assertEqual(
+            state["providerCounts"], {"codex": 0, "claude": 1, "grok": 0}
+        )
+        self.assertEqual(state["recentEvents"][-1]["provider"], "claude")
+
+        delegated = self.emit(
+            {
+                "session_id": "private-claude-session",
+                "hook_event_name": "SubagentStart",
+                "agent_id": "private-claude-agent",
+                "agent_type": "Explore",
+                "prompt": "private-agent-task",
+            },
+            provider="claude",
+        )
+        self.assertEqual(delegated["activeSubagents"], 1)
+        self.assertEqual(delegated["activeAgents"][0]["provider"], "claude")
+        self.assertEqual(delegated["activeAgents"][0]["role"], "researcher")
+        self.assertEqual(
+            delegated["providerCounts"], {"codex": 0, "claude": 2, "grok": 0}
+        )
+        persisted = self.all_persisted_json()
+        for secret in (
+            prompt_secret,
+            "private-claude-session",
+            "private-claude-agent",
+            "private-agent-task",
+            "/private/claude/workspace",
+        ):
+            self.assertNotIn(secret, persisted)
+
+    def test_grok_camel_case_wire_format_is_normalized(self) -> None:
+        command_secret = "pytest tests/private-grok-customer"
+        response_secret = "private-grok-tool-output"
+        state = self.emit(
+            {
+                "hookEventName": "pre_tool_use",
+                "sessionId": "private-grok-session",
+                "toolName": "run_terminal_command",
+                "toolInput": {"command": command_secret},
+                "cwd": "/private/grok/workspace",
+            },
+            provider="grok",
+        )
+        self.assertEqual(state["status"], "testing")
+        self.assertEqual(state["toolCategory"], "test")
+        self.assertEqual(state["source"], "grok-hook")
+        self.assertEqual(
+            state["providerCounts"], {"codex": 0, "claude": 0, "grok": 1}
+        )
+        latest = state["recentEvents"][-1]
+        self.assertEqual(latest["event"], "PreToolUse")
+        self.assertEqual(latest["provider"], "grok")
+
+        state = self.emit(
+            {
+                "hookEventName": "post_tool_use",
+                "sessionId": "private-grok-session",
+                "toolName": "run_terminal_command",
+                "toolInput": {"command": command_secret},
+                "toolResult": {"exitCode": 0, "output": response_secret},
+            },
+            provider="grok",
+        )
+        self.assertEqual(state["recentEvents"][-1]["outcome"], "success")
+
+        approval = self.emit(
+            {
+                "hookEventName": "notification",
+                "sessionId": "private-grok-session",
+                "notificationType": "permission_prompt",
+                "message": "private permission message",
+            },
+            provider="grok",
+        )
+        self.assertEqual(approval["status"], "approval")
+        self.assertEqual(approval["event"], "PermissionRequest")
+        persisted = self.all_persisted_json()
+        for secret in (
+            command_secret,
+            response_secret,
+            "private-grok-session",
+            "/private/grok/workspace",
+            "private permission message",
+        ):
+            self.assertNotIn(secret, persisted)
+
+    def test_provider_failure_and_cancel_events_have_safe_states(self) -> None:
+        failed = self.emit(
+            {
+                "session_id": "claude-failure-session",
+                "hook_event_name": "PostToolUseFailure",
+                "tool_name": "Bash",
+                "tool_input": {"command": "pytest private-suite"},
+                "error": "private failure detail",
+            },
+            provider="claude",
+        )
+        self.assertEqual(failed["status"], "error")
+        self.assertEqual(failed["toolCategory"], "test")
+        self.assertEqual(failed["recentEvents"][-1]["outcome"], "failure")
+
+        stopped = self.emit(
+            {
+                "hookEventName": "stop_failure",
+                "sessionId": "grok-failure-session",
+                "errorDetails": "private API failure",
+            },
+            provider="grok",
+        )
+        self.assertEqual(stopped["status"], "error")
+        self.assertEqual(stopped["recentEvents"][-1]["outcome"], "failure")
+
+        cancelled = self.emit(
+            {
+                "hookEventName": "stop_cancelled",
+                "sessionId": "grok-failure-session",
+                "reasonDetails": "private cancel detail",
+            },
+            provider="grok",
+        )
+        self.assertEqual(cancelled["status"], "error")
+        self.assertEqual(cancelled["recentEvents"][-1]["status"], "ready")
+        persisted = self.all_persisted_json()
+        self.assertNotIn("private failure detail", persisted)
+        self.assertNotIn("private API failure", persisted)
+        self.assertNotIn("private cancel detail", persisted)
+
+    def test_grok_idle_notification_settles_interrupts_without_hiding_completion(self) -> None:
+        self.emit(
+            {
+                "hookEventName": "user_prompt_submit",
+                "sessionId": "grok-idle-session",
+                "prompt": "private prompt",
+            },
+            provider="grok",
+        )
+        interrupted = self.emit(
+            {
+                "hookEventName": "notification",
+                "sessionId": "grok-idle-session",
+                "notificationType": "idle_prompt",
+            },
+            provider="grok",
+        )
+        self.assertEqual(interrupted["status"], "ready")
+        self.assertEqual(interrupted["event"], "TurnIdle")
+
+        complete = self.emit(
+            {
+                "hookEventName": "stop",
+                "sessionId": "grok-idle-session",
+            },
+            provider="grok",
+        )
+        self.assertEqual(complete["status"], "success")
+        settled = self.emit(
+            {
+                "hookEventName": "notification",
+                "sessionId": "grok-idle-session",
+                "notificationType": "idle_prompt",
+            },
+            provider="grok",
+        )
+        self.assertEqual(settled["status"], "success")
+        self.assertEqual(settled["event"], "Stop")
+        self.assertEqual(settled["recentEvents"][-1]["event"], "TurnIdle")
+        self.assertNotIn("private prompt", self.all_persisted_json())
+
     def test_permission_has_priority_across_sessions(self) -> None:
         self.emit(
             {"session_id": "session-a", "hook_event_name": "UserPromptSubmit"}
@@ -284,6 +474,30 @@ class MiraCodexHookTest(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse((self.state_dir / "state.json").exists())
+
+    def test_state_write_failure_is_provider_fail_open(self) -> None:
+        blocked_state = Path(self.temporary.name) / "not-a-directory"
+        blocked_state.write_text("occupied", encoding="utf-8")
+        environment = os.environ.copy()
+        environment["MIRA_COMPANION_STATE_DIR"] = str(blocked_state)
+        result = subprocess.run(
+            ["python3", str(HOOK)],
+            input=json.dumps(
+                {
+                    "session_id": "session-a",
+                    "hook_event_name": "PreToolUse",
+                    "tool_name": "Bash",
+                }
+            ),
+            text=True,
+            capture_output=True,
+            env=environment,
+            check=False,
+        )
+        self.assertEqual(result.returncode, 0)
+        self.assertEqual(result.stdout, "")
+        self.assertEqual(result.stderr, "")
+        self.assertEqual(blocked_state.read_text(encoding="utf-8"), "occupied")
 
     def test_concurrent_subagent_events_do_not_lose_updates(self) -> None:
         environment = os.environ.copy()
