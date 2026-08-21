@@ -1,0 +1,1005 @@
+#!/usr/bin/env python3
+"""Minimal entry point for the native-first multi-agent execution fabric."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import re
+import shutil
+import sqlite3
+import subprocess
+import sys
+from typing import Any
+
+
+SCRIPT_DIRECTORY = Path(__file__).resolve().parent
+INSTALLED_LIBRARY = Path("/usr/local/lib/agentctl")
+if (INSTALLED_LIBRARY / "agentctl_jobs.py").is_file():
+    sys.path.insert(0, str(INSTALLED_LIBRARY))
+elif str(SCRIPT_DIRECTORY) not in sys.path:
+    sys.path.insert(0, str(SCRIPT_DIRECTORY))
+
+from agentctl_jobs import (  # noqa: E402
+    AgentctlJobError,
+    StatePaths,
+    Store,
+    capacity_limits,
+    collect_job,
+    create_job,
+    gc_inventory,
+    list_jobs,
+    new_ulid,
+    port_range,
+    queue_aging_seconds,
+    queue_limit,
+    read_job_log,
+    register_project,
+    run_job_foreground,
+    run_prepared_attempt,
+    show_job,
+    show_project,
+    validate_succeeded_job,
+)
+from agent_contracts import ContractValidationError  # noqa: E402
+from agentctl_supervisor import (  # noqa: E402
+    ensure_supervisor,
+    serve_supervisor,
+    supervisor_request,
+)
+
+
+VERSION = "0.7.0"
+SCHEMA_VERSION = 1
+SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
+
+
+def command_path(env_name: str, fallback: str) -> str | None:
+    override = os.environ.get(env_name)
+    if override:
+        return override
+    return shutil.which(fallback)
+
+
+def probe(argv: list[str], timeout: float = 20.0) -> tuple[int, str]:
+    try:
+        result = subprocess.run(
+            argv,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            timeout=timeout,
+            check=False,
+        )
+        return result.returncode, result.stdout
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        return 127, str(exc)
+
+
+def add_check(
+    checks: list[dict[str, Any]],
+    check_id: str,
+    status: str,
+    summary: str,
+    **details: Any,
+) -> None:
+    entry: dict[str, Any] = {"id": check_id, "status": status, "summary": summary}
+    entry.update(details)
+    checks.append(entry)
+
+
+def provider_capability(
+    checks: list[dict[str, Any]],
+    *,
+    name: str,
+    binary: str | None,
+    help_commands: list[list[str]],
+    required: list[str],
+    expected_version: str | None,
+) -> dict[str, Any]:
+    if not binary:
+        add_check(checks, f"provider.{name}", "fail", f"{name} executable is missing")
+        return {"available": False, "missing": required}
+
+    version_rc, version_text = probe([binary, "--version"])
+    combined_help = ""
+    failed_help: list[str] = []
+    for suffix in help_commands:
+        rc, text = probe([binary, *suffix])
+        combined_help += "\n" + text
+        if rc != 0:
+            failed_help.append(" ".join(suffix))
+    missing = [token for token in required if token not in combined_help]
+    version = version_text.strip().splitlines()[0] if version_text.strip() else "unknown"
+    version_matches = not expected_version or expected_version in version
+    if version_rc != 0 or failed_help or missing or not version_matches:
+        add_check(
+            checks,
+            f"provider.{name}",
+            "fail",
+            f"{name} does not satisfy the stable adapter contract",
+            path=binary,
+            version=version,
+            expected_version=expected_version,
+            missing_capabilities=missing,
+            failed_help_commands=failed_help,
+        )
+    else:
+        add_check(
+            checks,
+            f"provider.{name}",
+            "pass",
+            f"{name} satisfies required CLI capabilities",
+            path=binary,
+            version=version,
+            expected_version=expected_version,
+        )
+    return {
+        "available": True,
+        "path": binary,
+        "version": version,
+        "expected_version": expected_version,
+        "missing": missing,
+    }
+
+
+def pinned_command_versions(checks: list[dict[str, Any]], channel: str) -> None:
+    if channel != "stable":
+        return
+    specs = [
+        ("typescript", "DEVCONTAINER_TYPESCRIPT_VERSION", "AGENTCTL_TSC_BIN", "tsc"),
+        ("ts-node", "DEVCONTAINER_TS_NODE_VERSION", "AGENTCTL_TS_NODE_BIN", "ts-node"),
+        ("eslint", "DEVCONTAINER_ESLINT_VERSION", "AGENTCTL_ESLINT_BIN", "eslint"),
+        ("prettier", "DEVCONTAINER_PRETTIER_VERSION", "AGENTCTL_PRETTIER_BIN", "prettier"),
+    ]
+    observed: dict[str, Any] = {}
+    mismatches: list[str] = []
+    for name, expected_env, override_env, fallback in specs:
+        expected = os.environ.get(expected_env)
+        if not expected:
+            continue
+        binary = command_path(override_env, fallback)
+        if not binary:
+            observed[name] = {"expected": expected, "path": None, "version": "missing"}
+            mismatches.append(name)
+            continue
+        rc, output = probe([binary, "--version"])
+        version = output.strip().splitlines()[0] if output.strip() else "unknown"
+        observed[name] = {"expected": expected, "path": binary, "version": version}
+        if rc != 0 or expected not in version:
+            mismatches.append(name)
+    if observed:
+        add_check(
+            checks,
+            "toolchain.global_npm",
+            "fail" if mismatches else "pass",
+            "Pinned global npm tool mismatch" if mismatches else "Pinned global npm tools match the image contract",
+            tools=observed,
+            mismatches=mismatches,
+        )
+
+
+def lock_summary(workspace: Path) -> tuple[str, str, dict[str, Any]]:
+    candidates = [workspace / ".devcontainer" / "devcontainer-lock.json"]
+    if workspace != Path("/workspace"):
+        candidates.append(Path("/workspace/.devcontainer/devcontainer-lock.json"))
+    lock_path = next((path for path in candidates if path.is_file()), None)
+    if lock_path is None:
+        return "fail", "Dev Container Feature lockfile is missing", {}
+    try:
+        payload = json.loads(lock_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return "fail", "Dev Container Feature lockfile is invalid", {"error": str(exc)}
+    features = payload.get("features")
+    if not isinstance(features, dict) or not features:
+        return "fail", "Dev Container Feature lockfile has no Features", {"path": str(lock_path)}
+    invalid: list[str] = []
+    for name, entry in features.items():
+        integrity = entry.get("integrity") if isinstance(entry, dict) else None
+        resolved = entry.get("resolved") if isinstance(entry, dict) else None
+        if not isinstance(integrity, str) or not SHA256.fullmatch(integrity):
+            invalid.append(name)
+        elif not isinstance(resolved, str) or not resolved.endswith("@" + integrity):
+            invalid.append(name)
+    if invalid:
+        return "fail", "Feature lock contains invalid digest entries", {
+            "path": str(lock_path),
+            "invalid_features": sorted(invalid),
+        }
+    return "pass", "Dev Container Features are digest-locked", {
+        "path": str(lock_path),
+        "feature_count": len(features),
+    }
+
+
+def directory_bytes(paths: list[Path]) -> int:
+    total = 0
+    for root in paths:
+        if not root.exists():
+            continue
+        for path in root.rglob("*"):
+            try:
+                if path.is_file() and not path.is_symlink():
+                    total += path.stat().st_size
+            except OSError:
+                pass
+    return total
+
+
+def legacy_inventory(workspace: Path) -> dict[str, Any]:
+    backends = {
+        "codex": (".codex-second-agent", ".codex-worktrees", "refs/heads/agent/"),
+        "claude": (".claude-second-agent", ".claude-worktrees", "refs/heads/claude-agent/"),
+    }
+    output: dict[str, Any] = {}
+    for backend, (state_name, workspace_worktrees_name, branch_prefix) in backends.items():
+        state_root = workspace / state_name
+        workspace_worktrees = workspace / workspace_worktrees_name
+        session_paths = sorted(
+            str(path.relative_to(workspace)) for path in state_root.rglob("session_id") if path.is_file()
+        ) if state_root.exists() else []
+        worktree_paths: set[str] = set()
+        if state_root.exists():
+            for worktrees_root in state_root.rglob("worktrees"):
+                if worktrees_root.is_dir():
+                    for path in worktrees_root.iterdir():
+                        if path.is_dir():
+                            worktree_paths.add(str(path.relative_to(workspace)))
+        if workspace_worktrees.is_dir():
+            for path in workspace_worktrees.iterdir():
+                if path.is_dir():
+                    worktree_paths.add(str(path.relative_to(workspace)))
+
+        branch_rc, branch_text = probe(
+            ["git", "-C", str(workspace), "for-each-ref", "--format=%(refname:short)", branch_prefix]
+        )
+        branches = sorted(line for line in branch_text.splitlines() if line) if branch_rc == 0 else []
+        roots = [path for path in (state_root, workspace_worktrees) if path.exists()]
+        output[backend] = {
+            "state_root": str(state_root),
+            "state_exists": state_root.exists(),
+            "session_count": len(session_paths),
+            "session_paths": session_paths,
+            "worktree_count": len(worktree_paths),
+            "worktree_paths": sorted(worktree_paths),
+            "branch_count": len(branches),
+            "branches": branches,
+            "state_bytes": directory_bytes(roots),
+        }
+    return {
+        "workspace": str(workspace),
+        "destructive": False,
+        "backends": output,
+    }
+
+
+def run_doctor(args: argparse.Namespace) -> int:
+    workspace = Path(args.workspace).expanduser().resolve()
+    checks: list[dict[str, Any]] = []
+
+    add_check(checks, "runtime.python", "pass", "Python runtime available", version=sys.version.split()[0])
+    try:
+        connection = sqlite3.connect(":memory:")
+        json_value = connection.execute("select json('{}')").fetchone()[0]
+        connection.close()
+        add_check(
+            checks,
+            "runtime.sqlite",
+            "pass",
+            "SQLite transactions and JSON functions available",
+            version=sqlite3.sqlite_version,
+            json_probe=json_value,
+        )
+    except sqlite3.Error as exc:
+        add_check(checks, "runtime.sqlite", "fail", "SQLite capability probe failed", error=str(exc))
+
+    try:
+        limits = capacity_limits()
+        selected_port_range = port_range()
+        add_check(
+            checks,
+            "scheduler.config",
+            "pass",
+            "Capacity, queue, and integration port configuration is valid",
+            capacity=limits,
+            queue_limit=queue_limit(),
+            queue_aging_seconds=queue_aging_seconds(),
+            port_range=list(selected_port_range),
+        )
+    except AgentctlJobError as exc:
+        add_check(
+            checks,
+            "scheduler.config",
+            "fail",
+            "Capacity, queue, or integration port configuration is invalid",
+            error=str(exc),
+        )
+
+    bash = command_path("AGENTCTL_BASH_BIN", "bash")
+    if bash:
+        rc, output = probe([bash, "--version"])
+        match = re.search(r"version\s+(\d+)\.(\d+)", output)
+        supported = bool(match and (int(match.group(1)), int(match.group(2))) >= (4, 4))
+        add_check(
+            checks,
+            "runtime.bash",
+            "pass" if rc == 0 and supported else "fail",
+            "Bash >= 4.4 available" if supported else "Bash >= 4.4 is required for legacy compatibility",
+            path=bash,
+            version=match.group(0) if match else "unknown",
+        )
+    else:
+        add_check(checks, "runtime.bash", "fail", "Bash executable is missing")
+
+    git = command_path("AGENTCTL_GIT_BIN", "git")
+    if git:
+        git_rc, git_output = probe([git, "--version"])
+        add_check(
+            checks,
+            "runtime.git",
+            "pass" if git_rc == 0 else "fail",
+            "Git executable available" if git_rc == 0 else "Git version probe failed",
+            path=git,
+            version=git_output.strip(),
+        )
+        repo_rc, _ = probe([git, "-C", str(workspace), "rev-parse", "--is-inside-work-tree"])
+        add_check(
+            checks,
+            "workspace.git",
+            "pass" if repo_rc == 0 else "warn",
+            "Workspace is a Git worktree" if repo_rc == 0 else "Workspace is not a Git worktree",
+            workspace=str(workspace),
+        )
+    else:
+        add_check(checks, "runtime.git", "fail", "Git executable is missing")
+
+    channel = os.environ.get("DEVCONTAINER_AI_CLI_CHANNEL") or "stable"
+    if channel == "stable":
+        add_check(checks, "toolchain.channel", "pass", "Stable pinned toolchain selected", channel=channel)
+    elif channel == "edge":
+        add_check(checks, "toolchain.channel", "warn", "Edge host-synchronized toolchain selected", channel=channel)
+    else:
+        add_check(checks, "toolchain.channel", "fail", "Unknown toolchain channel", channel=channel)
+
+    profile = os.environ.get("AGENTCTL_PERMISSION_PROFILE") or "safe"
+    if profile == "safe":
+        add_check(checks, "permission.profile", "pass", "Safe command profile selected", profile=profile)
+    elif profile == "trusted-fast":
+        add_check(
+            checks,
+            "permission.profile",
+            "warn",
+            "Trusted-fast bypass profile selected; this is not a security boundary",
+            profile=profile,
+        )
+    else:
+        add_check(checks, "permission.profile", "fail", "Unknown permission profile", profile=profile)
+
+    lock_status, lock_message, lock_details = lock_summary(workspace)
+    add_check(checks, "toolchain.feature_lock", lock_status, lock_message, **lock_details)
+    pinned_command_versions(checks, channel)
+
+    capabilities: dict[str, Any] = {}
+    capabilities["codex"] = provider_capability(
+        checks,
+        name="codex",
+        binary=command_path("AGENTCTL_CODEX_BIN", "codex"),
+        help_commands=[["--help"], ["exec", "--help"]],
+        required=[
+            "exec",
+            "--sandbox",
+            "--ask-for-approval",
+            "--output-schema",
+            "--output-last-message",
+            "--ephemeral",
+            "--color",
+            "--json",
+            "--cd",
+        ],
+        expected_version=os.environ.get("DEVCONTAINER_CODEX_CLI_VERSION") if channel == "stable" else None,
+    )
+    capabilities["claude"] = provider_capability(
+        checks,
+        name="claude",
+        binary=command_path("AGENTCTL_CLAUDE_BIN", "claude"),
+        help_commands=[["--help"]],
+        required=[
+            "--print",
+            "--output-format",
+            "--json-schema",
+            "--permission-mode",
+            "--agent",
+            "--worktree",
+            "--no-session-persistence",
+        ],
+        expected_version=os.environ.get("DEVCONTAINER_CLAUDE_CODE_VERSION") if channel == "stable" else None,
+    )
+    capabilities["grok"] = provider_capability(
+        checks,
+        name="grok",
+        binary=command_path("AGENTCTL_GROK_BIN", "grok"),
+        help_commands=[["--help"], ["agent", "--help"], ["--no-auto-update", "--help"]],
+        required=[
+            "--agent",
+            "--allow",
+            "--cwd",
+            "--deny",
+            "--json-schema",
+            "--max-turns",
+            "--no-memory",
+            "--no-subagents",
+            "--output-format",
+            "--permission-mode",
+            "--prompt-file",
+            "--sandbox",
+            "stdio",
+        ],
+        expected_version=os.environ.get("DEVCONTAINER_GROK_CLI_VERSION") if channel == "stable" else None,
+    )
+
+    expected_gh = os.environ.get("DEVCONTAINER_GITHUB_CLI_VERSION") if channel == "stable" else None
+    gh = command_path("AGENTCTL_GH_BIN", "gh")
+    if not gh:
+        add_check(
+            checks,
+            "runtime.github_cli",
+            "fail" if expected_gh else "warn",
+            "Pinned GitHub CLI is missing" if expected_gh else "GitHub CLI unavailable",
+            expected_version=expected_gh,
+        )
+    else:
+        gh_rc, gh_output = probe([gh, "--version"])
+        gh_version = gh_output.strip().splitlines()[0] if gh_output.strip() else "unknown"
+        gh_matches = gh_rc == 0 and (not expected_gh or expected_gh in gh_version)
+        add_check(
+            checks,
+            "runtime.github_cli",
+            "pass" if gh_matches else "fail",
+            "GitHub CLI matches the stable contract" if gh_matches else "GitHub CLI version mismatch",
+            path=gh,
+            version=gh_version,
+            expected_version=expected_gh,
+        )
+
+    docker = command_path("AGENTCTL_DOCKER_BIN", "docker")
+    docker_expected = os.environ.get("DEVCONTAINER_DOCKER_VERSION") if channel == "stable" else None
+    buildx_expected = os.environ.get("DEVCONTAINER_DOCKER_BUILDX_VERSION") if channel == "stable" else None
+    compose_expected = os.environ.get("DEVCONTAINER_DOCKER_COMPOSE_VERSION") if channel == "stable" else None
+    if not docker:
+        expected = any((docker_expected, buildx_expected, compose_expected))
+        add_check(
+            checks,
+            "runtime.docker",
+            "fail" if expected else "warn",
+            "Pinned Docker CLI is missing" if expected else "Docker unavailable; integration lanes cannot run",
+            expected_versions={"docker": docker_expected, "buildx": buildx_expected, "compose": compose_expected},
+        )
+    else:
+        client_rc, client_output = probe([docker, "--version"])
+        daemon_rc, daemon_output = probe([docker, "info", "--format", "{{.ServerVersion}}"])
+        compose_rc, compose_output = probe([docker, "compose", "version"])
+        buildx_rc, buildx_output = probe([docker, "buildx", "version"])
+        mismatches = []
+        for name, expected, rc, output in (
+            ("docker", docker_expected, client_rc, client_output),
+            ("buildx", buildx_expected, buildx_rc, buildx_output),
+            ("compose", compose_expected, compose_rc, compose_output),
+        ):
+            if expected and (rc != 0 or expected not in output):
+                mismatches.append(name)
+        if mismatches:
+            status = "fail"
+            summary = "Docker tool versions do not match the stable contract"
+        elif client_rc == 0 and compose_rc == 0 and buildx_rc == 0 and daemon_rc == 0:
+            status = "pass"
+            summary = "Docker daemon, Buildx, and Compose match the stable contract"
+        else:
+            status = "warn"
+            summary = "Docker tools match, but the integration runtime is not fully available"
+        add_check(
+            checks,
+            "runtime.docker",
+            status,
+            summary,
+            path=docker,
+            client_version=client_output.strip(),
+            daemon_version=daemon_output.strip(),
+            buildx_version=buildx_output.strip(),
+            compose_version=compose_output.strip(),
+            expected_versions={"docker": docker_expected, "buildx": buildx_expected, "compose": compose_expected},
+            mismatches=mismatches,
+            daemon_available=daemon_rc == 0,
+            buildx_available=buildx_rc == 0,
+            compose_available=compose_rc == 0,
+        )
+
+    inventory = legacy_inventory(workspace)
+    legacy_sessions = sum(item["session_count"] for item in inventory["backends"].values())
+    legacy_worktrees = sum(item["worktree_count"] for item in inventory["backends"].values())
+    add_check(
+        checks,
+        "legacy.inventory",
+        "warn" if legacy_sessions or legacy_worktrees else "pass",
+        "Legacy state requires explicit migration" if legacy_sessions or legacy_worktrees else "No legacy sessions or worktrees found",
+        session_count=legacy_sessions,
+        worktree_count=legacy_worktrees,
+    )
+
+    add_check(
+        checks,
+        "security.boundary",
+        "warn",
+        "Current privileged devcontainer and credential mounts are not a security boundary",
+    )
+
+    ok = not any(check["status"] == "fail" for check in checks)
+    payload = {
+        "schema_version": SCHEMA_VERSION,
+        "command": "doctor",
+        "agentctl_version": VERSION,
+        "ok": ok,
+        "workspace": str(workspace),
+        "toolchain_channel": channel,
+        "permission_profile": profile,
+        "checks": checks,
+        "capabilities": capabilities,
+        "legacy": inventory,
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print(f"agentctl doctor: {'ok' if ok else 'failed'}")
+        for check in checks:
+            print(f"[{check['status']}] {check['id']}: {check['summary']}")
+    return 0 if ok else 1
+
+
+def run_inventory(args: argparse.Namespace) -> int:
+    workspace = Path(args.workspace).expanduser().resolve()
+    payload = {
+        "schema_version": SCHEMA_VERSION,
+        "command": "legacy inventory",
+        **legacy_inventory(workspace),
+    }
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print(f"legacy inventory (read-only): {workspace}")
+        for name, item in payload["backends"].items():
+            print(
+                f"{name}: sessions={item['session_count']} worktrees={item['worktree_count']} "
+                f"branches={item['branch_count']} bytes={item['state_bytes']}"
+            )
+            for path in item["session_paths"]:
+                print(f"  session: {path}")
+            for path in item["worktree_paths"]:
+                print(f"  worktree: {path}")
+            for branch in item["branches"]:
+                print(f"  branch: {branch}")
+    return 0
+
+
+def state_paths(args: argparse.Namespace) -> StatePaths:
+    return StatePaths.from_value(args.state_dir)
+
+
+def print_payload(payload: Any, *, as_json: bool, summary: str) -> None:
+    if as_json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        print(summary)
+
+
+def run_project_register(args: argparse.Namespace) -> int:
+    with Store(state_paths(args)) as store:
+        project = register_project(store, args.workspace)
+    print_payload(
+        project,
+        as_json=args.json,
+        summary=f"project {project['project_id']} registered: {project['registered_path']}",
+    )
+    return 0
+
+
+def run_project_show(args: argparse.Namespace) -> int:
+    with Store(state_paths(args)) as store:
+        project = show_project(store, args.workspace)
+    print_payload(
+        project,
+        as_json=args.json,
+        summary=f"project {project['project_id']}: {project['current_path']}",
+    )
+    return 0
+
+
+def run_job_id(args: argparse.Namespace) -> int:
+    print(new_ulid())
+    return 0
+
+
+def run_job_create(args: argparse.Namespace) -> int:
+    with Store(state_paths(args)) as store:
+        job = create_job(
+            store,
+            args.workspace,
+            args.task,
+            requested_job_id=args.job_id,
+            base_revision=args.base,
+        )
+    print_payload(
+        job,
+        as_json=args.json,
+        summary=f"job {job['job_id']} created at {job['base_sha']} ({job['lane']}/{job['role']})",
+    )
+    return 0
+
+
+def run_job_list(args: argparse.Namespace) -> int:
+    with Store(state_paths(args)) as store:
+        jobs = list_jobs(store, args.workspace, state=args.state)
+    if args.json:
+        print(json.dumps({"jobs": jobs}, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        for job in jobs:
+            print(
+                f"{job['job_id']} {job['state']:<10} {job['lane']:<8} "
+                f"{job['role']:<12} {job['base_sha'][:12]}"
+            )
+    return 0
+
+
+def run_job_show(args: argparse.Namespace) -> int:
+    with Store(state_paths(args)) as store:
+        job = show_job(store, args.job_id)
+    latest = job["attempts"][-1] if job["attempts"] else None
+    summary = f"job {job['job_id']}: {job['state']}"
+    if latest:
+        summary += f"; attempt {latest['number']} {latest['state']} ({latest['provider']})"
+    print_payload(job, as_json=args.json, summary=summary)
+    return 0
+
+
+def run_job_logs(args: argparse.Namespace) -> int:
+    with Store(state_paths(args)) as store:
+        payload = read_job_log(
+            store,
+            args.job_id,
+            attempt_number=args.attempt,
+            source="runner" if args.runner else "process",
+            max_lines=args.lines,
+            max_bytes=args.bytes,
+        )
+    if args.json:
+        print(json.dumps(payload, ensure_ascii=False, indent=2, sort_keys=True))
+    else:
+        sys.stdout.write(payload["content"])
+        if payload["content"] and not payload["content"].endswith("\n"):
+            sys.stdout.write("\n")
+    return 0
+
+
+def run_job_run(args: argparse.Namespace) -> int:
+    if args.detach:
+        paths = state_paths(args)
+        ensure_supervisor(paths, Path(__file__).resolve())
+        response = supervisor_request(
+            paths,
+            {
+                "command": "submit",
+                "job_id": args.job_id,
+                "provider": args.provider,
+                "clean_retry": args.clean_retry,
+                "allow_trusted_fast": args.allow_trusted_fast,
+                "environment": dict(os.environ),
+            },
+        )
+        result = response["result"]
+        print_payload(
+            result,
+            as_json=args.json,
+            summary=(
+                f"job {result['job_id']} queued for {result['resource_class']} capacity; "
+                f"position={result['queue']['position']}"
+                if result["state"] == "waiting_capacity"
+                else f"job {result['job_id']} accepted; attempt={result['attempt_id']} "
+                f"runtime={result['runtime_id']}"
+            ),
+        )
+        return 0
+    with Store(state_paths(args)) as store:
+        job = run_job_foreground(
+            store,
+            args.job_id,
+            args.provider,
+            clean_retry=args.clean_retry,
+            allow_trusted_fast=args.allow_trusted_fast,
+        )
+    latest = job["attempts"][-1]
+    print_payload(
+        job,
+        as_json=args.json,
+        summary=(
+            f"job {job['job_id']} succeeded; attempt={latest['attempt_id']} "
+            f"head={latest['head_sha']}"
+        ),
+    )
+    return 0
+
+
+def run_job_cancel(args: argparse.Namespace) -> int:
+    paths = state_paths(args)
+    ensure_supervisor(paths, Path(__file__).resolve())
+    response = supervisor_request(paths, {"command": "cancel", "job_id": args.job_id})
+    job = response["result"]
+    print_payload(
+        job,
+        as_json=args.json,
+        summary=f"job {job['job_id']} cancelled",
+    )
+    return 0
+
+
+def run_supervisor_status(args: argparse.Namespace) -> int:
+    paths = state_paths(args)
+    response = ensure_supervisor(paths, Path(__file__).resolve())
+    print_payload(
+        response["result"],
+        as_json=args.json,
+        summary=f"agentctl supervisor running: pid={response['result']['pid']}",
+    )
+    return 0
+
+
+def run_supervisor_reconcile(args: argparse.Namespace) -> int:
+    paths = state_paths(args)
+    ensure_supervisor(paths, Path(__file__).resolve())
+    response = supervisor_request(paths, {"command": "reconcile"})
+    result = response["result"]
+    print_payload(
+        result,
+        as_json=args.json,
+        summary=(
+            f"supervisor reconciliation: {len(result['actions'])} recovery action(s), "
+            f"{len(result['promotions'])} queue promotion(s)"
+        ),
+    )
+    return 0
+
+
+def run_supervisor_stop(args: argparse.Namespace) -> int:
+    response = supervisor_request(state_paths(args), {"command": "stop"})
+    print_payload(
+        response["result"],
+        as_json=args.json,
+        summary="agentctl supervisor stopping (active runners are not implicitly cancelled)",
+    )
+    return 0
+
+
+def run_internal_runner(args: argparse.Namespace) -> int:
+    if sys.stdin.readline() != "go\n":
+        raise AgentctlJobError("detached runner did not receive its supervisor start gate")
+    with Store(state_paths(args)) as store:
+        job = run_prepared_attempt(
+            store,
+            args.attempt_id,
+            allow_trusted_fast=args.allow_trusted_fast,
+        )
+    latest = job["attempts"][-1]
+    print(
+        f"job {job['job_id']} succeeded; attempt={latest['attempt_id']} "
+        f"head={latest['head_sha']}"
+    )
+    return 0
+
+
+def run_internal_supervisor(args: argparse.Namespace) -> int:
+    return serve_supervisor(state_paths(args), Path(__file__).resolve())
+
+
+def run_job_validate(args: argparse.Namespace) -> int:
+    with Store(state_paths(args)) as store:
+        job = validate_succeeded_job(store, args.job_id)
+    print_payload(
+        job,
+        as_json=args.json,
+        summary=f"job {job['job_id']} validated at {job['validation']['head_sha']}",
+    )
+    return 0
+
+
+def run_job_collect(args: argparse.Namespace) -> int:
+    with Store(state_paths(args)) as store:
+        report = collect_job(
+            store,
+            args.job_id,
+            target_revision=args.onto,
+        )
+    print_payload(
+        report,
+        as_json=args.json,
+        summary=(
+            f"integration report {report['collection_id']}: {report['integration_assessment']}; "
+            f"{len(report['candidate_commits'])} candidate commit(s); {report['report_path']}"
+        ),
+    )
+    return 0
+
+
+def run_gc(args: argparse.Namespace) -> int:
+    if not args.dry_run:
+        raise AgentctlJobError(
+            "destructive GC is not implemented; pass --dry-run to inspect candidates"
+        )
+    with Store(state_paths(args)) as store:
+        inventory = gc_inventory(store, job_id=args.job_id)
+    print_payload(
+        inventory,
+        as_json=args.json,
+        summary=(
+            f"GC dry-run: {inventory['summary']['eligible']} eligible, "
+            f"{inventory['summary']['blocked']} blocked; no resources changed"
+        ),
+    )
+    return 0
+
+
+def parser() -> argparse.ArgumentParser:
+    root = argparse.ArgumentParser(prog="agentctl")
+    root.add_argument("--version", action="version", version=f"agentctl {VERSION}")
+    root.add_argument(
+        "--state-dir",
+        default=os.environ.get("AGENTCTL_STATE_DIR"),
+        help="persistent state root (default: AGENTCTL_STATE_DIR or ~/.local/state/agentctl)",
+    )
+    commands = root.add_subparsers(dest="command", required=True)
+
+    doctor = commands.add_parser("doctor", help="probe stable toolchain and provider capabilities")
+    doctor.add_argument("--json", action="store_true")
+    doctor.add_argument("--workspace", default=os.getcwd())
+    doctor.set_defaults(handler=run_doctor)
+
+    legacy = commands.add_parser("legacy", help="inspect the frozen second-agent runtime")
+    legacy_commands = legacy.add_subparsers(dest="legacy_command", required=True)
+    inventory = legacy_commands.add_parser("inventory", help="list legacy state without deleting it")
+    inventory.add_argument("--json", action="store_true")
+    inventory.add_argument("--workspace", default=os.getcwd())
+    inventory.set_defaults(handler=run_inventory)
+
+    gc = commands.add_parser("gc", help="inventory conservative cleanup candidates")
+    gc.add_argument("--dry-run", action="store_true", help="required; never deletes resources")
+    gc.add_argument("--job", dest="job_id", help="limit inventory to one job ID")
+    gc.add_argument("--json", action="store_true")
+    gc.set_defaults(handler=run_gc)
+
+    project = commands.add_parser("project", help="register and inspect stable Git project identity")
+    project_commands = project.add_subparsers(dest="project_command", required=True)
+    project_register = project_commands.add_parser("register", help="register the current Git project")
+    project_register.add_argument("--workspace", default=os.getcwd())
+    project_register.add_argument("--json", action="store_true")
+    project_register.set_defaults(handler=run_project_register)
+    project_show = project_commands.add_parser("show", help="show the registered project")
+    project_show.add_argument("--workspace", default=os.getcwd())
+    project_show.add_argument("--json", action="store_true")
+    project_show.set_defaults(handler=run_project_show)
+
+    job = commands.add_parser("job", help="create and execute immutable agent jobs")
+    job_commands = job.add_subparsers(dest="job_command", required=True)
+
+    job_id = job_commands.add_parser("id", help="generate a canonical sortable job ULID")
+    job_id.set_defaults(handler=run_job_id)
+
+    job_create = job_commands.add_parser("create", help="validate and persist a task envelope")
+    job_create.add_argument("--task", required=True)
+    job_create.add_argument("--workspace", default=os.getcwd())
+    job_create.add_argument("--job-id")
+    job_create.add_argument("--base", help="explicit Git revision; must match task base_sha when present")
+    job_create.add_argument("--json", action="store_true")
+    job_create.set_defaults(handler=run_job_create)
+
+    job_list = job_commands.add_parser("list", help="list jobs for a registered project")
+    job_list.add_argument("--workspace", default=os.getcwd())
+    job_list.add_argument("--state")
+    job_list.add_argument("--json", action="store_true")
+    job_list.set_defaults(handler=run_job_list)
+
+    job_show = job_commands.add_parser("show", help="show job, attempts, dependencies, and leases")
+    job_show.add_argument("job_id")
+    job_show.add_argument("--json", action="store_true")
+    job_show.set_defaults(handler=run_job_show)
+
+    job_logs = job_commands.add_parser(
+        "logs", help="show a bounded, redacted tail of one attempt log"
+    )
+    job_logs.add_argument("job_id")
+    job_logs.add_argument("--attempt", type=int, help="attempt number (default: latest)")
+    job_logs.add_argument("--runner", action="store_true", help="show runner.log instead of process.log")
+    job_logs.add_argument("--lines", type=int, default=80)
+    job_logs.add_argument("--bytes", type=int, default=65536)
+    job_logs.add_argument("--json", action="store_true")
+    job_logs.set_defaults(handler=run_job_logs)
+
+    job_run = job_commands.add_parser("run", help="prepare a workspace and run one provider")
+    job_run.add_argument("job_id")
+    job_run.add_argument("--provider", choices=("codex", "claude", "grok"), required=True)
+    job_run.add_argument("--clean-retry", action="store_true")
+    job_run.add_argument("--allow-trusted-fast", action="store_true")
+    job_run.add_argument(
+        "--detach",
+        action="store_true",
+        help="submit to the local supervisor and return after acceptance",
+    )
+    job_run.add_argument("--json", action="store_true")
+    job_run.set_defaults(handler=run_job_run)
+
+    job_cancel = job_commands.add_parser(
+        "cancel", help="cancel the active attempt and its process group"
+    )
+    job_cancel.add_argument("job_id")
+    job_cancel.add_argument("--json", action="store_true")
+    job_cancel.set_defaults(handler=run_job_cancel)
+
+    job_validate = job_commands.add_parser("validate", help="recompute Git/result evidence and seal success")
+    job_validate.add_argument("job_id")
+    job_validate.add_argument("--json", action="store_true")
+    job_validate.set_defaults(handler=run_job_validate)
+
+    job_collect = job_commands.add_parser(
+        "collect", help="write a read-only single-writer integration handoff report"
+    )
+    job_collect.add_argument("job_id")
+    job_collect.add_argument(
+        "--onto",
+        help="target Git revision to assess (default: registered workspace HEAD)",
+    )
+    job_collect.add_argument("--json", action="store_true")
+    job_collect.set_defaults(handler=run_job_collect)
+
+    supervisor = commands.add_parser(
+        "supervisor", help="inspect and reconcile detached execution"
+    )
+    supervisor_commands = supervisor.add_subparsers(
+        dest="supervisor_command", required=True
+    )
+    supervisor_status = supervisor_commands.add_parser(
+        "status", help="start if needed and show status"
+    )
+    supervisor_status.add_argument("--json", action="store_true")
+    supervisor_status.set_defaults(handler=run_supervisor_status)
+    supervisor_reconcile = supervisor_commands.add_parser(
+        "reconcile", help="reconcile stale process identities and heartbeats"
+    )
+    supervisor_reconcile.add_argument("--json", action="store_true")
+    supervisor_reconcile.set_defaults(handler=run_supervisor_reconcile)
+    supervisor_stop = supervisor_commands.add_parser(
+        "stop", help="stop only the local control plane"
+    )
+    supervisor_stop.add_argument("--json", action="store_true")
+    supervisor_stop.set_defaults(handler=run_supervisor_stop)
+
+    internal_runner = commands.add_parser("_runner", help=argparse.SUPPRESS)
+    internal_runner.add_argument("attempt_id")
+    internal_runner.add_argument("--allow-trusted-fast", action="store_true")
+    internal_runner.set_defaults(handler=run_internal_runner)
+    internal_supervisor = commands.add_parser("_supervisor", help=argparse.SUPPRESS)
+    internal_supervisor_commands = internal_supervisor.add_subparsers(
+        dest="internal_supervisor_command", required=True
+    )
+    internal_supervisor_serve = internal_supervisor_commands.add_parser("serve")
+    internal_supervisor_serve.set_defaults(handler=run_internal_supervisor)
+    return root
+
+
+def main() -> int:
+    args = parser().parse_args()
+    try:
+        return int(args.handler(args))
+    except (AgentctlJobError, ContractValidationError, OSError, sqlite3.Error) as exc:
+        print(f"agentctl: error: {exc}", file=sys.stderr)
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
