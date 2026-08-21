@@ -21,7 +21,7 @@ CODEX_HELP = """exec --sandbox --ask-for-approval --cd --color
 CLAUDE_HELP = """--print --output-format --json-schema --permission-mode --agent --worktree
 --no-session-persistence
 """
-GROK_HELP = """--agent --allow --cwd --deny --json-schema --max-turns --no-memory --no-subagents
+GROK_HELP = """--agent --allow --cwd --deny --json-schema --max-turns --no-subagents
 --output-format --permission-mode --prompt-file --sandbox stdio
 """
 
