@@ -441,7 +441,7 @@ function processEvents(inputProfile, events, nowMs = Date.now()) {
     }
 
     if (
-      event.event === "PostToolUse" &&
+      ["PostToolUse", "PostToolUseFailure"].includes(event.event) &&
       event.category === "test" &&
       event.outcome !== "unknown"
     ) {
@@ -509,7 +509,7 @@ function lineForState(
     .reverse()
     .find(
       (event) =>
-        event.event === "PostToolUse" &&
+        ["PostToolUse", "PostToolUseFailure"].includes(event.event) &&
         event.category === "test" &&
         event.outcome !== "unknown",
     );

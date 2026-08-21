@@ -60,8 +60,8 @@ test("an explicit test recovery becomes a safe memory and unlocks stickers", () 
   const result = processEvents(
     createProfile(NOW),
     [
-      event("test-1", "PostToolUse", {
-        status: "testing",
+      event("test-1", "PostToolUseFailure", {
+        status: "error",
         category: "test",
         outcome: "failure",
       }),

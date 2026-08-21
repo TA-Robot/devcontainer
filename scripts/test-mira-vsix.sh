@@ -42,7 +42,7 @@ with zipfile.ZipFile(path) as archive:
     manifest = json.loads(archive.read("extension/assets/manifest.json"))
     if package["publisher"] != "asakura" or package["name"] != "mira-companion":
         raise SystemExit("unexpected extension identity")
-    if package["version"] != "0.4.0":
+    if package["version"] != "0.5.0":
         raise SystemExit(f"unexpected extension version: {package['version']}")
     contributes = package.get("contributes", {})
     containers = contributes.get("viewsContainers", {})
@@ -120,7 +120,7 @@ cat >"$mock_editor_cli" <<'SH'
 set -euo pipefail
 if [[ "${1:-}" == "--list-extensions" ]]; then
   if [[ -f "$MIRA_TEST_EDITOR_STATE" ]]; then
-    echo "asakura.mira-companion@0.4.0"
+    echo "asakura.mira-companion@0.5.0"
   fi
   exit 0
 fi
@@ -141,7 +141,7 @@ installer_output="$(
     MIRA_TEST_EDITOR_STATE="$mock_editor_state" \
     "$script_dir/install-mira-vscode-extension"
 )"
-if [[ "$installer_output" != *"mira-companion: installed asakura.mira-companion@0.4.0 with $mock_editor_cli"* ]]; then
+if [[ "$installer_output" != *"mira-companion: installed asakura.mira-companion@0.5.0 with $mock_editor_cli"* ]]; then
   echo "Mira installer did not exercise the detected editor CLI" >&2
   exit 1
 fi
@@ -171,7 +171,7 @@ if [[ "${1:-}" == "--server-data-dir" ]]; then
 fi
 if [[ "${1:-}" == "--list-extensions" ]]; then
   if [[ -f "$MIRA_TEST_EDITOR_STATE" ]]; then
-    echo "asakura.mira-companion@0.4.0"
+    echo "asakura.mira-companion@0.5.0"
   fi
   exit 0
 fi
