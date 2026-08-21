@@ -1,0 +1,71 @@
+# Container-owned Codex lifecycle hooks for Mira Companion.
+#
+# A system requirements layer is used deliberately: the devcontainer is the
+# distribution boundary, so target repositories do not need to copy or trust a
+# project-local .codex/hooks.json file.
+
+[hooks]
+managed_dir = "/usr/local/lib/mira-companion"
+
+[[hooks.SessionStart]]
+
+[[hooks.SessionStart.hooks]]
+type = "command"
+command = "/usr/local/lib/mira-companion/mira-codex-hook.py"
+timeout = 2
+
+[[hooks.SessionEnd]]
+
+[[hooks.SessionEnd.hooks]]
+type = "command"
+command = "/usr/local/lib/mira-companion/mira-codex-hook.py"
+timeout = 2
+
+[[hooks.UserPromptSubmit]]
+
+[[hooks.UserPromptSubmit.hooks]]
+type = "command"
+command = "/usr/local/lib/mira-companion/mira-codex-hook.py"
+timeout = 2
+
+[[hooks.PreToolUse]]
+
+[[hooks.PreToolUse.hooks]]
+type = "command"
+command = "/usr/local/lib/mira-companion/mira-codex-hook.py"
+timeout = 2
+
+[[hooks.PostToolUse]]
+
+[[hooks.PostToolUse.hooks]]
+type = "command"
+command = "/usr/local/lib/mira-companion/mira-codex-hook.py"
+timeout = 2
+
+[[hooks.PermissionRequest]]
+
+[[hooks.PermissionRequest.hooks]]
+type = "command"
+command = "/usr/local/lib/mira-companion/mira-codex-hook.py"
+timeout = 2
+
+[[hooks.SubagentStart]]
+
+[[hooks.SubagentStart.hooks]]
+type = "command"
+command = "/usr/local/lib/mira-companion/mira-codex-hook.py"
+timeout = 2
+
+[[hooks.SubagentStop]]
+
+[[hooks.SubagentStop.hooks]]
+type = "command"
+command = "/usr/local/lib/mira-companion/mira-codex-hook.py"
+timeout = 2
+
+[[hooks.Stop]]
+
+[[hooks.Stop.hooks]]
+type = "command"
+command = "/usr/local/lib/mira-companion/mira-codex-hook.py"
+timeout = 2

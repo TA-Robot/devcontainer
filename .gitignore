@@ -4,3 +4,4 @@
 .claude-second-agent/
 scripts/__pycache__/
 fugu-api
+dist/

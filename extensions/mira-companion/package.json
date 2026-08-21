@@ -1,0 +1,297 @@
+{
+  "name": "mira-companion",
+  "displayName": "Mira Companion",
+  "description": "Codexの作業が小さなドット絵世界の出来事になる、bottom-panelのMira World。",
+  "version": "0.3.1",
+  "publisher": "asakura",
+  "license": "UNLICENSED",
+  "engines": {
+    "vscode": "^1.95.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "keywords": [
+    "codex",
+    "pet",
+    "companion",
+    "multi-agent"
+  ],
+  "extensionKind": [
+    "workspace"
+  ],
+  "main": "./src/extension.js",
+  "activationEvents": [
+    "onStartupFinished",
+    "onView:miraCompanion.world",
+    "onCommand:miraCompanion.openWorld"
+  ],
+  "contributes": {
+    "commands": [
+      {
+        "command": "miraCompanion.openWorld",
+        "title": "ミラ: Mira Worldを開く",
+        "icon": "$(mira-idle-1)"
+      }
+    ],
+    "viewsContainers": {
+      "panel": [
+        {
+          "id": "miraCompanion.worldContainer",
+          "title": "Mira World",
+          "icon": "./media/mira-panel.svg"
+        }
+      ]
+    },
+    "views": {
+      "miraCompanion.worldContainer": [
+        {
+          "type": "webview",
+          "id": "miraCompanion.world",
+          "name": "ミラの工房",
+          "contextualTitle": "Mira World",
+          "visibility": "visible"
+        }
+      ]
+    },
+    "icons": {
+      "mira-idle-1": {
+        "description": "Mira idle frame 1",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E001"
+        }
+      },
+      "mira-idle-2": {
+        "description": "Mira idle frame 2",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E002"
+        }
+      },
+      "mira-idle-3": {
+        "description": "Mira idle frame 3",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E003"
+        }
+      },
+      "mira-idle-4": {
+        "description": "Mira idle frame 4",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E004"
+        }
+      },
+      "mira-ready": {
+        "description": "Mira ready",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E005"
+        }
+      },
+      "mira-thinking": {
+        "description": "Mira thinking",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E006"
+        }
+      },
+      "mira-research-1": {
+        "description": "Mira research frame 1",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E007"
+        }
+      },
+      "mira-research-2": {
+        "description": "Mira research frame 2",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E008"
+        }
+      },
+      "mira-research-3": {
+        "description": "Mira research frame 3",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E009"
+        }
+      },
+      "mira-research-4": {
+        "description": "Mira research frame 4",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E00A"
+        }
+      },
+      "mira-typing-1": {
+        "description": "Mira typing frame 1",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E00B"
+        }
+      },
+      "mira-typing-2": {
+        "description": "Mira typing frame 2",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E00C"
+        }
+      },
+      "mira-typing-3": {
+        "description": "Mira typing frame 3",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E00D"
+        }
+      },
+      "mira-typing-4": {
+        "description": "Mira typing frame 4",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E00E"
+        }
+      },
+      "mira-terminal-1": {
+        "description": "Mira terminal frame 1",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E00F"
+        }
+      },
+      "mira-terminal-2": {
+        "description": "Mira terminal frame 2",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E010"
+        }
+      },
+      "mira-terminal-3": {
+        "description": "Mira terminal frame 3",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E011"
+        }
+      },
+      "mira-terminal-4": {
+        "description": "Mira terminal frame 4",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E012"
+        }
+      },
+      "mira-testing-1": {
+        "description": "Mira testing frame 1",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E013"
+        }
+      },
+      "mira-testing-2": {
+        "description": "Mira testing frame 2",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E014"
+        }
+      },
+      "mira-testing-3": {
+        "description": "Mira testing frame 3",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E015"
+        }
+      },
+      "mira-testing-4": {
+        "description": "Mira testing frame 4",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E016"
+        }
+      },
+      "mira-delegating-1": {
+        "description": "Mira delegation frame 1",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E017"
+        }
+      },
+      "mira-delegating-2": {
+        "description": "Mira delegation frame 2",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E018"
+        }
+      },
+      "mira-delegating-3": {
+        "description": "Mira delegation frame 3",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E019"
+        }
+      },
+      "mira-delegating-4": {
+        "description": "Mira delegation frame 4",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E01A"
+        }
+      },
+      "mira-approval": {
+        "description": "Mira approval",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E01B"
+        }
+      },
+      "mira-success": {
+        "description": "Mira success",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E01C"
+        }
+      },
+      "mira-error": {
+        "description": "Mira error",
+        "default": {
+          "fontPath": "./media/mira-icons.woff",
+          "fontCharacter": "\\E01D"
+        }
+      }
+    },
+    "configuration": {
+      "title": "Mira Companion",
+      "properties": {
+        "miraCompanion.statusBar": {
+          "type": "boolean",
+          "default": true,
+          "description": "Mira Worldを開く小さなstatus bar toggleを表示します。"
+        },
+        "miraCompanion.motion": {
+          "type": "string",
+          "enum": [
+            "auto",
+            "subtle",
+            "full",
+            "off"
+          ],
+          "default": "auto",
+          "description": "Mira World内の移動とanimationの強さ。autoはworkbench.reduceMotionを尊重します。"
+        },
+        "miraCompanion.autoOpen": {
+          "type": "boolean",
+          "default": true,
+          "description": "workspace初回とremote runtime rebuild直後だけbottom panelを開きます。同じruntimeでの以後はVS Codeのpanel状態を尊重します。"
+        },
+        "miraCompanion.stateFile": {
+          "type": "string",
+          "default": "",
+          "description": "状態JSONへの絶対path。空欄ではMIRA_COMPANION_STATE_DIRまたはXDG state directoryを使います。"
+        }
+      }
+    }
+  },
+  "scripts": {
+    "test": "node --test test/*.test.js"
+  }
+}
