@@ -11,7 +11,7 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 - **明示的なedge channel**: 必要なときだけホストのCodex / Gemini / Claude Code / Grok versionへ同期
 - **Docker-in-Docker**: コンテナ内でDockerを利用可能
 - **ホスト設定の引き継ぎ**: SSH鍵、Git設定、認証情報を自動マウント
-- **Mira Companion v2**: Codexとagentctl-managed Codex / Claude / Grokの作業が小さなpixel-art世界の動きになるbottom-panel companionを自動導入
+- **Mira Companion v2**: Codex / Claude / Grokのinteractive sessionとagentctl-managed jobが小さなpixel-art世界の動きになるbottom-panel companionを自動導入
 
 ミラのpersonaは `AGENTS.md`、再利用templateは `AGENTS_TEMPLATE.md`、companion architectureは [`docs/mira/architecture.md`](docs/mira/architecture.md)、visual asset contractは [`docs/mira/assets.md`](docs/mira/assets.md) を参照してください。
 
@@ -126,9 +126,9 @@ Lane Iはまだstable runtimeを持たず、同一containerへfallbackしませ�
 
 devcontainerにeditorがattachした後、local VSIXをpackageしてremote側のVS Code / Cursorへ自動導入します。専用のActivity Barやsidebarは作らず、VS Code下部に短い`Mira World` panelを1つ追加します。workspace初回とremote runtimeのrebuild直後だけ自動で復帰し、同じruntimeでのreload以後はVS Codeが記憶するpanelの開閉状態を尊重します。status bar右側の小さなMiraはworldを再度開くtoggleです。
 
-Codex連携はimage内の`/etc/codex/requirements.toml`にあるcontainer-managed hookで行います。対象projectへ`.codex/hooks.json`をコピーしたり、projectごとに`/hooks`で信頼したりする必要はありません。さらに`agentctl`経由のCodex / Claude / Grok jobは共通brokerから同じbridgeへ接続され、provider別人数とresearcher / reviewer / implementerのrole spriteとして表示されます。調査なら資料庫、planningなら作戦卓、編集やshellなら工房、testならsignal gate、delegationならdispatch dockへミラが自動で歩き、到着後に状態別animationへ変わります。idle中も低頻度でmap内を散歩します。
+Codex / Claude / Grok連携はimage内のcontainer-managed hookで行います。配置先はそれぞれ`/etc/codex/requirements.toml`、`/etc/claude-code/managed-settings.d/50-mira-companion.json`、`/etc/grok/managed_config.toml`です。Claude / Grok側も既存hookへ加算され、bind mountした`~/.claude` / `~/.grok`、認証、permission、sandboxを変更しません。対象projectへhookをコピーしたり、projectごとに信頼したりする必要もありません。さらに`agentctl`経由のCodex / Claude / Grok jobは共通brokerから同じbridgeへ接続され、provider別人数とresearcher / reviewer / implementerのrole spriteとして表示されます。調査なら資料庫、planningなら作戦卓、編集やshellなら工房、testならsignal gate、delegationならdispatch dockへミラが自動で歩き、到着後に状態別animationへ変わります。idle中も低頻度でmap内を散歩します。
 
-状態ファイルをまだ一度も受信していない場合は、HUDへ`activity未接続`と表示します。imageを更新した直後はeditorをreloadし、新しいCodex sessionを開始してください。正常に接続され、active workがなければ`待機中`になります。Claude / Grokを単独interactive CLIとして直接起動したsessionはまだ観測せず、`agentctl job run --provider claude|grok`で動くjobだけがMiraへ接続されます。
+状態ファイルをまだ一度も受信していない場合は、HUDへ`activity未接続`と表示します。imageを更新した直後はeditorをreloadし、新しいCodex / Claude / Grok sessionを開始してください。正常に接続され、active workがなければ`待機中`になります。direct CLIではprovider自身のlifecycleとnative subagent、`agentctl`ではdurable job transitionを観測します。
 
 ハイタッチ、なでる、常設menuはありません。長い作業の完了、test recovery、badge獲得など自然な区切りにだけ、ミラの近くへ45秒で消えるone-click popが現れます。押さなくても損はなく、clickによるXP差もありません。motionは`auto` / `subtle` / `full` / `off`、status toggleは表示 / 非表示を選べます。
 

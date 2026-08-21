@@ -2,13 +2,13 @@
 
 ## Outcome
 
-Mira Companion v2は、devcontainer内で動くCodexと、`agentctl`が管理するCodex / Claude / Grok jobの状態を、VS Code下部の**短い横長pixel-art world**へ変換するworkspace extensionです。
+Mira Companion v2は、devcontainer内で動くCodex / Claude / Grokのinteractive sessionと、`agentctl`が管理する3-provider jobの状態を、VS Code下部の**短い横長pixel-art world**へ変換するworkspace extensionです。
 
 ```text
-container-managed Codex lifecycle hooks ─┐
-  (/etc/codex/requirements.toml)          │
-agentctl durable job transitions ─────────┤ provider / role / outcome only
-                                         v
+container-managed native lifecycle hooks ─┐
+  Codex / Claude / Grok                    │ provider-native wire adapter
+agentctl durable job transitions ──────────┤ provider / role / outcome only
+                                          v
   mira-codex-hook compatibility entrypoint
   (sanitize + aggregate + bounded event ring, fail-open)
   -> ~/.local/state/mira-companion/state.json
@@ -57,7 +57,7 @@ background sourceはbuilt-in image generationで作った`workshop-source.png`�
 
 ### Work feedback loop
 
-Codexのread、edit、shell、test、delegationと、`agentctl` jobのstart / success / failure / cancel / orphanが、地理的な移動、作業animation、短いHUD、test gateの色へ自動変換されます。ユーザーの追加操作は不要です。
+Codex / Claude / Grokのread、edit、shell、test、delegationと、`agentctl` jobのstart / success / failure / cancel / orphanが、地理的な移動、作業animation、短いHUD、test gateの色へ自動変換されます。ユーザーの追加操作は不要です。
 
 subagent稼働中は最大4体のrole spriteを対応zoneへ出します。researcherは資料庫、reviewerは作戦卓、implementerは工房、testerはtest門へ配置し、同roleだけ少し横へずらします。Codex / Claude / Grokは小さな色dotとHUDのprovider countで区別します。extensionへ渡すのはopaque ID、provider / role enum、aggregate count、categoryだけで、agentの発言や作業内容は渡しません。
 
@@ -93,10 +93,12 @@ v1のハイタッチ、なでる、ひとこと、reaction wheel、Mira Deck、i
 
 | component | responsibility |
 |---|---|
-| `.devcontainer/codex-requirements.toml` | lifecycle eventをbridgeへ渡すcontainer-owned managed config |
+| `.devcontainer/codex-requirements.toml` | Codex lifecycle eventをbridgeへ渡すcontainer-owned requirements |
+| `.devcontainer/claude-mira-managed-settings.json` | Claude hookだけを加算するmanaged-settings drop-in |
+| `.devcontainer/grok-mira-managed-config.toml` | Grok hookだけを加算するsystem managed config |
 | `.devcontainer/Dockerfile` | managed configとbridgeをsystem pathへ配置 |
 | `scripts/agentctl_jobs.py` | durable job transition後にprovider / role / outcomeだけのMira eventをbest-effort emit |
-| `scripts/mira-codex-hook.py` | Codex互換entrypoint。Codex hookとagentctl envelopeを分類し、機微情報を捨て、stateとbounded event ringをatomic write |
+| `scripts/mira-codex-hook.py` | 互換entrypoint兼共通bridge。Codex / Claudeのsnake_caseとGrokのcamelCaseを正規化し、agentctl envelopeと合わせて機微情報を捨て、stateとbounded event ringをatomic write |
 | `extensions/mira-companion/src/state.js` | filesystem contractをもう一段allowlist normalize |
 | `extensions/mira-companion/src/game.js` | automatic bond、daily cap、rhythm、badge、safe moment、固定台詞 |
 | `extensions/mira-companion/src/world.js` | state-to-destination、passive decoration、earned pop、webview snapshot allowlist |
@@ -151,7 +153,9 @@ bridgeが書く`state.json`はschema version 1です。追加fieldは後方互�
 }
 ```
 
-`recentEvents`は最大24件です。`state.js`はeventの`id / at / event / status / category / outcome / activeSubagents / provider / role`と、active agentのopaque ID / provider / role / statusだけを再allowlistします。`world.js`はそこからさらに描画用のnumber、enum、bounded labelだけをsnapshotへ作ります。
+`recentEvents`は最大24件です。`state.js`はeventの`id / at / event / status / category / outcome / activeSubagents / provider / role`と、active agentのopaque ID / provider / role / statusだけを再allowlistします。`world.js`はそこからさらに描画用のnumber、enum、bounded labelだけをsnapshotへ作ります。`providerCounts`はactiveなdirect root sessionとworkerの合計、`activeAgents`は追加spriteを描くworkerだけです。
+
+Codex / Claudeのhook stdinはsnake_case、GrokはcamelCaseかつsnake_case event valueなので、provider別entrypoint名でadapterを選び、共通のevent enumへ正規化します。Grokの`run_terminal_command / search_replace / spawn_subagent`も共通categoryへ写像し、nativeの`Explore / Plan / general-purpose`等は表示用のresearcher / reviewer / implementer roleへ閉じます。`permission_prompt` notificationは`PermissionRequest`、`idle_prompt`はinterrupt時のidle backstopへ変換し、直前のsuccess / error transientは上書きしません。
 
 `agentctl`からbridgeへ渡すenvelopeは`mira_source / hook_event_name / session_id / attempt_id / provider / role`だけです。raw job / attempt IDはbridge内でhash化され、task objective、workspace / worktree path、command、result、failure reason、provider logはenvelopeへ入りません。bridge binaryの欠損、nonzero exit、1秒timeoutはpresentation failureとして無視され、broker stateやjob resultを変更しません。
 
@@ -187,9 +191,9 @@ VS Code `globalState`へ保存するのは次だけです。
 
 ## Privacy and failure behavior
 
-bridgeはprompt本文、tool arguments、shell command本文、tool result、transcript、private reasoning、raw session / job / attempt / agent IDを保存しません。`Bash` commandはtestまたはsecond-agentかをprocess内で分類するためだけに読み、永続化しません。`agentctl` emitterはAPI keyを含む親environmentをbridgeへそのまま渡さず、HOME / PATH / locale / Mira state設定だけをallowlistします。
+provider hookが渡すraw JSONはprocess内で直ちにbridge用fieldへ絞り、prompt本文、workspace / transcript path、permission message、error detail、private reasoningをaggregationへ渡しません。tool inputはactivity分類、structured tool resultは成否分類に必要な間だけ参照し、本文を保存しません。raw session / job / attempt / agent IDはprovider namespace付きでhash化します。`agentctl` emitterはAPI keyを含む親environmentをbridgeへそのまま渡さず、HOME / PATH / locale / Mira state設定だけをallowlistします。
 
-state directoryは`0700`、JSONとlockは`0600`です。temporary fileからatomic replaceし、並行するCodex / agentctl eventは`flock`で直列化します。bridge内部で例外が起きてもexit 0で終了し、表示機能の故障がCodex、tool call、agentctl jobを止めないことを優先します。extension側もstate欠損、破損、期限切れ、1時間更新されないactive stateをdisconnected / idleとして扱います。
+state directoryは`0700`、JSONとlockは`0600`です。temporary fileからatomic replaceし、並行するprovider / agentctl eventは`flock`で直列化します。これは再構築可能なpresentation stateなので、partial JSON防止のatomicityは保ちつつ、tool前後のhot pathへstorage-level durabilityの`fsync`待ちを入れません。bridge内部で例外が起きてもexit 0で終了し、表示機能の故障がprovider、tool call、agentctl jobを止めないことを優先します。extension側もstate欠損、破損、期限切れ、1時間更新されないactive stateをdisconnected / idleとして扱います。
 
 webviewはstrict CSPを設定し、extension mediaとMira runtime assetsだけをlocal resource rootにします。messageは`ready`と現在表示中popの`ackPop`だけを受け付け、arbitrary command execution経路を持ちません。
 
@@ -208,9 +212,11 @@ scripts/install-mira-vscode-extension
 MIRA_COMPANION_FORCE_INSTALL=1 scripts/install-mira-vscode-extension
 ```
 
-Codexはhook configをprocess / session開始時に読みます。image rebuild後はeditor windowをreloadし、新しいCodex sessionを開始します。`MIRA_COMPANION_ENABLED=0`はbridgeと自動導入を止め、`MIRA_COMPANION_INSTALL=0`はextension導入だけを止めます。
+各providerはhook configをprocess / session開始時に読みます。image rebuild後はeditor windowをreloadし、新しいCodex / Claude / Grok sessionを開始します。Claudeは`managed-settings.d` drop-in、Grokは`/etc/grok/managed_config.toml`の加算型hookを使うため、bind mountされた`~/.claude` / `~/.grok`や既存hookを編集しません。`MIRA_COMPANION_ENABLED=0`はbridgeをno-opにして自動導入も止め、`MIRA_COMPANION_INSTALL=0`はextension導入だけを止めます。
 
-v0.4.0では`agentctl`のCodex / Claude / Grok job表示を追加しました。workspace初回とremote runtime rebuild直後に一度だけMira World panelを開き、同じruntimeでの以後のpanel open / collapseはVS Codeに任せます。v0.2のstatus-only UIやv0.1のActivity Bar iconが残って見える場合はeditor windowをreloadしてください。
+配置境界はClaude Codeの[managed settings](https://code.claude.com/docs/en/configuration#settings-files)と、Grok Buildの[hook locations / config-file hooks](https://github.com/xai-org/grok-build/blob/main/crates/codegen/xai-grok-pager/docs/user-guide/10-hooks.md)に合わせています。いずれもproject trustへ依存しないsystem layerですが、Mira側は権限判断を返さず常にfail-openです。
+
+v0.5.0ではClaude / Grokの単独interactive sessionをnative managed hookで追加し、3-provider direct sessionと`agentctl` jobを同じbridgeへ統合しました。workspace初回とremote runtime rebuild直後に一度だけMira World panelを開き、同じruntimeでの以後のpanel open / collapseはVS Codeに任せます。v0.2のstatus-only UIやv0.1のActivity Bar iconが残って見える場合はeditor windowをreloadしてください。
 
 ## Dependency and removal record
 
@@ -224,9 +230,9 @@ Mira全体を削除する場合は`.devcontainer/codex-requirements.toml`、`ext
 
 - extension APIからbottom panelの正確な高さは固定できない。rendererは64px以上で段階的に情報を減らす。
 - panelはTerminal / Problems / Outputと同じ領域を共有するため、ユーザーがcollapseしたらworldも見えない。status glyphから再表示できる。
-- managed hookはこのdevcontainer内で起動したCodexだけを観測する。hostや別containerのCodexとはstateを共有しない。
-- image / hook更新後も既に動いているCodex processは旧configのままなので、新しいsessionが必要。
-- Claude / Grokの単独interactive CLI sessionは未接続。`agentctl` managed jobは3 providerとも接続済みで、Codexからlegacy `claude-second-agent`を起動した場合はcommand categoryで委譲を表示する。
+- managed hookはこのdevcontainer内で起動したCodex / Claude / Grokだけを観測する。hostや別containerのsessionとはstateを共有しない。
+- image / hook更新後も既に動いているprovider processは旧configのままなので、新しいsessionが必要。
+- Grokのsubagent wireがstableなagent IDを持たない場合はtypeをopaque identityのfallbackにするため、同typeを完全同時に複数起動した表示はまとめられることがある。durable job countは`agentctl` IDで区別される。
 - structured exit statusがないtest outcomeは`unknown`になる。
 - extensionからagentをsteer、cancel、approveしない。操作系は別milestone。
 
