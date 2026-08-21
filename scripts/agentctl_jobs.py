@@ -59,6 +59,13 @@ SECRET_TEXT_PATTERNS = (
 DOCKER_INVENTORY_TIMEOUT_SECONDS = 5.0
 MAX_PROVIDER_LOG_BYTES = 8 * 1024 * 1024
 LOG_RETENTION_MARKER = b"[agentctl: earlier provider output discarded by retention policy]\n"
+MIRA_AGENT_JOB_EVENTS = {
+    "AgentJobStart",
+    "AgentJobSucceeded",
+    "AgentJobFailed",
+    "AgentJobCancelled",
+    "AgentJobOrphaned",
+}
 
 ACTIVE_STATES = {"waiting_capacity", "preparing", "ready", "running"}
 RETRYABLE_STATES = {"failed", "cancelled", "orphaned", "rejected"}
@@ -528,6 +535,78 @@ def latest_attempt(store: Store, job_id: str) -> dict[str, Any] | None:
         (require_job_id(job_id),),
     ).fetchone()
     return dict(row) if row is not None else None
+
+
+def _emit_mira_agent_job_event(
+    store: Store,
+    job_id: str,
+    attempt_id: str,
+    event: str,
+) -> None:
+    """Best-effort, sanitized bridge from durable broker state to Mira.
+
+    The bridge is presentation-only: missing binaries, lock contention, hook
+    errors, and timeouts must never change the job result.  Task text, paths,
+    provider output, and reasons deliberately never enter this envelope.
+    """
+
+    if event not in MIRA_AGENT_JOB_EVENTS:
+        return
+    if os.environ.get("MIRA_COMPANION_ENABLED", "1").strip().lower() in {
+        "0",
+        "false",
+        "no",
+        "off",
+    }:
+        return
+    configured = os.environ.get("AGENTCTL_MIRA_BRIDGE_BIN")
+    bridge = configured or shutil.which("mira-codex-hook")
+    if not bridge:
+        return
+    job = store.connection.execute(
+        "SELECT role FROM jobs WHERE job_id = ?", (job_id,)
+    ).fetchone()
+    attempt = store.connection.execute(
+        "SELECT provider FROM attempts WHERE attempt_id = ? AND job_id = ?",
+        (attempt_id, job_id),
+    ).fetchone()
+    if job is None or attempt is None:
+        return
+    payload = {
+        "mira_source": "agentctl",
+        "hook_event_name": event,
+        "session_id": f"agentctl:{job_id}",
+        "attempt_id": attempt_id,
+        "provider": attempt["provider"],
+        "role": job["role"],
+    }
+    environment = {
+        key: os.environ[key]
+        for key in (
+            "HOME",
+            "LANG",
+            "LC_ALL",
+            "MIRA_COMPANION_DEBUG",
+            "MIRA_COMPANION_ENABLED",
+            "MIRA_COMPANION_STATE_DIR",
+            "PATH",
+            "XDG_STATE_HOME",
+        )
+        if key in os.environ
+    }
+    try:
+        subprocess.run(
+            [bridge],
+            input=json.dumps(payload, separators=(",", ":")),
+            text=True,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            env=environment,
+            timeout=1.0,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return
 
 
 def _transition(
@@ -1325,6 +1404,7 @@ def _record_prepare_failure(
     attempt_id: str,
     reason: str,
 ) -> None:
+    job_failed = False
     with store.transaction() as connection:
         attempt = connection.execute(
             "SELECT state FROM attempts WHERE attempt_id = ?", (attempt_id,)
@@ -1341,7 +1421,10 @@ def _record_prepare_failure(
             )
         if job is not None and job["state"] == "preparing":
             transition_job(connection, job_id, "failed", reason=reason)
+            job_failed = True
         _release_runtime_leases(connection, attempt_id, utc_now())
+    if job_failed:
+        _emit_mira_agent_job_event(store, job_id, attempt_id, "AgentJobFailed")
 
 
 def prepare_attempt(
@@ -1681,7 +1764,6 @@ def prepare_provider_invocation(
             "/dev/stdin",
             "--no-auto-update",
             "--no-subagents",
-            "--no-memory",
             "--max-turns",
             "64",
         ]
@@ -1726,6 +1808,10 @@ def prepare_provider_invocation(
             "TMPDIR": str(attempt_temp),
         }
     )
+    if attempt["provider"] == "grok":
+        # GROK_MEMORY=0 is supported across the pinned 1.0.3 binary and newer
+        # builds whose advertised --no-memory flag may be absent from clap.
+        environment["GROK_MEMORY"] = "0"
     port_lease = store.connection.execute(
         """
         SELECT value FROM leases
@@ -2082,6 +2168,7 @@ def _mark_run_failure(
     reason: str,
 ) -> None:
     now = utc_now()
+    job_failed = False
     with store.transaction() as connection:
         attempt = connection.execute(
             "SELECT state FROM attempts WHERE attempt_id = ?", (attempt_id,)
@@ -2097,7 +2184,10 @@ def _mark_run_failure(
             transition_attempt(connection, job_id, attempt_id, "failed", reason=reason, fields=fields)
         if job is not None and job["state"] in {"ready", "running", "succeeded"}:
             transition_job(connection, job_id, "failed", reason=reason)
+            job_failed = True
         _release_runtime_leases(connection, attempt_id, now)
+    if job_failed:
+        _emit_mira_agent_job_event(store, job_id, attempt_id, "AgentJobFailed")
 
 
 def _mark_run_cancelled(
@@ -2109,6 +2199,7 @@ def _mark_run_cancelled(
     reason: str,
 ) -> None:
     now = utc_now()
+    job_cancelled = False
     with store.transaction() as connection:
         attempt = connection.execute(
             "SELECT state FROM attempts WHERE attempt_id = ?", (attempt_id,)
@@ -2126,7 +2217,10 @@ def _mark_run_cancelled(
             )
         if job is not None and job["state"] == "running":
             transition_job(connection, job_id, "cancelled", reason=reason)
+            job_cancelled = True
         _release_runtime_leases(connection, attempt_id, now)
+    if job_cancelled:
+        _emit_mira_agent_job_event(store, job_id, attempt_id, "AgentJobCancelled")
 
 
 def _terminate_process_group(process: subprocess.Popen[str]) -> int | None:
@@ -2201,6 +2295,12 @@ def run_prepared_attempt(
             "running",
             reason="foreground provider launch reserved",
         )
+    _emit_mira_agent_job_event(
+        store,
+        job["job_id"],
+        attempt["attempt_id"],
+        "AgentJobStart",
+    )
     process: subprocess.Popen[str] | None = None
     try:
         log_descriptor = os.open(
@@ -2413,6 +2513,12 @@ def run_prepared_attempt(
             reason="provider exit and result/Git validation passed",
         )
         _release_runtime_leases(connection, attempt["attempt_id"], now)
+    _emit_mira_agent_job_event(
+        store,
+        job["job_id"],
+        attempt["attempt_id"],
+        "AgentJobSucceeded",
+    )
     return show_job(store, job["job_id"])
 
 
@@ -2578,6 +2684,13 @@ def cancel_job(store: Store, job_id: str, *, grace_seconds: float = 5.0) -> dict
         transition_job(connection, canonical, "cancelled", reason="operator requested cancellation")
         _release_runtime_leases(connection, attempt["attempt_id"], now)
 
+    _emit_mira_agent_job_event(
+        store,
+        canonical,
+        attempt["attempt_id"],
+        "AgentJobCancelled",
+    )
+
     provider_pid, provider_marker = provider_identity
     if _signal_recorded_group(provider_pid, provider_marker, signal.SIGTERM):
         assert provider_pid is not None and provider_marker is not None
@@ -2603,6 +2716,7 @@ def cancel_job(store: Store, job_id: str, *, grace_seconds: float = 5.0) -> dict
 
 def _mark_run_orphaned(store: Store, job_id: str, attempt_id: str, reason: str) -> None:
     now = utc_now()
+    job_orphaned = False
     with store.transaction() as connection:
         attempt = connection.execute(
             "SELECT state FROM attempts WHERE attempt_id = ?", (attempt_id,)
@@ -2623,7 +2737,10 @@ def _mark_run_orphaned(store: Store, job_id: str, attempt_id: str, reason: str) 
             )
         if job is not None and job["state"] == "running":
             transition_job(connection, job_id, "orphaned", reason=reason)
+            job_orphaned = True
         _release_runtime_leases(connection, attempt_id, now)
+    if job_orphaned:
+        _emit_mira_agent_job_event(store, job_id, attempt_id, "AgentJobOrphaned")
 
 
 def reconcile_attempts(store: Store, *, orphan_after_seconds: float = 30.0) -> list[dict[str, Any]]:

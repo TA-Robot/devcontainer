@@ -184,6 +184,74 @@ class MiraCodexHookTest(unittest.TestCase):
         self.assertEqual(state["status"], "idle")
         self.assertEqual(state["activeSubagents"], 0)
 
+    def test_agentctl_jobs_are_provider_aware_and_sanitized(self) -> None:
+        secret = "private-job-objective-must-not-persist"
+        grok = self.emit(
+            {
+                "mira_source": "agentctl",
+                "session_id": "private-grok-job-id",
+                "attempt_id": "private-grok-attempt-id",
+                "hook_event_name": "AgentJobStart",
+                "provider": "grok",
+                "role": "implementer",
+                "objective": secret,
+                "workspace": "/private/customer/workspace",
+            }
+        )
+        self.assertEqual(grok["status"], "typing")
+        self.assertEqual(grok["source"], "agentctl")
+        self.assertEqual(grok["activeSubagents"], 1)
+        self.assertEqual(grok["providerCounts"], {"codex": 0, "claude": 0, "grok": 1})
+        self.assertEqual(grok["activeAgents"][0]["provider"], "grok")
+        self.assertEqual(grok["activeAgents"][0]["role"], "implementer")
+
+        mixed = self.emit(
+            {
+                "mira_source": "agentctl",
+                "session_id": "private-claude-job-id",
+                "attempt_id": "private-claude-attempt-id",
+                "hook_event_name": "AgentJobStart",
+                "provider": "claude",
+                "role": "researcher",
+            }
+        )
+        self.assertEqual(mixed["status"], "research")
+        self.assertEqual(mixed["activeSubagents"], 2)
+        self.assertEqual(mixed["providerCounts"], {"codex": 0, "claude": 1, "grok": 1})
+
+        still_working = self.emit(
+            {
+                "mira_source": "agentctl",
+                "session_id": "private-grok-job-id",
+                "attempt_id": "private-grok-attempt-id",
+                "hook_event_name": "AgentJobSucceeded",
+                "provider": "grok",
+                "role": "implementer",
+            }
+        )
+        self.assertEqual(still_working["status"], "research")
+        self.assertEqual(still_working["activeSubagents"], 1)
+        self.assertEqual(still_working["recentEvents"][-1]["outcome"], "success")
+
+        complete = self.emit(
+            {
+                "mira_source": "agentctl",
+                "session_id": "private-claude-job-id",
+                "attempt_id": "private-claude-attempt-id",
+                "hook_event_name": "AgentJobSucceeded",
+                "provider": "claude",
+                "role": "researcher",
+            }
+        )
+        self.assertEqual(complete["status"], "success")
+        self.assertEqual(complete["activeSubagents"], 0)
+        self.assertEqual(complete["activeAgents"], [])
+        persisted = self.all_persisted_json()
+        self.assertNotIn(secret, persisted)
+        self.assertNotIn("private-grok-job-id", persisted)
+        self.assertNotIn("private-grok-attempt-id", persisted)
+        self.assertNotIn("/private/customer/workspace", persisted)
+
     def test_permission_has_priority_across_sessions(self) -> None:
         self.emit(
             {"session_id": "session-a", "hook_event_name": "UserPromptSubmit"}

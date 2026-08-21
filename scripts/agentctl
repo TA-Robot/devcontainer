@@ -428,7 +428,6 @@ def run_doctor(args: argparse.Namespace) -> int:
             "--deny",
             "--json-schema",
             "--max-turns",
-            "--no-memory",
             "--no-subagents",
             "--output-format",
             "--permission-mode",

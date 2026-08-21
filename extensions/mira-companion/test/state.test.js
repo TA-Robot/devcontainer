@@ -11,6 +11,12 @@ test("missing and invalid values become idle", () => {
   assert.equal(missing.source, "extension");
   assert.equal(normalizeState({ status: "unknown" }, 0).status, "idle");
   assert.equal(idleState(0).activeSubagents, 0);
+  assert.deepEqual(idleState(0).activeAgents, []);
+  assert.deepEqual(idleState(0).providerCounts, {
+    codex: 0,
+    claude: 0,
+    grok: 0,
+  });
 });
 
 test("a valid state keeps only bounded display fields", () => {
@@ -68,6 +74,8 @@ test("recent events are bounded and discard every unknown payload field", () => 
     category: index === 29 ? "test" : "private-category",
     outcome: index === 29 ? "failure" : "private-outcome",
     activeSubagents: 2.9,
+    provider: index === 29 ? "grok" : "private-provider",
+    role: index === 29 ? "implementer" : "private-role",
     session: "hashed-but-not-needed-by-the-extension",
     toolResponse: "must disappear",
     prompt: "must disappear",
@@ -83,11 +91,63 @@ test("recent events are bounded and discard every unknown payload field", () => 
     "event",
     "id",
     "outcome",
+    "provider",
+    "role",
     "status",
   ]);
   assert.equal(state.recentEvents[0].category, null);
   assert.equal(state.recentEvents[0].outcome, "unknown");
+  assert.equal(state.recentEvents[0].provider, "unknown");
+  assert.equal(state.recentEvents[0].role, "unknown");
   assert.equal(state.recentEvents[0].activeSubagents, 2);
   assert.equal(state.recentEvents[23].category, "test");
   assert.equal(state.recentEvents[23].outcome, "failure");
+  assert.equal(state.recentEvents[23].provider, "grok");
+  assert.equal(state.recentEvents[23].role, "implementer");
+});
+
+test("active agent metadata accepts only bounded provider and role enums", () => {
+  const state = normalizeState(
+    {
+      status: "typing",
+      activeSubagents: 2,
+      activeAgents: [
+        {
+          id: "agent-1" + "x".repeat(100),
+          provider: "grok",
+          role: "implementer",
+          status: "typing",
+          prompt: "must disappear",
+        },
+        {
+          id: "agent-2",
+          provider: "private-provider",
+          role: "private-role",
+          status: "private-status",
+        },
+      ],
+      providerCounts: {
+        codex: 0,
+        claude: 0,
+        grok: 1.9,
+        privateProvider: 99,
+      },
+    },
+    0,
+  );
+
+  assert.deepEqual(state.activeAgents[0], {
+    id: "agent-1" + "x".repeat(25),
+    provider: "grok",
+    role: "implementer",
+    status: "typing",
+  });
+  assert.deepEqual(state.activeAgents[1], {
+    id: "agent-2",
+    provider: "unknown",
+    role: "unknown",
+    status: "thinking",
+  });
+  assert.deepEqual(state.providerCounts, { codex: 0, claude: 0, grok: 1 });
+  assert.equal(state.activeAgents[0].prompt, undefined);
 });

@@ -133,6 +133,7 @@ class AgentctlSupervisorTests(unittest.TestCase):
                 "AGENTCTL_ORPHAN_AFTER_SECONDS": "0.4",
                 "AGENTCTL_CAPACITY_WRITE": self.capacity_write,
                 "AGENTCTL_CAPACITY_INTEGRATION": self.capacity_integration,
+                "MIRA_COMPANION_ENABLED": "0",
             }
         )
         return environment

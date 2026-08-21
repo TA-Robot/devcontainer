@@ -128,6 +128,22 @@ test("world snapshots expose activity metadata but no prompt or code payload", (
       label: "実装中",
       source: "codex",
       activeSubagents: 9,
+      activeAgents: [
+        {
+          id: "agent-1",
+          provider: "grok",
+          role: "implementer",
+          status: "typing",
+          prompt: "must disappear",
+        },
+        {
+          id: "agent-2",
+          provider: "private-provider",
+          role: "private-role",
+          status: "private-status",
+        },
+      ],
+      providerCounts: { codex: 1, claude: 2, grok: 3, private: 99 },
       prompt: "must disappear",
     },
     profile,
@@ -145,7 +161,23 @@ test("world snapshots expose activity metadata but no prompt or code payload", (
   assert.equal(typeof snapshot.ambientSeed, "number");
   assert.match(snapshot.dayPhase, /^(morning|day|evening|night)$/);
   assert.equal(snapshot.activeSubagents, 4);
+  assert.deepEqual(snapshot.activeAgents, [
+    {
+      id: "agent-1",
+      provider: "grok",
+      role: "implementer",
+      status: "typing",
+    },
+    {
+      id: "agent-2",
+      provider: "unknown",
+      role: "unknown",
+      status: "thinking",
+    },
+  ]);
+  assert.deepEqual(snapshot.providerCounts, { codex: 1, claude: 2, grok: 3 });
   assert.equal(snapshot.prompt, undefined);
+  assert.equal(snapshot.activeAgents[0].prompt, undefined);
   assert.equal(snapshot.session.privateSource, undefined);
   assert.deepEqual(Object.keys(snapshot.session).sort(), [
     "delegations",

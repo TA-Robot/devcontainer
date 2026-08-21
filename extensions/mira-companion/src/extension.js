@@ -307,6 +307,23 @@ class MiraCompanion {
       }
       return;
     }
+    const latestAgentTerminal = [...freshEvents]
+      .reverse()
+      .find((event) =>
+        [
+          "AgentJobSucceeded",
+          "AgentJobFailed",
+          "AgentJobOrphaned",
+        ].includes(event.event),
+      );
+    if (latestAgentTerminal && state.status !== "approval") {
+      if (latestAgentTerminal.outcome === "success") {
+        this.setReaction("agent job、きれいに着地した〜", "success", 3200);
+      } else {
+        this.setReaction("agent jobを切り分け直してるよ", "error", 3600);
+      }
+      return;
+    }
     this.render(nowMs);
   }
 
@@ -325,8 +342,10 @@ class MiraCompanion {
         if (event.outcome === "success") this.sessionStats.testsPassed += 1;
         if (event.outcome === "failure") this.sessionStats.testsFailed += 1;
       }
-      if (event.event === "SubagentStart") this.sessionStats.delegations += 1;
-      if (event.event === "Stop") this.sessionStats.turns += 1;
+      if (["SubagentStart", "AgentJobStart"].includes(event.event))
+        this.sessionStats.delegations += 1;
+      if (["Stop", "AgentJobSucceeded"].includes(event.event))
+        this.sessionStats.turns += 1;
     }
   }
 

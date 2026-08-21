@@ -115,6 +115,21 @@ const LINES = Object.freeze({
   ],
 });
 
+const PROVIDER_LABELS = Object.freeze({
+  codex: "Codex",
+  claude: "Claude",
+  grok: "Grok",
+  unknown: "agent",
+});
+
+const ROLE_ACTIVITY_LINES = Object.freeze({
+  implementer: "実装班が工房で作業中〜",
+  researcher: "調査班が資料庫を探索中〜",
+  reviewer: "review班が作戦卓で確認中〜",
+  tester: "test班が信号門を確認中〜",
+  unknown: "仲間がdockで稼働中〜",
+});
+
 function dateKey(nowMs) {
   const value = new Date(nowMs);
   return [
@@ -404,12 +419,12 @@ function processEvents(inputProfile, events, nowMs = Date.now()) {
     if (event.event === "SessionStart") profile.counters.sessions += 1;
     if (event.event === "UserPromptSubmit") profile.counters.prompts += 1;
     if (event.event === "PermissionRequest") profile.counters.approvals += 1;
-    if (event.event === "SubagentStart") {
+    if (["SubagentStart", "AgentJobStart"].includes(event.event)) {
       profile.counters.delegations += 1;
       awardXp(profile, 1, atMs);
       addMoment(profile, event, "delegation", "仲間がteamへ加わった");
     }
-    if (event.event === "Stop") {
+    if (["Stop", "AgentJobSucceeded"].includes(event.event)) {
       profile.counters.turns += 1;
       awardXp(profile, 2, atMs);
       addMoment(profile, event, "complete", "ひとつのturnを一緒に完了した");
@@ -471,6 +486,19 @@ function lineForState(
   seed = "workspace",
   nowMs = Date.now(),
 ) {
+  const activeAgents = Array.isArray(state.activeAgents)
+    ? state.activeAgents
+    : [];
+  if (activeAgents.length > 1) {
+    return `agentが${activeAgents.length}人、並行で動いてるよ`;
+  }
+  if (activeAgents.length === 1) {
+    const agent = activeAgents[0];
+    const provider = PROVIDER_LABELS[agent.provider] || PROVIDER_LABELS.unknown;
+    const activity =
+      ROLE_ACTIVITY_LINES[agent.role] || ROLE_ACTIVITY_LINES.unknown;
+    return `${provider}の${activity}`;
+  }
   const hour = new Date(nowMs).getHours();
   if (state.status === "ready") {
     if (hour < 6) return "夜ふかし部だ。無理はなしね";

@@ -42,7 +42,7 @@ with zipfile.ZipFile(path) as archive:
     manifest = json.loads(archive.read("extension/assets/manifest.json"))
     if package["publisher"] != "asakura" or package["name"] != "mira-companion":
         raise SystemExit("unexpected extension identity")
-    if package["version"] != "0.3.1":
+    if package["version"] != "0.4.0":
         raise SystemExit(f"unexpected extension version: {package['version']}")
     contributes = package.get("contributes", {})
     containers = contributes.get("viewsContainers", {})
@@ -78,7 +78,11 @@ with zipfile.ZipFile(path) as archive:
     world = manifest.get("worlds", {}).get("workshop", {})
     if (world.get("width"), world.get("height")) != (1536, 192):
         raise SystemExit(f"unexpected Mira World dimensions: {world}")
-print("Mira VSIX OK: one bottom world, one tiny status toggle, 80 sprites, and no active pet commands")
+    runtime = archive.read("extension/media/world-runtime.js").decode("utf-8")
+    for required_token in ("providerCounts", "companionDestinations", "dataset.provider"):
+        if required_token not in runtime:
+            raise SystemExit(f"provider-aware world runtime is missing {required_token}")
+print("Mira VSIX OK: provider-aware bottom world, one tiny status toggle, 80 sprites, and no active pet commands")
 PY
 
 python3 - "$repo_root/.devcontainer/devcontainer.json" "$script_dir/devcontainer-post-start" <<'PY'
@@ -116,7 +120,7 @@ cat >"$mock_editor_cli" <<'SH'
 set -euo pipefail
 if [[ "${1:-}" == "--list-extensions" ]]; then
   if [[ -f "$MIRA_TEST_EDITOR_STATE" ]]; then
-    echo "asakura.mira-companion@0.3.1"
+    echo "asakura.mira-companion@0.4.0"
   fi
   exit 0
 fi
@@ -137,7 +141,7 @@ installer_output="$(
     MIRA_TEST_EDITOR_STATE="$mock_editor_state" \
     "$script_dir/install-mira-vscode-extension"
 )"
-if [[ "$installer_output" != *"mira-companion: installed asakura.mira-companion@0.3.1 with $mock_editor_cli"* ]]; then
+if [[ "$installer_output" != *"mira-companion: installed asakura.mira-companion@0.4.0 with $mock_editor_cli"* ]]; then
   echo "Mira installer did not exercise the detected editor CLI" >&2
   exit 1
 fi
@@ -167,7 +171,7 @@ if [[ "${1:-}" == "--server-data-dir" ]]; then
 fi
 if [[ "${1:-}" == "--list-extensions" ]]; then
   if [[ -f "$MIRA_TEST_EDITOR_STATE" ]]; then
-    echo "asakura.mira-companion@0.3.1"
+    echo "asakura.mira-companion@0.4.0"
   fi
   exit 0
 fi

@@ -49,7 +49,8 @@ else:
             f"resource={os.environ.get('AGENTCTL_RESOURCE_CLASS', '')}\n"
             f"compose={os.environ.get('COMPOSE_PROJECT_NAME', '')}\n"
             f"label={os.environ.get('AGENTCTL_DOCKER_LABEL', '')}\n"
-            f"port={os.environ.get('AGENTCTL_PORT', '')}\n",
+            f"port={os.environ.get('AGENTCTL_PORT', '')}\n"
+            f"memory={os.environ.get('GROK_MEMORY', '')}\n",
             encoding="utf-8",
         )
         changed = [relative]
@@ -149,7 +150,7 @@ class AgentctlJobTests(unittest.TestCase):
         self.codex = self.make_provider("codex", "codex")
         self.claude = self.make_provider("claude", "claude")
         self.grok = self.make_provider("grok", "grok")
-        self.extra_environment: dict[str, str] = {}
+        self.extra_environment: dict[str, str] = {"MIRA_COMPANION_ENABLED": "0"}
 
     def tearDown(self) -> None:
         self.temp.cleanup()
@@ -434,6 +435,86 @@ class AgentctlJobTests(unittest.TestCase):
         self.assertIn("workspace", arguments)
         self.assertIn("Glob", arguments)
         self.assertIn("Bash(git push*)", arguments)
+        self.assertIn(
+            "memory=0",
+            (Path(attempt["workspace_path"]) / "result.txt").read_text(encoding="utf-8"),
+        )
+
+    def test_provider_lifecycle_reaches_mira_without_job_content(self) -> None:
+        mira_state = self.root / "mira-state"
+        self.extra_environment.update(
+            {
+                "AGENTCTL_MIRA_BRIDGE_BIN": str(ROOT / "scripts/mira-codex-hook.py"),
+                "MIRA_COMPANION_ENABLED": "1",
+                "MIRA_COMPANION_STATE_DIR": str(mira_state),
+            }
+        )
+        job = self.create("mira-grok-task.json")
+        result = self.invoke(
+            "job", "run", str(job["job_id"]), "--provider", "grok", "--json"
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        state = json.loads((mira_state / "state.json").read_text(encoding="utf-8"))
+        timeline = json.loads((mira_state / "timeline.json").read_text(encoding="utf-8"))
+        lifecycle = [
+            event
+            for event in timeline
+            if event["event"] in {"AgentJobStart", "AgentJobSucceeded"}
+        ]
+        self.assertEqual([event["event"] for event in lifecycle], [
+            "AgentJobStart",
+            "AgentJobSucceeded",
+        ])
+        self.assertTrue(all(event["provider"] == "grok" for event in lifecycle))
+        self.assertTrue(all(event["role"] == "implementer" for event in lifecycle))
+        self.assertEqual(state["status"], "success")
+        self.assertEqual(state["activeSubagents"], 0)
+
+        persisted = "".join(
+            path.read_text(encoding="utf-8") for path in mira_state.glob("*.json")
+        )
+        self.assertNotIn(str(job["job_id"]), persisted)
+        self.assertNotIn("Create one deterministic result file.", persisted)
+        self.assertNotIn(str(self.workspace), persisted)
+
+        failed_job = self.create("mira-failed-job.json")
+        failed = self.invoke(
+            "job",
+            "run",
+            str(failed_job["job_id"]),
+            "--provider",
+            "codex",
+            mode="exit",
+        )
+        self.assertEqual(failed.returncode, 2)
+        failed_timeline = json.loads(
+            (mira_state / "timeline.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(failed_timeline[-1]["event"], "AgentJobFailed")
+        self.assertEqual(failed_timeline[-1]["provider"], "codex")
+        self.assertEqual(failed_timeline[-1]["outcome"], "failure")
+        self.assertNotIn(
+            str(failed_job["job_id"]),
+            "".join(
+                path.read_text(encoding="utf-8")
+                for path in mira_state.glob("*.json")
+            ),
+        )
+
+        self.extra_environment["AGENTCTL_MIRA_BRIDGE_BIN"] = str(
+            self.root / "missing-mira-bridge"
+        )
+        fail_open_job = self.create("mira-fail-open.json")
+        fail_open = self.invoke(
+            "job",
+            "run",
+            str(fail_open_job["job_id"]),
+            "--provider",
+            "codex",
+            "--json",
+        )
+        self.assertEqual(fail_open.returncode, 0, fail_open.stdout + fail_open.stderr)
 
     def test_grok_text_fallback_uses_only_a_fully_valid_final_document(self) -> None:
         recovered_job = self.create("grok-duplicate.json")

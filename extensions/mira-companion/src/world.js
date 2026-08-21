@@ -18,6 +18,14 @@ const DESTINATIONS = Object.freeze({
 
 const IDLE_WAYPOINTS = Object.freeze([27, 34, 41, 48, 55, 63, 72]);
 const MOTION_MODES = new Set(["subtle", "full", "off"]);
+const AGENT_PROVIDERS = new Set(["codex", "claude", "grok", "unknown"]);
+const AGENT_ROLES = new Set([
+  "implementer",
+  "researcher",
+  "reviewer",
+  "tester",
+  "unknown",
+]);
 const POP_LIFETIME_MS = 45_000;
 
 function finiteCount(value) {
@@ -197,6 +205,29 @@ function sanitizeSession(stats) {
   };
 }
 
+function sanitizeActiveAgents(agents) {
+  if (!Array.isArray(agents)) return [];
+  return agents.slice(0, 4).map((agent) => ({
+    id: boundedText(agent?.id, 32),
+    provider: AGENT_PROVIDERS.has(agent?.provider)
+      ? agent.provider
+      : "unknown",
+    role: AGENT_ROLES.has(agent?.role) ? agent.role : "unknown",
+    status: Object.hasOwn(DESTINATIONS, agent?.status)
+      ? agent.status
+      : "thinking",
+  }));
+}
+
+function sanitizeProviderCounts(counts) {
+  const source = counts && typeof counts === "object" ? counts : {};
+  return {
+    codex: Math.min(99, finiteCount(source.codex)),
+    claude: Math.min(99, finiteCount(source.claude)),
+    grok: Math.min(99, finiteCount(source.grok)),
+  };
+}
+
 function buildWorldSnapshot({
   state,
   profile,
@@ -228,6 +259,8 @@ function buildWorldSnapshot({
     dayPhase: dayPhase(nowMs),
     connected: state?.source !== "extension",
     activeSubagents: Math.min(4, finiteCount(state?.activeSubagents)),
+    activeAgents: sanitizeActiveAgents(state?.activeAgents),
+    providerCounts: sanitizeProviderCounts(state?.providerCounts),
     motion: MOTION_MODES.has(motion) ? motion : "subtle",
     windowFocused: Boolean(windowFocused),
     rhythm: currentRhythm(profile, nowMs),
@@ -256,6 +289,7 @@ module.exports = {
   decorationIds,
   destinationForStatus,
   sanitizePop,
+  sanitizeActiveAgents,
   selectEarnedPop,
   sessionActivity,
 };

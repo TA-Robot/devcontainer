@@ -154,6 +154,12 @@ button {
   white-space: nowrap;
 }
 
+.hud__session {
+  max-width: 42vw;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .mira {
   position: absolute;
   z-index: 5;
@@ -190,6 +196,31 @@ button {
   height: clamp(28px, 28vh, 46px);
   transform: translateX(-50%);
   filter: drop-shadow(0 1px 1px rgb(48 33 57 / 36%));
+}
+
+.companion::after {
+  position: absolute;
+  right: 1px;
+  bottom: 1px;
+  width: 5px;
+  height: 5px;
+  border: 1px solid var(--plum);
+  border-radius: 50%;
+  content: "";
+  background: #a8a8b3;
+  box-shadow: 1px 1px 0 rgb(48 33 57 / 35%);
+}
+
+.companion[data-provider="codex"]::after {
+  background: #67c4dd;
+}
+
+.companion[data-provider="claude"]::after {
+  background: #ef9f63;
+}
+
+.companion[data-provider="grok"]::after {
+  background: #b892e8;
 }
 
 .earned-pop {

@@ -54,6 +54,14 @@ const EVENT_CATEGORIES = new Set([
 ]);
 
 const OUTCOMES = new Set(["success", "failure", "unknown"]);
+const AGENT_PROVIDERS = new Set(["codex", "claude", "grok", "unknown"]);
+const AGENT_ROLES = new Set([
+  "implementer",
+  "researcher",
+  "reviewer",
+  "tester",
+  "unknown",
+]);
 const ACTIVE_STATE_TTL_MS = 60 * 60 * 1000;
 
 function finiteInteger(value, fallback = 0) {
@@ -77,10 +85,12 @@ function idleState(nowMs = Date.now()) {
     updatedAt: new Date(nowMs).toISOString(),
     status: "idle",
     label: "未接続",
-    message: "Codex連携を待ってるよ",
+    message: "activity連携を待ってるよ",
     event: "StateFileMissing",
     toolCategory: null,
     activeSubagents: 0,
+    activeAgents: [],
+    providerCounts: { codex: 0, claude: 0, grok: 0 },
     expiresAt: null,
     source: "extension",
     recentEvents: [],
@@ -102,6 +112,33 @@ function normalizeEvent(value) {
     category,
     outcome,
     activeSubagents: finiteInteger(value.activeSubagents),
+    provider: AGENT_PROVIDERS.has(value.provider)
+      ? value.provider
+      : "unknown",
+    role: AGENT_ROLES.has(value.role) ? value.role : "unknown",
+  };
+}
+
+function normalizeAgent(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+  return {
+    id: cleanText(value.id, 32),
+    provider: AGENT_PROVIDERS.has(value.provider)
+      ? value.provider
+      : "unknown",
+    role: AGENT_ROLES.has(value.role) ? value.role : "unknown",
+    status: STATES.has(value.status) ? value.status : "thinking",
+  };
+}
+
+function normalizeProviderCounts(value) {
+  const source = value && typeof value === "object" ? value : {};
+  return {
+    codex: Math.min(99, finiteInteger(source.codex)),
+    claude: Math.min(99, finiteInteger(source.claude)),
+    grok: Math.min(99, finiteInteger(source.grok)),
   };
 }
 
@@ -129,6 +166,14 @@ function normalizeState(value, nowMs = Date.now()) {
   const recentEvents = Array.isArray(value.recentEvents)
     ? value.recentEvents.map(normalizeEvent).filter(Boolean).slice(-24)
     : [];
+  const activeAgents =
+    status !== "idle" && Array.isArray(value.activeAgents)
+      ? value.activeAgents.map(normalizeAgent).filter(Boolean).slice(0, 8)
+      : [];
+  const providerCounts =
+    status === "idle"
+      ? { codex: 0, claude: 0, grok: 0 }
+      : normalizeProviderCounts(value.providerCounts);
 
   return {
     schemaVersion: 1,
@@ -147,6 +192,8 @@ function normalizeState(value, nowMs = Date.now()) {
         : null,
     activeSubagents:
       status === "idle" ? 0 : finiteInteger(value.activeSubagents),
+    activeAgents,
+    providerCounts,
     expiresAt:
       Number.isFinite(expiresAt) && !expired && !stale
         ? new Date(expiresAt).toISOString()
@@ -161,6 +208,7 @@ module.exports = {
   LABELS,
   STATES,
   idleState,
+  normalizeAgent,
   normalizeEvent,
   normalizeState,
 };

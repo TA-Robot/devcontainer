@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
-"""Translate Codex lifecycle hooks into a small, sanitized Mira state file."""
+"""Translate trusted activity events into a small, sanitized Mira state file.
+
+The executable name remains ``mira-codex-hook`` for Codex configuration
+compatibility.  It also accepts the deliberately tiny ``agentctl`` event
+envelope emitted by the broker.
+"""
 
 from __future__ import annotations
 
@@ -19,6 +24,15 @@ from typing import Any
 SCHEMA_VERSION = 1
 SESSION_TTL_SECONDS = 60 * 60
 MAX_RECENT_EVENTS = 24
+
+AGENT_PROVIDERS = {"codex", "claude", "grok"}
+AGENT_ROLES = {"implementer", "researcher", "reviewer", "tester"}
+AGENT_JOB_TERMINAL_EVENTS = {
+    "AgentJobSucceeded": ("success", "success"),
+    "AgentJobFailed": ("error", "failure"),
+    "AgentJobOrphaned": ("error", "failure"),
+    "AgentJobCancelled": ("ready", "unknown"),
+}
 
 STATE_PRIORITY = {
     "idle": 0,
@@ -123,6 +137,21 @@ def string_field(value: object, limit: int = 80) -> str:
     return str(value or "")[:limit]
 
 
+def enum_field(value: object, allowed: set[str], fallback: str = "unknown") -> str:
+    normalized = string_field(value, 40).strip().lower()
+    return normalized if normalized in allowed else fallback
+
+
+def agent_activity(role: str) -> tuple[str, str]:
+    if role == "researcher":
+        return "research", "read"
+    if role == "implementer":
+        return "typing", "edit"
+    if role == "tester":
+        return "testing", "test"
+    return "thinking", "planning"
+
+
 def tool_state(payload: dict[str, Any]) -> tuple[str, str]:
     tool_name = string_field(payload.get("tool_name"), 120)
     normalized = tool_name.lower()
@@ -182,13 +211,15 @@ def tool_outcome(payload: dict[str, Any]) -> str:
     return inspect(payload.get("tool_response")) or "unknown"
 
 
-def new_record(session_key: str, now: float) -> dict[str, Any]:
+def new_record(session_key: str, now: float, source: str = "codex") -> dict[str, Any]:
     return {
         "session": session_key,
+        "source": source,
         "status": "idle",
         "event": "Unknown",
         "toolCategory": None,
         "subagents": [],
+        "agentMeta": {},
         "updatedEpoch": now,
         "expiresEpoch": None,
     }
@@ -210,9 +241,12 @@ def apply_event(
 ) -> dict[str, Any]:
     event = string_field(payload.get("hook_event_name"), 80) or "Unknown"
     session_key = opaque_id(payload.get("session_id"), "default-session")
+    source = "agentctl" if payload.get("mira_source") == "agentctl" else "codex"
     timeline_status = "thinking"
     timeline_category: str | None = None
     outcome = "unknown"
+    timeline_provider = "unknown"
+    timeline_role = "unknown"
 
     if event == "SessionEnd":
         sessions.pop(session_key, None)
@@ -226,8 +260,19 @@ def apply_event(
             "outcome": outcome,
         }
 
-    record = sessions.setdefault(session_key, new_record(session_key, now))
+    record = sessions.setdefault(session_key, new_record(session_key, now, source))
+    record["source"] = source
     subagents = set(str(item) for item in record.get("subagents", []))
+    raw_meta = record.get("agentMeta")
+    agent_meta = raw_meta if isinstance(raw_meta, dict) else {}
+    agent_meta = {
+        str(agent_id): {
+            "provider": enum_field(metadata.get("provider"), AGENT_PROVIDERS),
+            "role": enum_field(metadata.get("role"), AGENT_ROLES),
+        }
+        for agent_id, metadata in agent_meta.items()
+        if str(agent_id) in subagents and isinstance(metadata, dict)
+    }
 
     if event == "SessionStart":
         set_record_state(record, "ready", event, now)
@@ -252,15 +297,53 @@ def apply_event(
         status = "delegating" if subagents else "thinking"
         set_record_state(record, status, event, now)
     elif event == "SubagentStart":
-        subagents.add(opaque_id(payload.get("agent_id"), f"agent-{len(subagents) + 1}"))
+        agent_id = opaque_id(payload.get("agent_id"), f"agent-{len(subagents) + 1}")
+        subagents.add(agent_id)
+        timeline_provider = "codex"
+        timeline_role = enum_field(payload.get("agent_type"), AGENT_ROLES)
+        agent_meta[agent_id] = {
+            "provider": timeline_provider,
+            "role": timeline_role,
+        }
         record["subagents"] = sorted(subagents)
         set_record_state(record, "delegating", event, now, "agent")
         timeline_status = "delegating"
         timeline_category = "agent"
     elif event == "SubagentStop":
-        subagents.discard(opaque_id(payload.get("agent_id"), "unknown-agent"))
+        agent_id = opaque_id(payload.get("agent_id"), "unknown-agent")
+        metadata = agent_meta.pop(agent_id, {})
+        timeline_provider = enum_field(metadata.get("provider"), AGENT_PROVIDERS)
+        timeline_role = enum_field(metadata.get("role"), AGENT_ROLES)
+        subagents.discard(agent_id)
         record["subagents"] = sorted(subagents)
         status = "delegating" if subagents else "thinking"
+        set_record_state(record, status, event, now, "agent")
+        timeline_status = status
+        timeline_category = "agent"
+    elif event == "AgentJobStart" and source == "agentctl":
+        agent_id = opaque_id(
+            payload.get("attempt_id") or payload.get("agent_id"),
+            f"agent-{len(subagents) + 1}",
+        )
+        timeline_provider = enum_field(payload.get("provider"), AGENT_PROVIDERS)
+        timeline_role = enum_field(payload.get("role"), AGENT_ROLES)
+        subagents = {agent_id}
+        agent_meta = {
+            agent_id: {
+                "provider": timeline_provider,
+                "role": timeline_role,
+            }
+        }
+        status, category = agent_activity(timeline_role)
+        set_record_state(record, status, event, now, category)
+        timeline_status = status
+        timeline_category = "agent"
+    elif event in AGENT_JOB_TERMINAL_EVENTS and source == "agentctl":
+        timeline_provider = enum_field(payload.get("provider"), AGENT_PROVIDERS)
+        timeline_role = enum_field(payload.get("role"), AGENT_ROLES)
+        status, outcome = AGENT_JOB_TERMINAL_EVENTS[event]
+        subagents.clear()
+        agent_meta.clear()
         set_record_state(record, status, event, now, "agent")
         timeline_status = status
         timeline_category = "agent"
@@ -273,6 +356,7 @@ def apply_event(
         timeline_status = "thinking"
 
     record["subagents"] = sorted(subagents)
+    record["agentMeta"] = agent_meta
     return {
         "id": f"{time.time_ns():x}-{os.getpid():x}",
         "at": utc_iso(now),
@@ -281,6 +365,8 @@ def apply_event(
         "status": timeline_status,
         "category": timeline_category,
         "outcome": outcome,
+        "provider": timeline_provider,
+        "role": timeline_role,
     }
 
 
@@ -307,13 +393,26 @@ def aggregate_state(sessions: dict[str, dict[str, Any]], now: float) -> dict[str
             "event": "NoActiveSession",
             "toolCategory": None,
             "activeSubagents": 0,
+            "activeAgents": [],
+            "providerCounts": {"codex": 0, "claude": 0, "grok": 0},
             "session": None,
             "expiresAt": None,
             "source": "codex-hook",
         }
 
+    selection_pool = active
+    if any(record.get("subagents") for record in active):
+        selection_pool = [
+            record
+            for record in active
+            if not (
+                record.get("source") == "agentctl"
+                and not record.get("subagents")
+                and record.get("status") in {"ready", "success", "error"}
+            )
+        ]
     selected = max(
-        active,
+        selection_pool,
         key=lambda item: (
             STATE_PRIORITY.get(str(item.get("status")), 0),
             float(item.get("updatedEpoch") or 0),
@@ -321,6 +420,35 @@ def aggregate_state(sessions: dict[str, dict[str, Any]], now: float) -> dict[str
     )
     status = str(selected.get("status") or "idle")
     expires_epoch = selected.get("expiresEpoch")
+    active_agents = []
+    ordered_records = [selected, *(item for item in active if item is not selected)]
+    for record in ordered_records:
+        metadata = record.get("agentMeta")
+        metadata = metadata if isinstance(metadata, dict) else {}
+        for agent_id in sorted(str(item) for item in record.get("subagents", [])):
+            agent = metadata.get(agent_id, {})
+            active_agents.append(
+                {
+                    "id": string_field(agent_id, 32),
+                    "provider": enum_field(agent.get("provider"), AGENT_PROVIDERS),
+                    "role": enum_field(agent.get("role"), AGENT_ROLES),
+                    "status": string_field(record.get("status"), 20),
+                }
+            )
+    provider_counts = {"codex": 0, "claude": 0, "grok": 0}
+    for agent in active_agents:
+        provider = agent["provider"]
+        if provider in provider_counts:
+            provider_counts[provider] += 1
+    active_agents = active_agents[:8]
+    sources = {str(item.get("source") or "codex") for item in active}
+    state_source = (
+        "mira-activity-bridge"
+        if len(sources) > 1
+        else "agentctl"
+        if sources == {"agentctl"}
+        else "codex-hook"
+    )
     return {
         "schemaVersion": SCHEMA_VERSION,
         "revision": time.time_ns(),
@@ -330,9 +458,11 @@ def aggregate_state(sessions: dict[str, dict[str, Any]], now: float) -> dict[str
         "event": string_field(selected.get("event"), 80),
         "toolCategory": selected.get("toolCategory"),
         "activeSubagents": sum(len(item.get("subagents", [])) for item in active),
+        "activeAgents": active_agents,
+        "providerCounts": provider_counts,
         "session": selected.get("session"),
         "expiresAt": utc_iso(float(expires_epoch)) if expires_epoch else None,
-        "source": "codex-hook",
+        "source": state_source,
     }
 
 

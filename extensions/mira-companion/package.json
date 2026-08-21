@@ -1,8 +1,8 @@
 {
   "name": "mira-companion",
   "displayName": "Mira Companion",
-  "description": "Codexの作業が小さなドット絵世界の出来事になる、bottom-panelのMira World。",
-  "version": "0.3.1",
+  "description": "Codexとagentctl jobの作業が小さなドット絵世界の出来事になる、bottom-panelのMira World。",
+  "version": "0.4.0",
   "publisher": "asakura",
   "license": "UNLICENSED",
   "engines": {

@@ -100,6 +100,46 @@ test("a three-agent party is recognized without reading agent content", () => {
   assert.ok(result.profile.badges.some((badge) => badge.id === "party"));
 });
 
+test("agentctl lifecycle contributes the same passive team progress", () => {
+  const result = processEvents(
+    createProfile(NOW),
+    [
+      event("job-1", "AgentJobStart", {
+        status: "typing",
+        category: "agent",
+        activeSubagents: 1,
+        provider: "grok",
+        role: "implementer",
+      }),
+      event("job-2", "AgentJobSucceeded", {
+        status: "success",
+        category: "agent",
+        outcome: "success",
+        provider: "grok",
+        role: "implementer",
+      }),
+    ],
+    NOW,
+  );
+
+  assert.equal(result.profile.counters.delegations, 1);
+  assert.equal(result.profile.counters.turns, 1);
+  assert.equal(result.profile.bondXp, 3);
+  assert.equal(
+    lineForState(
+      {
+        status: "typing",
+        revision: 1,
+        activeAgents: [{ provider: "grok", role: "implementer" }],
+      },
+      result.profile,
+      "workspace-a",
+      NOW,
+    ),
+    "Grokの実装班が工房で作業中〜",
+  );
+});
+
 test("profile normalization keeps only bounded game data", () => {
   const profile = normalizeProfile(
     {

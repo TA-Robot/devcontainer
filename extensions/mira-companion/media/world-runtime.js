@@ -23,6 +23,13 @@
     { x: 63, animation: "testing" },
     { x: 72, animation: "idle" },
   ];
+  const companionDestinations = {
+    researcher: 31,
+    reviewer: 41,
+    implementer: 55,
+    tester: 63,
+    unknown: 72,
+  };
 
   let assets;
   let snapshot;
@@ -129,16 +136,31 @@
 
   function renderCompanions() {
     companions.replaceChildren();
-    const count = Math.min(4, Number(snapshot?.activeSubagents) || 0);
+    const activeAgents = Array.isArray(snapshot?.activeAgents)
+      ? snapshot.activeAgents.slice(0, 4)
+      : [];
+    const count = Math.min(
+      4,
+      activeAgents.length || Number(snapshot?.activeSubagents) || 0,
+    );
+    const roleSlots = new Map();
     for (let index = 0; index < count; index += 1) {
-      const definition = assets.companions[index % assets.companions.length];
+      const agent = activeAgents[index];
+      const definition =
+        assets.companions.find((item) => item.role === agent?.role) ||
+        assets.companions[index % assets.companions.length];
       const wrapper = document.createElement("span");
       wrapper.className = "companion";
-      wrapper.style.left = `${77 + index * 4}%`;
+      wrapper.dataset.provider = agent?.provider || "unknown";
+      const role = agent?.role || "unknown";
+      const slot = roleSlots.get(role) || 0;
+      roleSlots.set(role, slot + 1);
+      const destination =
+        companionDestinations[role] || companionDestinations.unknown;
+      wrapper.style.left = `${Math.min(90, destination + slot * 3.2)}%`;
       const image = document.createElement("img");
       image.alt = "";
-      image.src =
-        snapshot.status === "delegating" ? definition.active : definition.idle;
+      image.src = agent ? definition.active : definition.idle;
       wrapper.append(image);
       companions.append(wrapper);
     }
@@ -198,10 +220,21 @@
     }
     status.textContent = snapshot.connected
       ? snapshot.label
-      : "Codex未接続";
+      : "activity未接続";
     line.textContent = snapshot.line;
     const activity = snapshot.session || {};
-    session.textContent = `調査${activity.research || 0} · 編集${activity.edit || 0} · test${activity.test || 0}`;
+    const providerCounts = snapshot.providerCounts || {};
+    const providerSummary = [
+      ["Codex", providerCounts.codex],
+      ["Claude", providerCounts.claude],
+      ["Grok", providerCounts.grok],
+    ]
+      .filter((entry) => Number(entry[1]) > 0)
+      .map((entry) => `${entry[0]}×${entry[1]}`)
+      .join(" · ");
+    session.textContent = providerSummary
+      ? providerSummary
+      : `調査${activity.research || 0} · 編集${activity.edit || 0} · test${activity.test || 0}`;
     const next = snapshot.progress.nextLevelXp ?? "MAX";
     progress.textContent = `Lv.${snapshot.progress.level} · ${snapshot.progress.xp}/${next} · ✦${snapshot.rhythm}`;
     renderDecorations();
