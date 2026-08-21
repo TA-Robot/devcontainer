@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+codex_wrapper="${DEVCONTAINER_CODEX_WRAPPER_BIN:-/usr/local/bin/codex}"
+
+if [[ ! -x "$codex_wrapper" ]]; then
+  echo "error: codex wrapper not found or not executable: $codex_wrapper" >&2
+  exit 127
+fi
+
+export AGENTCTL_PERMISSION_PROFILE=trusted-fast
+exec "$codex_wrapper" --dangerously-bypass-approvals-and-sandbox "$@"

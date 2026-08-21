@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+claude_wrapper="${DEVCONTAINER_CLAUDE_WRAPPER_BIN:-/usr/local/bin/claude}"
+
+if [[ ! -x "$claude_wrapper" ]]; then
+  echo "error: claude wrapper not found or not executable: $claude_wrapper" >&2
+  exit 127
+fi
+
+export AGENTCTL_PERMISSION_PROFILE=trusted-fast
+exec "$claude_wrapper" --dangerously-skip-permissions "$@"

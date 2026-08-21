@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ai_cli_prefix="${DEVCONTAINER_AI_CLI_PREFIX:-/opt/devcontainer-ai-cli}"
+real_grok_bin="${DEVCONTAINER_GROK_REAL_BIN:-$ai_cli_prefix/bin/grok}"
+
+if [[ ! -x "$real_grok_bin" ]]; then
+  echo "error: grok real binary not found or not executable: $real_grok_bin" >&2
+  exit 127
+fi
+
+# The managed stable/edge channel owns upgrades, so suppress Grok's background
+# self-updater. Keep an explicitly supplied flag singular because clap rejects
+# duplicate --no-auto-update options.
+managed_args=()
+has_no_auto_update=0
+for argument in "$@"; do
+  if [[ "$argument" == "--no-auto-update" ]]; then
+    has_no_auto_update=1
+    break
+  fi
+done
+if [[ $has_no_auto_update -eq 0 ]]; then
+  managed_args+=(--no-auto-update)
+fi
+
+# Safe is the default: preserve Grok's interactive permission mode and sandbox
+# unless the caller explicitly selects otherwise. New automation should use
+# `grok-trusted` when it intentionally wants the bypass profile.
+if [[ "${DEVCONTAINER_GROK_DANGEROUS_DEFAULT:-0}" == "1" ]]; then
+  exec "$real_grok_bin" "${managed_args[@]}" --permission-mode bypassPermissions --sandbox off "$@"
+fi
+
+exec "$real_grok_bin" "${managed_args[@]}" "$@"

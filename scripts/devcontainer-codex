@@ -10,14 +10,17 @@ if [[ ! -x "$real_codex_bin" ]]; then
   exit 127
 fi
 
-if [[ "${DEVCONTAINER_CODEX_DANGEROUS_DEFAULT:-1}" == "0" ]]; then
-  exec "$real_codex_bin" "$@"
-fi
-
 for argument in "$@"; do
   if [[ "$argument" == "$dangerous_flag" ]]; then
     exec "$real_codex_bin" "$@"
   fi
 done
 
-exec "$real_codex_bin" "$dangerous_flag" "$@"
+# Safe is the default. The environment switch is retained only as an explicit
+# compatibility opt-in for existing automation; new callers should use
+# `codex-trusted`, whose name makes the missing sandbox boundary visible.
+if [[ "${DEVCONTAINER_CODEX_DANGEROUS_DEFAULT:-0}" == "1" ]]; then
+  exec "$real_codex_bin" "$dangerous_flag" "$@"
+fi
+
+exec "$real_codex_bin" "$@"

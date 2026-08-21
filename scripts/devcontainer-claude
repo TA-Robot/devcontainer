@@ -10,14 +10,17 @@ if [[ ! -x "$real_claude_bin" ]]; then
   exit 127
 fi
 
-if [[ "${DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT:-1}" == "0" ]]; then
-  exec "$real_claude_bin" "$@"
-fi
-
 for argument in "$@"; do
   if [[ "$argument" == "$dangerous_flag" ]]; then
     exec "$real_claude_bin" "$@"
   fi
 done
 
-exec "$real_claude_bin" "$dangerous_flag" "$@"
+# Safe is the default. The environment switch is retained only as an explicit
+# compatibility opt-in for existing automation; new callers should use
+# `claude-trusted`, whose name makes the missing permission boundary visible.
+if [[ "${DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT:-0}" == "1" ]]; then
+  exec "$real_claude_bin" "$dangerous_flag" "$@"
+fi
+
+exec "$real_claude_bin" "$@"

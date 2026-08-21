@@ -15,19 +15,30 @@
   // ユーザー設定
   "remoteUser": "devuser",
 
-  // bind mount 元を用意し、ホストにある AI CLI のバージョン番号を記録する。
-  // 実行ファイル自体は OS/CPU が異なり得るため mount せず、postStartCommand で
-  // コンテナ向けの同一 npm version を導入する。
+  // bind mount 元を用意する。stableではhost CLIをprobeせずimage pinを使う。
+  // edgeを明示した場合だけhost version番号を記録し、container向けnpm packageを同期する。
   "initializeCommand": "sh \"${localWorkspaceFolder}/.devcontainer/initialize-host.sh\"",
   
   // 機能追加（必要に応じてコメントアウト解除）
   "features": {
     // Docker-in-Docker サポート
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "29.7.2",
+      "mobyBuildxVersion": "0.36.1",
+      // Featureのv2指定はbuild時latest解決なので、ComposeはDockerfileで直接固定する
+      "dockerDashComposeVersion": "none",
+      // aptで固定したmoby-buildxを使い、GitHub latest downloadを抑止する
+      "installDockerBuildx": false
+    },
     // Git設定
-    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "os-provided"
+    },
     // GitHub CLI
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "2.97.0",
+      "installDirectlyFromGitHubRelease": true
+    }
   },
   
   // 拡張機能（Cursorで使いたい拡張機能を追加）
@@ -58,6 +69,10 @@
     "source=${localEnv:HOME}/.config/gemini,target=/home/devuser/.config/gemini,type=bind",
     "source=${localEnv:HOME}/.claude.json,target=/home/devuser/.claude.json,type=bind",
     "source=${localEnv:HOME}/.claude,target=/home/devuser/.claude,type=bind",
+    "source=${localEnv:HOME}/.grok,target=/home/devuser/.grok,type=bind",
+    // agentctl metadata, bounded evidence, and job worktrees survive container rebuilds.
+    // Projects are partitioned by a UUID stored in each repository's local Git config.
+    "source=devcontainer-agentctl-state,target=/var/lib/agentctl,type=volume",
     // initializeCommand が生成したバージョン番号だけを共有する（credential は含まない）
     "source=${localEnv:HOME}/.cache/devcontainer-ai-cli,target=/opt/devcontainer-host-ai-cli,type=bind,readonly"
   ],
@@ -66,17 +81,32 @@
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",
     "WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
-    // 0 にするとホスト AI CLI バージョン同期を無効化できる
-    "DEVCONTAINER_AI_CLI_SYNC": "${localEnv:DEVCONTAINER_AI_CLI_SYNC}",
-    // APIキー（ホストに設定されていれば引き継ぐ）
+    "MIRA_COMPANION_STATE_DIR": "/home/devuser/.local/state/mira-companion",
+    // 0 にするとmanaged hookと拡張の自動導入を無効化できる
+    "MIRA_COMPANION_ENABLED": "${localEnv:MIRA_COMPANION_ENABLED}",
+    // 0 にするとMira Companion拡張の自動package/installを無効化できる
+    "MIRA_COMPANION_INSTALL": "${localEnv:MIRA_COMPANION_INSTALL}",
+    // stable（既定）は起動時更新なし。edgeだけhost versionへ同期する
+    "DEVCONTAINER_AI_CLI_CHANNEL": "${localEnv:DEVCONTAINER_AI_CLI_CHANNEL:stable}",
+    // legacy switch: 1はedge opt-in、0は同期/host probe無効
+    "DEVCONTAINER_AI_CLI_SYNC": "${localEnv:DEVCONTAINER_AI_CLI_SYNC}"
+  },
+
+  // API keyはbuild時のimage ENVへ焼かず、remote editor/terminal processだけへ渡す。
+  // Codex / Claude / Grokの通常認証は上記credential mountを使う。
+  "remoteEnv": {
     "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
     "SAKANA_API_KEY": "${localEnv:SAKANA_API_KEY}",
     "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
-    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}"
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "XAI_API_KEY": "${localEnv:XAI_API_KEY}"
   },
   
   "postCreateCommand": "echo '✅ Dev Container is ready!' && git --version && node --version 2>/dev/null || true",
-  "postStartCommand": "bash /workspace/scripts/sync-host-ai-cli-versions",
+  "postStartCommand": "bash /workspace/scripts/devcontainer-post-start",
+  // local VSIXの導入はremote editor CLIが準備されたattach後に行う。
+  // CLIが見つからない場合は黙ってskipせず、lifecycle errorとして見えるようにする。
+  "postAttachCommand": "MIRA_COMPANION_EDITOR_CLI_WAIT_SECONDS=30 MIRA_COMPANION_REQUIRE_EDITOR_CLI=1 bash /workspace/scripts/install-mira-vscode-extension",
   
   // 追加のrunArgs（必要に応じて調整）
   "runArgs": [
