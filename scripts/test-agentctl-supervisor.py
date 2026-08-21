@@ -120,6 +120,8 @@ class AgentctlSupervisorTests(unittest.TestCase):
         self.jobs: list[str] = []
         self.capacity_write = "2"
         self.capacity_integration = "1"
+        self.runner_log_max_bytes = str(1024 * 1024)
+        self.supervisor_log_max_bytes = str(2 * 1024 * 1024)
 
     def tearDown(self) -> None:
         for job_id in self.jobs:
@@ -145,6 +147,8 @@ class AgentctlSupervisorTests(unittest.TestCase):
                 "AGENTCTL_ORPHAN_AFTER_SECONDS": "0.4",
                 "AGENTCTL_CAPACITY_WRITE": self.capacity_write,
                 "AGENTCTL_CAPACITY_INTEGRATION": self.capacity_integration,
+                "AGENTCTL_RUNNER_LOG_MAX_BYTES": self.runner_log_max_bytes,
+                "AGENTCTL_SUPERVISOR_LOG_MAX_BYTES": self.supervisor_log_max_bytes,
                 "MIRA_COMPANION_ENABLED": "0",
             }
         )
@@ -240,6 +244,14 @@ class AgentctlSupervisorTests(unittest.TestCase):
             time.sleep(0.05)
         self.fail(f"job did not record a running process identity: {latest}")
 
+    def wait_file(self, path: Path, timeout: float = 5) -> Path:
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            if path.is_file():
+                return path
+            time.sleep(0.05)
+        self.fail(f"file did not appear: {path}")
+
     def test_detached_runner_survives_dispatch_client_and_heartbeats(self) -> None:
         job_id = self.create("detached.json")
         submitted = self.invoke(
@@ -256,7 +268,88 @@ class AgentctlSupervisorTests(unittest.TestCase):
         self.assertGreater(attempt["heartbeat_at"], attempt["started_at"])
         self.assertEqual((self.state_dir / "agentd.sock").stat().st_mode & 0o777, 0o600)
         self.assertEqual((self.state_dir / "agentd.json").stat().st_mode & 0o777, 0o600)
-        self.assertEqual(Path(attempt["log_path"]).with_name("runner.log").stat().st_mode & 0o777, 0o600)
+        runner_log = Path(attempt["log_path"]).with_name("runner.log")
+        self.assertEqual(runner_log.stat().st_mode & 0o777, 0o600)
+        retention_path = self.wait_file(runner_log.with_name("runner-log-retention.json"))
+        retention = json.loads(retention_path.read_text(encoding="utf-8"))
+        self.assertEqual(retention["policy"], "runner_terminal_tail")
+        self.assertFalse(retention["truncated"])
+
+    def test_runner_log_is_bounded_after_detached_exit(self) -> None:
+        self.runner_log_max_bytes = "2048"
+        job_id = self.create("runner-retention.json")
+        submitted = self.invoke(
+            "job", "run", job_id, "--provider", "codex", "--detach", mode="slow"
+        )
+        self.assertEqual(submitted.returncode, 0, submitted.stdout + submitted.stderr)
+        running = self.wait_running_identity(job_id)
+        runner_log = Path(running["attempts"][0]["log_path"]).with_name("runner.log")
+        runner_log.write_bytes(b"discarded-line\n" + b"x" * 4096 + b"\nretained-line\n")
+
+        completed = self.wait_state(job_id, {"succeeded"})
+        attempt = completed["attempts"][0]
+        retention_path = self.wait_file(runner_log.with_name("runner-log-retention.json"))
+        retention = json.loads(retention_path.read_text(encoding="utf-8"))
+        self.assertTrue(retention["truncated"])
+        self.assertLessEqual(runner_log.stat().st_size, 2048)
+        self.assertTrue(
+            runner_log.read_bytes().startswith(
+                b"[agentctl: earlier runner output discarded by retention policy]\n"
+            )
+        )
+        viewed = self.invoke("job", "logs", job_id, "--runner", "--json")
+        self.assertEqual(viewed.returncode, 0, viewed.stdout + viewed.stderr)
+        self.assertEqual(
+            json.loads(viewed.stdout)["retention"]["policy"],
+            "runner_terminal_tail",
+        )
+        self.assertEqual(attempt["state"], "succeeded")
+
+    def test_supervisor_log_rotates_in_place_and_keeps_its_live_descriptor(self) -> None:
+        self.supervisor_log_max_bytes = "2048"
+        started = self.invoke("supervisor", "status", "--json")
+        self.assertEqual(started.returncode, 0, started.stdout + started.stderr)
+        status = json.loads(started.stdout)
+        self.assertEqual(status["log_limits"]["supervisor_bytes"], 2048)
+        supervisor_pid = int(status["pid"])
+        log_path = self.state_dir / "agentd.log"
+        log_inode = log_path.stat().st_ino
+        self.assertEqual(Path(f"/proc/{supervisor_pid}/fd/1").stat().st_ino, log_inode)
+
+        with log_path.open("ab") as handle:
+            handle.write(b"discarded-line\n" + b"y" * 4096 + b"\nretained-line\n")
+        time.sleep(0.3)
+        ping = self.invoke("supervisor", "status", "--json")
+        self.assertEqual(ping.returncode, 0, ping.stdout + ping.stderr)
+        deadline = time.monotonic() + 5
+        while log_path.stat().st_size > 2048 and time.monotonic() < deadline:
+            time.sleep(0.05)
+            self.invoke("supervisor", "status")
+        self.assertLessEqual(log_path.stat().st_size, 2048)
+        self.assertEqual(log_path.stat().st_ino, log_inode)
+        self.assertEqual(Path(f"/proc/{supervisor_pid}/fd/1").stat().st_ino, log_inode)
+        self.assertTrue(
+            log_path.read_bytes().startswith(
+                b"[agentctl: earlier supervisor output discarded by retention policy]\n"
+            )
+        )
+        retention = json.loads(
+            (self.state_dir / "agentd-log-retention.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(retention["policy"], "supervisor_live_tail")
+        self.assertTrue(retention["truncated"])
+
+    def test_supervisor_refuses_a_symlink_log_without_touching_its_target(self) -> None:
+        self.state_dir.mkdir(mode=0o700, parents=True)
+        (self.state_dir / "locks").mkdir(mode=0o700)
+        target = self.root / "must-not-change.log"
+        target.write_text("private target\n", encoding="utf-8")
+        (self.state_dir / "agentd.log").symlink_to(target)
+
+        started = self.invoke("supervisor", "status")
+        self.assertEqual(started.returncode, 2)
+        self.assertIn("regular non-symlink", started.stderr)
+        self.assertEqual(target.read_text(encoding="utf-8"), "private target\n")
 
     def test_detached_grok_uses_the_same_supervised_execution_path(self) -> None:
         job_id = self.create("detached-grok.json")
@@ -309,6 +402,13 @@ class AgentctlSupervisorTests(unittest.TestCase):
         self.assertTrue(all(lease["released_at"] for lease in process_leases))
         retention = Path(attempt["log_path"]).with_name("log-retention.json")
         self.assertTrue(retention.is_file())
+        runner_retention = self.wait_file(
+            Path(attempt["log_path"]).with_name("runner-log-retention.json")
+        )
+        self.assertEqual(
+            json.loads(runner_retention.read_text(encoding="utf-8"))["policy"],
+            "runner_terminal_tail",
+        )
 
     def test_restart_reconciliation_marks_lost_execution_orphaned(self) -> None:
         job_id = self.create("orphan.json")
@@ -344,6 +444,13 @@ class AgentctlSupervisorTests(unittest.TestCase):
         self.assertEqual(orphaned["attempts"][0]["exit_reason"], "orphaned")
         retention = Path(attempt["log_path"]).with_name("log-retention.json")
         self.assertTrue(retention.is_file())
+        runner_retention = self.wait_file(
+            Path(attempt["log_path"]).with_name("runner-log-retention.json")
+        )
+        self.assertEqual(
+            json.loads(runner_retention.read_text(encoding="utf-8"))["policy"],
+            "runner_terminal_tail",
+        )
 
     def test_detached_dispatch_is_single_attempt_and_preserves_trusted_gate(self) -> None:
         job_id = self.create("single-dispatch.json")

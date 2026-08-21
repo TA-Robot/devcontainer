@@ -58,7 +58,11 @@ SECRET_TEXT_PATTERNS = (
 )
 DOCKER_INVENTORY_TIMEOUT_SECONDS = 5.0
 MAX_PROVIDER_LOG_BYTES = 8 * 1024 * 1024
+MAX_RUNNER_LOG_BYTES = 1024 * 1024
 LOG_RETENTION_MARKER = b"[agentctl: earlier provider output discarded by retention policy]\n"
+RUNNER_LOG_RETENTION_MARKER = (
+    b"[agentctl: earlier runner output discarded by retention policy]\n"
+)
 MIRA_AGENT_JOB_EVENTS = {
     "AgentJobStart",
     "AgentJobSucceeded",
@@ -1099,55 +1103,101 @@ def _redact_log_text(text: str) -> tuple[str, int]:
     return text, redactions
 
 
-def enforce_terminal_log_retention(path: Path) -> dict[str, Any]:
-    """Atomically retain at most the final MAX_PROVIDER_LOG_BYTES of a closed log."""
+def enforce_log_tail_retention(
+    path: Path,
+    *,
+    max_bytes: int,
+    marker: bytes,
+    policy: str,
+    report_path: Path,
+    in_place: bool = False,
+    report_unchanged: bool = True,
+) -> dict[str, Any] | None:
+    """Retain a bounded line-aligned tail of an owner-only regular log."""
+
+    if max_bytes <= len(marker):
+        raise AgentctlJobError("log retention limit must exceed its marker size")
 
     try:
         metadata = path.lstat()
     except OSError as exc:
-        raise AgentctlJobError(f"provider log is unavailable for retention: {exc}") from exc
+        raise AgentctlJobError(f"log is unavailable for retention: {exc}") from exc
     if not stat.S_ISREG(metadata.st_mode):
-        raise AgentctlJobError("provider log retention requires a regular non-symlink file")
+        raise AgentctlJobError("log retention requires a regular non-symlink file")
+    if metadata.st_uid != os.getuid():
+        raise AgentctlJobError("log retention requires a file owned by the current user")
     original_bytes = metadata.st_size
 
-    truncated = original_bytes > MAX_PROVIDER_LOG_BYTES
+    truncated = original_bytes > max_bytes
     dropped_partial_line = False
     if truncated:
-        tail_budget = MAX_PROVIDER_LOG_BYTES - len(LOG_RETENTION_MARKER)
+        tail_budget = max_bytes - len(marker)
         offset = max(0, original_bytes - tail_budget)
+        descriptor = -1
         try:
             descriptor = os.open(
                 path,
-                os.O_RDONLY | getattr(os, "O_NOFOLLOW", 0),
+                (os.O_RDWR if in_place else os.O_RDONLY)
+                | getattr(os, "O_NOFOLLOW", 0),
             )
-            with os.fdopen(descriptor, "rb") as source:
+            opened = os.fstat(descriptor)
+            if (
+                not stat.S_ISREG(opened.st_mode)
+                or opened.st_uid != os.getuid()
+                or opened.st_dev != metadata.st_dev
+                or opened.st_ino != metadata.st_ino
+            ):
+                raise AgentctlJobError("log changed identity during retention")
+            source_handle = os.fdopen(descriptor, "r+b" if in_place else "rb")
+            descriptor = -1
+            with source_handle as source:
                 source.seek(offset)
                 tail = source.read(tail_budget)
+                if offset:
+                    newline = tail.find(b"\n")
+                    dropped_partial_line = True
+                    tail = tail[newline + 1 :] if newline >= 0 else b""
+                retained = marker + tail
+                if in_place:
+                    source.seek(0)
+                    source.truncate(0)
+                    source.write(retained)
+                    source.flush()
+                    os.fsync(source.fileno())
         except OSError as exc:
-            raise AgentctlJobError(f"provider log cannot be read for retention: {exc}") from exc
-        if offset:
-            newline = tail.find(b"\n")
-            dropped_partial_line = True
-            tail = tail[newline + 1 :] if newline >= 0 else b""
-        retained = LOG_RETENTION_MARKER + tail
-        temporary = path.with_name(f".{path.name}.{secrets.token_hex(8)}.retention")
-        descriptor = os.open(temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-        try:
-            with os.fdopen(descriptor, "wb") as output:
-                output.write(retained)
-                output.flush()
-                os.fsync(output.fileno())
-            os.replace(temporary, path)
-        except BaseException:
-            temporary.unlink(missing_ok=True)
-            raise
+            raise AgentctlJobError(f"log cannot be read for retention: {exc}") from exc
         finally:
-            temporary.unlink(missing_ok=True)
+            if descriptor >= 0:
+                os.close(descriptor)
+        if not in_place:
+            temporary = path.with_name(f".{path.name}.{secrets.token_hex(8)}.retention")
+            descriptor = -1
+            try:
+                descriptor = os.open(
+                    temporary, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600
+                )
+                output_handle = os.fdopen(descriptor, "wb")
+                descriptor = -1
+                with output_handle as output:
+                    output.write(retained)
+                    output.flush()
+                    os.fsync(output.fileno())
+                os.replace(temporary, path)
+            except BaseException:
+                temporary.unlink(missing_ok=True)
+                raise
+            finally:
+                if descriptor >= 0:
+                    os.close(descriptor)
+                temporary.unlink(missing_ok=True)
+
+    if not truncated and not report_unchanged:
+        return None
 
     report = {
         "schema_version": 1,
-        "policy": "terminal_tail",
-        "max_bytes": MAX_PROVIDER_LOG_BYTES,
+        "policy": policy,
+        "max_bytes": max_bytes,
         "original_bytes": original_bytes,
         "retained_bytes": path.lstat().st_size,
         "truncated": truncated,
@@ -1155,8 +1205,66 @@ def enforce_terminal_log_retention(path: Path) -> dict[str, Any]:
         "raw_log_redacted": False,
         "applied_at": utc_now(),
     }
-    write_json_private(path.with_name("log-retention.json"), report)
+    write_json_private(report_path, report)
     return report
+
+
+def enforce_terminal_log_retention(path: Path) -> dict[str, Any]:
+    """Atomically retain at most the final MAX_PROVIDER_LOG_BYTES of a closed log."""
+
+    report = enforce_log_tail_retention(
+        path,
+        max_bytes=MAX_PROVIDER_LOG_BYTES,
+        marker=LOG_RETENTION_MARKER,
+        policy="terminal_tail",
+        report_path=path.with_name("log-retention.json"),
+    )
+    assert report is not None
+    return report
+
+
+def enforce_attempt_runner_log_retention(
+    store: Store,
+    attempt: dict[str, Any],
+    *,
+    max_bytes: int = MAX_RUNNER_LOG_BYTES,
+) -> dict[str, Any] | None:
+    """Bound a closed detached-runner log at its canonical attempt path."""
+
+    job = get_job(store, str(attempt["job_id"]))
+    attempt_dir = store.paths.attempt_dir(
+        job["project_id"], job["job_id"], int(attempt["number"])
+    ).resolve()
+    recorded_log = Path(attempt["log_path"])
+    if recorded_log.name != "process.log" or recorded_log.parent.resolve() != attempt_dir:
+        raise AgentctlJobError(
+            "recorded log path does not match its canonical attempt evidence path"
+        )
+    runner_log = attempt_dir / "runner.log"
+    if runner_log.is_symlink():
+        raise AgentctlJobError("runner log retention refuses a symbolic link")
+    if not runner_log.is_file():
+        return None
+    retention_path = attempt_dir / "runner-log-retention.json"
+    if retention_path.is_file():
+        if retention_path.is_symlink():
+            raise AgentctlJobError("runner log retention evidence is a symbolic link")
+        try:
+            existing = load_json(retention_path)
+        except (OSError, json.JSONDecodeError, ContractValidationError) as exc:
+            raise AgentctlJobError(
+                f"runner log retention evidence is unreadable: {exc}"
+            ) from exc
+        if not isinstance(existing, dict):
+            raise AgentctlJobError("runner log retention evidence root is not an object")
+        return existing
+    return enforce_log_tail_retention(
+        runner_log,
+        max_bytes=max_bytes,
+        marker=RUNNER_LOG_RETENTION_MARKER,
+        policy="runner_terminal_tail",
+        report_path=retention_path,
+    )
 
 
 def enforce_attempt_log_retention(
@@ -1275,7 +1383,9 @@ def read_job_log(
     if selected and decoded.endswith("\n"):
         content += "\n"
     redacted, redaction_count = _redact_log_text(content)
-    retention_path = attempt_dir / "log-retention.json"
+    retention_path = attempt_dir / (
+        "log-retention.json" if source == "process" else "runner-log-retention.json"
+    )
     retention = None
     if retention_path.is_file():
         if retention_path.is_symlink():

@@ -21,11 +21,15 @@ from typing import Any
 
 from agentctl_jobs import (
     AgentctlJobError,
+    MAX_RUNNER_LOG_BYTES,
     StatePaths,
     Store,
     capacity_limits,
     capacity_snapshot,
     cancel_job,
+    enforce_attempt_runner_log_retention,
+    enforce_log_tail_retention,
+    get_attempt,
     get_job,
     mark_detached_launch_failure,
     prepare_attempt,
@@ -41,6 +45,11 @@ from agentctl_jobs import (
 
 PROTOCOL_VERSION = 2
 MAX_REQUEST_BYTES = 1024 * 1024
+MAX_SUPERVISOR_LOG_BYTES = 2 * 1024 * 1024
+MAX_CONFIGURED_LOG_BYTES = 64 * 1024 * 1024
+SUPERVISOR_LOG_RETENTION_MARKER = (
+    b"[agentctl: earlier supervisor output discarded by retention policy]\n"
+)
 
 
 def supervisor_socket(paths: StatePaths) -> Path:
@@ -58,6 +67,63 @@ def supervisor_pid_file(paths: StatePaths) -> Path:
 
 def supervisor_log_file(paths: StatePaths) -> Path:
     return paths.root / "agentd.log"
+
+
+def _operational_log_limit(name: str, default: int) -> int:
+    raw = os.environ.get(name, str(default))
+    try:
+        value = int(raw)
+    except ValueError as exc:
+        raise AgentctlJobError(f"invalid {name}: {raw!r}; expected an integer") from exc
+    if not 1024 <= value <= MAX_CONFIGURED_LOG_BYTES:
+        raise AgentctlJobError(
+            f"{name} must be between 1024 and {MAX_CONFIGURED_LOG_BYTES}, got {value}"
+        )
+    return value
+
+
+def _open_private_log(
+    path: Path, *, append: bool = False, exclusive: bool = False
+) -> int:
+    flags = os.O_WRONLY | os.O_CREAT | getattr(os, "O_NOFOLLOW", 0)
+    if append:
+        flags |= os.O_APPEND
+    if exclusive:
+        flags |= os.O_EXCL
+    try:
+        descriptor = os.open(path, flags, 0o600)
+    except OSError as exc:
+        raise AgentctlJobError(f"cannot open private operational log {path}: {exc}") from exc
+    try:
+        metadata = os.fstat(descriptor)
+        if not stat.S_ISREG(metadata.st_mode):
+            raise AgentctlJobError(f"operational log is not a regular file: {path}")
+        if metadata.st_uid != os.getuid():
+            raise AgentctlJobError(
+                f"operational log is not owned by the current user: {path}"
+            )
+        os.fchmod(descriptor, 0o600)
+        return descriptor
+    except BaseException:
+        os.close(descriptor)
+        raise
+
+
+def _retain_supervisor_log(paths: StatePaths, max_bytes: int) -> dict[str, Any] | None:
+    path = supervisor_log_file(paths)
+    try:
+        path.lstat()
+    except FileNotFoundError:
+        return None
+    return enforce_log_tail_retention(
+        path,
+        max_bytes=max_bytes,
+        marker=SUPERVISOR_LOG_RETENTION_MARKER,
+        policy="supervisor_live_tail",
+        report_path=paths.root / "agentd-log-retention.json",
+        in_place=True,
+        report_unchanged=False,
+    )
 
 
 def _read_response(connection: socket.socket) -> dict[str, Any]:
@@ -160,11 +226,11 @@ def ensure_supervisor(paths: StatePaths, entrypoint: Path) -> dict[str, Any]:
         _remove_stale_socket(paths)
         supervisor_pid_file(paths).unlink(missing_ok=True)
 
-        log_descriptor = os.open(
-            supervisor_log_file(paths),
-            os.O_WRONLY | os.O_CREAT | os.O_APPEND,
-            0o600,
+        supervisor_log_limit = _operational_log_limit(
+            "AGENTCTL_SUPERVISOR_LOG_MAX_BYTES", MAX_SUPERVISOR_LOG_BYTES
         )
+        _retain_supervisor_log(paths, supervisor_log_limit)
+        log_descriptor = _open_private_log(supervisor_log_file(paths), append=True)
         with os.fdopen(log_descriptor, "a", encoding="utf-8") as output:
             subprocess.Popen(
                 [
@@ -205,7 +271,7 @@ class Supervisor:
         self.paths = paths
         self.entrypoint = entrypoint.resolve()
         self.stopping = False
-        self.children: dict[int, subprocess.Popen[str]] = {}
+        self.children: dict[int, tuple[subprocess.Popen[str], str]] = {}
         # Dispatch environments can contain provider credentials. Keep them in
         # memory only; the durable DB queue intentionally stores no secrets.
         self.pending_submissions: dict[str, dict[str, Any]] = {}
@@ -221,6 +287,13 @@ class Supervisor:
             raise AgentctlJobError("AGENTCTL_ORPHAN_AFTER_SECONDS must be at least 0.1")
         self.reconcile_interval = min(5.0, max(0.1, self.orphan_after_seconds / 2))
         self.last_reconcile = 0.0
+        self.runner_log_max_bytes = _operational_log_limit(
+            "AGENTCTL_RUNNER_LOG_MAX_BYTES", MAX_RUNNER_LOG_BYTES
+        )
+        self.supervisor_log_max_bytes = _operational_log_limit(
+            "AGENTCTL_SUPERVISOR_LOG_MAX_BYTES", MAX_SUPERVISOR_LOG_BYTES
+        )
+        self.runner_retention_seen: set[str] = set()
 
     def _peer_is_owner(self, connection: socket.socket) -> bool:
         if not hasattr(socket, "SO_PEERCRED"):
@@ -270,7 +343,7 @@ class Supervisor:
         environment: dict[str, str],
     ) -> dict[str, Any]:
         runner_log = Path(attempt["log_path"]).with_name("runner.log")
-        log_descriptor = os.open(runner_log, os.O_WRONLY | os.O_CREAT | os.O_TRUNC, 0o600)
+        log_descriptor = _open_private_log(runner_log, exclusive=True)
         argv = [
             sys.executable,
             str(self.entrypoint),
@@ -303,7 +376,7 @@ class Supervisor:
             process.stdin.write("go\n")
             process.stdin.close()
             process.stdin = None
-            self.children[process.pid] = process
+            self.children[process.pid] = (process, str(attempt["attempt_id"]))
             return {
                 "job_id": attempt["job_id"],
                 "attempt_id": attempt["attempt_id"],
@@ -390,6 +463,10 @@ class Supervisor:
                         for job in queued
                         if job["job_id"] not in self.pending_submissions
                     ],
+                    "log_limits": {
+                        "runner_bytes": self.runner_log_max_bytes,
+                        "supervisor_bytes": self.supervisor_log_max_bytes,
+                    },
                 },
             }
         if command == "submit":
@@ -465,17 +542,81 @@ class Supervisor:
         raise AgentctlJobError(f"unknown supervisor command: {command!r}")
 
     def _reap_children(self) -> None:
-        for pid, process in list(self.children.items()):
+        for pid, (process, attempt_id) in list(self.children.items()):
             if process.poll() is not None:
                 self.children.pop(pid, None)
+                try:
+                    with Store(self.paths) as store:
+                        attempt = get_attempt(store, attempt_id)
+                        enforce_attempt_runner_log_retention(
+                            store,
+                            attempt,
+                            max_bytes=self.runner_log_max_bytes,
+                        )
+                        self.runner_retention_seen.add(attempt_id)
+                except BaseException as exc:
+                    print(
+                        f"agentctl supervisor: runner log retention failed for {attempt_id}: {exc}",
+                        file=sys.stderr,
+                        flush=True,
+                    )
+
+    def _retain_terminal_runner_logs(self) -> None:
+        with Store(self.paths) as store:
+            attempts = [
+                dict(row)
+                for row in store.connection.execute(
+                    """
+                    SELECT * FROM attempts
+                    WHERE runtime_id LIKE 'runner:%'
+                      AND state NOT IN ('preparing', 'ready', 'running')
+                    ORDER BY updated_at
+                    """
+                ).fetchall()
+            ]
+            for attempt in attempts:
+                attempt_id = str(attempt["attempt_id"])
+                if attempt_id in self.runner_retention_seen:
+                    continue
+                runtime = str(attempt.get("runtime_id") or "").split(":", 2)
+                if (
+                    len(runtime) == 3
+                    and runtime[0] == "runner"
+                    and runtime[1].isdigit()
+                    and process_identity_matches(int(runtime[1]), runtime[2])
+                ):
+                    continue
+                try:
+                    enforce_attempt_runner_log_retention(
+                        store,
+                        attempt,
+                        max_bytes=self.runner_log_max_bytes,
+                    )
+                    self.runner_retention_seen.add(attempt_id)
+                except BaseException as exc:
+                    print(
+                        f"agentctl supervisor: recovered runner log retention failed for "
+                        f"{attempt_id}: {exc}",
+                        file=sys.stderr,
+                        flush=True,
+                    )
 
     def _periodic_reconcile(self) -> None:
         now = time.monotonic()
         if now - self.last_reconcile < self.reconcile_interval:
             return
         self.last_reconcile = now
+        try:
+            _retain_supervisor_log(self.paths, self.supervisor_log_max_bytes)
+        except BaseException as exc:
+            print(
+                f"agentctl supervisor: live log retention failed: {exc}",
+                file=sys.stderr,
+                flush=True,
+            )
         with Store(self.paths) as store:
             reconcile_attempts(store, orphan_after_seconds=self.orphan_after_seconds)
+        self._retain_terminal_runner_logs()
         self._drain_queue()
 
     def serve(self) -> int:
