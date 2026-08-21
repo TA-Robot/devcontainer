@@ -11,7 +11,7 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 - **明示的なedge channel**: 必要なときだけホストのCodex / Gemini / Claude Code / Grok versionへ同期
 - **Docker-in-Docker**: コンテナ内でDockerを利用可能
 - **ホスト設定の引き継ぎ**: SSH鍵、Git設定、認証情報を自動マウント
-- **Mira Companion v2**: Codex / subagentの作業が小さなpixel-art世界の動きになるbottom-panel companionを自動導入
+- **Mira Companion v2**: Codexとagentctl-managed Codex / Claude / Grokの作業が小さなpixel-art世界の動きになるbottom-panel companionを自動導入
 
 ミラのpersonaは `AGENTS.md`、再利用templateは `AGENTS_TEMPLATE.md`、companion architectureは [`docs/mira/architecture.md`](docs/mira/architecture.md)、visual asset contractは [`docs/mira/assets.md`](docs/mira/assets.md) を参照してください。
 
@@ -116,7 +116,7 @@ agentctl job logs <job-id> --lines 80
 agentctl gc --dry-run --job <job-id> --json
 ```
 
-write providerはGit common metadataへ直接commitせず、`ready_for_commit`を返します。brokerがscope、HEAD、dirty pathsをGitから照合してjob branchへcommitするため、Codexのsafe sandboxを崩さずlinked worktreeを使えます。state、attempt evidence、worktreeは`/var/lib/agentctl`のnamed volumeへ保存されます。detachはowner-only Unix socketのlocal supervisorへ渡され、PID＋process start time、heartbeat、process-group cancel、restart時orphan判定に加え、resource class別capacity、priority queue、Compose namespace、integration port leaseを持ちます。validated jobは`collect`でdependency順・commit候補・path overlap・checks/risksをimmutable reportへ集約しますが、merge/pushは行いません。運用時のlog viewはboundedかつbest-effortでsecretをredactし、provider終了後のraw logは8 MiBのtailへ制限します。`gc --dry-run`はcanonical path、Git identity、integration evidence、job固有Docker labelまで再確認しますが、削除は一切行いません。CLI、state、failure semanticsは[`docs/agentctl.md`](docs/agentctl.md)を参照してください。
+write providerはGit common metadataへ直接commitせず、`ready_for_commit`を返します。brokerがscope、HEAD、dirty pathsをGitから照合してjob branchへcommitするため、Codexのsafe sandboxを崩さずlinked worktreeを使えます。state、attempt evidence、worktreeは`/var/lib/agentctl`のnamed volumeへ保存されます。detachはowner-only Unix socketのlocal supervisorへ渡され、PID＋process start time、heartbeat、process-group cancel、restart時orphan判定に加え、resource class別capacity、priority queue、Compose namespace、integration port leaseを持ちます。validated jobは`collect`でdependency順・commit候補・path overlap・checks/risksをimmutable reportへ集約しますが、merge/pushは行いません。運用時のlog viewはboundedかつbest-effortでsecretをredactし、provider終了後のraw logは8 MiBのtailへ制限します。`gc --dry-run`はcanonical path、Git identity、integration evidence、job固有Docker labelまで再確認しますが、削除は一切行いません。jobの開始・成功・失敗・cancel・orphanはprovider / roleだけのsanitized eventとしてMira Worldへ自動反映されます。CLI、state、failure semanticsは[`docs/agentctl.md`](docs/agentctl.md)を参照してください。
 
 Lane Iはまだstable runtimeを持たず、同一containerへfallbackしません。optional runtimeの導入前probeと、model request/image pullなしのprivate-daemon比較は`python3 scripts/benchmark-isolated-runtime-pilot.py --probe-only` / `--repetitions 5`で実行できます。現時点の結果と「privileged DinDをsecurity boundaryにはしない」という判断は[`docs/agents/isolated-runtime-pilot-2026-08-12.md`](docs/agents/isolated-runtime-pilot-2026-08-12.md)にあります。
 
@@ -126,9 +126,9 @@ Lane Iはまだstable runtimeを持たず、同一containerへfallbackしませ�
 
 devcontainerにeditorがattachした後、local VSIXをpackageしてremote側のVS Code / Cursorへ自動導入します。専用のActivity Barやsidebarは作らず、VS Code下部に短い`Mira World` panelを1つ追加します。workspace初回とremote runtimeのrebuild直後だけ自動で復帰し、同じruntimeでのreload以後はVS Codeが記憶するpanelの開閉状態を尊重します。status bar右側の小さなMiraはworldを再度開くtoggleです。
 
-Codex連携はimage内の`/etc/codex/requirements.toml`にあるcontainer-managed hookで行います。対象projectへ`.codex/hooks.json`をコピーしたり、projectごとに`/hooks`で信頼したりする必要はありません。調査なら資料庫、planningなら作戦卓、編集やshellなら工房、testならsignal gate、delegationならdispatch dockへミラが自動で歩き、到着後に状態別animationへ変わります。idle中も低頻度でmap内を散歩します。
+Codex連携はimage内の`/etc/codex/requirements.toml`にあるcontainer-managed hookで行います。対象projectへ`.codex/hooks.json`をコピーしたり、projectごとに`/hooks`で信頼したりする必要はありません。さらに`agentctl`経由のCodex / Claude / Grok jobは共通brokerから同じbridgeへ接続され、provider別人数とresearcher / reviewer / implementerのrole spriteとして表示されます。調査なら資料庫、planningなら作戦卓、編集やshellなら工房、testならsignal gate、delegationならdispatch dockへミラが自動で歩き、到着後に状態別animationへ変わります。idle中も低頻度でmap内を散歩します。
 
-状態ファイルをまだ一度も受信していない場合は、HUDへ`Codex未接続`と表示します。imageを更新した直後はeditorをreloadし、新しいCodex sessionを開始してください。正常に接続され、active workがなければ`待機中`になります。
+状態ファイルをまだ一度も受信していない場合は、HUDへ`activity未接続`と表示します。imageを更新した直後はeditorをreloadし、新しいCodex sessionを開始してください。正常に接続され、active workがなければ`待機中`になります。Claude / Grokを単独interactive CLIとして直接起動したsessionはまだ観測せず、`agentctl job run --provider claude|grok`で動くjobだけがMiraへ接続されます。
 
 ハイタッチ、なでる、常設menuはありません。長い作業の完了、test recovery、badge獲得など自然な区切りにだけ、ミラの近くへ45秒で消えるone-click popが現れます。押さなくても損はなく、clickによるXP差もありません。motionは`auto` / `subtle` / `full` / `off`、status toggleは表示 / 非表示を選べます。
 

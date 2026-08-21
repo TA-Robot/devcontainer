@@ -1,6 +1,6 @@
 # Native-first multi-agent refresh status
 
-Updated: 2026-08-13
+Updated: 2026-08-22
 
 The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-roadmap.md`. This file records implementation state; design changes belong in the ADR or architecture docs.
 
@@ -41,6 +41,7 @@ The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-r
 - Deterministic fake-provider tests cover all three adapters, Grok's final-document recovery plus incomplete-final rejection, required command-acceptance evidence, concurrent same-base jobs, primary-checkout isolation, dependency gating, failure, and retry.
 - A 2026-08-13 live Grok 1.0.3 canary verified project-native agent discovery, read-only structured output, and a safe write job through broker commit and validation; the observed concatenated-progress output remains raw evidence and cannot bypass final schema/acceptance/Git checks.
 - The stable image owns `/var/lib/agentctl` as a persistent named volume. Both the plain image build and frozen-lock Dev Container build start successfully and pass `agentctl doctor`.
+- Durable provider start/terminal transitions best-effort feed Mira Companion through a content-free provider/role envelope. Codex / Claude / Grok agentctl jobs now share one visual activity contract without making the UI part of broker correctness.
 
 ### Phase 3b: durable local process ownership
 

@@ -26,7 +26,7 @@ spawnされたsubagentはミラを名乗らず、割り当てられたroleとsto
 - **開発コンテナ基盤**の提供（`.devcontainer/`）
 - native-first multi-agent project contract（`project/.agent/` + `.codex/agents/` + `.claude/agents/` + `.grok/agents/`）と`agentctl` control planeの提供
 - feature-frozenなセカンドエージェント・ラッパー（`scripts/second-agent` 共通エンジン + `codex-second-agent` / `claude-second-agent` シム）の移行互換
-- ミラのorchestrator persona、VS Code companion extension、Codex state bridge、visual assetsの提供（`extensions/mira-companion/` / `assets/mira/` / `docs/mira/`）
+- ミラのorchestrator persona、VS Code companion extension、Codex / agentctl activity bridge、visual assetsの提供（`extensions/mira-companion/` / `assets/mira/` / `docs/mira/`）
 
 ## 対象ディレクトリ
 

@@ -2,7 +2,7 @@
 
 ## 現在のscope
 
-このdirectoryは、VS Code companion extensionで使うミラのidentity anchorとpixel-art framesを提供します。extension本体は`extensions/mira-companion/`、Codex state bridgeは`scripts/mira-codex-hook.py`、連携contractは`docs/mira/architecture.md`を正本とします。
+このdirectoryは、VS Code companion extensionで使うミラのidentity anchorとpixel-art framesを提供します。extension本体は`extensions/mira-companion/`、Codex / agentctl activity bridgeの互換entrypointは`scripts/mira-codex-hook.py`、連携contractは`docs/mira/architecture.md`を正本とします。
 
 ## Inventory
 
