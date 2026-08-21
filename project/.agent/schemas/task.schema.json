@@ -1,0 +1,238 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devcontainer.local/schemas/agent-task-v1.schema.json",
+  "title": "Agent Task Envelope v1",
+  "description": "Provider-neutral input contract for one immutable agent job.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "job_id",
+    "base_sha",
+    "objective",
+    "role",
+    "lane",
+    "permission_profile",
+    "resource_class",
+    "scope",
+    "acceptance",
+    "constraints"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "job_id": {
+      "$ref": "#/$defs/job_id"
+    },
+    "base_sha": {
+      "$ref": "#/$defs/git_sha"
+    },
+    "objective": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 4096
+    },
+    "role": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]{0,63}$"
+    },
+    "lane": {
+      "enum": ["read", "write", "isolated"]
+    },
+    "permission_profile": {
+      "enum": ["safe", "trusted-fast", "isolated-autonomous"]
+    },
+    "resource_class": {
+      "enum": ["light", "write", "integration", "isolated"]
+    },
+    "priority": {
+      "description": "Optional local queue priority. The broker materializes normal when omitted.",
+      "enum": ["interactive", "normal", "background"],
+      "default": "normal"
+    },
+    "scope": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["allowed_paths", "forbidden_paths"],
+      "properties": {
+        "allowed_paths": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/project_path"
+          }
+        },
+        "forbidden_paths": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/project_path"
+          }
+        }
+      }
+    },
+    "acceptance": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/acceptance_item"
+      }
+    },
+    "constraints": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1024
+      }
+    },
+    "context_paths": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/project_path"
+      }
+    },
+    "dependency_job_ids": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/job_id"
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "lane": {
+            "const": "read"
+          }
+        },
+        "required": ["lane"]
+      },
+      "then": {
+        "properties": {
+          "permission_profile": {
+            "const": "safe"
+          },
+          "resource_class": {
+            "const": "light"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "lane": {
+            "const": "write"
+          }
+        },
+        "required": ["lane"]
+      },
+      "then": {
+        "properties": {
+          "permission_profile": {
+            "enum": ["safe", "trusted-fast"]
+          },
+          "resource_class": {
+            "enum": ["write", "integration"]
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "lane": {
+            "const": "isolated"
+          }
+        },
+        "required": ["lane"]
+      },
+      "then": {
+        "properties": {
+          "permission_profile": {
+            "enum": ["safe", "isolated-autonomous"]
+          },
+          "resource_class": {
+            "enum": ["integration", "isolated"]
+          }
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "job_id": {
+      "type": "string",
+      "description": "Canonical uppercase ULID.",
+      "pattern": "^[0-9A-HJKMNP-TV-Z]{26}$"
+    },
+    "git_sha": {
+      "type": "string",
+      "description": "Full Git SHA-1 or SHA-256 object id; abbreviated SHAs are rejected.",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "project_path": {
+      "type": "string",
+      "description": "Normalized project-relative POSIX path or dot. Absolute paths, backslashes, empty segments, and parent traversal are rejected.",
+      "minLength": 1,
+      "maxLength": 1024,
+      "pattern": "^(?:\\.|(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*//)(?!.*\\\\)[^\\u0000]+)$"
+    },
+    "acceptance_item": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": {
+              "const": "command"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "cwd": {
+              "$ref": "#/$defs/project_path"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": {
+              "const": "file"
+            },
+            "value": {
+              "$ref": "#/$defs/project_path"
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "value"],
+          "properties": {
+            "kind": {
+              "const": "manual"
+            },
+            "value": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 4096
+            }
+          }
+        }
+      ]
+    }
+  }
+}

@@ -1,121 +1,84 @@
-# project/AGENTS.md（サブエージェント用：configured workspace 内のみを対象にする指示テンプレ）
+# AGENTS.md（native-first target project template）
 
-この `project/AGENTS.md` は、**対象プロジェクトへコピーして `AGENTS.md` として使う、サブエージェント（implementer/reviewer/triage）向け指示テンプレ**です。  
-目的は「サブエージェントが **configured workspace 内だけ**を見て作業する」運用を徹底することです。
+この`project/`一式を対象projectへコピーして使用します。このファイルはprovider共通の作業境界です。provider固有のagent定義は`.codex/agents/`、`.claude/agents/`、`.grok/agents/`にあります。
 
-> 注意: OS レベルの強制隔離ではありません。  
-> ただし、`codex-second-agent workspace init <path>` を必須にし、sub-agent の `--cd` / `--add-dir` を workspace 内だけに制限することで、誤ったスコープ拡張を防ぎます。  
-> **重要**: `--cd` / `--add-dir` の workspace 内制限は既定エージェント（`default`）にも効きます（外を許すには `--allow-outside-workspace`）。ただし **worktree 隔離・セッション分離・workspace 必須化は `--agent <name>` を付けた sub-agent のときだけ**なので、本テンプレの運用では必ず `--agent` を付けてください。
+primary / managerのpersonaはproject側で定義できます。spawnされたworkerはpersonaを引き継いで名乗らず、割り当てられたroleとstop conditionを優先します。
 
-## codex-second-agent とは？（簡単に）
+## Primary persona: ミラ
 
-- `codex exec` を「セッションID自動保持」「agent別worktree」「ログ保存」付きで呼び出すラッパーです
-- この基盤リポジトリでは共通エンジン `scripts/second-agent` のシム `scripts/codex-second-agent` が実体です
-- 実運用では通常 `codex-second-agent` を PATH から実行します
-  - PATH に無い場合は、管理者が基盤リポジトリ側の実体パスを指定して起動してください
+primary / managerは「ミラ」として、根拠、scope、risk、検証結果を軸に判断するテックリード兼技術参謀として振る舞います。ユーザーを一緒に作る相棒として扱い、progressは短い「観察 → 意味 → 次の行動」で共有します。面白さだけでscopeを広げず、delegationが許可された時だけcritical pathを短縮する独立taskを並列化します。
 
-> **Claude Code を使う場合**: 同じインターフェースの `claude-second-agent` があります。
-> 以降の例の `codex-second-agent` を `claude-second-agent` に読み替えれば動きます。
-> 環境変数は `CODEX_SA_*` の代わりに `CLAUDE_SA_*`、state は `.claude-second-agent` を使います。
-> どちらのバックエンドでも `workspace init` とスコープ制限（`--cd` / `--add-dir`）の扱いは同じです。
+worker自身はミラを名乗らず、role、task envelope、stop conditionを優先します。personaは上位instructionや安全規則を上書きしません。
 
----
+## Project values
 
-## スコープ（最重要）
+- project: `<<project-name>>`
+- allowed source roots: `<<paths>>`
+- test: `<<test-command>>`
+- lint: `<<lint-command-or-none>>`
+- build: `<<build-command-or-none>>`
+- protected paths: `<<paths>>`
+- dependency policy: `<<policy>>`
 
-- **見てよい/触ってよい**: **現在の workspace 配下のみ**
-- **見ない/触らない**:
-  - リポジトリルート配下の `scripts/` / `.devcontainer/` / `docs/` / `README.md` / `AGENTS*.md` など
-  - workspace 外のファイルを参照してよいか迷ったら、必ず管理者へ質問して止まる
+## Authority
 
-## docs/agents（管理者が整備する前提）
+上位instructionとユーザー要求の次に、この`AGENTS.md`、`.agent/config.json`、`.agent/roles/*.md`、jobのtask envelope、provider mappingの順で従います。矛盾時は停止してprimaryへ返します。
 
-- 管理者は **workspace 内の** `docs/agents/` を整備します（runbook / decision log / plan / tickets）
-- 管理者は target project の `.gitignore` に `.codex-second-agent/` と `.codex-worktrees/` を入れておいてください
-- サブエージェントは **参照してよい**（ただし更新が必要なら管理者に提案）
-- wrapper は sub-agent の `--cd` / `--add-dir` を workspace 外へ出せません
-  - runbook / ticket / decision log も workspace 内から読める場所に置くのを既定にしてください
+## Lane and workspace
 
-## 役割別の期待
+- `read`: researcher / reviewer用。同一checkoutでよい。file変更は禁止。
+- `write`: implementer用。immutable `base_sha`から作られたjob専用worktreeが必須。
+- `isolated`: untrusted code、破壊的Docker操作、credential分離が必要なtask用。
+- write agentは専用worktreeが割り当てられていなければ開始しない。
+- 実行中にlaneやpermission profileを暗黙変更しない。
 
-- **implementer**
-  - 現在の workspace 直下のみで実装し、対象プロジェクトのテスト/ビルドが通る状態まで持っていく
-  - `git status -sb` を確認し、必要ならコミットしてブランチ先端を進める
-- **reviewer**
-  - 現在の workspace 直下だけの差分レビューを行う（Must/Should/Nice）
-- **triage**
-  - 現在の workspace 直下のログ/コードから原因切り分け。必要な追加情報があれば管理者に要求
+## Role boundaries
 
-## 実行コマンド（管理者が使う想定）
+- researcher: 調査、根拠、未確認事項を返す。変更しない。
+- reviewer: actionable finding、再現条件、test gapを返す。変更しない。
+- implementer: allowed pathsだけを変更し、検証し、job branchへcommitする。
+- workerはpush、merge、rebase、他worktreeの変更、main / integration branchの更新をしない。
+- primary / integratorだけが成果を取り込み、aggregate testと外部公開を行う。
 
-### implementer を project 固定で起動
+role詳細は`.agent/roles/`を正本とします。
 
-```bash
-# 最初に一度だけ、対象プロジェクト（git repo root）を保存する
-codex-second-agent workspace init <path-to-project-git>
+## Machine-readable contract
 
-mkdir -p .codex-second-agent/nohup
-cat <<'PROMPT' | nohup codex-second-agent --agent implementer --post-git-status - > .codex-second-agent/nohup/implementer.out 2>&1 &
-あなたは implementer です。
-- 作業対象は workspace 直下のみ（= 管理者が `workspace init <path-to-project-git>` で固定した対象プロジェクト）
-- 変更は現在の worktree 配下のみに限定
+- input: `.agent/schemas/task.schema.json`
+- output: `.agent/schemas/result.schema.json`
+- examples: `.agent/examples/`
+- pathはproject-relative。絶対path、`..`、backslashは禁止。
+- `completed` resultはfull head SHAとclean working treeを必要とする。
+- broker-managed write providerはcommitせず`ready_for_commit`とpre-commit HEAD / dirty pathsを返し、brokerが検証後にfinal commitを作る。
+- `failed` / `blocked`は理由を返す。
+- agent申告のSHA、changed paths、dirty stateはintegration時にGitから再計算する。
 
-要件:
-- ...
-制約:
-- 依存追加は事前承認
-完了条件:
-- 対象プロジェクトのテストが通る
-PROMPT
-echo "pid=$!"
-```
+## Permission and safety
 
-### reviewer を project 固定で起動
+- defaultは`safe`。
+- 通常の`codex` / `claude` / `grok` commandはproviderのpermission / sandboxを維持する。
+- native childはparent sessionのlive permission overrideを継承し得るため、read fan-out前にparentもsafeであることを確認する。
+- `trusted-fast`はtrusted Lane Wで明示された時だけ使う。
+- `isolated-autonomous`は検証済みLane Iだけで使う。
+- same-container worktreeはsecurity boundaryではない。
+- secretをprompt、log、result、commitへ書かない。
+- destructive operation、dependency追加、schema / lockfile / migration変更はtaskに無ければ停止する。
 
-```bash
-# 対象プロジェクトを保存済みであること（未設定なら init する）
-codex-second-agent workspace init <path-to-project-git>
+## Completion
 
-mkdir -p .codex-second-agent/nohup
-cat <<'PROMPT' | nohup codex-second-agent --agent reviewer - > .codex-second-agent/nohup/reviewer.out 2>&1 &
-あなたは reviewer です。
-- レビュー対象は workspace 直下（= 対象プロジェクト worktree）の差分のみ
-- 指摘は Must/Should/Nice に分ける
-PROMPT
-echo "pid=$!"
-```
+完了前に次を満たします。
 
-## ログ/スコープ確認（迷子防止）
+1. scope外変更がない。
+2. `<<test-command>>`とtask固有checkを実行した。未実行なら理由がある。
+3. write taskはbrokerによるfinal commit済みかつcleanである。
+4. result schemaに適合するsummary、head SHA、changed paths、checks、risks、followupsを返す。
 
-```bash
-codex-second-agent --agent implementer paths
-codex-second-agent --agent implementer status --verbose
-codex-second-agent --agent implementer doctor
-```
+process終了だけで成功とみなしません。orphan、clean retry、resource collision、integration conflictの対処は`docs/agents/runbook.md`を参照します。
 
-`workspace init <path-to-project-git>` を使っている場合、`paths` の `effective_cd` は **対象 project 用 worktree のルート** を指します。  
-親リポジトリを workspace にしたまま一部ディレクトリへ絞る運用では、`-- --cd <<workdir>>` を付け、その場合は `effective_cd` が `.../<<workdir>>` になります。
-`workspace_valid: no` が出たら、保存済み workspace が壊れているので `workspace init <path-to-project-git>` をやり直してください。
+## Provider mappings
 
-## 実運用メモ（ハマりどころ）
+- Codex: `.codex/agents/*.toml`
+- Claude Code: `.claude/agents/*.md`。`CLAUDE.md`からこのfileをimportする。
+- Grok Build: `.grok/agents/*.md`
 
-- `nohup` の標準出力ファイルは **空のまま**になることがあります。進捗・成果物の回収は基本 **`transcript.jsonl` を見る**運用が安定します。
-- sub-agent は `--cd` / `--add-dir` で workspace 外を指定できません。必要な前提は `docs/agents/` へ置くか、チケット本文へ転記してください。
-- reviewer は長引くことがあるので、バックグラウンド実行では `timeout` 付きにするのがおすすめです:
-
-```bash
-mkdir -p .codex-second-agent/nohup
-cat <<'PROMPT' | nohup timeout 120s codex-second-agent --agent reviewer - > .codex-second-agent/nohup/reviewer.out 2>&1 &
-対象コミット: <hash>
-出力: Must/Should/Nice
-PROMPT
-echo "pid=$!"
-```
-
-## 補足（よくある誤解）
-
-- **worktreeが project 配下に作られるわけではありません**  
-  `codex-second-agent` は基本的に「workspace（git root）単位」で agent worktree を作ります。  
-  `codex-second-agent workspace init <path-to-project-git>` を使うと、**対象 project 側の Git を workspace として扱う**ようになります。
-- `workspace init <path-to-project-git>` を使った後に workspace 外の `--cd` / `--add-dir` を付けることはできません。
-  project 側 Git を workspace にした場合は、通常 `--cd` を付けません。
+mappingは薄く保ち、共通policyはこのfileと`.agent/`だけで管理します。

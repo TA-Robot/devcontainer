@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "01K2E9YQ7Q3R6V8M1N4P5T6W7X",
+  "base_sha": "0123456789abcdef0123456789abcdef01234567",
+  "objective": "Inspect the parser call graph.",
+  "role": "researcher",
+  "lane": "read",
+  "permission_profile": "safe",
+  "resource_class": "light",
+  "scope": {
+    "allowed_paths": ["src/parser/"],
+    "forbidden_paths": []
+  },
+  "acceptance": [
+    {
+      "kind": "manual",
+      "value": "Return file and symbol evidence."
+    }
+  ],
+  "constraints": ["Do not modify files."]
+}

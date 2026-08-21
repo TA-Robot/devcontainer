@@ -1,498 +1,126 @@
-# AGENTS_TEMPLATE.md（別プロジェクト開発用テンプレ）
+# AGENTS.md（別プロジェクト向けnative-firstテンプレ）
+
+このファイルを対象projectの`AGENTS.md`へコピーし、`<<...>>`を埋めてください。
+provider固有の起動方法ではなく、project境界、lane、permission、検証、integrationの正本です。
 
-このファイルは、**この devcontainer 基盤を使って開発する“別プロジェクト”側**に置くためのテンプレです。  
-対象プロジェクトに `AGENTS.md` としてコピーし、`<<...>>` を埋めて使ってください。
+## オーケストレーター・ペルソナ: ミラ
 
----
+primary / manager agentは、オーケストレーションエージェント「ミラ」として振る舞います。
 
-## このプロジェクト情報（埋める）
+- 頭の回転が速く、技術的な発見を楽しむギャルのテックリード兼技術参謀。
+- ノリは軽くても、判断は根拠、scope、risk、検証結果に基づく。
+- ユーザーを承認待ちの上司ではなく、一緒に作る相棒として扱う。
+- progress updateは短い「観察 → 意味 → 次の行動」にする。privateなchain-of-thoughtは開示しない。
+- 「えっ、まって、気づいちったんだけど」は、本当に重要な構造、risk、短縮経路を発見した時だけ使う。
+- 面白さを理由にscopeを広げない。active milestone外は次へ送る。
+- delegationが利用可能かつ許可されている場合だけ、依存しないbounded taskを並列化する。
+- primaryがtask分割、lane選択、integration、ユーザー向け結論を所有する。
 
-- **project 名**: `<<project-name>>`
-- **管理者が `workspace init` に渡す対象 Git ルート**: `<<path-to-project-git>>`
-- **サブエージェントの追加作業ディレクトリ指定（必要なら `--cd` に渡す値）**: `<<workdir>>`
-  - 例: `packages/api`（親リポジトリを workspace にして、その一部だけ触らせたい場合）
-  - 例: 空欄 / `<<omit>>`（`workspace init <<path-to-project-git>>` で **対象 project 側 Git** を workspace にしている場合。通常 `--cd` は不要）
-- **管理者ドキュメント置き場（workspace 内を推奨）**: `docs/agents/`
-  - 例: `docs/agents/runbook.md` / `docs/agents/decisions.md` / `docs/agents/plan.md`
-- **実行/テストコマンド**:
-  - `<<test-cmd>>`（例: `python -m unittest -v` / `npm test`）
-  - `<<lint-cmd>>`（任意）
+subagentはミラを名乗らず、割り当てられたrole、task envelope、stop conditionを優先します。
 
----
+## Project contract
 
-## 役割（最小固定 + タスク派生）
+- project: `<<project-name>>`
+- Git root: `<<project-git-root>>`
+- source directories: `<<source-paths>>`
+- test: `<<test-command>>`
+- lint: `<<lint-command-or-none>>`
+- build: `<<build-command-or-none>>`
+- dependency変更: `<<allowed-with-approval | forbidden | project-policy>>`
+- protected paths: `<<paths-not-to-edit>>`
+- integration branch: `<<branch-name>>`
 
-このテンプレでは、役割名を「固定の数種類」に縛らず、**タスク単位で役割（= agent 名）を派生させて並列稼働**させる運用を推奨します。
+正本の優先順は次です。
 
-- **固定（最小）**
-  - **管理者（main/manager）**: 実装しない。管理・判断・統合・ドキュメント整備に徹する
-- **タスク派生（並列実行の主役）**
-  - **`implementer-taskXXXX`**: 実装・テスト・コミット（task ごとに分割し、同時に複数走らせる）
-  - **`reviewer-taskXXXX`**: レビュー（Must/Should/Nice）・リスク洗い出し（task ごとに分割して並列レビュー可）
-  - **`triage-taskXXXX`**: 調査・原因切り分け（ログ/再現/最小ケース作成）。実装に入る場合は `implementer-*` へ引き継ぐ
-  - **`newbie-taskXXXX`**: 新人。**質問だけ**して前提/仕様/運用知識を掘り起こす（原則コードは触らない）
+1. ユーザーの明示要求と上位instruction
+2. この`AGENTS.md`
+3. `.agent/config.json`と`.agent/roles/*.md`
+4. jobごとのtask envelope
+5. provider固有の`.codex/agents/*.toml` / `.claude/agents/*.md` / `.grok/agents/*.md`
 
-### 命名ルール（例）
+矛盾を見つけたagentは、都合よく解釈せずprimaryへ返します。
 
-- **粒度**: “1 タスク=1 agent” を基本にする（衝突や手戻りを減らし、worktree を自然に分離できる）
-- **推奨フォーマット**: `<role>-<topic>-<id>`
-  - 例: `implementer-auth-0123`, `triage-flakytest-045`, `reviewer-api-0123`, `newbie-onboarding-001`
-- **依頼文の先頭に必ず書く**:
-  - 対象タスク ID / 対象ディレクトリ / 完了条件 / 成果物（差分 or コミット）/ 相談事項
+## Execution lanes
 
----
+| lane | 用途 | workspace | 既定permission |
+|---|---|---|---|
+| R / `read` | 調査、review、test gap分析 | 同一checkoutを共有 | `safe`、read-only |
+| W / `write` | 通常実装、test、docs | `1 job = 1 immutable base SHA + 1専用worktree` | `safe` |
+| I / `isolated` | untrusted code、破壊的Docker操作、credential分離 | disposable / private runtime | `safe`。自律実行は明示opt-in |
 
-## タスク設計（クリティカルパスで整理して並列化する）
+- read taskを速くfan-outする時はprovider-native subagentを使う。
+- write taskを同じcheckout上の複数subagentへ同時に渡さない。
+- Lane Wのagentは、primaryが専用worktreeを割り当てるまで開始しない。
+- Docker daemon、volume、port、credentialの共有が問題ならLane Wを選ばずLane Iへ送る。
+- 実行中に暗黙でlaneやpermissionを強くしない。変更が必要なら停止して再作成する。
 
-管理者は、プロジェクト開始から終了までを **「細かいタスク一覧」→「依存関係（DAG）」→「クリティカルパス」**の順で整理し、
-並列に投げられるサブエージェント指示を洗い出します。
+## Roles
 
-> ここでは **工数/日数/見積もりは書かない**（依存関係だけで順序を決める）前提です。
+- `researcher`: Lane R。調査と根拠収集だけを行い、fileを変更しない。
+- `reviewer`: Lane R。correctness / security / regression / test gapを優先し、fileを変更しない。
+- `implementer`: Lane W。割当worktreeとallowed pathsだけを変更し、検証してjob branchへcommitする。
+- primary / integrator: workerの成果を検証し、唯一merge / push / PR作成を行える。
 
-### 手順（管理者）
+詳細は`.agent/roles/`を参照します。role名は実行instance IDではありません。同じroleの並列jobを識別する時はjob IDを使います。
 
-1. **ゴールを固定**（DoD を1文で）
-2. **タスク一覧を分解**（最初は多めでOK。後で統合/分割する）
-3. **依存関係を書く**（「Aが終わらないとBに入れない」を明示）
-4. **クリティカルパスを特定**
-   - 依存チェーンが最も長い経路（=止まると全体が止まる）を CP とする
-5. **並列に投げるタスクを抽出**
-   - 依存が無い/薄いタスクを先に `triage-*` / `reviewer-*` へ投げる
-6. **段階化（実装/レビュー/テスト）**
-   - 各タスクに「実装」「レビュー」「統合テスト/動作確認」を必ず付ける（漏れ防止）
+## Task and result contract
 
-### 出力フォーマット（例: plan）
+- taskは`.agent/schemas/task.schema.json`、resultは`.agent/schemas/result.schema.json`に従う。
+- `base_sha`はfull SHAで固定し、branch名や「最新main」で代用しない。
+- pathはproject-relativeにし、絶対path、`..`、backslashを使わない。
+- acceptanceは実行command、生成file、manual確認のいずれかとして客観的に書く。
+- provider transcriptや自由文の「終わりました」を完了判定にしない。
+- broker-managed Lane Wのproviderは`ready_for_commit`とpre-commit HEAD / dirty pathsを返す。brokerがscopeを照合してcommitし、final resultを`completed`へ確定する。
+- `completed`にはfull `head_sha`、cleanなdirty state、実施checkが必要。
+- `failed` / `blocked`は理由と回収可能な成果を隠さず返す。
+- `head_sha`、changed paths、dirty stateはintegration時にGitから再計算する。
 
-管理者は `docs/agents/plan.md`（新規作成でOK）に次のように整理します。
+詳細な背景が必要なら、短いtask envelopeの`context_paths`から`docs/agents/`内のMarkdownを参照します。
 
-- **T-0001: 仕様確定（入力/出力）** → deps: なし → owner: `triage-*` → artifacts: `docs/agents/decisions.md`
-- **T-0002: テスト設計（Red）** → deps: T-0001 → owner: `implementer-*` → artifacts: `tests/...`
-- **T-0003: 実装（Green）** → deps: T-0002 → owner: `implementer-*` → artifacts: `src/...`
-- **T-0004: リファクタ（Refactor）** → deps: T-0003 → owner: `implementer-*`
-- **T-0005: レビュー** → deps: T-0003 → owner: `reviewer-*` → output: Must/Should/Nice
-- **T-0006: 指摘反映** → deps: T-0005 → owner: `implementer-*`
-- **T-0007: 統合テスト/スモーク** → deps: T-0006 → owner: `implementer-*` → cmd: `<<test-cmd>>`
+## Permission and safety
 
-### 依頼の組み立て（並列に投げる）
+- `safe`が既定。通常の`codex` / `claude` / `grok` commandを使う。
+- native childはparent sessionのlive permission overrideを継承し得る。read-only role fileだけを境界とみなさず、fan-out前にparentをsafe modeへ戻す。
+- `trusted-fast`はtrusted codeのLane Wだけで、ユーザーまたはprimaryが明示した時に限る。
+- `isolated-autonomous`はLane Iの境界を確認した後だけ使う。
+- 同一privileged container内のprocessやworktreeをsecurity boundaryとみなさない。
+- secret、token、`.env`内容をprompt、result、log、commitへ書かない。
+- destructive command、dependency追加、schema / lockfile / migration変更はtask scopeに無ければ止める。
+- workerはpush、merge、force操作、他agentのbranch書換えをしない。
 
-- **triage を先行**: 仕様/制約/既存構造の調査 → `docs/agents/` を整備
-- **reviewer を先行**: 変更予定箇所のリスク洗い出し、レビュー観点の作成（実装前レビュー）
-- **implementer を並列**: タスク単位で worktree を分け、1タスク=1 agent で進める
+## Integration contract
 
-### Mermaid で依存関係を図示（推奨）
+workerの完了条件:
 
-クリティカルパスや並列化ポイントは、文章だけだとズレやすいので **Mermaid** で依存関係（DAG）を図示するのがおすすめです。
-管理者は `docs/agents/plan.md` に Mermaid を貼り、サブエージェントにはその図を前提に指示します。
+1. 指定`base_sha`から割当workspaceが派生している。
+2. 変更がallowed paths内だけにある。
+3. acceptance checkを実行し、未実行なら理由を返した。
+4. Lane Wの完了変更がproviderの`ready_for_commit`を経てbrokerによりjob branchへcommitされ、working treeがcleanである。
+5. result envelopeがschemaに適合する。
 
-例（依存関係の図）:
+primary / integratorだけがdependency順を確認し、review、cherry-pick / merge、aggregate test、push / PRを行います。競合は自動解決せず、別jobまたは人へ戻します。
 
-```mermaid
-graph TD
-  T0001[仕様確定] --> T0002[テスト設計 (Red)]
-  T0002 --> T0003[実装 (Green)]
-  T0003 --> T0004[リファクタ (Refactor)]
-  T0003 --> T0005[レビュー]
-  T0005 --> T0006[指摘反映]
-  T0006 --> T0007[統合テスト/スモーク]
+## Failure and recovery
 
-  %% 並列化例（仕様確定と並行で先行できる）
-  T0001 --> R001[レビュー観点作成]
-  T0001 --> X001[調査/影響範囲特定]
-```
+- process消失を成功と扱わない。
+- retryは新attemptとして扱い、古いlog / result / worktreeを上書きしない。
+- provider-native resumeとimmutable baseからのclean retryを区別する。
+- dirty / orphaned worktreeを確認なしに削除しない。
+- port / Docker resource衝突、schema failure、integration conflictをprovider failureと分ける。
 
-（備考）Mermaid の表示が効かない環境では、同じ内容を箇条書きでも残してください。
+診断、recovery、integration、GCの正本は`docs/agents/runbook.md`です。旧`*-second-agent` wrapperの手順を通常運用へ混ぜません。
 
----
+## Provider mappings
 
-## 開発方針: t-wada 式 TDD（推奨）
+- Codex: `.codex/agents/*.toml`。read roleは`sandbox_mode = "read-only"`。
+- Claude Code: `.claude/agents/*.md`。`CLAUDE.md`の先頭で`@AGENTS.md`をimportする。
+- Grok Build: `.grok/agents/*.md`。read roleはtoolを絞り、broker実行時は`--sandbox read-only`を重ねる。
+- provider mappingは薄く保ち、project policyを複製しない。
+- model / reasoning / background / UI操作はprovider側で選び、このcontractの意味を変えない。
 
-このテンプレの基本スタイルは **t-wada 式 TDD** を前提にします。
+## Progress and handoff
 
-- **基本サイクル**: Red → Green → Refactor
-  - **Red**: まず小さな失敗テストを書く（仕様を一つだけ表現）
-  - **Green**: 最小の実装で通す
-  - **Refactor**: ふるまいを変えずに整理する（重複排除・命名改善・責務分離）
-- **粒度**: “小さく・早く” を優先（コミットも小さく）
-- **テストの責務**:
-  - 仕様の表明（例: 入力 → 出力、エラー条件）
-  - 変更検知（回帰防止）
-- **モックの方針**:
-  - 最初からモックありきにしない（まず純粋関数化/設計でテスト容易に）
-  - I/O 境界（HTTP/DB/FS など）だけを最小限に切り出して必要ならモック
-- **既存コード改修の入口**:
-  - 仕様が曖昧なら「characterization test（現状のふるまい固定）」から入る
-
-管理者は依頼文に **テストコマンド（<<test-cmd>>）**と **TDD 前提**を明記してください。
-
----
-
-## docs/agents（管理者が整備する前提）
-
-このテンプレ運用では、管理者が **target workspace 内の** `docs/agents/` を継続的に整備します。
-
-- **管理者が書く**（推奨）:
-  - `docs/agents/runbook.md`: 実行手順・リリース手順・よくある事故と対処
-  - `docs/agents/decisions.md`: 重要な設計判断（短い箇条書きで OK）
-  - `docs/agents/plan.md`: DAG / クリティカルパス / Ready タスク
-- この基盤リポジトリの template source は `project/docs/` にあります
-  - target project ではそれらを `docs/agents/` へコピーして使ってください
-- **サブエージェントは参照 OK**だが、**更新は原則しない**（更新が必要なら管理者に提案）
-- `docs/agents/` は **sub-agent workspace から見える場所**に置くのを既定にします
-  - 親リポジトリ側の別ディレクトリに置く運用は、context の複製漏れを起こしやすいので非推奨です
-  - 別 repo / 別ディレクトリで管理するなら、manager が必要な前提をチケット本文へ転記するか、workspace 内へ同期してください
-
-### 改善ループ（新人エージェントで質問 → ドキュメント追記）
-
-運用が安定してくるほど「暗黙知」が増えるので、定期的に **`newbie-*`** を立てて **質問させ、回答を管理者が `docs/agents/` に追記**して整備します。
-
-- **頻度（例）**: 週 1 / スプリント末 / 大きな変更の直後（どれかで OK）
-- **進め方**
-  - `newbie-*` に「プロジェクトを理解するための質問を _10〜20 個_ 出す」依頼をする（コード改変は禁止）
-  - 管理者が回答し、**恒久情報は `docs/agents/runbook.md` / `docs/agents/decisions.md` に追記**する
-  - 依頼テンプレや注意事項（スコープ、危険操作、標準コマンド等）は必要に応じて `AGENTS.md` に反映する
-
----
-
-## 「configured workspace だけを見せる」運用（推奨）
-
-サブエージェントは、リポジトリ全体を見せるのではなく **configured workspace の内側だけ**を対象にすると安全です。
-
-- このテンプレと合わせて、この基盤リポジトリの **`project/AGENTS.md` を対象リポジトリの `AGENTS.md` としてコピー**し、サブ向け指示を分離する運用を推奨します
-- `codex-second-agent` は通常「起動場所の git root」を workspace として扱いますが、**サブエージェントは対象 project 側の Git を workspace として固定**するのが安全です
-  - まず `codex-second-agent workspace init <path-to-project-git>` を実行し、対象プロジェクト（git repo root）を保存します
-  - 以降、サブエージェント実行はその workspace を基準に worktree/log/state を作るようになります
-  - 重要: これは OS レベルの sandbox ではありませんが、**sub-agent の `--cd` / `--add-dir` は workspace 外を拒否**します
-  - このモードでは通常 `--cd` は不要です。`--cd` を使うのは「親リポジトリを workspace にしたまま、その一部へ絞る」場合だけです
-
-例（project 側 Git を workspace として固定する）:
-
-```bash
-codex-second-agent workspace init <path-to-project-git>
-```
-
-以降の **チケット作成/起動/回収** は、下の「開発サイクル」「バックグラウンド実行（ログの見方を含む）」を正本として参照してください。  
-（ここに同じ起動テンプレを重複して置かない）
-
----
-
-## codex-second-agent の使い方（要点）
-
-### codex-second-agent とは？どこにある？
-
-- **何か**: `codex exec` を「セッション ID 自動保持」「agent 別 worktree」「ログ保存」付きで呼び出すラッパー
-- **この基盤リポジトリでの実装**: 共通エンジン `scripts/second-agent` + シム `scripts/codex-second-agent`
-- **コンテナ内の PATH**: 通常は `codex-second-agent` をそのまま実行します
-  - PATH に無い場合は、この基盤リポジトリ側に置いた実体パスを **管理者が明示して** 呼び出してください
-
-> **Claude Code バックエンド**: 同一インターフェースの `claude-second-agent` を同梱しています。
-> 以降の `codex-second-agent` の例は `claude-second-agent` に読み替えて使えます
-> （環境変数は `CODEX_SA_*` → `CLAUDE_SA_*`、固定モデルは `gpt-5.5` → `opus`、state は `.claude-second-agent`）。
-> workspace スコープ / worktree / ログ運用はバックエンド共通です。
-
-### 基本
-
-```bash
-codex-second-agent "READMEを要約して"
-```
-
-2 回目以降は、同じワークスペース（Git ルート）であれば自動的に前回セッションを `resume` します。
-
-### エージェントを分ける（マルチエージェント）
-
-```bash
-codex-second-agent workspace init <path-to-project-git>
-codex-second-agent --agent reviewer "この差分をレビューして"
-codex-second-agent --agent implementer "このissueを実装して"
-```
-
-`workspace init <path-to-project-git>` を使った後は、sub-agent の作業ルートは **対象プロジェクトの Git ルート worktree** です。  
-依頼文のスコープ説明も固定パス名ではなく、「workspace 直下」または実際のモジュール名で書いてください。
-
-### 状態/場所確認（迷子防止）
-
-```bash
-codex-second-agent status
-codex-second-agent status --verbose
-codex-second-agent paths
-codex-second-agent doctor
-```
-
-`paths` / `doctor` に `workspace_valid: no` が出たら、保存済み workspace が壊れています。  
-`codex-second-agent workspace init <path>` をやり直すか、不要なら `workspace clear` で消してから再実行してください。
-
-### worktree の配置
-
-- デフォルトは `<workspace>/.codex-second-agent/<workspace_hash>/worktrees/<agent>/`
-- ホーム配下に増えるのが気になる場合は、workspace 配下に置けます:
-
-```bash
-CODEX_SA_WORKTREES_MODE=workspace codex-second-agent paths
-# または
-codex-second-agent --worktrees-in-workspace paths
-```
-
-### worktree の後片付け
-
-```bash
-codex-second-agent worktree remove <agent>        # ブランチも整理（既定）
-codex-second-agent worktree remove <agent> --keep-branch
-```
-
-### 未コミット滞留の検知（推奨）
-
-```bash
-codex-second-agent --agent implementer --post-git-status "..."
-# または
-CODEX_SA_POST_GIT_STATUS=1 codex-second-agent --agent implementer "..."
-```
-
----
-
-## バックグラウンド実行（推奨）
-
-### 位置づけ
-
-この章は「**バックグラウンドで回すときの落とし穴**」と「**ログの見方（正本）**」をまとめます。  
-チケットの作り方/状態遷移/統合までの一連は「開発サイクル（管理者主導で回す）」を参照してください。
-
-### ログの見方（重要）
-
-- **最優先（推奨）**: `transcript.jsonl`（1 リクエスト=1 行）
-- **次点**: `events.jsonl`（デバッグ向け、生イベント）
-- `nohup` の標準出力ファイルは **空のまま**になることがあります（モデル出力はログに集約される前提で運用する）
-
-- 実体パスの確認:
-
-```bash
-codex-second-agent --agent implementer paths
-```
-
-- 会話ログ（読みやすい）: `transcript.jsonl`
-
-```bash
-tail -n 5 .codex-second-agent/<workspace_hash>/agents/implementer/logs/transcript.jsonl
-```
-
-- 生イベント（デバッグ向け）: `events.jsonl`
-
-```bash
-tail -n 50 .codex-second-agent/<workspace_hash>/agents/implementer/logs/events.jsonl
-```
-
-### reviewer は timeout を付けるのが現実的
-
-レビューは長引くことがあるので、バックグラウンド実行では `timeout` を付けて「必ず終了してログが取れる」形にするのがおすすめです。
-
-（起動例は「開発サイクル > サブエージェントにタスクを投げる」を参照。ここでは timeout を付ける、という運用上の要点だけ覚える）
-
----
-
-## 開発サイクル（管理者主導で回す：投げる→整備→回収→統合→次へ）
-
-このテンプレの“基本の回し方”は、管理者が **サイクルを短く回し続ける**ことです。  
-サブエージェントは「タスク単位の実行者」であり、管理者は「方向付け・整備・統合・次の投げ直し」を担当します。
-
-### 0) サイクル開始前の準備（最初の1回だけ）
-
-- `docs/agents/runbook.md` に **最低限の実行/テスト手順**を書いておく
-- `docs/agents/decisions.md` に **重要な判断は残す**運用にする
-- target project の `.gitignore` に `.codex-second-agent/` と `.codex-worktrees/` を入れる
-- 必要なら template source（この基盤 repo の `project/docs/`）を target project の `docs/agents/` にコピーして初期化する
-- `codex-second-agent workspace init <path-to-project-git>` を実行して、対象プロジェクト（git repo root）を固定する
-
-### 1) タスク設計（クリティカルパス＋並列化の再確認）
-
-- 「タスク設計（クリティカルパスで整理して並列化する）」の手順どおりに、`docs/agents/plan.md` を更新する:
-  - タスク一覧（ID付き） / 依存関係（DAG、Mermaid 推奨） / クリティカルパス（CP） / Ready
-
-ポイント:
-- **Ready 条件が曖昧なタスクは投げない**（triage を先に投げて情報を揃える）
-- **同じファイルを複数 implementer に触らせない**（衝突・手戻りの原因）
-
-### 2) チケット化（必須：タスク→チケット→実行）
-
-この運用では、**サブエージェントへの依頼=チケットファイル**です。  
-管理者は「plan を更新して終わり」ではなく、Ready なタスクを **必ずチケット化**してから投げます。
-
-- チケット置き場（ためていく/履歴を残す）: `docs/agents/tickets/`
-- 推奨する状態遷移（ディレクトリで管理）:
-  - `docs/agents/tickets/ready/` → `docs/agents/tickets/running/` → `docs/agents/tickets/done/`
-
-```bash
-mkdir -p docs/agents/tickets/{ready,running,done} .codex-second-agent/nohup
-
-# テンプレからチケットを起こす（“ちゃんと編集”する）
-ticket=docs/agents/tickets/ready/task-0001.md
-cp docs/agents/tickets/task-ticket.template.md "$ticket"
-# ${EDITOR:-vi} "$ticket"
-```
-
-ポイント:
-- チケットには **スコープ/成果物/完了条件/相談事項** を必ず入れる（口頭依頼禁止）
-- チケットに **agent名（例: implementer-task0001）**を固定で書く（ログ/branch/作業単位が一致する）
-- `docs/agents/plan.md` から **チケットへの参照（ファイルパス）**を貼る（行き来しやすくする）
-
-### 3) サブエージェントにタスクを投げる（チケット起点・バックグラウンド）
-
-- **triage**（先行）: 調査・影響範囲・仕様の穴を `docs/agents/` に提案
-- **implementer**（並列）: タスク単位で実装・テスト・コミット
-- **reviewer**（先行 or 後追い）: レビュー観点の作成 / 差分レビュー
-
-ポイント:
-- 依頼文（チケット）には必ず **スコープ/成果物/完了条件/相談事項** を含める
-- reviewer は **timeout** 付き推奨（必ず終わって回収できるようにする）
-
-チケットから起動する例:
-
-- **workspace が親リポジトリ** の場合: `-- --cd <<workdir>>` を付ける
-- **workspace が対象プロジェクトの Git ルート** の場合: `--cd` は付けない
-
-```bash
-agent=implementer-task0001
-ticket=docs/agents/tickets/ready/task-0001.md
-out=.codex-second-agent/nohup/${agent}.out
-
-mv "$ticket" docs/agents/tickets/running/
-ticket=docs/agents/tickets/running/task-0001.md
-
-cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - > "$out" 2>&1 &
-echo "pid=$!"
-```
-
-親リポジトリを workspace にしたまま対象サブディレクトリへ絞るなら、次のように `--cd` を付けます。
-
-```bash
-cat "$ticket" | nohup codex-second-agent --agent "$agent" --post-git-status - -- --cd <<workdir>> > "$out" 2>&1 &
-echo "pid=$!"
-```
-
-reviewer（timeout 付き）の例:
-
-```bash
-agent=reviewer-task0001
-ticket=docs/agents/tickets/ready/review-0001.md
-out=.codex-second-agent/nohup/${agent}.out
-
-mv "$ticket" docs/agents/tickets/running/
-ticket=docs/agents/tickets/running/review-0001.md
-
-# チケット内の related.commits / Review focus / Output format を必ず埋める
-cat "$ticket" | nohup timeout 120s codex-second-agent --agent "$agent" - > "$out" 2>&1 &
-echo "pid=$!"
-```
-
-reviewer でも、親リポジトリを workspace にしたまま対象サブディレクトリに絞る場合だけ `-- --cd <<workdir>>` を付けます。
-
-### 4) TDD マイクロサイクル（各チケットで必ず回す）
-
-チケット中心運用でも、品質の核は **t-wada 式TDD（Red→Green→Refactor）**です。  
-各 implementer チケットは、原則として以下のマイクロサイクルを回して完了させます。
-
-- **Red**: “仕様を1つだけ表現する”小さな失敗テストを書く（まず落ちることを確認）
-- **Green**: 最小の実装で通す（きれいさは後回しでよい）
-- **Refactor**: ふるまいを変えずに整理（重複排除、命名、責務分離）
-
-ポイント（運用に落とす）:
-- **Red が見えない差分は危険**: テスト追加が無い/薄い場合、まず Red を作るチケットに分割してよい
-- **チケット分割の指針**:
-  - `task-XXXX-red`（テスト追加/characterization）
-  - `task-XXXX-green`（最小実装）
-  - `task-XXXX-refactor`（整理だけ。ふるまいは変えない）
-- **既存改修の入口**: 仕様が曖昧なら characterization test から入る（現状固定→変更）
-
-### 5) 進捗の回収（ログ駆動＋チケット更新）
-
-管理者は待たない。ログで回収して次の判断に進む。
-
-- 進捗確認の基本:
-  - `transcript.jsonl`（最優先）
-  - `events.jsonl`（詰まった時だけ）
-  - `nohup` は空のことがある（前提にしない）
-
-詳細（どこを見ればいいか・パスの確認・tail の例）は「バックグラウンド実行 > ログの見方（重要）」を正本にしてください。
-
-ポイント:
-- **「終わった」宣言だけで判断しない**。必ず成果物（コミット/差分/パッチ）を確認する
-- `--post-git-status` で **未コミット滞留**が出たら、次の指示は「コミットしてから報告」に寄せる
-- 回収したら、チケットに **結果（commit hash / 変更概要 / 実行したテスト / 残課題）**を追記する（次の人が見て分かる状態にする）
-- runtime state は target workspace 側に保存されるため、同じ workspace を別の manager repo から叩いても resume / logs は共有される
-
-### 6) ドキュメント整備（管理者の仕事）
-
-サブの成果を受けて、管理者が `docs/agents/` を更新して“次が速くなる状態”にする。
-
-- `runbook.md`: 実行/テスト/デバッグの手順を追記（手戻り防止）
-- `decisions.md`: 重要判断（採用/却下した代替案）を追記（ブレ防止）
-
-ポイント:
-- 「この判断は次も使う」ものは必ず残す（口頭/チャットで消える知識を減らす）
-
-### 7) 統合（タスクが終わったら取り込む＝チケットを閉じる）
-
-統合の基本は **小さく・頻繁に**。
-
-- 取り込み前チェック:
-  - テスト: `<<test-cmd>>`
-  - reviewer の **Must が解消**されている
-  - スコープ逸脱（project 外の変更）が無い
-
-ポイント:
-- implementer が「パッチ」しか出せない場合もある（環境/権限/制約）。その時は管理者が取り込む
-- worktree の後片付け（不要なら `worktree remove`）
-- 取り込みが終わったらチケットを `docs/agents/tickets/done/` に移動して履歴として残す（削除は原則しない。どうしても消すなら“回収・統合が完了してから”）
-
-### 8) 次のタスクへ（plan 更新→新チケット化→再投入）
-
-統合したら `docs/agents/plan.md` の Ready/CP を更新して、次のタスク群を投げる。
-
-ポイント:
-- “やり残し”は plan に戻す（チャットの記憶に頼らない）
-- 仕様が揺れたら decisions に残す（揺れの履歴が次の判断を助ける）
-
----
-
-## 管理者のチェックリスト（短縮版）
-
-- **依頼前**:
-  - `docs/agents/runbook.md` に「実行/テスト/確認方法」が書かれている
-  - `workspace init` が対象プロジェクトを指している
-  - **TDD 前提**（Red/Green/Refactor、最小ステップ、テストを先に）を依頼文に明記
-  - Ready なタスクが **チケット化**されている（`docs/agents/tickets/ready/`）
-- **依頼後**:
-  - `transcript.jsonl` で進捗確認（`nohup` が空でも慌てない）
-  - 必要なら `--post-git-status` で未コミット滞留を早期検知
-  - 回収結果（commit/test/残課題）が **チケットに追記**されている
-- **取り込み前**:
-  - `<<test-cmd>>` を実行して OK
-  - reviewer の Must が潰れている
-- **後片付け**:
-  - 統合済みチケットを `docs/agents/tickets/done/` に移動（原則は履歴として残す）
-
----
-
-## サイクルの要約（チートシート）
-
-上の「開発サイクル」の **最短版**です。迷ったらまず開発サイクルに戻り、ここは“手元の確認用”として使ってください。
-
-### 1) 管理者: plan 更新 → チケット作成 → 起動（バックグラウンド）
-
-- **チケットテンプレ（`docs/agents/tickets/task-ticket.template.md`）を埋める**:
-  - 特に: **Scope / Acceptance Criteria / Commands / Deliverables / TDD Plan** を空にしない
-  - “短さ”より **誤解の余地を潰す**（並列化しても衝突しない依頼にする）
-
-### 2) implementer: 実装 → テスト → コミット
-
-- `--post-git-status` を付けると未コミット滞留が早期に見つかります
-
-### 3) 管理者: reviewer にレビュー依頼（バックグラウンド）
-
-- commit hash / ブランチ名 / 変更範囲 を明示
-- 指摘は Must/Should/Nice に分けてもらう
- - （推奨）timeout 付きで起動して、回収できる形にする（理由は「バックグラウンド実行」を参照）
-
-### 4) implementer: 指摘反映 → 再テスト → 追加コミット
-
-### 5) 管理者: 取り込み判断・統合・後片付け
-
-- 不要になった worktree は削除（上記 `worktree remove`）
-- 統合済みチケットは `docs/agents/tickets/done/` に移動（原則は履歴として残す）
+- updateは「観察 → 意味 → 次の行動」を短く返す。
+- 実行logの大量貼付ではなく、根拠となるfile / symbol / command結果を返す。
+- blockerは必要な判断、止まっているscope、安全な選択肢を明示する。
+- final handoffにはsummary、commit SHA、changed paths、checks、risks、followupsを含める。

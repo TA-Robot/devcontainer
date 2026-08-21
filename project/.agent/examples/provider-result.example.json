@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "job_id": "01K2E9YQ7Q3R6V8M1N4P5T6W7X",
+  "status": "ready_for_commit",
+  "summary": "Added parser regression coverage and left the verified edit for the broker.",
+  "head_sha": "0123456789abcdef0123456789abcdef01234567",
+  "changed_paths": ["tests/parser/regression.test.js"],
+  "dirty_state": {
+    "is_dirty": true,
+    "paths": ["tests/parser/regression.test.js"]
+  },
+  "checks": [
+    {
+      "command": "npm test -- parser",
+      "status": "passed",
+      "exit_code": 0,
+      "summary": "Parser test suite passed before broker commit."
+    }
+  ],
+  "risks": [],
+  "followups": []
+}

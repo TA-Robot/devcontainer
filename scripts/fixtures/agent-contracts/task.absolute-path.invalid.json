@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "01K2E9YQ7Q3R6V8M1N4P5T6W7X",
+  "base_sha": "0123456789abcdef0123456789abcdef01234567",
+  "objective": "Escape the project scope.",
+  "role": "implementer",
+  "lane": "write",
+  "permission_profile": "safe",
+  "resource_class": "write",
+  "scope": {
+    "allowed_paths": ["/etc/"],
+    "forbidden_paths": []
+  },
+  "acceptance": [
+    {
+      "kind": "manual",
+      "value": "This fixture must be rejected."
+    }
+  ],
+  "constraints": []
+}

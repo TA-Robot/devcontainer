@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "job_id": "01K2E9YQ7Q3R6V8M1N4P5T6W7X",
+  "status": "completed",
+  "summary": "Added parser regression coverage while preserving the public API.",
+  "head_sha": "89abcdef0123456789abcdef0123456789abcdef",
+  "changed_paths": ["tests/parser/regression.test.js"],
+  "dirty_state": {
+    "is_dirty": false,
+    "paths": []
+  },
+  "checks": [
+    {
+      "command": "npm test -- parser",
+      "status": "passed",
+      "exit_code": 0,
+      "summary": "Parser test suite passed."
+    }
+  ],
+  "risks": [],
+  "followups": []
+}

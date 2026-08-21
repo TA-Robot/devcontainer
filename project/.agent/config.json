@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "default_permission_profile": "safe",
+  "contracts": {
+    "task": ".agent/schemas/task.schema.json",
+    "result": ".agent/schemas/result.schema.json"
+  },
+  "roles": {
+    "researcher": {
+      "definition": ".agent/roles/researcher.md",
+      "default_lane": "read",
+      "resource_class": "light",
+      "writes": false
+    },
+    "implementer": {
+      "definition": ".agent/roles/implementer.md",
+      "default_lane": "write",
+      "resource_class": "write",
+      "writes": true
+    },
+    "reviewer": {
+      "definition": ".agent/roles/reviewer.md",
+      "default_lane": "read",
+      "resource_class": "light",
+      "writes": false
+    }
+  },
+  "lanes": {
+    "read": {
+      "requires_worktree": false,
+      "permission_profiles": ["safe"]
+    },
+    "write": {
+      "requires_worktree": true,
+      "permission_profiles": ["safe", "trusted-fast"]
+    },
+    "isolated": {
+      "requires_worktree": true,
+      "permission_profiles": ["safe", "isolated-autonomous"]
+    }
+  },
+  "integration": {
+    "single_writer": true,
+    "workers_may_push": false,
+    "workers_may_merge": false
+  }
+}

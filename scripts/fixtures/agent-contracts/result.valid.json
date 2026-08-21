@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "job_id": "01K2E9YQ7Q3R6V8M1N4P5T6W7X",
+  "status": "completed",
+  "summary": "Mapped the parser call graph.",
+  "head_sha": "0123456789abcdef0123456789abcdef01234567",
+  "changed_paths": [],
+  "dirty_state": {
+    "is_dirty": false,
+    "paths": []
+  },
+  "checks": [],
+  "risks": ["Dynamic plugin loading was not exercised."],
+  "followups": []
+}
