@@ -35,7 +35,11 @@ elif mode == "slow":
 
 workspace = Path.cwd()
 job_id = os.environ["AGENTCTL_JOB_ID"]
-(workspace / "result.txt").write_text(f"job={job_id}\n", encoding="utf-8")
+(workspace / "result.txt").write_text(
+    f"job={job_id}\n"
+    f"memory={os.environ.get('GROK_MEMORY', '')}\n",
+    encoding="utf-8",
+)
 head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
 result = {
     "schema_version": 1,
@@ -55,9 +59,12 @@ result = {
     "followups": []
 }
 arguments = sys.argv[1:]
-index = arguments.index("--output-last-message")
-Path(arguments[index + 1]).write_text(json.dumps(result), encoding="utf-8")
-print(json.dumps({"argv": arguments}))
+if Path(sys.argv[0]).name == "fake-grok":
+    print(json.dumps({"structuredOutput": result, "argv": arguments}))
+else:
+    index = arguments.index("--output-last-message")
+    Path(arguments[index + 1]).write_text(json.dumps(result), encoding="utf-8")
+    print(json.dumps({"argv": arguments}))
 '''
 
 
@@ -107,6 +114,9 @@ class AgentctlSupervisorTests(unittest.TestCase):
         self.provider = self.root / "fake-codex"
         self.provider.write_text(FAKE_CODEX, encoding="utf-8")
         self.provider.chmod(0o755)
+        self.grok = self.root / "fake-grok"
+        self.grok.write_text(FAKE_CODEX, encoding="utf-8")
+        self.grok.chmod(0o755)
         self.jobs: list[str] = []
         self.capacity_write = "2"
         self.capacity_integration = "1"
@@ -128,6 +138,8 @@ class AgentctlSupervisorTests(unittest.TestCase):
             {
                 "AGENTCTL_CODEX_BIN": str(self.provider),
                 "AGENTCTL_CODEX_TRUSTED_BIN": str(self.provider),
+                "AGENTCTL_GROK_BIN": str(self.grok),
+                "AGENTCTL_GROK_TRUSTED_BIN": str(self.grok),
                 "FAKE_PROVIDER_MODE": mode,
                 "AGENTCTL_HEARTBEAT_SECONDS": "0.1",
                 "AGENTCTL_ORPHAN_AFTER_SECONDS": "0.4",
@@ -245,6 +257,35 @@ class AgentctlSupervisorTests(unittest.TestCase):
         self.assertEqual((self.state_dir / "agentd.sock").stat().st_mode & 0o777, 0o600)
         self.assertEqual((self.state_dir / "agentd.json").stat().st_mode & 0o777, 0o600)
         self.assertEqual(Path(attempt["log_path"]).with_name("runner.log").stat().st_mode & 0o777, 0o600)
+
+    def test_detached_grok_uses_the_same_supervised_execution_path(self) -> None:
+        job_id = self.create("detached-grok.json")
+        submitted = self.invoke(
+            "job",
+            "run",
+            job_id,
+            "--provider",
+            "grok",
+            "--detach",
+            "--json",
+            mode="slow",
+        )
+        self.assertEqual(submitted.returncode, 0, submitted.stdout + submitted.stderr)
+        self.assertEqual(json.loads(submitted.stdout)["state"], "accepted")
+
+        completed = self.wait_state(job_id, {"succeeded"})
+        attempt = completed["attempts"][0]
+        self.assertEqual(attempt["provider"], "grok")
+        provider_log = json.loads(Path(attempt["log_path"]).read_text(encoding="utf-8"))
+        arguments = provider_log["argv"]
+        self.assertIn("--prompt-file", arguments)
+        self.assertIn("/dev/stdin", arguments)
+        self.assertIn("--no-subagents", arguments)
+        self.assertIn("dontAsk", arguments)
+        self.assertIn(
+            "memory=0",
+            (Path(attempt["workspace_path"]) / "result.txt").read_text(encoding="utf-8"),
+        )
 
     def test_cancel_terminates_recorded_process_group(self) -> None:
         job_id = self.create("cancel.json")

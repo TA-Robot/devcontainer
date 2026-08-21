@@ -395,7 +395,11 @@ class Supervisor:
         if command == "submit":
             job_id = request.get("job_id")
             provider = request.get("provider")
-            if not isinstance(job_id, str) or provider not in {"codex", "claude"}:
+            if not isinstance(job_id, str) or provider not in {
+                "codex",
+                "claude",
+                "grok",
+            }:
                 raise AgentctlJobError("submit requires a job_id and supported provider")
             clean_retry = request.get("clean_retry") is True
             allow_trusted_fast = request.get("allow_trusted_fast") is True
