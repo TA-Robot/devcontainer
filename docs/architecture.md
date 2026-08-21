@@ -88,7 +88,7 @@ queue metadataは永続化しますが、provider credentialを含み得るdispa
 
 `job collect`はmerge/pushを行いません。target SHAに対するcommit候補、dependency order、path overlap、checks/risksとstructural blockerをimmutable reportへ固定し、integration方法と意味的競合の判断はsingle writerへ残します。
 
-`job logs`はcanonical attempt pathから最大1 MiB / 1000行までのtailだけを読み、known token、authorization header、secret名付きassignment、現在processが保持するsecret値をbest-effortでredactします。raw log自体をredactしたとは主張しません。正常にproviderが閉じた時点でraw logを最大8 MiBのtailへ原子的に制限し、`log-retention.json`へ元サイズと保持結果を記録します。実行中の一時的な増加と、runner / supervisor logのrotationは未解決です。
+`job logs`はcanonical attempt pathから最大1 MiB / 1000行までのtailだけを読み、known token、authorization header、secret名付きassignment、現在processが保持するsecret値をbest-effortでredactします。raw log自体をredactしたとは主張しません。正常にproviderが閉じた時点でraw logを最大8 MiB、detached runner終了後は1 MiBのtailへ原子的に制限し、別々のretention evidenceへ元サイズと保持結果を記録します。supervisor logはstdout/stderrのinodeを維持したまま2 MiBのlive tailへ回します。未解決なのは実行中provider logの一時的な増加です。
 
 `gc --dry-run`は削除commandではありません。validated state、terminal attempt、process/lease不在、canonical worktree/branch/Git common-dir identity、clean tree、canonical evidence、明示的なcollection integration proof、Compose project labelの残存resource不在を全て満たしたjobだけへ候補actionを返します。registered workspaceが移動済み、Dockerを照合できない、pathやDB evidenceが矛盾する場合はjob単位でblockし、global inventory自体は継続します。
 

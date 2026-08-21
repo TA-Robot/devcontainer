@@ -72,7 +72,7 @@ The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-r
 ### Phase 3e: bounded evidence and conservative cleanup inventory
 
 - `agentctl 0.7 job logs` reads only a bounded canonical attempt tail and applies best-effort redaction for OpenAI/Anthropic/xAI/GitHub/AWS/JWT token, header, and secret-assignment forms without claiming the raw evidence is sanitized.
-- Provider exit atomically retains at most the final 8 MiB of `process.log` and writes owner-only `log-retention.json`; the view exposes that retention metadata. Live-log growth and runner/supervisor rotation remain explicit boundaries.
+- Provider exit atomically retains at most the final 8 MiB of `process.log`; detached runner exit retains 1 MiB and a restarted supervisor recovers missed terminal retention. The long-lived supervisor keeps a 2 MiB in-place live tail without detaching its stdout/stderr inode. Each policy writes separate owner-only evidence, and effective operational limits appear in supervisor status. Only live provider-log growth remains an explicit log boundary.
 - `agentctl gc --dry-run` is non-destructive by construction. It checks validated/terminal state, identity-checked process and lease absence, exact worktree/branch/Git identity, clean state, canonical evidence, and still-valid integration proof before proposing any action.
 - Integration-class inventory uses only the exact Compose project label and blocks when Docker ownership cannot be verified or scoped containers/networks/volumes remain. No broad prune or automatic teardown exists.
 - GC tolerates a moved/unavailable registered workspace per job, rejects database path redirection, retains all evidence, and rechecks ancestry or stable patch ID rather than trusting a stale collection flag.
@@ -87,4 +87,4 @@ The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-r
 
 ## Next: Phase 4b
 
-Run the same fixture on intentional `sbx --clone` and Docker Agent installations, then compare credential exposure, main-checkout/worktree constraints, cache, Compose, disk, teardown, and rollback before choosing an adapter. Destructive worktree/branch GC, verified job-scoped Docker teardown, evidence expiry, and live/runner/supervisor log rotation remain unclaimed follow-ups; none should be inferred from Phase 3e eligibility.
+Run the same fixture on intentional `sbx --clone` and Docker Agent installations, then compare credential exposure, main-checkout/worktree constraints, cache, Compose, disk, teardown, and rollback before choosing an adapter. Destructive worktree/branch GC, verified job-scoped Docker teardown, evidence expiry, and live provider-log rotation remain unclaimed follow-ups; none should be inferred from Phase 3e eligibility.
