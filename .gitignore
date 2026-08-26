@@ -3,5 +3,6 @@
 .claude-worktrees/
 .claude-second-agent/
 scripts/__pycache__/
+temp/multi-agent-duration-atlas/case-designs/__pycache__/
 fugu-api
 dist/
