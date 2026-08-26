@@ -2,7 +2,7 @@
 
 検討開始: 2026-08-26
 
-このdirectoryは、agentへ「どんな仕事を、どの構成でさせると、実際にどれくらい時間がかかるか」を計測し、projectが後から判断材料として参照できる時間atlasを作るための計画・実装記録です。Milestone Aのschemaとdeterministic fake runner、Wave 0.5の非生成capability probe、Milestone BのS/M/L isolated fixtureとnetwork-disabled evaluatorまでは実装済みですが、まだlive providerを使ったtask時間計測結果ではありません。
+このdirectoryは、agentへ「どんな仕事を、どの構成でさせると、実際にどれくらい時間がかかるか」を計測し、projectが後から判断材料として参照できる時間atlasを作るための計画・実装記録です。schema/fake runner、非生成capability probe、S/M/L isolated fixture、network-disabled evaluator、Codex workspace-only live runnerまで実装済みです。live taskはS/C0を1件記録しましたがquality failであり、時間目安やtypical bandを出せる段階ではありません。
 
 ## 今回作るもの
 
@@ -57,6 +57,7 @@ evidence grade:              single-observation
 - `16-wave-0.5-passive-capability-probe.md`: provider別のmodel/effort広告面とhost/container観測差
 - `17-milestone-b-case-fixtures.md`: structural S/M/L catalog、disposable repo、gold/oracle isolation
 - `18-isolated-evaluator.md`: live artifactをhost credential/networkから分離して検査するcontainer
+- `19-first-recorded-codex-canary.md`: provider時間とhidden評価を結合した最初のCodex live record
 
 ## 正本との関係
 

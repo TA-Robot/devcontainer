@@ -2,7 +2,7 @@
 
 実装日: 2026-08-26
 
-Status: S/M/L fixtureのagent artifactをhostで直接実行しないevaluator pathを実装・Docker smoke済み。live provider runはまだ0件。
+Status: S/M/L fixtureのagent artifactをhostで直接実行しないevaluator pathを実装・Docker smoke済み。後続のlive provider結合は`19-first-recorded-codex-canary.md`を参照。
 
 ## Outcome
 
@@ -89,11 +89,11 @@ fake Docker testは生成commandを検査します。
 - hidden checkだけhidden mountあり
 - NaN timeoutをcommand実行前にreject
 
-duration study全体は41 tests passです。
+このmilestone時点でduration study全体は41 tests passでした。live runner追加後の現行checkは`AGENTS.md`を正本とします。
 
-## Remaining live-run boundary
+## Live-run boundaryへの引き継ぎ
 
-evaluator側の隔離は実装できました。次に必要なのはagent側です。
+この時点では次のagent側boundaryが未実装でした。
 
 1. fixture workspaceだけを書き込みmountしたephemeral agent container
 2. provider API transportは許しつつ、agent command/webのtask networkを禁止するprovider別profile
@@ -101,5 +101,4 @@ evaluator側の隔離は実装できました。次に必要なのはagent側で
 4. capsuleをpromptとして一度だけ投入し、nested delegationを初期canaryでは無効化
 5. provider event/resultをT0/TX/V0/V1/T6とrun identityへ接続
 
-このagent-side gateを実装するまで、S caseへproviderを直接走らせません。
-
+これらは後続のrun schema v2 / Codex one-shot runnerで実装しました。設計と最初のrecordは`19-first-recorded-codex-canary.md`へ続きます。
