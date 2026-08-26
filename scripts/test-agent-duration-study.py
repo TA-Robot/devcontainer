@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import copy
+from datetime import datetime, timezone
 import json
 import stat
 import subprocess
@@ -18,6 +19,7 @@ CLI = SCRIPT_DIR / "agent-duration-study"
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from agent_contracts import ContractValidationError  # noqa: E402
+from agent_duration_capability import probe_capability  # noqa: E402
 from agent_duration_study import (  # noqa: E402
     DurationStudyError,
     atomic_write_json,
@@ -33,6 +35,72 @@ from agent_duration_study import (  # noqa: E402
 
 
 class AgentDurationStudyTests(unittest.TestCase):
+    def make_fake_provider(self, directory: Path, provider: str) -> tuple[Path, Path]:
+        executable = directory / f"fake-{provider}"
+        call_log = directory / f"fake-{provider}.calls"
+        codex_catalog = {
+            "models": [
+                {
+                    "slug": "gpt-fixture",
+                    "display_name": "GPT Fixture",
+                    "default_reasoning_level": "low",
+                    "supported_reasoning_levels": [
+                        {"effort": "low", "description": "fixture secret description"},
+                        {"effort": "high", "description": "fixture secret description"},
+                    ],
+                    "comp_hash": "fixture-snapshot-42",
+                    "visibility": "list",
+                }
+            ]
+        }
+        versions = {
+            "codex": "codex-cli 9.8.7",
+            "claude": "9.8.6 (Claude Code)",
+            "grok": "grok 9.8.5 (abcdef123) [stable]",
+        }
+        helps = {
+            "codex": "Options:\n  --model <MODEL> Model to use\nfixture-secret-path=/private/x",
+            "claude": (
+                "Options:\n  --effort <level> Effort level for the current session "
+                "(low, medium, high, xhigh, max)\n  --model <model> Model to use\n"
+                "fixture-secret-path=/private/x"
+            ),
+            "grok": (
+                "Options:\n  --reasoning-effort <EFFORT> Reasoning effort for reasoning models\n"
+                "fixture-secret-path=/private/x"
+            ),
+        }
+        grok_models = (
+            "You are logged in with fixture-secret-account.\n\n"
+            "Default model: grok-fixture-new\n\n"
+            "Available models:\n  * grok-fixture-new (default)\n  - grok-fixture-old\n"
+        )
+        program = f"""#!/usr/bin/env python3
+import json
+from pathlib import Path
+import sys
+
+provider = {provider!r}
+call_log = Path({str(call_log)!r})
+with call_log.open("a", encoding="utf-8") as handle:
+    handle.write(json.dumps(sys.argv[1:]) + "\\n")
+
+if sys.argv[1:] == ["--version"]:
+    print({versions[provider]!r})
+elif sys.argv[1:] == ["--help"]:
+    print({helps[provider]!r})
+elif provider == "codex" and sys.argv[1:2] == ["debug"]:
+    print(json.dumps({codex_catalog!r}))
+elif provider == "grok" and sys.argv[1:] == ["models"]:
+    print({grok_models!r})
+else:
+    print("unsupported fixture command", file=sys.stderr)
+    raise SystemExit(2)
+"""
+        executable.write_text(program, encoding="utf-8")
+        executable.chmod(0o700)
+        return executable, call_log
+
     def valid_study(self) -> dict[str, object]:
         return {
             "schema_version": 1,
@@ -88,24 +156,60 @@ class AgentDurationStudyTests(unittest.TestCase):
 
     def valid_capability(self) -> dict[str, object]:
         return {
-            "schema_version": 1,
-            "capability_id": "fixture-cli-v1",
+            "schema_version": 2,
+            "capability_id": "fixture-cli-v2",
             "observed_at": "2026-01-01T00:00:00.000Z",
+            "probe": {
+                "mode": "live-canary",
+                "generation_request_performed": True,
+                "provider_metadata_request_attempted": False,
+                "metadata_scope": "not-requested",
+                "raw_output_persisted": False,
+                "commands": [
+                    {
+                        "command_id": "version",
+                        "status": "observed",
+                        "evidence_source": "version-output",
+                        "duration_ms": 1.0,
+                        "exit_code": 0,
+                    }
+                ],
+            },
             "model_identity": {
                 "requested_alias": "fixture-model",
                 "requested_source": "flag",
                 "resolved_id": "fixture-model-v1",
                 "identity_confidence": "exact",
             },
+            "model_inventory": [
+                {
+                    "model_id": "fixture-model-v1",
+                    "catalog_status": "available",
+                    "identity_confidence": "catalog-id-with-snapshot",
+                    "snapshot_hint": "deterministic",
+                }
+            ],
             "runtime_identity": {
                 "provider": "fixture",
                 "cli_name": "duration-fixture",
                 "cli_version": "1",
                 "cli_source": "fixture",
-                "execution_surface": "fixture",
+                "execution_surface": "direct-provider",
+                "environment_kind": "fixture",
                 "permission_mode": "automatic",
                 "observed_at": "2026-01-01T00:00:00.000Z",
             },
+            "setting_surfaces": [
+                {
+                    "namespace": "fixture.reasoning",
+                    "key": "effort",
+                    "advertisement": "enumerated",
+                    "advertised_values": ["deterministic"],
+                    "default_value": "deterministic",
+                    "evidence_source": "live-canary",
+                    "application_observability": "direct",
+                }
+            ],
             "setting_probes": [
                 {
                     "namespace": "fixture.reasoning",
@@ -119,6 +223,13 @@ class AgentDurationStudyTests(unittest.TestCase):
                 "progress_artifact": "observed",
                 "synthesis_envelope": "observed",
                 "permission_mode": "automatic",
+            },
+            "coverage": {
+                "model_inventory": "exact",
+                "setting_advertisement": "exact",
+                "setting_application": "exact",
+                "runtime_identity": "exact",
+                "limitations": [],
             },
         }
 
@@ -148,6 +259,118 @@ class AgentDurationStudyTests(unittest.TestCase):
         unknown_with_applied["setting_probes"][0]["status"] = "unknown"  # type: ignore[index]
         with self.assertRaises(DurationStudyError):
             validate_record("capability", unknown_with_applied)
+
+    def test_capability_contract_separates_advertisement_from_application(self) -> None:
+        passive = self.valid_capability()
+        passive["probe"]["mode"] = "passive-cli"  # type: ignore[index]
+        passive["probe"]["generation_request_performed"] = False  # type: ignore[index]
+        passive["runtime_identity"]["execution_surface"] = "capability-probe"  # type: ignore[index]
+        passive["setting_probes"] = []
+        passive["coverage"]["setting_application"] = "not-observed"  # type: ignore[index]
+        validate_record("capability", passive)
+
+        claimed_application = copy.deepcopy(passive)
+        claimed_application["coverage"]["setting_application"] = "exact"
+        with self.assertRaises(DurationStudyError):
+            validate_record("capability", claimed_application)
+
+        malformed_surface = copy.deepcopy(passive)
+        malformed_surface["setting_surfaces"][0]["advertisement"] = "flag-only"
+        with self.assertRaises(DurationStudyError):
+            validate_record("capability", malformed_surface)
+
+    def test_passive_provider_probes_preserve_evidence_strength_and_privacy(self) -> None:
+        fixed_now = datetime(2026, 8, 26, 12, 34, 56, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory(prefix="duration-capability-fixtures-") as raw_temp:
+            directory = Path(raw_temp)
+            records: dict[str, dict[str, object]] = {}
+            logs: dict[str, list[list[str]]] = {}
+            for provider in ("codex", "claude", "grok"):
+                executable, call_log = self.make_fake_provider(directory, provider)
+                record = probe_capability(
+                    provider,
+                    binary=str(executable),
+                    cli_source="fixture",
+                    environment_kind="fixture",
+                    timeout_seconds=2,
+                    capability_id=f"{provider}-passive-fixture",
+                    now=fixed_now,
+                )
+                records[provider] = record
+                logs[provider] = [
+                    json.loads(line)
+                    for line in call_log.read_text(encoding="utf-8").splitlines()
+                ]
+                validate_record("capability", record)
+                serialized = json.dumps(record, sort_keys=True)
+                self.assertNotIn("fixture-secret", serialized)
+                self.assertNotIn(str(executable), serialized)
+                self.assertFalse(record["probe"]["generation_request_performed"])
+                self.assertFalse(record["probe"]["raw_output_persisted"])
+                self.assertEqual(record["setting_probes"], [])
+
+            codex = records["codex"]
+            self.assertEqual(codex["coverage"]["model_inventory"], "exact")
+            self.assertEqual(codex["model_inventory"][0]["model_id"], "gpt-fixture")
+            self.assertEqual(
+                codex["setting_surfaces"][0]["advertised_values"], ["low", "high"]
+            )
+            self.assertEqual(codex["setting_surfaces"][0]["default_value"], "low")
+            self.assertEqual(codex["model_identity"]["identity_confidence"], "default-unspecified")
+            self.assertIn(["debug", "models"], logs["codex"])
+
+            claude = records["claude"]
+            self.assertEqual(claude["coverage"]["model_inventory"], "not-observed")
+            self.assertEqual(
+                claude["setting_surfaces"][0]["advertised_values"],
+                ["low", "medium", "high", "xhigh", "max"],
+            )
+            self.assertEqual(logs["claude"], [["--version"], ["--help"]])
+
+            grok = records["grok"]
+            self.assertEqual(grok["model_identity"]["requested_alias"], "grok-fixture-new")
+            self.assertEqual(grok["model_inventory"][0]["catalog_status"], "advertised-default")
+            self.assertEqual(grok["setting_surfaces"][0]["advertisement"], "flag-only")
+            self.assertIn("setting-values-unadvertised", grok["coverage"]["limitations"])
+            self.assertIn(["models"], logs["grok"])
+
+    def test_offline_passive_probe_avoids_provider_metadata_request(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="duration-capability-offline-") as raw_temp:
+            directory = Path(raw_temp)
+            grok_binary, grok_log = self.make_fake_provider(directory, "grok")
+            grok = probe_capability(
+                "grok",
+                binary=str(grok_binary),
+                cli_source="fixture",
+                environment_kind="fixture",
+                offline_only=True,
+                capability_id="grok-passive-offline-fixture",
+            )
+            calls = [
+                json.loads(line)
+                for line in grok_log.read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertEqual(calls, [["--version"], ["--help"]])
+            self.assertEqual(grok["probe"]["metadata_scope"], "not-requested")
+            self.assertFalse(grok["probe"]["provider_metadata_request_attempted"])
+            self.assertEqual(grok["model_inventory"], [])
+
+            codex_binary, codex_log = self.make_fake_provider(directory, "codex")
+            codex = probe_capability(
+                "codex",
+                binary=str(codex_binary),
+                cli_source="fixture",
+                environment_kind="fixture",
+                offline_only=True,
+                capability_id="codex-passive-offline-fixture",
+            )
+            codex_calls = [
+                json.loads(line)
+                for line in codex_log.read_text(encoding="utf-8").splitlines()
+            ]
+            self.assertIn(["debug", "models", "--bundled"], codex_calls)
+            self.assertEqual(codex["probe"]["metadata_scope"], "bundled")
+            self.assertFalse(codex["probe"]["provider_metadata_request_attempted"])
 
     def test_every_fake_scenario_is_schema_and_semantically_valid(self) -> None:
         for scenario in (
@@ -339,6 +562,91 @@ class AgentDurationStudyTests(unittest.TestCase):
             )
             self.assertEqual(repeated.returncode, 2)
             self.assertIn("refusing to overwrite immutable run record", repeated.stderr)
+
+    def test_cli_writes_and_validates_a_passive_capability_record(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="duration-capability-cli-") as raw_temp:
+            directory = Path(raw_temp)
+            executable, _ = self.make_fake_provider(directory, "codex")
+            output_dir = directory / "capabilities"
+            result = subprocess.run(
+                [
+                    str(CLI),
+                    "probe-capability",
+                    "--provider",
+                    "codex",
+                    "--binary",
+                    str(executable),
+                    "--cli-source",
+                    "fixture",
+                    "--environment-kind",
+                    "fixture",
+                    "--capability-id",
+                    "codex-passive-cli-fixture",
+                    "--output-dir",
+                    str(output_dir),
+                ],
+                cwd=ROOT,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+            summary = json.loads(result.stdout)
+            self.assertFalse(summary["generation_request_performed"])
+            record_path = Path(summary["path"])
+            record = json.loads(record_path.read_text(encoding="utf-8"))
+            self.assertEqual(record["runtime_identity"]["cli_version"], "9.8.7")
+
+            validation = subprocess.run(
+                [str(CLI), "validate", "--kind", "capability", str(record_path)],
+                cwd=ROOT,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            self.assertEqual(validation.returncode, 0, validation.stdout + validation.stderr)
+
+    def test_missing_provider_binary_is_a_partial_record_not_an_exception(self) -> None:
+        record = probe_capability(
+            "codex",
+            binary="/definitely/missing/duration-study-provider",
+            cli_source="unknown",
+            environment_kind="fixture",
+            timeout_seconds=1,
+            capability_id="codex-passive-missing-fixture",
+        )
+        self.assertEqual(
+            [item["status"] for item in record["probe"]["commands"]],
+            ["unavailable", "unavailable", "unavailable"],
+        )
+        self.assertEqual(record["coverage"]["runtime_identity"], "not-observed")
+        self.assertEqual(record["coverage"]["model_inventory"], "not-observed")
+        self.assertIn("partial-command-coverage", record["coverage"]["limitations"])
+
+    def test_passive_probe_rejects_invalid_safety_inputs_before_execution(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="duration-capability-input-") as raw_temp:
+            executable, call_log = self.make_fake_provider(Path(raw_temp), "codex")
+            with self.assertRaises(DurationStudyError):
+                probe_capability(
+                    "codex",
+                    binary=str(executable),
+                    timeout_seconds=float("nan"),
+                )
+            with self.assertRaises(DurationStudyError):
+                probe_capability(
+                    "codex",
+                    binary=str(executable),
+                    image_digest="sha256:not-a-digest",
+                )
+            with self.assertRaises(DurationStudyError):
+                probe_capability(
+                    "codex",
+                    binary=str(executable),
+                    capability_id="Invalid/Capability/ID",
+                )
+            self.assertFalse(call_log.exists())
 
 
 if __name__ == "__main__":

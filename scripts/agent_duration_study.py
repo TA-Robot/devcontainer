@@ -304,6 +304,104 @@ def _validate_model_and_settings(
             raise DurationStudyError("only an applied setting may contain applied_value")
 
 
+def _validate_capability_record(record: dict[str, Any]) -> None:
+    validate(record, load_schema("capability"))
+    _validate_model_and_settings(record["model_identity"], record["setting_probes"])
+
+    if record["observed_at"] != record["runtime_identity"]["observed_at"]:
+        raise DurationStudyError("capability and runtime observation timestamps must match")
+
+    commands = record["probe"]["commands"]
+    command_ids = [item["command_id"] for item in commands]
+    if len(command_ids) != len(set(command_ids)):
+        raise DurationStudyError("capability probe command IDs must be unique")
+    for command in commands:
+        status = command["status"]
+        exit_code = command.get("exit_code")
+        if status == "observed" and exit_code != 0:
+            raise DurationStudyError("an observed probe command requires exit_code 0")
+        if status == "failed" and (exit_code is None or exit_code == 0):
+            raise DurationStudyError("a failed probe command requires a nonzero exit_code")
+        if status in {"unavailable", "timed-out"} and exit_code is not None:
+            raise DurationStudyError(f"a {status} probe command cannot have an exit_code")
+
+    probe = record["probe"]
+    metadata_requested = probe["provider_metadata_request_attempted"]
+    if metadata_requested != (probe["metadata_scope"] == "provider-current"):
+        raise DurationStudyError("provider metadata request flag disagrees with metadata_scope")
+    if probe["mode"] == "passive-cli":
+        if probe["generation_request_performed"]:
+            raise DurationStudyError("a passive capability probe cannot perform generation")
+        if record["setting_probes"]:
+            raise DurationStudyError("a passive capability probe cannot claim applied settings")
+        if record["coverage"]["setting_application"] != "not-observed":
+            raise DurationStudyError("passive setting application coverage must be not-observed")
+        if record["runtime_identity"]["execution_surface"] != "capability-probe":
+            raise DurationStudyError("a passive probe must use the capability-probe surface")
+
+    inventory = record["model_inventory"]
+    inventory_ids = [item["model_id"] for item in inventory]
+    if len(inventory_ids) != len(set(inventory_ids)):
+        raise DurationStudyError("model inventory IDs must be unique")
+    defaults = [item for item in inventory if item["catalog_status"] == "advertised-default"]
+    if len(defaults) > 1:
+        raise DurationStudyError("model inventory can advertise at most one default")
+    for item in inventory:
+        if item["identity_confidence"] == "catalog-id-with-snapshot":
+            if "snapshot_hint" not in item:
+                raise DurationStudyError("catalog snapshot confidence requires snapshot_hint")
+        elif "snapshot_hint" in item:
+            raise DurationStudyError("snapshot_hint requires catalog-id-with-snapshot confidence")
+
+    model_identity = record["model_identity"]
+    if defaults and model_identity["identity_confidence"] == "alias-only":
+        if model_identity["requested_alias"] != defaults[0]["model_id"]:
+            raise DurationStudyError("runtime default identity disagrees with advertised default")
+
+    surfaces = record["setting_surfaces"]
+    surface_keys = [
+        (item["namespace"], item["key"], item.get("model_selector")) for item in surfaces
+    ]
+    if len(surface_keys) != len(set(surface_keys)):
+        raise DurationStudyError("setting surface keys must be unique per model selector")
+    inventory_id_set = set(inventory_ids)
+    for surface in surfaces:
+        selector = surface.get("model_selector")
+        if selector is not None and selector not in inventory_id_set:
+            raise DurationStudyError(f"setting surface references unknown model: {selector}")
+        advertised_values = surface.get("advertised_values")
+        default_value = surface.get("default_value")
+        if surface["advertisement"] == "enumerated":
+            if not advertised_values:
+                raise DurationStudyError("enumerated setting surface requires advertised_values")
+            if default_value is not None and default_value not in advertised_values:
+                raise DurationStudyError("setting default_value must be one of advertised_values")
+        elif advertised_values is not None or default_value is not None:
+            raise DurationStudyError(
+                "only an enumerated setting surface may contain advertised/default values"
+            )
+
+    coverage = record["coverage"]
+    if inventory and coverage["model_inventory"] in {"not-observed", "unknown"}:
+        raise DurationStudyError("observed model inventory cannot have missing coverage")
+    if not inventory and coverage["model_inventory"] in {"exact", "partial"}:
+        raise DurationStudyError("model inventory coverage requires at least one model")
+    if surfaces and coverage["setting_advertisement"] in {"not-observed", "unknown"}:
+        raise DurationStudyError("observed setting surfaces cannot have missing coverage")
+    if not surfaces and coverage["setting_advertisement"] in {"exact", "partial"}:
+        raise DurationStudyError("setting advertisement coverage requires a surface")
+    if record["setting_probes"] and coverage["setting_application"] in {
+        "not-observed",
+        "unknown",
+    }:
+        raise DurationStudyError("setting probes cannot have missing application coverage")
+    if not record["setting_probes"] and coverage["setting_application"] in {
+        "exact",
+        "partial",
+    }:
+        raise DurationStudyError("setting application coverage requires an actual probe")
+
+
 def validate_run_record(record: dict[str, Any]) -> None:
     validate(record, load_schema("run"))
     _validate_utc_timestamps(record)
@@ -433,13 +531,14 @@ def validate_record(kind: str, record: dict[str, Any]) -> None:
     if kind == "run":
         validate_run_record(record)
         return
+    if kind == "capability":
+        _validate_capability_record(record)
+        return
     validate(record, load_schema(kind))
     if kind == "study":
         reporting = record["reporting"]
         if reporting["typical_quantile_low"] >= reporting["typical_quantile_high"]:
             raise DurationStudyError("study typical quantile low must be less than high")
-    if kind == "capability":
-        _validate_model_and_settings(record["model_identity"], record["setting_probes"])
 
 
 def _make_private_directory(path: Path) -> None:
@@ -918,6 +1017,33 @@ def build_parser() -> argparse.ArgumentParser:
     fake.add_argument("--output-dir", type=Path, required=True)
     fake.add_argument("--print-record", action="store_true")
 
+    capability = subparsers.add_parser(
+        "probe-capability",
+        help="record version/help/catalog evidence without a generation request",
+    )
+    capability.add_argument("--provider", choices=("codex", "claude", "grok"), required=True)
+    capability.add_argument("--binary", help="provider executable; defaults to the provider name")
+    capability.add_argument(
+        "--cli-source",
+        choices=("container-image", "host-sync", "fixture", "unknown"),
+        default="unknown",
+    )
+    capability.add_argument(
+        "--environment-kind",
+        choices=("host", "devcontainer", "fixture", "unknown"),
+        default="unknown",
+    )
+    capability.add_argument("--image-digest")
+    capability.add_argument("--timeout-seconds", type=float, default=15.0)
+    capability.add_argument(
+        "--offline-only",
+        action="store_true",
+        help="avoid provider metadata calls; Codex uses its bundled catalog",
+    )
+    capability.add_argument("--capability-id")
+    capability.add_argument("--output-dir", type=Path, required=True)
+    capability.add_argument("--print-record", action="store_true")
+
     validate_command = subparsers.add_parser("validate", help="validate one study record")
     validate_command.add_argument("--kind", choices=tuple(SCHEMA_PATHS), required=True)
     validate_command.add_argument("path", type=Path)
@@ -942,6 +1068,38 @@ def main(argv: list[str] | None = None) -> int:
                             "scenario": args.scenario,
                             "run_id": record["run_id"],
                             "path": str(output),
+                        },
+                        sort_keys=True,
+                    )
+                )
+            return 0
+
+        if args.command == "probe-capability":
+            from agent_duration_capability import probe_capability
+
+            record = probe_capability(
+                args.provider,
+                binary=args.binary,
+                cli_source=args.cli_source,
+                environment_kind=args.environment_kind,
+                image_digest=args.image_digest,
+                timeout_seconds=args.timeout_seconds,
+                offline_only=args.offline_only,
+                capability_id=args.capability_id,
+            )
+            output = args.output_dir.resolve() / f"{record['capability_id']}.json"
+            atomic_write_json(output, record)
+            if args.print_record:
+                print(json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True))
+            else:
+                print(
+                    json.dumps(
+                        {
+                            "status": "written",
+                            "provider": args.provider,
+                            "capability_id": record["capability_id"],
+                            "path": str(output),
+                            "generation_request_performed": False,
                         },
                         sort_keys=True,
                     )
