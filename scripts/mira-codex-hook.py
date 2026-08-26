@@ -1,10 +1,12 @@
 #!/usr/bin/python3
-"""Translate trusted provider activity into a small, sanitized Mira state file.
+"""Translate trusted provider activity into sanitized Mira state and episodes.
 
 The executable name remains ``mira-codex-hook`` for Codex configuration
 compatibility.  Provider-specific symlink names select the Claude or Grok wire
 adapter, and the bridge also accepts the deliberately tiny ``agentctl`` event
-envelope emitted by the broker.
+envelope emitted by the broker.  Completed turns are summarized into a
+bounded, content-free observation ledger without entering the correctness
+path.
 """
 
 from __future__ import annotations
@@ -23,8 +25,11 @@ from typing import Any
 
 
 SCHEMA_VERSION = 1
+OBSERVATION_SCHEMA_VERSION = 1
 SESSION_TTL_SECONDS = 60 * 60
 MAX_RECENT_EVENTS = 24
+DEFAULT_MAX_OBSERVATION_EPISODES = 512
+MAX_CONFIGURED_OBSERVATION_EPISODES = 4096
 
 AGENT_PROVIDERS = {"codex", "claude", "grok"}
 AGENT_ROLES = {"implementer", "researcher", "reviewer", "tester"}
@@ -87,6 +92,24 @@ AGENT_JOB_TERMINAL_EVENTS = {
     "AgentJobOrphaned": ("error", "failure"),
     "AgentJobCancelled": ("ready", "unknown"),
 }
+AGENT_JOB_EVENTS = {"AgentJobStart", *AGENT_JOB_TERMINAL_EVENTS}
+
+OBSERVATION_TERMINAL_EVENTS = {
+    "AgentJobSucceeded",
+    "AgentJobFailed",
+    "AgentJobOrphaned",
+    "AgentJobCancelled",
+    "SessionEnd",
+    "Stop",
+    "StopFailure",
+    "StopCancelled",
+}
+OBSERVATION_EXCLUDED_START_EVENTS = {
+    "SessionStart",
+    "TurnIdle",
+    "Unknown",
+} | OBSERVATION_TERMINAL_EVENTS
+OBSERVATION_EXPLICIT_START_EVENTS = {"UserPromptSubmit", "AgentJobStart"}
 
 STATE_PRIORITY = {
     "idle": 0,
@@ -152,9 +175,47 @@ def state_directory() -> Path:
     return base / "mira-companion"
 
 
+def observation_directory() -> Path:
+    configured = os.environ.get("MIRA_COMPANION_EPISODE_DIR")
+    if configured:
+        return Path(configured).expanduser()
+    return state_directory()
+
+
 def opaque_id(value: object, fallback: str) -> str:
     text = str(value or fallback)
     return hashlib.sha256(text.encode("utf-8", errors="replace")).hexdigest()[:16]
+
+
+def workspace_key(value: object) -> str:
+    """Return a stable-enough opaque workspace key without persisting its path."""
+
+    raw = string_field(value, 4096).strip()
+    if not raw:
+        return "unknown"
+    try:
+        normalized = str(Path(raw).expanduser().resolve(strict=False))
+    except (OSError, RuntimeError):
+        normalized = raw
+    return opaque_id(f"workspace:{normalized}", "workspace:unknown")
+
+
+def observation_episode_limit() -> int:
+    """Storage cost cap, not a collaboration-quality or sampling default."""
+
+    raw = os.environ.get("MIRA_COMPANION_EPISODE_LIMIT", "")
+    if raw:
+        try:
+            configured = int(raw)
+        except ValueError:
+            configured = DEFAULT_MAX_OBSERVATION_EPISODES
+        return min(max(configured, 1), MAX_CONFIGURED_OBSERVATION_EPISODES)
+    return DEFAULT_MAX_OBSERVATION_EPISODES
+
+
+def observation_episodes_enabled() -> bool:
+    configured = os.environ.get("MIRA_COMPANION_EPISODES_ENABLED", "1")
+    return configured.strip().lower() not in {"0", "false", "no", "off"}
 
 
 def read_json(path: Path, fallback: Any) -> Any:
@@ -221,7 +282,18 @@ def normalize_hook_payload(payload: dict[str, Any], provider: str) -> dict[str, 
     """Keep only bridge inputs and adapt Grok's camelCase hook wire format."""
 
     if payload.get("mira_source") == "agentctl":
-        return payload
+        event = string_field(payload.get("hook_event_name"), 80)
+        if event not in AGENT_JOB_EVENTS:
+            event = "Unknown"
+        return {
+            "mira_source": "agentctl",
+            "hook_event_name": event,
+            "session_id": payload.get("session_id"),
+            "attempt_id": payload.get("attempt_id"),
+            "provider": payload.get("provider"),
+            "role": payload.get("role"),
+            "_mira_workspace": payload.get("_mira_workspace"),
+        }
 
     if provider == "grok":
         event = canonical_hook_event(
@@ -250,6 +322,7 @@ def normalize_hook_payload(payload: dict[str, Any], provider: str) -> dict[str, 
             "tool_response": payload.get("toolResult"),
             "agent_id": subagent_id,
             "agent_type": subagent_type,
+            "_mira_workspace_path": payload.get("cwd") or os.environ.get("PWD"),
         }
 
     return {
@@ -261,6 +334,7 @@ def normalize_hook_payload(payload: dict[str, Any], provider: str) -> dict[str, 
         "tool_response": payload.get("tool_response"),
         "agent_id": payload.get("agent_id"),
         "agent_type": payload.get("agent_type"),
+        "_mira_workspace_path": payload.get("cwd") or os.environ.get("PWD"),
     }
 
 
@@ -354,16 +428,24 @@ def tool_outcome(payload: dict[str, Any]) -> str:
     return inspect(payload.get("tool_response")) or "unknown"
 
 
-def new_record(session_key: str, now: float, source: str = "codex") -> dict[str, Any]:
+def new_record(
+    session_key: str,
+    now: float,
+    source: str = "codex",
+    opaque_workspace: str = "unknown",
+) -> dict[str, Any]:
     return {
         "session": session_key,
         "source": source,
         "provider": source if source in AGENT_PROVIDERS else "unknown",
+        "workspace": opaque_workspace,
         "status": "idle",
         "event": "Unknown",
         "toolCategory": None,
         "subagents": [],
         "agentMeta": {},
+        "observationSequence": 0,
+        "observation": None,
         "updatedEpoch": now,
         "expiresEpoch": None,
     }
@@ -380,14 +462,402 @@ def set_record_state(
     record["expiresEpoch"] = now + duration if duration else None
 
 
+def payload_source(payload: dict[str, Any]) -> str:
+    direct_provider = enum_field(payload.get("_mira_provider"), AGENT_PROVIDERS, "codex")
+    return "agentctl" if payload.get("mira_source") == "agentctl" else direct_provider
+
+
+def payload_session_key(payload: dict[str, Any]) -> str:
+    source = payload_source(payload)
+    raw_session = payload.get("session_id") or "default-session"
+    return opaque_id(f"{source}:{raw_session}", f"{source}:default-session")
+
+
+def increment_counter(container: dict[str, Any], field: str, key: str) -> None:
+    counters = container.setdefault(field, {})
+    if not isinstance(counters, dict):
+        counters = {}
+        container[field] = counters
+    counters[key] = int(counters.get(key) or 0) + 1
+
+
+def begin_observation(
+    record: dict[str, Any], event_name: str, now: float, *, start_observed: bool
+) -> dict[str, Any]:
+    try:
+        sequence = int(record.get("observationSequence") or 0) + 1
+    except (TypeError, ValueError):
+        sequence = 1
+    record["observationSequence"] = sequence
+    observation = {
+        "id": opaque_id(
+            f"{record.get('session', 'unknown')}:{sequence}:{now}:{time.time_ns()}",
+            f"observation:{time.time_ns()}",
+        ),
+        "startedEpoch": now,
+        "startEvent": event_name,
+        "startObserved": start_observed,
+        "eventCounts": {},
+        "categoryCounts": {},
+        "outcomeCounts": {},
+        "testOutcomes": {"success": 0, "failure": 0, "unknown": 0},
+        "lastTestOutcome": "unknown",
+        "testRecoveries": 0,
+        "editEventsAfterTestFailure": 0,
+        "workerStarts": 0,
+        "workerStops": 0,
+        "peakConcurrentWorkers": 0,
+        "workerActiveStartedEpoch": {},
+        "workerActiveMs": 0,
+        "workerStartCoverage": True,
+        "workerProviderCounts": {},
+        "workerRoleCounts": {},
+        "firstWorkerStartedEpoch": None,
+        "lastWorkerStoppedEpoch": None,
+        "postWorkerEventCounts": {},
+        "postWorkerCategoryCounts": {},
+    }
+    record["observation"] = observation
+    return observation
+
+
+def normalized_counter(value: object) -> dict[str, int]:
+    if not isinstance(value, dict):
+        return {}
+    result: dict[str, int] = {}
+    for raw_key, raw_count in value.items():
+        key = string_field(raw_key, 80)
+        if not key:
+            continue
+        try:
+            count = int(raw_count)
+        except (TypeError, ValueError):
+            continue
+        if count >= 0:
+            result[key] = count
+    return dict(sorted(result.items()))
+
+
+def finalize_observation(
+    record: dict[str, Any],
+    finished_epoch: float,
+    terminal_event: str,
+    terminal_outcome: str,
+    *,
+    completion: str,
+    terminal_observed: bool,
+) -> dict[str, Any] | None:
+    observation = record.get("observation")
+    if not isinstance(observation, dict):
+        return None
+
+    try:
+        started_epoch = float(observation.get("startedEpoch") or finished_epoch)
+    except (TypeError, ValueError):
+        started_epoch = finished_epoch
+    finished_epoch = max(finished_epoch, started_epoch)
+
+    active_starts = observation.get("workerActiveStartedEpoch")
+    active_starts = active_starts if isinstance(active_starts, dict) else {}
+    worker_active_ms = int(observation.get("workerActiveMs") or 0)
+    for raw_started in active_starts.values():
+        try:
+            worker_active_ms += max(0, round((finished_epoch - float(raw_started)) * 1000))
+        except (TypeError, ValueError):
+            observation["workerStartCoverage"] = False
+
+    active_workers = len(record.get("subagents", []))
+    worker_starts = int(observation.get("workerStarts") or 0)
+    peak_workers = int(observation.get("peakConcurrentWorkers") or 0)
+    source = string_field(record.get("source"), 24) or "unknown"
+    if source == "agentctl":
+        topology = "managed-job"
+    elif worker_starts > 0 or peak_workers > 0:
+        topology = "delegated"
+    else:
+        topology = "solo-observed"
+
+    last_worker_stopped = observation.get("lastWorkerStoppedEpoch")
+    review_available = (
+        source in AGENT_PROVIDERS
+        and worker_starts > 0
+        and active_workers == 0
+        and isinstance(last_worker_stopped, (int, float))
+    )
+    review_elapsed_ms = (
+        max(0, round((finished_epoch - float(last_worker_stopped)) * 1000))
+        if review_available
+        else None
+    )
+
+    test_outcomes = normalized_counter(observation.get("testOutcomes"))
+    for outcome in ("success", "failure", "unknown"):
+        test_outcomes.setdefault(outcome, 0)
+
+    episode = {
+        "schemaVersion": OBSERVATION_SCHEMA_VERSION,
+        "id": string_field(observation.get("id"), 32),
+        "session": string_field(record.get("session"), 32),
+        "workspace": string_field(record.get("workspace"), 32) or "unknown",
+        "source": source,
+        "provider": enum_field(
+            observation.get("provider") or record.get("provider"), AGENT_PROVIDERS
+        ),
+        "startedAt": utc_iso(started_epoch),
+        "finishedAt": utc_iso(finished_epoch),
+        "durationMs": max(0, round((finished_epoch - started_epoch) * 1000)),
+        "startEvent": string_field(observation.get("startEvent"), 80),
+        "terminalEvent": string_field(terminal_event, 80),
+        "terminalOutcome": enum_field(
+            terminal_outcome, {"success", "failure", "unknown"}
+        ),
+        "completion": enum_field(
+            completion, {"observed-terminal", "superseded", "expired"}
+        ),
+        "topology": topology,
+        "eventCounts": normalized_counter(observation.get("eventCounts")),
+        "categoryCounts": normalized_counter(observation.get("categoryCounts")),
+        "outcomeCounts": normalized_counter(observation.get("outcomeCounts")),
+        "testOutcomes": test_outcomes,
+        "delegation": {
+            "starts": worker_starts,
+            "stops": int(observation.get("workerStops") or 0),
+            "peakConcurrent": peak_workers,
+            "workerActiveMs": max(0, worker_active_ms),
+            "unfinishedAtTerminal": active_workers,
+            "providerCounts": normalized_counter(
+                observation.get("workerProviderCounts")
+            ),
+            "roleCounts": normalized_counter(observation.get("workerRoleCounts")),
+        },
+        "reviewProxy": {
+            "kind": "post-worker-tail",
+            "available": review_available,
+            "elapsedMs": review_elapsed_ms,
+            "eventCounts": normalized_counter(
+                observation.get("postWorkerEventCounts")
+            ),
+            "categoryCounts": normalized_counter(
+                observation.get("postWorkerCategoryCounts")
+            ),
+        },
+        "reworkProxy": {
+            "testRecoveries": int(observation.get("testRecoveries") or 0),
+            "editEventsAfterTestFailure": int(
+                observation.get("editEventsAfterTestFailure") or 0
+            ),
+        },
+        "semantics": {
+            "expectedMechanisms": [],
+            "bindingConstraint": "unknown",
+            "relation": "unknown",
+            "lifecycle": "unknown",
+            "annotationSource": "none",
+        },
+        "coverage": {
+            "startObserved": bool(observation.get("startObserved")),
+            "terminalObserved": terminal_observed,
+            "workerStartsObserved": bool(
+                observation.get("workerStartCoverage", True)
+            ),
+        },
+    }
+    record["observation"] = None
+    return episode
+
+
+def observe_event(
+    record: dict[str, Any] | None,
+    event: dict[str, Any],
+    now: float,
+    active_before: set[str],
+    active_after: set[str],
+) -> list[dict[str, Any]]:
+    if record is None:
+        return []
+    event_name = string_field(event.get("event"), 80) or "Unknown"
+    completed: list[dict[str, Any]] = []
+
+    existing = record.get("observation")
+    if event_name in OBSERVATION_EXPLICIT_START_EVENTS and isinstance(existing, dict):
+        previous = finalize_observation(
+            record,
+            now,
+            "Superseded",
+            "unknown",
+            completion="superseded",
+            terminal_observed=False,
+        )
+        if previous:
+            completed.append(previous)
+
+    observation = record.get("observation")
+    if not isinstance(observation, dict) and event_name not in OBSERVATION_EXCLUDED_START_EVENTS:
+        observation = begin_observation(
+            record,
+            event_name,
+            now,
+            start_observed=event_name in OBSERVATION_EXPLICIT_START_EVENTS,
+        )
+
+    if not isinstance(observation, dict):
+        return completed
+
+    observed_provider = enum_field(event.get("provider"), AGENT_PROVIDERS)
+    if observed_provider != "unknown" and observation.get("provider") in {
+        None,
+        "",
+        "unknown",
+    }:
+        observation["provider"] = observed_provider
+
+    increment_counter(observation, "eventCounts", event_name)
+    category = string_field(event.get("category"), 40)
+    if category:
+        increment_counter(observation, "categoryCounts", category)
+    outcome = enum_field(event.get("outcome"), {"success", "failure", "unknown"})
+    increment_counter(observation, "outcomeCounts", outcome)
+
+    added_workers = active_after - active_before
+    removed_workers = active_before - active_after
+    active_started = observation.setdefault("workerActiveStartedEpoch", {})
+    if not isinstance(active_started, dict):
+        active_started = {}
+        observation["workerActiveStartedEpoch"] = active_started
+        observation["workerStartCoverage"] = False
+
+    for worker_id in added_workers:
+        active_started[worker_id] = now
+    if added_workers:
+        observation["workerStarts"] = int(observation.get("workerStarts") or 0) + len(
+            added_workers
+        )
+        if observation.get("firstWorkerStartedEpoch") is None:
+            observation["firstWorkerStartedEpoch"] = now
+        observation["lastWorkerStoppedEpoch"] = None
+        provider = enum_field(event.get("provider"), AGENT_PROVIDERS)
+        role = role_field(event.get("role"))
+        for _ in added_workers:
+            increment_counter(observation, "workerProviderCounts", provider)
+            increment_counter(observation, "workerRoleCounts", role)
+
+    for worker_id in removed_workers:
+        raw_started = active_started.pop(worker_id, None)
+        if raw_started is None:
+            observation["workerStartCoverage"] = False
+            continue
+        try:
+            elapsed_ms = max(0, round((now - float(raw_started)) * 1000))
+        except (TypeError, ValueError):
+            observation["workerStartCoverage"] = False
+            continue
+        observation["workerActiveMs"] = (
+            int(observation.get("workerActiveMs") or 0) + elapsed_ms
+        )
+    if removed_workers:
+        observation["workerStops"] = int(observation.get("workerStops") or 0) + len(
+            removed_workers
+        )
+        if not active_after:
+            observation["lastWorkerStoppedEpoch"] = now
+
+    for worker_id in active_after:
+        if worker_id not in active_started:
+            active_started[worker_id] = now
+            observation["workerStartCoverage"] = False
+    observation["peakConcurrentWorkers"] = max(
+        int(observation.get("peakConcurrentWorkers") or 0), len(active_after)
+    )
+
+    if category == "test" and event_name in {"PostToolUse", "PostToolUseFailure"}:
+        increment_counter(observation, "testOutcomes", outcome)
+        previous_test = enum_field(
+            observation.get("lastTestOutcome"), {"success", "failure", "unknown"}
+        )
+        if previous_test == "failure" and outcome == "success":
+            observation["testRecoveries"] = (
+                int(observation.get("testRecoveries") or 0) + 1
+            )
+        observation["lastTestOutcome"] = outcome
+    elif (
+        category == "edit"
+        and event_name == "PreToolUse"
+        and observation.get("lastTestOutcome") == "failure"
+    ):
+        observation["editEventsAfterTestFailure"] = int(
+            observation.get("editEventsAfterTestFailure") or 0
+        ) + 1
+
+    last_worker_stopped = observation.get("lastWorkerStoppedEpoch")
+    if (
+        isinstance(last_worker_stopped, (int, float))
+        and not active_after
+        and event_name not in OBSERVATION_TERMINAL_EVENTS
+        and event_name not in {"SubagentStop", "TurnIdle"}
+    ):
+        increment_counter(observation, "postWorkerEventCounts", event_name)
+        if category:
+            increment_counter(observation, "postWorkerCategoryCounts", category)
+
+    if event_name in OBSERVATION_TERMINAL_EVENTS:
+        terminal = finalize_observation(
+            record,
+            now,
+            event_name,
+            outcome,
+            completion="observed-terminal",
+            terminal_observed=True,
+        )
+        if terminal:
+            completed.append(terminal)
+    return completed
+
+
+def append_observation_episodes(
+    directory: Path, episodes: list[dict[str, Any]], now: float
+) -> None:
+    if not episodes:
+        return
+    directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+    os.chmod(directory, 0o700)
+    lock_path = directory / "collaboration-episodes.lock"
+    with lock_path.open("a+", encoding="utf-8") as lock_handle:
+        os.chmod(lock_path, 0o600)
+        fcntl.flock(lock_handle.fileno(), fcntl.LOCK_EX)
+        path = directory / "collaboration-episodes.json"
+        existing = read_json(path, {})
+        retained = existing.get("episodes", []) if isinstance(existing, dict) else []
+        retained = [item for item in retained if isinstance(item, dict)]
+        known_ids = {string_field(item.get("id"), 32) for item in retained}
+        for episode in episodes:
+            episode_id = string_field(episode.get("id"), 32)
+            if episode_id and episode_id not in known_ids:
+                retained.append(episode)
+                known_ids.add(episode_id)
+        limit = observation_episode_limit()
+        retained = retained[-limit:]
+        atomic_json_write(
+            path,
+            {
+                "schemaVersion": OBSERVATION_SCHEMA_VERSION,
+                "updatedAt": utc_iso(now),
+                "retention": {
+                    "role": "storage-cost-cap",
+                    "maxEpisodes": limit,
+                },
+                "episodes": retained,
+            },
+        )
+
+
 def apply_event(
     sessions: dict[str, dict[str, Any]], payload: dict[str, Any], now: float
 ) -> dict[str, Any]:
     event = string_field(payload.get("hook_event_name"), 80) or "Unknown"
     direct_provider = enum_field(payload.get("_mira_provider"), AGENT_PROVIDERS, "codex")
-    source = "agentctl" if payload.get("mira_source") == "agentctl" else direct_provider
-    raw_session = payload.get("session_id") or "default-session"
-    session_key = opaque_id(f"{source}:{raw_session}", f"{source}:default-session")
+    source = payload_source(payload)
+    session_key = payload_session_key(payload)
+    opaque_workspace = string_field(payload.get("_mira_workspace"), 32) or "unknown"
     timeline_status = "thinking"
     timeline_category: str | None = None
     outcome = "unknown"
@@ -408,9 +878,13 @@ def apply_event(
             "role": timeline_role,
         }
 
-    record = sessions.setdefault(session_key, new_record(session_key, now, source))
+    record = sessions.setdefault(
+        session_key, new_record(session_key, now, source, opaque_workspace)
+    )
     record["source"] = source
     record["provider"] = direct_provider if source != "agentctl" else "unknown"
+    if record.get("workspace") in {None, "", "unknown"}:
+        record["workspace"] = opaque_workspace
     subagents = set(str(item) for item in record.get("subagents", []))
     raw_meta = record.get("agentMeta")
     agent_meta = raw_meta if isinstance(raw_meta, dict) else {}
@@ -654,6 +1128,14 @@ def aggregate_state(sessions: dict[str, dict[str, Any]], now: float) -> dict[str
 
 def process_payload(payload: dict[str, Any], now: float | None = None) -> None:
     current_time = time.time() if now is None else now
+    episodes_enabled = observation_episodes_enabled()
+    raw_workspace = payload.pop("_mira_workspace_path", None)
+    supplied_workspace = string_field(payload.get("_mira_workspace"), 32)
+    if re.fullmatch(r"[0-9a-f]{16}", supplied_workspace):
+        opaque_workspace = supplied_workspace
+    else:
+        opaque_workspace = workspace_key(raw_workspace)
+    payload["_mira_workspace"] = opaque_workspace
     directory = state_directory()
     directory.mkdir(mode=0o700, parents=True, exist_ok=True)
     os.chmod(directory, 0o700)
@@ -665,16 +1147,62 @@ def process_payload(payload: dict[str, Any], now: float | None = None) -> None:
         sessions = read_json(sessions_path, {})
         if not isinstance(sessions, dict):
             sessions = {}
-        sessions = {
-            str(key): value
-            for key, value in sessions.items()
-            if isinstance(value, dict)
-            and float(value.get("updatedEpoch") or 0) >= current_time - SESSION_TTL_SECONDS
-        }
+        completed_observations: list[dict[str, Any]] = []
+        active_sessions: dict[str, dict[str, Any]] = {}
+        for key, value in sessions.items():
+            if not isinstance(value, dict):
+                continue
+            try:
+                updated_epoch = float(value.get("updatedEpoch") or 0)
+            except (TypeError, ValueError):
+                updated_epoch = 0
+            if updated_epoch >= current_time - SESSION_TTL_SECONDS:
+                active_sessions[str(key)] = value
+                continue
+            if episodes_enabled:
+                expired = finalize_observation(
+                    value,
+                    updated_epoch or current_time,
+                    "Expired",
+                    "unknown",
+                    completion="expired",
+                    terminal_observed=False,
+                )
+                if expired:
+                    completed_observations.append(expired)
+        sessions = active_sessions
         recent_events = read_json(directory / "timeline.json", [])
         if not isinstance(recent_events, list):
             recent_events = []
+        session_key = payload_session_key(payload)
+        record_before = sessions.get(session_key)
+        active_before = (
+            {str(item) for item in record_before.get("subagents", [])}
+            if isinstance(record_before, dict)
+            else set()
+        )
         event = apply_event(sessions, payload, current_time)
+        if event.get("event") == "SessionEnd":
+            observation_record = record_before
+        else:
+            observation_record = sessions.get(session_key)
+        active_after = (
+            {str(item) for item in observation_record.get("subagents", [])}
+            if isinstance(observation_record, dict)
+            else set()
+        )
+        if episodes_enabled:
+            completed_observations.extend(
+                observe_event(
+                    observation_record,
+                    event,
+                    current_time,
+                    active_before,
+                    active_after,
+                )
+            )
+        elif isinstance(observation_record, dict):
+            observation_record["observation"] = None
         state = aggregate_state(sessions, current_time)
         event_provider = enum_field(event.get("provider"), AGENT_PROVIDERS)
         if state["event"] == "NoActiveSession" and event_provider != "unknown":
@@ -684,6 +1212,16 @@ def process_payload(payload: dict[str, Any], now: float | None = None) -> None:
         recent_events.append(event)
         recent_events = recent_events[-MAX_RECENT_EVENTS:]
         state["recentEvents"] = recent_events
+        if episodes_enabled:
+            try:
+                append_observation_episodes(
+                    observation_directory(),
+                    completed_observations,
+                    current_time,
+                )
+            except (OSError, TypeError, ValueError) as error:
+                if os.environ.get("MIRA_COMPANION_DEBUG") == "1":
+                    print(f"mira-codex-hook observation ledger: {error}", file=sys.stderr)
         atomic_json_write(sessions_path, sessions)
         atomic_json_write(directory / "timeline.json", recent_events)
         atomic_json_write(directory / "state.json", state)

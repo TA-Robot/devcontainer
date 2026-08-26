@@ -12,6 +12,7 @@ import contextlib
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import fcntl
+import hashlib
 import json
 import os
 from pathlib import Path, PurePosixPath
@@ -547,11 +548,12 @@ def _emit_mira_agent_job_event(
     attempt_id: str,
     event: str,
 ) -> None:
-    """Best-effort, sanitized bridge from durable broker state to Mira.
+    """Best-effort, sanitized activity/observation bridge from broker state.
 
-    The bridge is presentation-only: missing binaries, lock contention, hook
-    errors, and timeouts must never change the job result.  Task text, paths,
-    provider output, and reasons deliberately never enter this envelope.
+    The bridge is outside the correctness path: missing binaries, lock
+    contention, hook errors, and timeouts must never change the job result.
+    Task text, paths, provider output, and reasons deliberately never enter
+    this envelope.
     """
 
     if event not in MIRA_AGENT_JOB_EVENTS:
@@ -568,7 +570,13 @@ def _emit_mira_agent_job_event(
     if not bridge:
         return
     job = store.connection.execute(
-        "SELECT role FROM jobs WHERE job_id = ?", (job_id,)
+        """
+        SELECT jobs.role, projects.registered_path
+        FROM jobs
+        JOIN projects ON projects.project_id = jobs.project_id
+        WHERE jobs.job_id = ?
+        """,
+        (job_id,),
     ).fetchone()
     attempt = store.connection.execute(
         "SELECT provider FROM attempts WHERE attempt_id = ? AND job_id = ?",
@@ -576,6 +584,13 @@ def _emit_mira_agent_job_event(
     ).fetchone()
     if job is None or attempt is None:
         return
+    try:
+        registered_path = str(Path(job["registered_path"]).resolve(strict=False))
+    except (OSError, RuntimeError):
+        registered_path = str(job["registered_path"])
+    opaque_workspace = hashlib.sha256(
+        f"workspace:{registered_path}".encode("utf-8", errors="replace")
+    ).hexdigest()[:16]
     payload = {
         "mira_source": "agentctl",
         "hook_event_name": event,
@@ -583,6 +598,7 @@ def _emit_mira_agent_job_event(
         "attempt_id": attempt_id,
         "provider": attempt["provider"],
         "role": job["role"],
+        "_mira_workspace": opaque_workspace,
     }
     environment = {
         key: os.environ[key]
@@ -592,6 +608,9 @@ def _emit_mira_agent_job_event(
             "LC_ALL",
             "MIRA_COMPANION_DEBUG",
             "MIRA_COMPANION_ENABLED",
+            "MIRA_COMPANION_EPISODE_DIR",
+            "MIRA_COMPANION_EPISODE_LIMIT",
+            "MIRA_COMPANION_EPISODES_ENABLED",
             "MIRA_COMPANION_STATE_DIR",
             "PATH",
             "XDG_STATE_HOME",

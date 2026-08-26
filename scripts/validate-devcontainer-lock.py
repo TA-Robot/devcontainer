@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Validate that devcontainer.json Features are exactly covered by the lockfile."""
+"""Validate locked Features and critical persistent Dev Container contracts."""
 
 from __future__ import annotations
 
@@ -11,6 +11,10 @@ import sys
 
 
 SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
+MIRA_OBSERVATION_MOUNT = (
+    "source=devcontainer-mira-observations,"
+    "target=/var/lib/mira-observations,type=volume"
+)
 
 
 def strip_jsonc(text: str) -> str:
@@ -138,6 +142,19 @@ def validate(config_path: Path, lock_path: Path) -> list[str]:
             errors.append("stable Docker Compose must use the separately pinned Dockerfile plugin")
         if docker_options.get("installDockerBuildx") is not False:
             errors.append("stable Docker Buildx must use the pinned Moby package, not a Feature download")
+
+    mounts = config.get("mounts")
+    if not isinstance(mounts, list) or MIRA_OBSERVATION_MOUNT not in mounts:
+        errors.append(
+            "zero-input collaboration observation must use its persistent named volume"
+        )
+    container_environment = config.get("containerEnv")
+    if not isinstance(container_environment, dict) or container_environment.get(
+        "MIRA_COMPANION_EPISODE_DIR"
+    ) != "/var/lib/mira-observations":
+        errors.append(
+            "MIRA_COMPANION_EPISODE_DIR must target the persistent observation volume"
+        )
     return errors
 
 
@@ -151,7 +168,9 @@ def main() -> int:
         for error in errors:
             print(f"error: {error}", file=sys.stderr)
         return 1
-    print(f"ok - {args.lock} exactly locks configured Dev Container Features")
+    print(
+        f"ok - {args.lock} locks configured Features and critical persistence contracts"
+    )
     return 0
 
 

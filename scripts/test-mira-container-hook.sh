@@ -8,6 +8,7 @@ docker image inspect "$image" >/dev/null
 docker run --rm -i \
   --entrypoint python3 \
   -e MIRA_COMPANION_STATE_DIR=/tmp/mira-companion-state \
+  -e MIRA_COMPANION_EPISODE_DIR=/var/lib/mira-observations \
   "$image" - <<'PY'
 from __future__ import annotations
 
@@ -153,6 +154,7 @@ claude_settings_path = pathlib.Path(
     "/etc/claude-code/managed-settings.d/50-mira-companion.json"
 )
 grok_config_path = pathlib.Path("/etc/grok/managed_config.toml")
+observation_dir = pathlib.Path(os.environ["MIRA_COMPANION_EPISODE_DIR"])
 if not hook_path.is_file() or not os.access(hook_path, os.X_OK):
     raise AssertionError("managed Mira hook is missing or not executable")
 if not bridge_entrypoint.is_file() or not os.access(bridge_entrypoint, os.X_OK):
@@ -165,6 +167,14 @@ if not requirements_path.is_file():
 for config_path in (claude_settings_path, grok_config_path):
     if not config_path.is_file() or config_path.stat().st_mode & 0o222:
         raise AssertionError(f"managed provider config is missing or writable: {config_path}")
+if (
+    not observation_dir.is_dir()
+    or observation_dir.stat().st_uid != os.getuid()
+    or observation_dir.stat().st_mode & 0o777 != 0o700
+):
+    raise AssertionError(
+        f"persistent observation directory is not private/writable: {observation_dir}"
+    )
 
 claude_settings = json.loads(claude_settings_path.read_text(encoding="utf-8"))
 claude_hooks = claude_settings.get("hooks", {})
@@ -316,14 +326,108 @@ if state["providerCounts"] != {"codex": 1, "claude": 0, "grok": 1}:
     raise AssertionError(f"unexpected provider counts: {state['providerCounts']}")
 if state["activeAgents"][0]["role"] != "implementer":
     raise AssertionError(f"unexpected active agent metadata: {state['activeAgents']}")
+agentctl_payload["hook_event_name"] = "AgentJobSucceeded"
+result = subprocess.run(
+    [str(hook_path)],
+    input=json.dumps(agentctl_payload),
+    text=True,
+    capture_output=True,
+    check=False,
+)
+if result.returncode != 0:
+    raise AssertionError(f"managed observation terminal failed: {result.stderr}")
+ledger_path = (
+    pathlib.Path(os.environ["MIRA_COMPANION_EPISODE_DIR"])
+    / "collaboration-episodes.json"
+)
+ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+managed_episodes = [
+    episode
+    for episode in ledger.get("episodes", [])
+    if episode.get("topology") == "managed-job"
+]
+if len(managed_episodes) != 1:
+    raise AssertionError(f"managed job episode was not observed: {ledger}")
+if (
+    managed_episodes[0].get("provider") != "grok"
+    or managed_episodes[0].get("terminalOutcome") != "success"
+):
+    raise AssertionError(f"unexpected managed episode: {managed_episodes[0]}")
 persisted = "".join(
     path.read_text(encoding="utf-8")
     for path in state_path.parent.glob("*.json")
 )
+persisted += ledger_path.read_text(encoding="utf-8")
 if "private-agentctl-job" in persisted or "private objective" in persisted:
     raise AssertionError("private agentctl content leaked into Mira state")
 
 print(
-    "Mira bridge OK: native Codex / Claude / Grok hooks plus sanitized agentctl state"
+    "Mira bridge OK: native hooks, sanitized agentctl state, zero-input episodes"
 )
 PY
+
+observation_volume="mira-observation-smoke-${BASHPID}-${RANDOM}"
+cleanup_observation_volume() {
+  if [[ "$observation_volume" == mira-observation-smoke-* ]]; then
+    docker volume rm -f "$observation_volume" >/dev/null 2>&1 || true
+  fi
+}
+trap cleanup_observation_volume EXIT
+docker volume create "$observation_volume" >/dev/null
+
+docker run --rm -i \
+  --entrypoint python3 \
+  -v "$observation_volume:/var/lib/mira-observations" \
+  -e MIRA_COMPANION_STATE_DIR=/tmp/mira-persistence-state \
+  -e MIRA_COMPANION_EPISODE_DIR=/var/lib/mira-observations \
+  "$image" - <<'PY'
+import json
+import os
+import pathlib
+import subprocess
+
+hook = "/usr/local/bin/mira-codex-hook"
+environment = os.environ.copy()
+for event in ("UserPromptSubmit", "Stop"):
+    result = subprocess.run(
+        [hook],
+        input=json.dumps(
+            {
+                "session_id": "private-persistence-session",
+                "hook_event_name": event,
+                "prompt": "private-persistence-content",
+            }
+        ),
+        text=True,
+        capture_output=True,
+        env=environment,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise AssertionError(result.stderr)
+ledger = pathlib.Path(os.environ["MIRA_COMPANION_EPISODE_DIR"]) / "collaboration-episodes.json"
+if not ledger.is_file():
+    raise AssertionError("observation ledger was not written to the mounted volume")
+PY
+
+docker run --rm -i \
+  --entrypoint python3 \
+  -v "$observation_volume:/var/lib/mira-observations" \
+  -e MIRA_COMPANION_EPISODE_DIR=/var/lib/mira-observations \
+  "$image" - <<'PY'
+import json
+import os
+import pathlib
+
+ledger_path = pathlib.Path(os.environ["MIRA_COMPANION_EPISODE_DIR"]) / "collaboration-episodes.json"
+ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+if len(ledger.get("episodes", [])) != 1:
+    raise AssertionError(f"observation did not survive container recreation: {ledger}")
+serialized = ledger_path.read_text(encoding="utf-8")
+if "private-persistence" in serialized:
+    raise AssertionError("private persistence probe content leaked into the ledger")
+PY
+
+cleanup_observation_volume
+trap - EXIT
+echo "Mira observation persistence OK: named-volume ledger survives recreation"

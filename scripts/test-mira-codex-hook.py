@@ -9,6 +9,7 @@ import tempfile
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -50,6 +51,13 @@ class MiraCodexHookTest(unittest.TestCase):
         return "".join(
             path.read_text(encoding="utf-8")
             for path in self.state_dir.glob("*.json")
+        )
+
+    def observation_ledger(self) -> dict[str, object]:
+        return json.loads(
+            (self.state_dir / "collaboration-episodes.json").read_text(
+                encoding="utf-8"
+            )
         )
 
     def test_prompt_content_is_not_persisted(self) -> None:
@@ -130,6 +138,222 @@ class MiraCodexHookTest(unittest.TestCase):
         persisted = self.all_persisted_json()
         self.assertNotIn(command, persisted)
         self.assertNotIn(response_secret, persisted)
+
+    def test_completed_turn_is_observed_without_human_input_or_content(self) -> None:
+        secret = "private-observation-prompt"
+        workspace = "/private/customer/observation-workspace"
+        self.emit(
+            {
+                "session_id": "observation-session",
+                "hook_event_name": "UserPromptSubmit",
+                "prompt": secret,
+                "cwd": workspace,
+            }
+        )
+        self.emit(
+            {
+                "session_id": "observation-session",
+                "hook_event_name": "PostToolUse",
+                "tool_name": "Bash",
+                "tool_input": {"command": "pytest private-suite"},
+                "tool_response": {"exit_code": 1, "output": "private failure"},
+            }
+        )
+        self.emit(
+            {
+                "session_id": "observation-session",
+                "hook_event_name": "PreToolUse",
+                "tool_name": "apply_patch",
+                "tool_input": {"patch": "private patch"},
+            }
+        )
+        self.emit(
+            {
+                "session_id": "observation-session",
+                "hook_event_name": "PostToolUse",
+                "tool_name": "Bash",
+                "tool_input": {"command": "pytest private-suite"},
+                "tool_response": {"exit_code": 0, "output": "private success"},
+            }
+        )
+        self.emit(
+            {"session_id": "observation-session", "hook_event_name": "Stop"}
+        )
+
+        ledger = self.observation_ledger()
+        self.assertEqual(ledger["schemaVersion"], 1)
+        self.assertEqual(ledger["retention"]["role"], "storage-cost-cap")
+        self.assertEqual(
+            (self.state_dir / "collaboration-episodes.json").stat().st_mode & 0o777,
+            0o600,
+        )
+        self.assertEqual(len(ledger["episodes"]), 1)
+        episode = ledger["episodes"][0]
+        self.assertEqual(episode["source"], "codex")
+        self.assertEqual(episode["provider"], "codex")
+        self.assertEqual(episode["topology"], "solo-observed")
+        self.assertEqual(episode["testOutcomes"]["failure"], 1)
+        self.assertEqual(episode["testOutcomes"]["success"], 1)
+        self.assertEqual(episode["reworkProxy"]["testRecoveries"], 1)
+        self.assertEqual(
+            episode["reworkProxy"]["editEventsAfterTestFailure"], 1
+        )
+        self.assertEqual(episode["semantics"]["relation"], "unknown")
+        self.assertTrue(episode["coverage"]["startObserved"])
+        self.assertTrue(episode["coverage"]["terminalObserved"])
+        persisted = self.all_persisted_json()
+        for private_value in (
+            secret,
+            workspace,
+            "private-suite",
+            "private failure",
+            "private patch",
+            "private success",
+            "observation-session",
+        ):
+            self.assertNotIn(private_value, persisted)
+
+    def test_delegation_observation_records_automatic_cost_proxies(self) -> None:
+        self.emit(
+            {
+                "session_id": "delegation-session",
+                "hook_event_name": "UserPromptSubmit",
+            }
+        )
+        self.emit(
+            {
+                "session_id": "delegation-session",
+                "hook_event_name": "SubagentStart",
+                "agent_id": "private-worker",
+                "agent_type": "Explore",
+            }
+        )
+        self.emit(
+            {
+                "session_id": "delegation-session",
+                "hook_event_name": "SubagentStop",
+                "agent_id": "private-worker",
+                "agent_type": "Explore",
+            }
+        )
+        self.emit(
+            {
+                "session_id": "delegation-session",
+                "hook_event_name": "PreToolUse",
+                "tool_name": "apply_patch",
+            }
+        )
+        self.emit(
+            {"session_id": "delegation-session", "hook_event_name": "Stop"}
+        )
+
+        episode = self.observation_ledger()["episodes"][0]
+        self.assertEqual(episode["topology"], "delegated")
+        self.assertEqual(episode["delegation"]["starts"], 1)
+        self.assertEqual(episode["delegation"]["stops"], 1)
+        self.assertEqual(episode["delegation"]["peakConcurrent"], 1)
+        self.assertEqual(episode["delegation"]["providerCounts"], {"codex": 1})
+        self.assertEqual(
+            episode["delegation"]["roleCounts"], {"researcher": 1}
+        )
+        self.assertTrue(episode["reviewProxy"]["available"])
+        self.assertGreaterEqual(episode["reviewProxy"]["elapsedMs"], 0)
+        self.assertEqual(
+            episode["reviewProxy"]["categoryCounts"], {"edit": 1}
+        )
+        self.assertNotIn("private-worker", self.all_persisted_json())
+
+    def test_observation_ledger_retention_is_a_configurable_storage_cap(self) -> None:
+        with patch.dict(os.environ, {"MIRA_COMPANION_EPISODE_LIMIT": "2"}):
+            for index in range(3):
+                self.emit(
+                    {
+                        "session_id": "retention-session",
+                        "hook_event_name": "UserPromptSubmit",
+                        "prompt": f"private-retention-{index}",
+                    }
+                )
+                self.emit(
+                    {
+                        "session_id": "retention-session",
+                        "hook_event_name": "Stop",
+                    }
+                )
+        ledger = self.observation_ledger()
+        self.assertEqual(ledger["retention"]["maxEpisodes"], 2)
+        self.assertEqual(len(ledger["episodes"]), 2)
+        self.assertEqual(len({item["id"] for item in ledger["episodes"]}), 2)
+        self.assertNotIn("private-retention", self.all_persisted_json())
+
+    def test_observation_directory_can_be_persistent_and_separate_from_ui_state(self) -> None:
+        episode_dir = Path(self.temporary.name) / "persistent-observations"
+        with patch.dict(
+            os.environ, {"MIRA_COMPANION_EPISODE_DIR": str(episode_dir)}
+        ):
+            self.emit(
+                {
+                    "session_id": "persistent-session",
+                    "hook_event_name": "UserPromptSubmit",
+                    "prompt": "private-persistent-prompt",
+                }
+            )
+            self.emit(
+                {
+                    "session_id": "persistent-session",
+                    "hook_event_name": "Stop",
+                }
+            )
+        self.assertFalse(
+            (self.state_dir / "collaboration-episodes.json").exists()
+        )
+        ledger_path = episode_dir / "collaboration-episodes.json"
+        ledger = json.loads(ledger_path.read_text(encoding="utf-8"))
+        self.assertEqual(len(ledger["episodes"]), 1)
+        self.assertEqual(episode_dir.stat().st_mode & 0o777, 0o700)
+        self.assertEqual(ledger_path.stat().st_mode & 0o777, 0o600)
+        self.assertNotIn(
+            "private-persistent-prompt", ledger_path.read_text(encoding="utf-8")
+        )
+
+    def test_partial_hook_coverage_is_recorded_instead_of_inferred(self) -> None:
+        self.emit(
+            {
+                "session_id": "partial-session",
+                "hook_event_name": "PreToolUse",
+                "tool_name": "Read",
+            }
+        )
+        self.emit(
+            {"session_id": "partial-session", "hook_event_name": "SessionEnd"}
+        )
+        episode = self.observation_ledger()["episodes"][0]
+        self.assertFalse(episode["coverage"]["startObserved"])
+        self.assertTrue(episode["coverage"]["terminalObserved"])
+        self.assertEqual(episode["semantics"]["bindingConstraint"], "unknown")
+
+    def test_repeated_terminal_hook_does_not_duplicate_an_episode(self) -> None:
+        self.emit(
+            {
+                "session_id": "duplicate-terminal",
+                "hook_event_name": "UserPromptSubmit",
+            }
+        )
+        terminal = {"session_id": "duplicate-terminal", "hook_event_name": "Stop"}
+        self.emit(terminal)
+        self.emit(terminal)
+        agentctl = {
+            "mira_source": "agentctl",
+            "session_id": "duplicate-job",
+            "attempt_id": "duplicate-attempt",
+            "hook_event_name": "AgentJobStart",
+            "provider": "codex",
+            "role": "reviewer",
+        }
+        self.emit(agentctl)
+        agentctl["hook_event_name"] = "AgentJobSucceeded"
+        self.emit(agentctl)
+        self.emit(agentctl)
+        self.assertEqual(len(self.observation_ledger()["episodes"]), 2)
 
     def test_unstructured_tool_output_is_never_interpreted_or_stored(self) -> None:
         response = "exit_code=1 private-output"
@@ -254,11 +478,37 @@ class MiraCodexHookTest(unittest.TestCase):
         self.assertEqual(complete["status"], "success")
         self.assertEqual(complete["activeSubagents"], 0)
         self.assertEqual(complete["activeAgents"], [])
+        observations = self.observation_ledger()["episodes"]
+        self.assertEqual(len(observations), 2)
+        self.assertEqual(
+            {episode["provider"] for episode in observations}, {"claude", "grok"}
+        )
+        self.assertTrue(
+            all(episode["source"] == "agentctl" for episode in observations)
+        )
+        self.assertTrue(
+            all(episode["topology"] == "managed-job" for episode in observations)
+        )
         persisted = self.all_persisted_json()
         self.assertNotIn(secret, persisted)
         self.assertNotIn("private-grok-job-id", persisted)
         self.assertNotIn("private-grok-attempt-id", persisted)
         self.assertNotIn("/private/customer/workspace", persisted)
+
+    def test_agentctl_envelope_event_name_is_allowlisted(self) -> None:
+        secret_event = "AgentJobPrivateCustomerObjective"
+        state = self.emit(
+            {
+                "mira_source": "agentctl",
+                "session_id": "private-agentctl-session",
+                "attempt_id": "private-agentctl-attempt",
+                "hook_event_name": secret_event,
+                "provider": "grok",
+                "role": "implementer",
+            }
+        )
+        self.assertEqual(state["recentEvents"][-1]["event"], "Unknown")
+        self.assertNotIn(secret_event, self.all_persisted_json())
 
     def test_direct_claude_events_are_provider_aware_and_sanitized(self) -> None:
         prompt_secret = "private-claude-prompt"
@@ -475,6 +725,25 @@ class MiraCodexHookTest(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertFalse((self.state_dir / "state.json").exists())
 
+    def test_episode_observation_can_be_disabled_without_disabling_mira(self) -> None:
+        with patch.dict(
+            os.environ, {"MIRA_COMPANION_EPISODES_ENABLED": "0"}
+        ):
+            self.emit(
+                {
+                    "session_id": "unobserved-session",
+                    "hook_event_name": "UserPromptSubmit",
+                }
+            )
+            state = self.emit(
+                {
+                    "session_id": "unobserved-session",
+                    "hook_event_name": "Stop",
+                }
+            )
+        self.assertEqual(state["status"], "success")
+        self.assertFalse((self.state_dir / "collaboration-episodes.json").exists())
+
     def test_state_write_failure_is_provider_fail_open(self) -> None:
         blocked_state = Path(self.temporary.name) / "not-a-directory"
         blocked_state.write_text("occupied", encoding="utf-8")
@@ -498,6 +767,23 @@ class MiraCodexHookTest(unittest.TestCase):
         self.assertEqual(result.stdout, "")
         self.assertEqual(result.stderr, "")
         self.assertEqual(blocked_state.read_text(encoding="utf-8"), "occupied")
+
+    def test_episode_write_failure_does_not_block_state_updates(self) -> None:
+        self.state_dir.mkdir(parents=True)
+        (self.state_dir / "collaboration-episodes.json").mkdir()
+        self.emit(
+            {
+                "session_id": "ledger-failure",
+                "hook_event_name": "UserPromptSubmit",
+            }
+        )
+        state = self.emit(
+            {"session_id": "ledger-failure", "hook_event_name": "Stop"}
+        )
+        self.assertEqual(state["status"], "success")
+        self.assertTrue(
+            (self.state_dir / "collaboration-episodes.json").is_dir()
+        )
 
     def test_concurrent_subagent_events_do_not_lose_updates(self) -> None:
         environment = os.environ.copy()

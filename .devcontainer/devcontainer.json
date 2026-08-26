@@ -73,6 +73,9 @@
     // agentctl metadata, bounded evidence, and job worktrees survive container rebuilds.
     // Projects are partitioned by a UUID stored in each repository's local Git config.
     "source=devcontainer-agentctl-state,target=/var/lib/agentctl,type=volume",
+    // Content-free collaboration episodes survive rebuilds independently of transient Mira UI state.
+    // Every record carries an opaque workspace key; no prompt, code, command, or path is stored.
+    "source=devcontainer-mira-observations,target=/var/lib/mira-observations,type=volume",
     // initializeCommand が生成したバージョン番号だけを共有する（credential は含まない）
     "source=${localEnv:HOME}/.cache/devcontainer-ai-cli,target=/opt/devcontainer-host-ai-cli,type=bind,readonly"
   ],
@@ -82,6 +85,7 @@
     "DISPLAY": "${localEnv:DISPLAY}",
     "WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
     "MIRA_COMPANION_STATE_DIR": "/home/devuser/.local/state/mira-companion",
+    "MIRA_COMPANION_EPISODE_DIR": "/var/lib/mira-observations",
     // 0 にするとmanaged hookと拡張の自動導入を無効化できる
     "MIRA_COMPANION_ENABLED": "${localEnv:MIRA_COMPANION_ENABLED}",
     // 0 にするとMira Companion拡張の自動package/installを無効化できる

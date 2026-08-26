@@ -158,6 +158,7 @@ ARG USER_GID=$USER_UID
 RUN groupadd --gid $USER_GID $USERNAME \
     && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -s /bin/bash \
     && install -d -m 0700 -o $USERNAME -g $USERNAME /var/lib/agentctl \
+    && install -d -m 0700 -o $USERNAME -g $USERNAME /var/lib/mira-observations \
     && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && chown -R $USERNAME:$USERNAME "${DEVCONTAINER_AI_CLI_PREFIX}"
