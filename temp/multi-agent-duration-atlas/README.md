@@ -2,7 +2,7 @@
 
 検討開始: 2026-08-26
 
-このdirectoryは、agentへ「どんな仕事を、どの構成でさせると、実際にどれくらい時間がかかるか」を計測し、projectが後から判断材料として参照できる時間atlasを作るための計画・実装記録です。schema/fake runner、非生成capability probe、S/M/L isolated fixture、network-disabled evaluator、Codex / Claude / Grok one-shot runner、raw sample reporter、criterion-level quality scoreまで実装済みです。current rubricのS/C0ではGrok 4.6 / mediumが5/5、Sol / mediumが4/5の単一観測です。時間目安やtypical bandを出せる段階ではありません。
+このdirectoryは、agentへ「どんな仕事を、どの構成でさせると、実際にどれくらい時間がかかるか」を計測し、projectが後から判断材料として参照できる時間atlasを作るための計画・実装記録です。schema/fake runner、非生成capability probe、S/M/L isolated fixture、network-disabled evaluator、Codex / Claude / Grok one-shot runner、raw sample reporter、criterion-level quality scoreまで実装済みです。12 family × S/M/Lの全36 candidateは`case-designs/`で各6文書へ具体化済みですが、fixture実装とlive観測が済んでいるのはまだF04の一部です。current rubricのS/C0ではGrok 4.6 / mediumが5/5、Sol / mediumが4/5の単一観測です。時間目安やtypical bandを出せる段階ではありません。
 
 ## 今回作るもの
 
@@ -62,6 +62,7 @@ evidence grade:              single-observation
 - `21-criterion-quality-scoring.md`: binary failの内訳を比較可能にするversioned rubric
 - `22-provider-depth-curve.md`: 3 provider runner、sandbox/auth知見、mediumからmax/ultraまでのdepth curve
 - `23-first-l-depth-coverage.md`: L caseでのGrok applied curve、Sol requested curve、max rejection、rubric飽和
+- `case-designs/`: 全36 candidateのprofile、fixture、task、rubric、execution、implementation handoff（各6文書）
 
 ## 正本との関係
 
