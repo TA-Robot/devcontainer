@@ -651,6 +651,26 @@ RECIPES: dict[str, dict[str, Any]] = {
         "hidden": S_HIDDEN,
         "good": S_GOOD,
         "executable": [],
+        "mutants": {
+            "unicode-alnum": {
+                "files": {
+                    "tag_normalizer.py": S_GOOD["tag_normalizer.py"].replace(
+                        "character.isascii() and character.isalnum()",
+                        "character.isalnum()",
+                    )
+                },
+                "expected_failed_check_ids": ["hidden-ascii-filtering"],
+            },
+            "truncate-overflow": {
+                "files": {
+                    "tag_normalizer.py": S_GOOD["tag_normalizer.py"].replace(
+                        'if not result or len(result) > 32:\n        raise ValueError("normalized tag must contain 1 to 32 characters")\n    return result',
+                        'if not result:\n        raise ValueError("normalized tag must contain 1 to 32 characters")\n    return result[:32]',
+                    )
+                },
+                "expected_failed_check_ids": ["hidden-length-bound"],
+            },
+        },
     },
     "f04-m-python-state-cli-v2": {
         "case_id": "F04-M-PY-001",
@@ -658,6 +678,28 @@ RECIPES: dict[str, dict[str, Any]] = {
         "hidden": M_HIDDEN,
         "good": M_GOOD,
         "executable": [],
+        "mutants": {
+            "unsorted-storage": {
+                "files": {
+                    **M_GOOD,
+                    "kvtool/store.py": M_GOOD["kvtool/store.py"].replace(
+                        "sort_keys=True, ",
+                        "",
+                    ),
+                },
+                "expected_failed_check_ids": ["hidden-round-trip-storage"],
+            },
+            "missing-key-success": {
+                "files": {
+                    **M_GOOD,
+                    "kvtool/cli.py": M_GOOD["kvtool/cli.py"].replace(
+                        '            if args.key not in values:\n                return 3\n            print(values[args.key])',
+                        '            if args.key not in values:\n                return 0\n            print(values[args.key])',
+                    ),
+                },
+                "expected_failed_check_ids": ["hidden-error-state-integrity"],
+            },
+        },
     },
     "f04-l-python-bash-restart-v2": {
         "case_id": "F04-L-PYBASH-001",
@@ -665,6 +707,27 @@ RECIPES: dict[str, dict[str, Any]] = {
         "hidden": L_HIDDEN,
         "good": L_GOOD,
         "executable": ["bin/queuectl"],
+        "mutants": {
+            "wrapper-first-argument": {
+                "files": {
+                    **L_GOOD,
+                    "bin/queuectl": L_FILES["bin/queuectl"],
+                },
+                "executable": ["bin/queuectl"],
+                "expected_failed_check_ids": ["hidden-restart-idempotence"],
+            },
+            "repeat-ack-increments": {
+                "files": {
+                    **L_GOOD,
+                    "queue_store.py": L_GOOD["queue_store.py"].replace(
+                        '    if item["acknowledged"]:\n        return\n    item["acknowledged"] = True\n    item["ack_count"] += 1',
+                        '    item["acknowledged"] = True\n    item["ack_count"] += 1',
+                    ),
+                },
+                "executable": ["bin/queuectl"],
+                "expected_failed_check_ids": ["hidden-restart-idempotence"],
+            },
+        },
     },
 }
 
