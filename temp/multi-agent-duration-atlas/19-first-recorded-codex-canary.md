@@ -2,7 +2,7 @@
 
 実施日: 2026-08-26
 
-Status: run schema v2、workspace-only Codex runner、hidden evaluatorのone-shot結合を実装し、S caseを1回記録済み。task outcomeはquality failのため、quality-pass時間母集団には未採用。
+Status: run schema v2、workspace-only Codex runner、hidden evaluatorのone-shot結合を実装し、S caseの有限canaryを3件記録済み。全task outcomeがquality failのため、quality-pass時間母集団には未採用。
 
 ## Outcome
 
@@ -29,6 +29,23 @@ Status: run schema v2、workspace-only Codex runner、hidden evaluatorのone-sho
 Machine-readable evidence:
 
 - `evidence/wave-1/codex-f04-s-terra-low-20260826-r02.json`
+
+## Finite canary batch
+
+instrumentation確認後、同一case/image/CLIでrequested effortまたはmodel aliasを一軸だけ変えた2件を追加しました。いずれもretryはありません。
+
+| Run | Requested model | Requested effort | Provider ms | T0–T6 ms | Public | Hidden | Quality |
+| --- | --- | --- | ---: | ---: | --- | --- | --- |
+| r02 | gpt-5.6-terra | low | 39,858.591 | 40,936.281 | pass | fail | fail |
+| r03 | gpt-5.6-terra | high | 34,463.320 | 35,339.100 | pass | fail | fail |
+| r04 | gpt-5.6-sol | low | 51,896.551 | 52,766.603 | pass | fail | fail |
+
+追加evidence:
+
+- `evidence/wave-1/codex-f04-s-terra-high-20260826-r03.json`
+- `evidence/wave-1/codex-f04-s-sol-low-20260826-r04.json`
+
+この3行をmodel/effort rankingとして読みません。特にr02/r03はapplied effortが両方`unknown`であり、requested settingの差しか確認できません。全件quality failなので、時間差は「失敗terminalまでの観測差」です。r03がr02より短いことや、r04が長いことから速度・品質の優劣を推定しません。
 
 ## Instrumentation verdictとtask verdictを分ける
 
@@ -89,7 +106,7 @@ record v2以前の試行はatlas sampleに昇格しません。
 2. stdin修正後の最初の実generationはprovider約27.7秒、public pass、hidden failだった。
 3. そのrunはprovider/evaluator/landmarkを一つのimmutable recordへ結合していなかったため、参考diagnosticに留めた。
 
-今回のr02でもhidden failが再現しました。ただしraw artifactは意図的に破棄するため、recordだけから具体的な誤実装内容を再構成しません。case capsuleは「normalized resultがemptyならValueError」と明示しており、private known-good artifactは同じisolated evaluatorをpass済みです。
+今回のr02/r03/r04でもhidden failが再現しました。ただしraw artifactは意図的に破棄するため、recordだけから具体的な誤実装内容を再構成しません。case capsuleは「normalized resultがemptyならValueError」と明示しており、private known-good artifactは同じisolated evaluatorをpass済みです。
 
 ## Command surface
 
@@ -110,6 +127,6 @@ scripts/agent-duration-study run-codex-study \
 
 ## Next controlled step
 
-次はsample数を無目的に増やさず、同じcase/image/CLI/modelでrequested effortだけを変えた1 runをpaired block候補として実施します。ただしapplied effortはprovider evidenceで確認できず`unknown`のため、結果は「requested-effort contrast」とだけ呼びます。
+同じcaseのlive run追加はここで止めます。次はraw sampleを条件・品質・欠測と一緒に表示するreporterを実装し、この3件がquality-pass bandへ混入しないことをend-to-endで検証します。その後、次の有限batchを宣言してからcase variantまたは別sizeへ進みます。
 
-その1件がquality passでも、単一passから時間目安bandは作りません。run varianceを得る反復、別caseによるcase variance、model contrast、M/L拡張はそれぞれ別の有限batchとして宣言してから進めます。
+run varianceを得る反復、別caseによるcase variance、model contrast、M/L拡張はそれぞれ別の有限batchとして宣言します。今回のrequested-effort contrastはapplied settingを確認できないため、Wave 5Aのapplied-effort seriesへ昇格しません。
