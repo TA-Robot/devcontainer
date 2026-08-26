@@ -388,7 +388,9 @@ else:
             "nested-untracked",
         ):
             with self.subTest(scenario=scenario):
-                validate_run_record(build_fake_run(scenario))
+                record = build_fake_run(scenario)
+                self.assertEqual(record["schema_version"], 2)
+                validate_run_record(record)
 
     def test_solo_online_validation_does_not_depend_on_synthesis(self) -> None:
         record = build_fake_run("solo-complete")
@@ -505,6 +507,18 @@ else:
         duplicate["correlation"]["episode_ids"] = ["episode-1", "episode-1"]
         with self.assertRaises(ContractValidationError):
             validate_run_record(duplicate)
+
+        raw_persisted = copy.deepcopy(record)
+        raw_persisted["diagnostics"]["provider"]["raw_output_persisted"] = True
+        with self.assertRaises(ContractValidationError):
+            validate_run_record(raw_persisted)
+
+        contradictory_evaluator = copy.deepcopy(record)
+        contradictory_evaluator["outcome"]["online_acceptance"] = "fail"
+        contradictory_evaluator["outcome"]["quality_pass"] = False
+        contradictory_evaluator["outcome"]["quality_basis"] = "online-fail"
+        with self.assertRaises(DurationStudyError):
+            validate_run_record(contradictory_evaluator)
 
     def test_atomic_run_record_is_private_and_immutable(self) -> None:
         record = build_fake_run("solo-complete")

@@ -1,8 +1,8 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://devcontainer.local/schemas/agent-duration-run-v1.schema.json",
-  "title": "Agent Duration Run v1",
-  "description": "Content-free timing, identity, outcome, and coverage record for one study attempt.",
+  "$id": "https://devcontainer.local/schemas/agent-duration-run-v2.schema.json",
+  "title": "Agent Duration Run v2",
+  "description": "Content-free timing, identity, outcome, diagnostics, and coverage record for one study attempt.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -23,12 +23,13 @@
     "correlation",
     "outcome",
     "quality",
+    "diagnostics",
     "coverage",
     "field_provenance"
   ],
   "properties": {
     "schema_version": {
-      "const": 1
+      "const": 2
     },
     "study_id": {
       "$ref": "#/$defs/id"
@@ -87,6 +88,9 @@
     },
     "quality": {
       "$ref": "#/$defs/quality"
+    },
+    "diagnostics": {
+      "$ref": "#/$defs/diagnostics"
     },
     "coverage": {
       "$ref": "#/$defs/coverage"
@@ -380,7 +384,13 @@
           "$ref": "#/$defs/sha256"
         },
         "execution_surface": {
-          "enum": ["direct-provider", "agentctl-job", "legacy-comparator", "fixture"]
+          "enum": [
+            "direct-provider",
+            "isolated-provider-container",
+            "agentctl-job",
+            "legacy-comparator",
+            "fixture"
+          ]
         },
         "permission_mode": {
           "enum": ["automatic", "approval-gated", "unknown"]
@@ -730,7 +740,18 @@
             "clock-anomaly",
             "fixture-invalid",
             "artifact-invalid",
-            "online-validation-failed"
+            "online-validation-failed",
+            "prompt-input-missing",
+            "configuration",
+            "authentication",
+            "credential-read-only",
+            "managed-hook",
+            "sandbox",
+            "model-unavailable",
+            "provider-network",
+            "provider-startup-unknown",
+            "output-cap",
+            "evaluator-infrastructure"
           ]
         },
         "stop_reason": {
@@ -767,6 +788,257 @@
           "items": {
             "$ref": "#/$defs/quality_metric"
           }
+        }
+      }
+    },
+    "diagnostic_counter": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "count"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/id"
+        },
+        "count": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "token_usage": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "cached_input_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "reasoning_output_tokens": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "sandbox_preflight": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "image_digest",
+        "profile_digest",
+        "workspace_write",
+        "unrelated_read",
+        "command_network",
+        "generation_request_performed"
+      ],
+      "properties": {
+        "status": {
+          "const": "pass"
+        },
+        "image_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "profile_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "workspace_write": {
+          "const": "observed"
+        },
+        "unrelated_read": {
+          "const": "denied"
+        },
+        "command_network": {
+          "const": "denied"
+        },
+        "generation_request_performed": {
+          "const": false
+        }
+      }
+    },
+    "provider_diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "exit_code",
+        "terminal_wall_ms",
+        "output_cap_bytes",
+        "output_bytes",
+        "stderr_bytes",
+        "workspace_changed_path_count",
+        "event_counts",
+        "item_type_counts",
+        "invalid_event_lines",
+        "final_message_observed",
+        "usage",
+        "generation_request_performed",
+        "prompt_persisted",
+        "raw_output_persisted",
+        "raw_stderr_persisted",
+        "credential_path_persisted",
+        "nested_delegation",
+        "task_network",
+        "sandbox_preflight"
+      ],
+      "properties": {
+        "status": {
+          "enum": ["success", "failure", "timeout"]
+        },
+        "exit_code": {
+          "type": "integer"
+        },
+        "terminal_wall_ms": {
+          "type": "number",
+          "minimum": 0
+        },
+        "output_cap_bytes": {
+          "type": "integer",
+          "minimum": 1024
+        },
+        "output_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stderr_bytes": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "workspace_changed_path_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "event_counts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diagnostic_counter"
+          }
+        },
+        "item_type_counts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/diagnostic_counter"
+          }
+        },
+        "invalid_event_lines": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "final_message_observed": {
+          "type": "boolean"
+        },
+        "usage": {
+          "$ref": "#/$defs/token_usage"
+        },
+        "thread_id_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "generation_request_performed": {
+          "type": "boolean"
+        },
+        "prompt_persisted": {
+          "const": false
+        },
+        "raw_output_persisted": {
+          "const": false
+        },
+        "raw_stderr_persisted": {
+          "const": false
+        },
+        "credential_path_persisted": {
+          "const": false
+        },
+        "nested_delegation": {
+          "enum": ["disabled-by-feature", "not-applicable"]
+        },
+        "task_network": {
+          "enum": ["denied-by-permission-profile", "not-applicable"]
+        },
+        "sandbox_preflight": {
+          "$ref": "#/$defs/sandbox_preflight"
+        }
+      }
+    },
+    "evaluator_check": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check_id", "status", "exit_code", "duration_ms"],
+      "properties": {
+        "check_id": {
+          "$ref": "#/$defs/id"
+        },
+        "status": {
+          "enum": ["pass", "fail"]
+        },
+        "exit_code": {
+          "type": "integer"
+        },
+        "duration_ms": {
+          "type": "number",
+          "minimum": 0
+        }
+      }
+    },
+    "evaluator_diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "status",
+        "evaluator_id",
+        "isolation_profile",
+        "image_digest",
+        "credential_mounts",
+        "control_bundle_mounted",
+        "checks"
+      ],
+      "properties": {
+        "status": {
+          "enum": ["pass", "fail", "not-run", "infrastructure-failure"]
+        },
+        "evaluator_id": {
+          "type": ["string", "null"],
+          "maxLength": 128
+        },
+        "isolation_profile": {
+          "enum": ["network-disabled-read-only-container", "not-run"]
+        },
+        "image_digest": {
+          "oneOf": [
+            {"$ref": "#/$defs/sha256"},
+            {"type": "null"}
+          ]
+        },
+        "credential_mounts": {
+          "const": false
+        },
+        "control_bundle_mounted": {
+          "const": false
+        },
+        "checks": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/evaluator_check"
+          }
+        }
+      }
+    },
+    "diagnostics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["provider", "evaluator"],
+      "properties": {
+        "provider": {
+          "$ref": "#/$defs/provider_diagnostics"
+        },
+        "evaluator": {
+          "$ref": "#/$defs/evaluator_diagnostics"
         }
       }
     },

@@ -1,0 +1,41 @@
+approval_policy = "never"
+default_permissions = "duration-fixture"
+web_search = "disabled"
+allow_login_shell = false
+
+[features]
+apps = false
+browser_use = false
+computer_use = false
+image_generation = false
+multi_agent = false
+plugins = false
+
+[permissions.duration-fixture]
+description = "Write only the generated duration fixture; deny task network and unrelated reads."
+extends = ":workspace"
+
+[permissions.duration-fixture.filesystem]
+":root" = "deny"
+":minimal" = "read"
+":tmpdir" = "write"
+":slash_tmp" = "write"
+"/opt/devcontainer-ai-cli" = "read"
+
+[permissions.duration-fixture.filesystem.":workspace_roots"]
+"." = "write"
+
+[permissions.duration-fixture.network]
+enabled = false
+
+[shell_environment_policy]
+inherit = "none"
+ignore_default_excludes = false
+set = { PATH = "/usr/local/bin:/usr/bin:/bin", HOME = "/tmp", LANG = "C.UTF-8", LC_ALL = "C.UTF-8", TZ = "UTC", PYTHONDONTWRITEBYTECODE = "1" }
+
+[history]
+persistence = "none"
+
+[memories]
+generate_memories = false
+use_memories = false

@@ -639,6 +639,65 @@ def validate_run_record(record: dict[str, Any]) -> None:
     if worker_tree != expected_worker_tree:
         raise DurationStudyError("worker tree coverage does not match observed worker intervals")
 
+    diagnostics = record["diagnostics"]
+    provider = diagnostics["provider"]
+    provider_names = [item["name"] for item in provider["event_counts"]]
+    if len(provider_names) != len(set(provider_names)):
+        raise DurationStudyError("provider event diagnostic names must be unique")
+    item_names = [item["name"] for item in provider["item_type_counts"]]
+    if len(item_names) != len(set(item_names)):
+        raise DurationStudyError("provider item diagnostic names must be unique")
+
+    expected_provider_status = {
+        "success": "success",
+        "failure": "failure",
+        "timeout": "timeout",
+    }.get(record["outcome"]["infrastructure"])
+    if expected_provider_status is not None and provider["status"] != expected_provider_status:
+        raise DurationStudyError("provider diagnostic status disagrees with run infrastructure")
+    if provider["sandbox_preflight"]["image_digest"] != record["environment"]["image_digest"]:
+        raise DurationStudyError("sandbox preflight image differs from the run environment")
+    for participant in record["participants"]:
+        runtime_image = participant["runtime_identity"].get("image_digest")
+        if runtime_image is not None and runtime_image != record["environment"]["image_digest"]:
+            raise DurationStudyError("participant runtime image differs from the run environment")
+
+    evaluator = diagnostics["evaluator"]
+    check_ids = [item["check_id"] for item in evaluator["checks"]]
+    if len(check_ids) != len(set(check_ids)):
+        raise DurationStudyError("evaluator diagnostic check IDs must be unique")
+    for check in evaluator["checks"]:
+        expected_status = "pass" if check["exit_code"] == 0 else "fail"
+        if check["status"] != expected_status:
+            raise DurationStudyError("evaluator check status disagrees with exit_code")
+    if evaluator["status"] == "pass":
+        if not evaluator["checks"] or any(item["status"] != "pass" for item in evaluator["checks"]):
+            raise DurationStudyError("passing evaluator requires passing checks")
+    elif evaluator["status"] == "fail":
+        if not any(item["status"] == "fail" for item in evaluator["checks"]):
+            raise DurationStudyError("failing evaluator requires at least one failed check")
+    elif evaluator["status"] == "not-run":
+        if (
+            evaluator["evaluator_id"] is not None
+            or evaluator["isolation_profile"] != "not-run"
+            or evaluator["image_digest"] is not None
+            or evaluator["checks"]
+        ):
+            raise DurationStudyError("not-run evaluator cannot claim runtime evidence")
+    if evaluator["image_digest"] is not None:
+        if evaluator["image_digest"] != record["environment"]["image_digest"]:
+            raise DurationStudyError("evaluator image differs from the run environment")
+
+    acceptance = record["outcome"]["online_acceptance"]
+    expected_evaluator_status = {"pass": "pass", "fail": "fail"}.get(acceptance)
+    if expected_evaluator_status is not None and evaluator["status"] != expected_evaluator_status:
+        raise DurationStudyError("online acceptance disagrees with evaluator diagnostics")
+    if acceptance == "unavailable" and evaluator["status"] not in {
+        "not-run",
+        "infrastructure-failure",
+    }:
+        raise DurationStudyError("unavailable acceptance has contradictory evaluator evidence")
+
 
 def validate_record(kind: str, record: dict[str, Any]) -> None:
     if kind == "run":
@@ -811,6 +870,7 @@ class RunRecorder:
         *,
         outcome: dict[str, Any],
         quality: dict[str, Any],
+        diagnostics: dict[str, Any],
         nested_worker_detected: bool = False,
     ) -> dict[str, Any]:
         record = copy.deepcopy(self.record)
@@ -830,6 +890,7 @@ class RunRecorder:
         outcome["quality_basis"] = quality_basis
         record["outcome"] = outcome
         record["quality"] = copy.deepcopy(quality)
+        record["diagnostics"] = copy.deepcopy(diagnostics)
 
         t2_status = record["landmarks"].get("T2", {"status": "not-observed"})["status"]
         t4_status = record["landmarks"].get("T4", {"status": "not-observed"})["status"]
@@ -868,10 +929,17 @@ class RunRecorder:
                         f"/participants/{index}/generation_settings/{setting_index}/applied_value"
                     )
         evaluated_paths = []
+        if diagnostics["evaluator"]["status"] in {"pass", "fail"}:
+            evaluated_paths.extend(["/diagnostics/evaluator", "/outcome/online_acceptance"])
         if outcome["offline_score"] not in {"not-run", "unavailable"}:
             evaluated_paths.extend(["/outcome/offline_score", "/quality"])
         record["field_provenance"] = {
-            "observed": ["/landmarks", "/workers", "/dialogue_exchanges"],
+            "observed": [
+                "/landmarks",
+                "/workers",
+                "/dialogue_exchanges",
+                "/diagnostics/provider",
+            ],
             "declared_by_harness": [
                 "/case",
                 "/snapshot",
@@ -938,7 +1006,7 @@ def _fake_base(scenario: str, *, delegated: bool, nested_untracked: bool = False
     if delegated:
         participants.append(_fixture_participant("worker-1", "investigator", observed_at))
     return {
-        "schema_version": 1,
+        "schema_version": 2,
         "study_id": "duration-atlas-fixture",
         "run_id": f"fixture-{scenario}",
         "block_id": "fixture-block",
@@ -996,6 +1064,73 @@ def _fake_base(scenario: str, *, delegated: bool, nested_untracked: bool = False
     }
 
 
+def _fake_diagnostics(scenario: str) -> dict[str, Any]:
+    provider_status = (
+        "timeout"
+        if scenario == "timeout"
+        else "failure"
+        if scenario == "provider-failure"
+        else "success"
+    )
+    provider_exit = 124 if scenario == "timeout" else 1 if scenario == "provider-failure" else 0
+    evaluator_ran = provider_status == "success"
+    digest = f"sha256:{'0' * 64}"
+    return {
+        "provider": {
+            "status": provider_status,
+            "exit_code": provider_exit,
+            "terminal_wall_ms": 30.0 if scenario == "timeout" else 10.0,
+            "output_cap_bytes": 1024,
+            "output_bytes": 0,
+            "stderr_bytes": 0,
+            "workspace_changed_path_count": 1 if evaluator_ran else 0,
+            "event_counts": (
+                [{"name": "turn.completed", "count": 1}] if evaluator_ran else []
+            ),
+            "item_type_counts": [],
+            "invalid_event_lines": 0,
+            "final_message_observed": evaluator_ran,
+            "usage": {},
+            "generation_request_performed": False,
+            "prompt_persisted": False,
+            "raw_output_persisted": False,
+            "raw_stderr_persisted": False,
+            "credential_path_persisted": False,
+            "nested_delegation": "not-applicable",
+            "task_network": "not-applicable",
+            "sandbox_preflight": {
+                "status": "pass",
+                "image_digest": digest,
+                "profile_digest": digest,
+                "workspace_write": "observed",
+                "unrelated_read": "denied",
+                "command_network": "denied",
+                "generation_request_performed": False,
+            },
+        },
+        "evaluator": {
+            "status": "pass" if evaluator_ran else "not-run",
+            "evaluator_id": "fixture-online-v1" if evaluator_ran else None,
+            "isolation_profile": "network-disabled-read-only-container" if evaluator_ran else "not-run",
+            "image_digest": digest if evaluator_ran else None,
+            "credential_mounts": False,
+            "control_bundle_mounted": False,
+            "checks": (
+                [
+                    {
+                        "check_id": "fixture-online-v1",
+                        "status": "pass",
+                        "exit_code": 0,
+                        "duration_ms": 1.0,
+                    }
+                ]
+                if evaluator_ran
+                else []
+            ),
+        },
+    }
+
+
 def build_fake_run(scenario: str) -> dict[str, Any]:
     if scenario not in {
         "delegated-complete",
@@ -1045,6 +1180,7 @@ def build_fake_run(scenario: str) -> dict[str, Any]:
                 "stop_reason": "safety-cap" if scenario == "timeout" else "provider-failure",
             },
             quality={"evaluator_id": None, "metrics": []},
+            diagnostics=_fake_diagnostics(scenario),
         )
 
     if delegated:
@@ -1112,6 +1248,7 @@ def build_fake_run(scenario: str) -> dict[str, Any]:
             "stop_reason": "result-ready",
         },
         quality=quality,
+        diagnostics=_fake_diagnostics(scenario),
         nested_worker_detected=nested_untracked,
     )
 
@@ -1196,6 +1333,68 @@ def build_parser() -> argparse.ArgumentParser:
     isolated_evaluate.add_argument("--image", required=True)
     isolated_evaluate.add_argument("--docker-bin", default="docker")
     isolated_evaluate.add_argument("--timeout-seconds", type=float, default=30)
+
+    codex_sandbox = subparsers.add_parser(
+        "probe-codex-sandbox",
+        help="verify the no-generation Codex workspace-only permission profile",
+    )
+    codex_sandbox.add_argument("fixture_dir", type=Path)
+    codex_sandbox.add_argument("--image", required=True)
+    codex_sandbox.add_argument("--docker-bin", default="docker")
+    codex_sandbox.add_argument("--timeout-seconds", type=float, default=30)
+
+    codex_live = subparsers.add_parser(
+        "run-codex-fixture",
+        help="run exactly one isolated primary-only Codex fixture turn",
+    )
+    codex_live.add_argument("fixture_dir", type=Path)
+    codex_live.add_argument("--image", required=True)
+    codex_live.add_argument("--model", required=True)
+    codex_live.add_argument(
+        "--effort",
+        required=True,
+        choices=("low", "medium", "high", "xhigh", "max", "ultra"),
+    )
+    codex_live.add_argument("--auth-file", type=Path, default=Path.home() / ".codex" / "auth.json")
+    codex_live.add_argument("--docker-bin", default="docker")
+    codex_live.add_argument("--timeout-seconds", type=float, default=900)
+    codex_live.add_argument("--output-bytes-cap", type=int, default=8 * 1024 * 1024)
+    codex_live.add_argument(
+        "--confirm-live-provider",
+        action="store_true",
+        help="explicitly authorize one provider generation request",
+    )
+
+    codex_study = subparsers.add_parser(
+        "run-codex-study",
+        help="run and immutably record one isolated Codex sample plus hidden evaluation",
+    )
+    codex_study.add_argument("--case-id", required=True)
+    codex_study.add_argument("--output-dir", type=Path, required=True)
+    codex_study.add_argument("--image", required=True)
+    codex_study.add_argument("--model", required=True)
+    codex_study.add_argument(
+        "--effort",
+        required=True,
+        choices=("low", "medium", "high", "xhigh", "max", "ultra"),
+    )
+    codex_study.add_argument("--study-id", default="duration-atlas-wave1")
+    codex_study.add_argument("--block-id", default="codex-primary-calibration")
+    codex_study.add_argument("--run-id")
+    codex_study.add_argument(
+        "--auth-file",
+        type=Path,
+        default=Path.home() / ".codex" / "auth.json",
+    )
+    codex_study.add_argument("--docker-bin", default="docker")
+    codex_study.add_argument("--timeout-seconds", type=float, default=900)
+    codex_study.add_argument("--evaluator-timeout-seconds", type=float, default=30)
+    codex_study.add_argument("--output-bytes-cap", type=int, default=8 * 1024 * 1024)
+    codex_study.add_argument(
+        "--confirm-live-provider",
+        action="store_true",
+        help="explicitly authorize exactly one provider generation request",
+    )
 
     validate_command = subparsers.add_parser("validate", help="validate one study record")
     validate_command.add_argument("--kind", choices=tuple(SCHEMA_PATHS), required=True)
@@ -1308,6 +1507,73 @@ def main(argv: list[str] | None = None) -> int:
             )
             print(json.dumps(result, sort_keys=True))
             return 0 if result["status"] == "pass" else 1
+
+        if args.command == "probe-codex-sandbox":
+            from agent_duration_live import probe_codex_agent_sandbox
+
+            result = probe_codex_agent_sandbox(
+                args.fixture_dir.resolve(),
+                image=args.image,
+                docker_bin=args.docker_bin,
+                timeout_seconds=args.timeout_seconds,
+            )
+            print(json.dumps(result, sort_keys=True))
+            return 0
+
+        if args.command == "run-codex-fixture":
+            from agent_duration_live import run_codex_fixture
+
+            result = run_codex_fixture(
+                args.fixture_dir.resolve(),
+                image=args.image,
+                model=args.model,
+                effort=args.effort,
+                auth_file=args.auth_file.resolve(),
+                live_generation_authorized=args.confirm_live_provider,
+                docker_bin=args.docker_bin,
+                timeout_seconds=args.timeout_seconds,
+                output_bytes_cap=args.output_bytes_cap,
+            )
+            print(json.dumps(result, sort_keys=True))
+            return 0 if result["infrastructure"] == "success" else 1
+
+        if args.command == "run-codex-study":
+            from agent_duration_live import run_codex_study_once
+
+            record, path = run_codex_study_once(
+                args.case_id,
+                args.output_dir,
+                image=args.image,
+                model=args.model,
+                effort=args.effort,
+                auth_file=args.auth_file.resolve(),
+                live_generation_authorized=args.confirm_live_provider,
+                study_id=args.study_id,
+                block_id=args.block_id,
+                run_id=args.run_id,
+                docker_bin=args.docker_bin,
+                timeout_seconds=args.timeout_seconds,
+                evaluator_timeout_seconds=args.evaluator_timeout_seconds,
+                output_bytes_cap=args.output_bytes_cap,
+            )
+            print(
+                json.dumps(
+                    {
+                        "status": "written",
+                        "run_id": record["run_id"],
+                        "path": str(path),
+                        "infrastructure": record["outcome"]["infrastructure"],
+                        "online_acceptance": record["outcome"]["online_acceptance"],
+                        "quality_pass": record["outcome"]["quality_pass"],
+                        "terminal_wall_ms": record["durations_ms"]["terminal_wall"],
+                        "provider_wall_ms": record["diagnostics"]["provider"][
+                            "terminal_wall_ms"
+                        ],
+                    },
+                    sort_keys=True,
+                )
+            )
+            return 0 if record["outcome"]["quality_pass"] is True else 1
 
         record = load_json(args.path)
         if not isinstance(record, dict):
