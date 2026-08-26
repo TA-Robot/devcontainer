@@ -129,7 +129,7 @@ else:
 
     def valid_case(self) -> dict[str, object]:
         return {
-            "schema_version": 1,
+            "schema_version": 2,
             "case_id": "F03-S-fixture",
             "revision": 1,
             "capsule_digest": f"sha256:{'1' * 64}",
@@ -137,6 +137,7 @@ else:
             "family": "failing-test-diagnosis",
             "size": "S",
             "profile_id": "S-local-deterministic-python",
+            "variant_group_id": "F03-S-PY",
             "descriptors": {
                 "context_surface": "single-module",
                 "artifact_surface": "answer-and-test",
@@ -151,6 +152,11 @@ else:
             "oracle_strength": "deterministic",
             "decomposability": "serial",
             "artifact_type": "answer",
+            "risk": "low",
+            "task_lane": "read",
+            "environment_dependence": "local-tool",
+            "knowledge_locality": "repository-contained",
+            "expected_failure_modes": ["behavioral"],
             "strong_online_oracle": True,
         }
 
@@ -234,7 +240,7 @@ else:
         }
 
     def test_all_checked_in_schemas_are_valid_json_objects(self) -> None:
-        for kind in ("study", "case", "capability", "run"):
+        for kind in ("study", "case", "case-catalog", "capability", "fixture", "run"):
             with self.subTest(kind=kind):
                 schema = load_schema(kind)
                 self.assertEqual(schema["type"], "object")

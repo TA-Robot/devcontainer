@@ -1,0 +1,153 @@
+{
+  "schema_version": 1,
+  "catalog_id": "duration-atlas-calibration",
+  "revision": 1,
+  "published_at": "2026-08-26T00:00:00.000Z",
+  "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F04-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:62c94e37eaf560b7579b022b488831e52a3ce5f8fdd3e1545a36df8f6178537c",
+        "source_type": "fixture",
+        "family": "bounded-implementation",
+        "size": "S",
+        "profile_id": "S-local-deterministic-python",
+        "variant_group_id": "F04-S-PY",
+        "descriptors": {
+          "context_surface": "single-module",
+          "artifact_surface": "one-function-and-unit-tests",
+          "coupling": "local",
+          "validation_depth": ["unit"],
+          "environment_setup": "none",
+          "failure_distance": "local",
+          "statefulness": "stateless",
+          "language_toolchain": ["python"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "patch",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["behavioral", "edge-case"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F04-S-PY-001",
+        "recipe_id": "f04-s-python-normalizer-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f04-s-python-normalizer.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"]
+        ],
+        "online_evaluator_id": "f04-s-python-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F04-M-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:c1ed30e6ed80274aa12edf5a8609591b58a3a60ad083984a1b4c74c219263c23",
+        "source_type": "fixture",
+        "family": "bounded-implementation",
+        "size": "M",
+        "profile_id": "M-coupled-deterministic-python",
+        "variant_group_id": "F04-M-PY",
+        "descriptors": {
+          "context_surface": "multi-module-cli-and-storage",
+          "artifact_surface": "storage-cli-tests-and-usage",
+          "coupling": "cross-module-contract",
+          "validation_depth": ["unit", "contract"],
+          "environment_setup": "temporary-filesystem",
+          "failure_distance": "cross-module",
+          "statefulness": "filesystem-state",
+          "language_toolchain": ["python"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "patch",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["behavioral", "persistence", "atomicity", "exit-contract"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F04-M-PY-001",
+        "recipe_id": "f04-m-python-state-cli-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f04-m-python-state-cli.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"]
+        ],
+        "online_evaluator_id": "f04-m-python-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F04-L-PYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:668f0779c196cedddd95c7d4dd14ee43881febb56235ea3b7fea621ac5ff5889",
+        "source_type": "fixture",
+        "family": "bounded-implementation",
+        "size": "L",
+        "profile_id": "L-cross-boundary-deterministic-python-bash",
+        "variant_group_id": "F04-L-PYBASH",
+        "descriptors": {
+          "context_surface": "python-storage-cli-and-bash-process-boundary",
+          "artifact_surface": "storage-cli-shell-tests-and-format-contract",
+          "coupling": "cross-process-persistent-contract",
+          "validation_depth": ["unit", "integration", "restart"],
+          "environment_setup": "fresh-process-lifecycle",
+          "failure_distance": "restart-delayed",
+          "statefulness": "persistent-filesystem",
+          "language_toolchain": ["python", "bash"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "patch",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["behavioral", "persistence", "atomicity", "cross-process", "restart"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F04-L-PYBASH-001",
+        "recipe_id": "f04-l-python-bash-restart-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f04-l-python-bash-restart.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["bash", "-n", "bin/queuectl"]
+        ],
+        "online_evaluator_id": "f04-l-python-bash-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    }
+  ]
+}

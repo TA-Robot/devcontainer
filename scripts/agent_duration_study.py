@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import copy
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -21,7 +22,9 @@ SCHEMA_DIR = ROOT / "experiments" / "multi-agent-duration" / "schemas"
 SCHEMA_PATHS = {
     "study": SCHEMA_DIR / "study.schema.json",
     "case": SCHEMA_DIR / "case.schema.json",
+    "case-catalog": SCHEMA_DIR / "case-catalog.schema.json",
     "capability": SCHEMA_DIR / "capability.schema.json",
+    "fixture": SCHEMA_DIR / "fixture.schema.json",
     "run": SCHEMA_DIR / "run.schema.json",
 }
 LANDMARK_NAMES = (
@@ -262,6 +265,116 @@ def load_schema(kind: str) -> dict[str, Any]:
     if not isinstance(schema, dict):
         raise DurationStudyError(f"schema root must be an object: {SCHEMA_PATHS[kind]}")
     return schema
+
+
+def content_digest(value: bytes) -> str:
+    return f"sha256:{hashlib.sha256(value).hexdigest()}"
+
+
+def canonical_json_digest(value: Any) -> str:
+    encoded = json.dumps(
+        value,
+        ensure_ascii=False,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode("utf-8")
+    return content_digest(encoded)
+
+
+def validate_case_catalog_record(
+    record: dict[str, Any],
+    *,
+    repository_root: Path = ROOT,
+) -> None:
+    validate(record, load_schema("case-catalog"))
+    case_ids: list[str] = []
+    recipe_ids: list[str] = []
+    capsule_paths: list[str] = []
+    resolved_root = repository_root.resolve()
+    for entry in record["entries"]:
+        case = entry["case"]
+        validate_record("case", case)
+        fixture = entry["fixture"]
+        case_id = case["case_id"]
+        if fixture["case_id"] != case_id:
+            raise DurationStudyError(f"fixture case_id does not match case: {case_id}")
+        if case["source_type"] != "fixture":
+            raise DurationStudyError(f"catalog fixture entry must use fixture source_type: {case_id}")
+        if not case["strong_online_oracle"]:
+            raise DurationStudyError(
+                f"initial calibration fixture requires a strong online oracle: {case_id}"
+            )
+
+        raw_capsule_path = fixture["capsule_path"]
+        capsule_path = Path(raw_capsule_path)
+        if capsule_path.is_absolute() or ".." in capsule_path.parts:
+            raise DurationStudyError(f"unsafe capsule path for {case_id}: {raw_capsule_path}")
+        resolved_capsule = (resolved_root / capsule_path).resolve()
+        try:
+            resolved_capsule.relative_to(resolved_root)
+        except ValueError as exc:
+            raise DurationStudyError(f"capsule escapes repository root: {case_id}") from exc
+        if not resolved_capsule.is_file():
+            raise DurationStudyError(f"capsule does not exist for {case_id}: {raw_capsule_path}")
+        actual_capsule_digest = content_digest(resolved_capsule.read_bytes())
+        if case["capsule_digest"] != actual_capsule_digest:
+            raise DurationStudyError(
+                f"capsule digest mismatch for {case_id}: expected {actual_capsule_digest}"
+            )
+
+        case_ids.append(case_id)
+        recipe_ids.append(fixture["recipe_id"])
+        capsule_paths.append(raw_capsule_path)
+
+    if len(case_ids) != len(set(case_ids)):
+        raise DurationStudyError("case catalog IDs must be unique")
+    if len(recipe_ids) != len(set(recipe_ids)):
+        raise DurationStudyError("fixture recipe IDs must be unique")
+    if len(capsule_paths) != len(set(capsule_paths)):
+        raise DurationStudyError("fixture capsule paths must be unique")
+
+
+def _validate_relative_manifest_path(raw_path: str, label: str) -> Path:
+    path = Path(raw_path)
+    if path.is_absolute() or ".." in path.parts or "." in path.parts:
+        raise DurationStudyError(f"unsafe fixture {label} path: {raw_path}")
+    return path
+
+
+def validate_fixture_record(record: dict[str, Any]) -> None:
+    validate(record, load_schema("fixture"))
+    paths = {
+        key: _validate_relative_manifest_path(value, key)
+        for key, value in record["paths"].items()
+    }
+    if paths["workspace"] != Path("workspace"):
+        raise DurationStudyError("fixture workspace path must be exactly 'workspace'")
+    for label in ("bundle", "hidden_evaluator"):
+        if paths["workspace"] == paths[label] or paths["workspace"] in paths[label].parents:
+            raise DurationStudyError(f"fixture {label} must remain outside the agent workspace")
+
+    workspace_files = record["workspace_files"]
+    if workspace_files != sorted(workspace_files):
+        raise DurationStudyError("fixture workspace file inventory must be sorted")
+    for raw_path in workspace_files:
+        path = _validate_relative_manifest_path(raw_path, "workspace file")
+        if path.parts[0] == ".git":
+            raise DurationStudyError("fixture workspace inventory must not expose Git internals")
+
+    initial_oracle = record["initial_oracle"]
+    checks = [*initial_oracle["workspace_checks"], initial_oracle["hidden_check"]]
+    check_ids = [item["check_id"] for item in checks]
+    if len(check_ids) != len(set(check_ids)):
+        raise DurationStudyError("fixture oracle check IDs must be unique")
+    for check in checks:
+        expected_status = "pass" if check["exit_code"] == 0 else "fail"
+        if check["status"] != expected_status:
+            raise DurationStudyError("fixture check status disagrees with exit_code")
+    expected_observed = "pass" if all(item["status"] == "pass" for item in checks) else "fail"
+    if initial_oracle["observed"] != expected_observed:
+        raise DurationStudyError("fixture initial oracle summary disagrees with checks")
+    if initial_oracle["observed"] != "fail":
+        raise DurationStudyError("seeded calibration fixture must initially fail its oracle")
 
 
 def _validate_utc_timestamps(record: dict[str, Any]) -> None:
@@ -533,6 +646,12 @@ def validate_record(kind: str, record: dict[str, Any]) -> None:
         return
     if kind == "capability":
         _validate_capability_record(record)
+        return
+    if kind == "case-catalog":
+        validate_case_catalog_record(record)
+        return
+    if kind == "fixture":
+        validate_fixture_record(record)
         return
     validate(record, load_schema(kind))
     if kind == "study":
@@ -1044,6 +1163,31 @@ def build_parser() -> argparse.ArgumentParser:
     capability.add_argument("--output-dir", type=Path, required=True)
     capability.add_argument("--print-record", action="store_true")
 
+    fixture = subparsers.add_parser(
+        "build-fixture",
+        help="materialize one isolated deterministic case repository",
+    )
+    fixture.add_argument("--case-id", required=True)
+    fixture.add_argument(
+        "--catalog",
+        type=Path,
+        default=ROOT / "experiments" / "multi-agent-duration" / "catalog" / "cases.json",
+    )
+    fixture.add_argument("--fixture-id")
+    fixture.add_argument("--output-dir", type=Path, required=True)
+    fixture.add_argument("--print-manifest", action="store_true")
+
+    evaluate = subparsers.add_parser(
+        "evaluate-fixture",
+        help="run trusted calibration checks; live artifacts require an isolated evaluator",
+    )
+    evaluate.add_argument("fixture_dir", type=Path)
+    evaluate.add_argument(
+        "--trusted-calibration",
+        action="store_true",
+        help="acknowledge host execution is only for checked-in fixture calibration",
+    )
+
     validate_command = subparsers.add_parser("validate", help="validate one study record")
     validate_command.add_argument("--kind", choices=tuple(SCHEMA_PATHS), required=True)
     validate_command.add_argument("path", type=Path)
@@ -1105,6 +1249,44 @@ def main(argv: list[str] | None = None) -> int:
                     )
                 )
             return 0
+
+        if args.command == "build-fixture":
+            from agent_duration_fixtures import build_fixture
+
+            manifest = build_fixture(
+                args.case_id,
+                args.output_dir.resolve(),
+                catalog_path=args.catalog.resolve(),
+                fixture_id=args.fixture_id,
+            )
+            if args.print_manifest:
+                print(json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True))
+            else:
+                print(
+                    json.dumps(
+                        {
+                            "status": "built",
+                            "fixture_id": manifest["fixture_id"],
+                            "case_id": manifest["case"]["case_id"],
+                            "path": str(args.output_dir.resolve()),
+                            "initial_oracle": manifest["initial_oracle"]["observed"],
+                        },
+                        sort_keys=True,
+                    )
+                )
+            return 0
+
+        if args.command == "evaluate-fixture":
+            from agent_duration_fixtures import evaluate_fixture
+
+            if not args.trusted_calibration:
+                raise DurationStudyError(
+                    "refusing host evaluation without --trusted-calibration; "
+                    "live artifacts require a network-disabled evaluator container"
+                )
+            result = evaluate_fixture(args.fixture_dir.resolve())
+            print(json.dumps(result, sort_keys=True))
+            return 0 if result["status"] == "pass" else 1
 
         record = load_json(args.path)
         if not isinstance(record, dict):
