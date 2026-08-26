@@ -20,6 +20,8 @@ Date: 2026-08-26
 
 「通常何人」「通常何round」をglobal policyにしません。安全上のinvariant、runawayを止めるcost cap、計画用の暫定prior、未検証hypothesisを明示的に区別します。
 
+> Zero-input correction: 当初の「manual episode記録が続いてからledgerを作る」という順序は、ユーザーが記録する前提を置いていたため棄却しました。客観的なepisode factsはhook / `agentctl` eventから自動生成し、semantic fieldはprimaryが通常作業中に生成するか、観測不能なら`unknown`にします。
+
 ## 1. Review method and limits
 
 - Grok 4.6とClaude Opus 5へ同じbriefと同じbase commitを渡した。
@@ -46,7 +48,7 @@ Date: 2026-08-26
 | control plane | conversationを所有しない | structural stateだけ所有 | ADR-0001を維持 |
 | recurring | permanent agentでなくfinite jobs | trigger + finite job + bounded carry-over | 維持。runtime未実装を明記 |
 | scheduler timing | 手動点検の価値を先に確認 | non-agent CI / cronで足りないことを先に実証 | scheduler実装を延期 |
-| observation | content-free episodeが必要 | episode + slot-seconds + human review | 最小のmanual observationから開始 |
+| observation | content-free episodeが必要 | episode + slot-seconds + human review | zero-input hook / agentctl factsから開始し、semantic欠測はunknown |
 
 ## 3. Where the reviews differ
 
@@ -240,7 +242,7 @@ parameter値はproject-localにし、rationale、scope、invalidation、ownerを
 5. claim / advice / variantの軽いMarkdown contractを用意する。
 6. validatorで上記のauthoritative guidanceが欠落・regressしないことを確認する。
 
-### Observe before automating
+### Observe automatically before adding analysis machinery
 
 - content-free episode record
 - solo / collaborationのtime-to-accepted-result
@@ -249,11 +251,11 @@ parameter値はproject-localにし、rationale、scope、invalidation、ownerを
 - rework / conflict
 - actual participants / exchanges / stop reason
 
-最初は手動で記録し、続くfieldだけを後でtool化します。
+人間へ入力を求めません。provider hook / `agentctl` eventから取得できるfieldは自動保存し、hookだけでは分からないsemantic fieldを推測しません。fieldの有用性は自動ledgerを後から分析して判断します。
 
 ### Build only behind evidence gates
 
-- episode ledger CLI: manual記録が続き、判断を変えた後。
+- semantic annotation / episode analysis helper: reliableなsession correlationと、routing判断を変えるuse caseを確認した後。
 - slot-seconds report: resource costがroutingに必要と確認した後。
 - compete harness: evaluatorが過去candidateの優劣を識別できた後。
 - held-out sidecar:fixture維持可能性を確認した後。
@@ -277,15 +279,15 @@ parameter値はproject-localにし、rationale、scope、invalidation、ownerを
 - raw provider reviewsとcross-provider synthesisをtempへ保存する。
 - validatorを更新する。
 
-### R1: manual observation
+### R1: zero-input observation
 
-- 実project taskへepisode fieldを手動記録する。
+- 実project taskのcontent-free episode factsをprovider hook / `agentctl` eventから自動記録する。
 - projectごとのtask classとbinding constraintを学ぶ。
 - no global sample countを設定せず、decisionを変えるだけのcoverageが得られるまで試す。
 
 ### R2: smallest reusable helper
 
-- manual observationが続いたfieldだけをoptional helperへ昇格する。
+- automatic observationでrouting判断に使われたfieldだけをoptional analysis helperへ昇格する。
 - helperはcontent-free、project-local、削除可能にする。
 - task/result schema v1を変えない。
 
@@ -322,3 +324,16 @@ parameter値はproject-localにし、rationale、scope、invalidation、ownerを
 - costとoutcomeをcontent-freeに振り返れる。
 - negative evidenceにより機能を作らない判断ができる。
 - projectが学んだpriorをglobal truthへ誤昇格させない。
+
+## 10. Zero-input implementation correction
+
+人間はcollaboration telemetryを入力・保守しない前提へ変更しました。
+
+- solo / delegated / managed-job episodeを同じcontent-free schemaで自動保存する。
+- duration、worker start / stop、peak concurrency、worker slot time、structured test outcome、rework、post-worker-tail、hook coverageを記録する。
+- prompt、response、command、path、raw ID、private reasoningは保存しない。
+- relation、mechanism、binding constraint、quality、actual human-review timeはhook topologyから推測しない。
+- primaryのplan / synthesisはagent-owned artifactであり、ユーザーへform入力を求めない。
+- automatic ledgerのretention値はstorage cost capであり、必要なepisode数や品質最適値ではない。
+
+これにより「manual recordingが続くこと」はtooling gateから外れました。次のgateは、automatic dataのどのfieldが実際にrouting判断を変えたかです。

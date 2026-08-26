@@ -34,6 +34,7 @@ laneは実行境界、roleは責務、relationはagent同士の関係、lifecycl
 - numeric / boolean parameterは`hard guard / cost cap / planning prior / hypothesis`へ分類し、scope、rationale、invalidation evidence、update ownerを持つ。
 - scheduled / event-driven workは無期限sessionにせずfinite jobへ限定する。runtime availabilityを確認するまで存在を仮定せず、非agent手段で足りるなら作らない。
 - primaryがcontinuation、synthesis、winner、integration、external side effectを所有し、human review / integration costも結果へ記録する。
+- primaryがplanとsynthesisを通常作業中に生成する。ユーザーへformやepisode logの記入を求めず、自動観測できないfieldは`unknown`とする。
 
 relation / lifecycle選択、brief、result、continuation / stop conditionの正本は`docs/agents/collaboration-playbook.md`です。
 

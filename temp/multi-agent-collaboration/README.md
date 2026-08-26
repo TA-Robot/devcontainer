@@ -19,6 +19,8 @@
 
 `01`と`02`に含まれる固定人数・固定round・固定variant数は、provider review前の探索仮説です。authoritative guidanceとして使用せず、`04`と正本側を参照してください。
 
+`04`の初期案にあったmanual episode記録の継続条件も棄却済みです。現在はprovider hook / `agentctl` eventからzero-input ledgerを生成し、人間へform保守を求めません。
+
 ## 出発点
 
 既存基盤は、read / write / isolated lane、job単位worktree、structured result、single-writer integrationを持ちます。一方、primary agentの指針は主に「独立taskを並列化してcritical pathを短縮する」に留まり、次を体系化していませんでした。

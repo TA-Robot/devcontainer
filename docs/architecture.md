@@ -52,6 +52,8 @@ laneは実行境界、roleは責務、relationはagent同士の関係、lifecycl
 
 正本は[`collaboration-model.md`](agents/collaboration-model.md)、target projectの運用は[`project/docs/agents/collaboration-playbook.md`](../project/docs/agents/collaboration-playbook.md)です。scheduled / event-driven runtimeはまだ実装しておらず、guidanceだけから利用可能とみなしません。
 
+provider hookと`agentctl` lifecycle eventは、human inputなしでcontent-free episode factsを専用named volumeへ有限保存します。transientなMira UI stateやagentctl correctness DBとは保存先を分け、container rebuildをまたいでも残します。これはconversation ownershipを共通層へ移すものではなく、semantic relation、quality、human review時間を推測しません。schemaと分析境界は[`collaboration-observation.md`](agents/collaboration-observation.md)を参照してください。
+
 ### Project contract (Phase 2)
 
 target projectのcopy sourceは`project/`です。

@@ -10,7 +10,7 @@ container-managed native lifecycle hooks ─┐
 agentctl durable job transitions ──────────┤ provider / role / outcome only
                                           v
   mira-codex-hook compatibility entrypoint
-  (sanitize + aggregate + bounded event ring, fail-open)
+  (sanitize + aggregate + bounded event ring / episode ledger, fail-open)
   -> ~/.local/state/mira-companion/state.json
   -> Mira Companion workspace extension
   -> bottom-panel Mira World
@@ -19,6 +19,8 @@ agentctl durable job transitions ──────────┤ provider / ro
        milestone -> scenery growth
        earned breakpoint -> expiring one-click pop
   -> tiny status-bar reopen toggle
+  -> /var/lib/mira-observations/collaboration-episodes.json
+       zero-input content-free observation; not rendered as productivity score
 ```
 
 product contractは「worldを始めて遊ぶ」のではなく、**普段のcodingが自然にworldの出来事になる**ことです。会話と承認は各provider、job ownershipは`agentctl`、orchestration判断はprimary agentが所有し、extensionはsanitized activityの表示とlocalな進行だけを担当します。
@@ -98,7 +100,7 @@ v1のハイタッチ、なでる、ひとこと、reaction wheel、Mira Deck、i
 | `.devcontainer/grok-mira-managed-config.toml` | Grok hookだけを加算するsystem managed config |
 | `.devcontainer/Dockerfile` | managed configとbridgeをsystem pathへ配置 |
 | `scripts/agentctl_jobs.py` | durable job transition後にprovider / role / outcomeだけのMira eventをbest-effort emit |
-| `scripts/mira-codex-hook.py` | 互換entrypoint兼共通bridge。Codex / Claudeのsnake_caseとGrokのcamelCaseを正規化し、agentctl envelopeと合わせて機微情報を捨て、stateとbounded event ringをatomic write |
+| `scripts/mira-codex-hook.py` | 互換entrypoint兼共通bridge。Codex / Claudeのsnake_caseとGrokのcamelCaseを正規化し、agentctl envelopeと合わせて機微情報を捨て、state、bounded event ring、zero-input episode ledgerをatomic write |
 | `extensions/mira-companion/src/state.js` | filesystem contractをもう一段allowlist normalize |
 | `extensions/mira-companion/src/game.js` | automatic bond、daily cap、rhythm、badge、safe moment、固定台詞 |
 | `extensions/mira-companion/src/world.js` | state-to-destination、passive decoration、earned pop、webview snapshot allowlist |
@@ -155,9 +157,11 @@ bridgeが書く`state.json`はschema version 1です。追加fieldは後方互�
 
 `recentEvents`は最大24件です。`state.js`はeventの`id / at / event / status / category / outcome / activeSubagents / provider / role`と、active agentのopaque ID / provider / role / statusだけを再allowlistします。`world.js`はそこからさらに描画用のnumber、enum、bounded labelだけをsnapshotへ作ります。`providerCounts`はactiveなdirect root sessionとworkerの合計、`activeAgents`は追加spriteを描くworkerだけです。
 
+turn / job terminalでは同じsanitized eventから`collaboration-episodes.json`も自動更新します。solo / delegated / agentctl-managed topology、duration、worker slot time、peak concurrency、structured test outcome、rework / post-worker-tail proxy、hook coverageだけを有限保存します。人間の入力は不要です。relation、expected mechanism、binding constraint、artifact品質、人間のreview時間はhookから推測せず`unknown`またはproxyとして区別します。ledger contractは[`docs/agents/collaboration-observation.md`](../agents/collaboration-observation.md)を正本とします。
+
 Codex / Claudeのhook stdinはsnake_case、GrokはcamelCaseかつsnake_case event valueなので、provider別entrypoint名でadapterを選び、共通のevent enumへ正規化します。Grokの`run_terminal_command / search_replace / spawn_subagent`も共通categoryへ写像し、nativeの`Explore / Plan / general-purpose`等は表示用のresearcher / reviewer / implementer roleへ閉じます。`permission_prompt` notificationは`PermissionRequest`、`idle_prompt`はinterrupt時のidle backstopへ変換し、直前のsuccess / error transientは上書きしません。
 
-`agentctl`からbridgeへ渡すenvelopeは`mira_source / hook_event_name / session_id / attempt_id / provider / role`だけです。raw job / attempt IDはbridge内でhash化され、task objective、workspace / worktree path、command、result、failure reason、provider logはenvelopeへ入りません。bridge binaryの欠損、nonzero exit、1秒timeoutはpresentation failureとして無視され、broker stateやjob resultを変更しません。
+`agentctl`からbridgeへ渡すenvelopeは`mira_source / hook_event_name / session_id / attempt_id / provider / role / opaque workspace key`だけです。raw job / attempt IDはbridge内でhash化され、workspace keyもregistered pathをbroker process内でhash化してから渡します。task objective、workspace / worktree path、command、result、failure reason、provider logはenvelopeへ入りません。bridge binaryの欠損、nonzero exit、1秒timeoutはactivity / observation failureとして無視され、broker stateやjob resultを変更しません。
 
 複数sessionは`approval > error > success > delegating > active work > thinking > ready > idle`の順でaggregateします。別のagent jobが稼働中なら、完了済みjobのtransient stateでactive workを隠さず、terminal eventだけをreactionとして表示します。session ID、job ID、attempt ID、subagent IDはhash化します。
 
@@ -193,7 +197,7 @@ VS Code `globalState`へ保存するのは次だけです。
 
 provider hookが渡すraw JSONはprocess内で直ちにbridge用fieldへ絞り、prompt本文、workspace / transcript path、permission message、error detail、private reasoningをaggregationへ渡しません。tool inputはactivity分類、structured tool resultは成否分類に必要な間だけ参照し、本文を保存しません。raw session / job / attempt / agent IDはprovider namespace付きでhash化します。`agentctl` emitterはAPI keyを含む親environmentをbridgeへそのまま渡さず、HOME / PATH / locale / Mira state設定だけをallowlistします。
 
-state directoryは`0700`、JSONとlockは`0600`です。temporary fileからatomic replaceし、並行するprovider / agentctl eventは`flock`で直列化します。これは再構築可能なpresentation stateなので、partial JSON防止のatomicityは保ちつつ、tool前後のhot pathへstorage-level durabilityの`fsync`待ちを入れません。bridge内部で例外が起きてもexit 0で終了し、表示機能の故障がprovider、tool call、agentctl jobを止めないことを優先します。extension側もstate欠損、破損、期限切れ、1時間更新されないactive stateをdisconnected / idleとして扱います。
+state directoryは`0700`、JSONとlockは`0600`です。temporary fileからatomic replaceし、並行するprovider / agentctl eventは`flock`で直列化します。activity stateとepisode observationは再構築可能なbest-effort dataなので、partial JSON防止のatomicityは保ちつつ、tool前後のhot pathへstorage-level durabilityの`fsync`待ちを入れません。episode ledger failureは表示更新からも分離してfail-openします。bridge内部で例外が起きてもexit 0で終了し、表示・観測機能の故障がprovider、tool call、agentctl jobを止めないことを優先します。extension側もstate欠損、破損、期限切れ、1時間更新されないactive stateをdisconnected / idleとして扱います。
 
 webviewはstrict CSPを設定し、extension mediaとMira runtime assetsだけをlocal resource rootにします。messageは`ready`と現在表示中popの`ackPop`だけを受け付け、arbitrary command execution経路を持ちません。
 

@@ -67,6 +67,8 @@ relation名は説明を短くするaliasで、closed enumではありません�
 
 複数agentを開始する前に、`docs/agents/tickets/collaboration-plan.template.md`を埋めるか、同じ情報をtask planへ持ちます。
 
+これはprimaryが通常のplanning中に生成・更新するagent-owned artifactです。ユーザーへformの記入やepisode logの保守を求めません。自動観測できないfieldは捏造せず`unknown`とします。
+
 - required decision / artifactとdefinition of done
 - expected mechanismとbinding constraint
 - relation、lifecycle、参加者を導いた理由
@@ -195,6 +197,8 @@ primaryは多数決で決めず、evidenceとproject constraintを比較しま�
 
 agent数、message数、token量を成果として報告しません。観測をproject-localなplanning priorへ更新し、他projectの標準値にはしません。
 
+このdevcontainer基盤を使う場合、客観的なepisode factsは`$MIRA_COMPANION_EPISODE_DIR/collaboration-episodes.json`へ自動保存されます。基盤既定はrebuild後も残る`/var/lib/mira-observations`です。primaryは比較やretrospectiveが必要な時に自分で読み、ユーザーへ転記を頼みません。sourceとcoverageを確認し、terminal successをartifact品質、post-worker-tailを実human review時間、topologyをsemantic relationへ読み替えません。ledgerが欠けている場合も数値を推測せず`unknown`とします。
+
 ## Current tooling boundary
 
 - provider-native layer: interactive consultation、delegation、peer UX。
@@ -202,7 +206,7 @@ agent数、message数、token量を成果として報告しません。観測を
 - primary / integrator: relation選択、continuation、synthesis、winner、integration。
 - future trigger layer: trigger、dedupe、budget、audit、finite job emission。
 
-`agentctl`へconversation graph、transcript、private reasoning、consensus stateを入れません。episode ledger、comparison harness、resource-aware recommender、schedulerは、手動観測が価値と必要fieldを示してから実装します。
+`agentctl`へconversation graph、transcript、private reasoning、consensus stateを入れません。provider hook / `agentctl` lifecycleからcontent-free episode factsを自動記録し、human inputを要求しません。semantic relationや期待mechanismをhook topologyから推測せず、reliableなmachine annotationがなければ`unknown`にします。comparison harness、resource-aware recommender、schedulerはautomatic observationが必要性を示してから実装します。
 
 ## Anti-patterns
 

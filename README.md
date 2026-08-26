@@ -13,6 +13,7 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 - **ホスト設定の引き継ぎ**: SSH鍵、Git設定、認証情報を自動マウント
 - **Mira Companion v2**: Codex / Claude / Grokのinteractive sessionとagentctl-managed jobが小さなpixel-art世界の動きになるbottom-panel companionを自動導入
 - **Adaptive collaboration playbook**: 期待する効果と律速要因からagent同士の関係を組み立て、人数・interaction・候補数はprojectごとの観測で調整
+- **Zero-input collaboration observation**: provider hookとagentctl lifecycleからsolo / delegated episodeの時間・worker・test・rework proxyを内容抜きで自動保存
 
 ミラのpersonaは `AGENTS.md`、再利用templateは `AGENTS_TEMPLATE.md`、companion architectureは [`docs/mira/architecture.md`](docs/mira/architecture.md)、visual asset contractは [`docs/mira/assets.md`](docs/mira/assets.md) を参照してください。
 
@@ -95,6 +96,8 @@ docs/agents/runbook.md           failure recovery / integration / GC
 通常の調査とreviewは`researcher` / `reviewer` native subagentへfan-outします。実装用`implementer`は、primaryがimmutable base SHAから専用worktreeを割り当てた後だけ使います。untrusted codeや破壊的Docker操作は同一containerへ混ぜずisolated laneへ送ります。
 
 agent同士の関係はlane、role、時間上のlifecycleとは別に設計します。soloより改善するmechanismと今回のbinding constraintを先に確認し、`solo / delegate / consult / compete / verify`を現在のrelation aliasとして必要な協働を組み立てます。人数、interaction、candidate数、blindnessはglobal defaultにせず、独立artifact、固有の観点、識別可能な案、検査したいfailure modeとproject-local evidenceから決めます。定期・event駆動workは無期限sessionではなく有限jobとして扱い、scheduler runtimeが未実装の間は存在を仮定しません。選択手順、parameterの意味、安全なstop conditionは[`collaboration model`](docs/agents/collaboration-model.md)とtarget copyの[`collaboration playbook`](project/docs/agents/collaboration-playbook.md)を参照してください。
+
+人間へ日報やform入力を要求しません。Codex / Claude / Grok hookと`agentctl` eventは、prompt、code、command、pathを保存せず、solo / delegated turnのduration、worker start / stop、peak concurrency、test outcome、rework / post-worker-tail proxyを`$MIRA_COMPANION_EPISODE_DIR/collaboration-episodes.json`へ自動保存します。このdevcontainerではrebuild後も残るnamed volume上の`/var/lib/mira-observations`です。relationや期待mechanismなどhookだけでは分からない意味は推測せず`unknown`です。schema、coverage、retention、privacyは[`zero-input collaboration observation`](docs/agents/collaboration-observation.md)を参照してください。
 
 native childはparent sessionのlive permissionを継承し得ます。read-only agent fileを置いただけで強いruntime overrideが弱まるとはみなさず、Lane Rをfan-outする前にparentもsafe modeであることを確認してください。
 

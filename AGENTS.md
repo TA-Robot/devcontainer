@@ -33,8 +33,9 @@ execution laneは「どこで安全に走らせるか」、roleは「何へ責�
 - 数値やbooleanは`hard guard / cost cap / planning prior / hypothesis`のどれかを明示し、scope、rationale、invalidation evidence、update ownerを付ける。
 - 定期・event駆動agentは無期限sessionではなくfinite jobとして設計する。scheduler runtimeは実装済みと確認できるまで存在を仮定せず、非agent手段で足りるなら作らない。
 - agent数、message数、token量を成果にしない。primaryがevidence、disagreement、採否、残risk、human review costをsynthesisし、project-localな学習へ戻す。
+- collaboration observationはprovider hook / `agentctl` eventからcontent-freeに自動生成する。ユーザーへ記入やlog保守を求めず、自動観測できない意味は`unknown`として残す。
 
-設計の正本は`docs/agents/collaboration-model.md`、target project向け手順は`project/docs/agents/collaboration-playbook.md`、探索catalogは`temp/multi-agent-collaboration/`を参照してください。
+設計の正本は`docs/agents/collaboration-model.md`、自動観測contractは`docs/agents/collaboration-observation.md`、target project向け手順は`project/docs/agents/collaboration-playbook.md`、探索catalogは`temp/multi-agent-collaboration/`を参照してください。
 
 ## このリポジトリの責務
 

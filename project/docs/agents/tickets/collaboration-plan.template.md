@@ -1,6 +1,6 @@
 # Collaboration plan: <<short-name>>
 
-Use only when delegation is available and allowed. Keep the plan proportional to the task; short inline answers are acceptable when they preserve the same decisions.
+Use only when delegation is available and allowed. The primary generates and updates this agent-owned artifact during normal planning; do not ask the user to fill it. Keep it proportional to the task, use `unknown` rather than inventing unavailable evidence, and allow short inline answers when they preserve the same decisions.
 
 ## Outcome
 

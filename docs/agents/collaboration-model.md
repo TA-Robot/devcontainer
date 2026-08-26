@@ -206,25 +206,29 @@ interval、expiry duration、attempt、wall time、usage、backoff、circuit thr
 | `agentctl` | finite job / attempt、worktree、process、resource、structured result |
 | future trigger layer | trigger、dedupe、budget、audit、finite job emission |
 | primary / integrator / human owner | merge、push、PR、release、enable、permission escalation |
-| Mira Companion | sanitized activity visualization only |
+| Mira activity bridge | sanitized visualization eventとbest-effort zero-input episode observation |
 
 ## Evidence-gated delivery
 
-### Now: correct guidance and prepare observation
+### Now: correct guidance and automatic baseline observation
 
 - remove unsupported global counts and unconditional blindness.
 - simplify relation / lifecycle vocabulary without deleting the idea catalog.
 - add mechanism、binding constraint、parameter role、human review、independence、stop reason to the collaboration brief.
 - validate that the authoritative copy source preserves this guidance.
-- begin manual, content-free observation on real project tasks.
+- derive content-free solo / delegated episode facts automatically from provider hooks and `agentctl` lifecycle events.
+- keep semantic labels `unknown` when the execution surface cannot observe them.
+- never require a human to maintain the observation ledger or complete a form.
 
-### Later: automate only fields that survive use
+### Later: add only semantics and analysis that survive use
 
-- optional episode ledger helper after manual recording proves sustainable.
+- machine annotation for primary-owned mechanism / relation / stop reason after a reliable session-correlation surface exists.
 - resource occupancy report if it changes routing decisions.
 - comparison harness only after evaluator capability and maintenance cost are demonstrated.
 - read-only trigger pilot only after manual/non-agent alternatives prove insufficient.
 - recurring write only after read-only findings are repeatedly triaged.
+
+automatic observationのschema、privacy、coverage、retention、proxyの限界は[`collaboration-observation.md`](collaboration-observation.md)を正本とします。human annotationはoptionalであり、欠測時は`unknown`のままにします。
 
 Negative evidence is a valid outcome: do not build a capability whose expected value was not demonstrated.
 
@@ -233,6 +237,6 @@ Negative evidence is a valid outcome: do not build a capability whose expected v
 - universal conversation orchestrator or message bus
 - transcript / private reasoning store
 - automatic consensus、winner、hybrid、merge、push、release
-- agent-count or exchange-count optimizer before observation exists
+- agent-count or exchange-count optimizer without reliable project-local comparative evidence
 - untrusted recurring execution before a real Lane I exists
 - claiming same-container worktrees are a security boundary

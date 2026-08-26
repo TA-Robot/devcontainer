@@ -113,6 +113,7 @@ delegationが上位instructionやユーザーによって許可されている�
 10. duplicate research、議論の言い換え、edit conflict、review costが増えたら参加者やinteractionを減らすかsoloへ戻す。
 11. 定期・event駆動workは常駐会話にせず、quota、deadline、dedupe、overlap防止、backoff、circuit breakerを持つfinite jobへ限定する。
 12. 数値やbooleanはhard guard、cost cap、planning prior、hypothesisのどれかを明示し、project-local evidenceで見直す。
+13. collaboration planとsynthesisは通常作業中に自分で生成し、ユーザーへformやlogの記入を求めない。自動観測できない意味は`unknown`として残す。
 
 agent数を増やすことは目的ではありません。milestone完了までの実時間を短くすることが目的です。
 

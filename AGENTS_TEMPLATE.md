@@ -53,6 +53,7 @@ execution laneはworkspace / permission境界、roleは責務、relationはagent
 - numeric / boolean parameterは`hard guard / cost cap / planning prior / hypothesis`へ分類し、scope、rationale、invalidation evidence、update ownerを持つ。
 - scheduled workは無期限agentにせずfinite jobにする。runtime availabilityを確認するまでscheduleの存在を仮定せず、deterministic CIや通常cronで足りるならagent schedulerを作らない。
 - primaryがcontinuation、synthesis、winner、integration、external side effectを所有し、human review / integration costも結果へ記録する。
+- primaryがcollaboration planとsynthesisを通常作業中に生成する。ユーザーへformやlogの記入を求めず、自動観測できないfieldは`unknown`とする。
 
 詳細は`docs/agents/collaboration-playbook.md`を参照します。`project/` copy sourceを使う場合は同fileも一緒に導入してください。
 

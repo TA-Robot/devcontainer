@@ -3,6 +3,8 @@
 Date: 2026-08-26
 Status: one episode; not a baseline or global prior
 
+> このepisodeはzero-input ledger実装前にprimaryが手動で再構成した初期記録です。今後、人間へ同じ記録を要求しません。自動取得できないsemantic fieldは`unknown`として扱います。
+
 ## Goal
 
 Grok 4.6とClaude Opus 5へ同じrepository contextとreview briefを渡し、multi-agent collaborationの思想、adaptive selection、interaction、recurring governance、repository toolingを独立に検討させる。
