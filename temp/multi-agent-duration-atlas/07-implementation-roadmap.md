@@ -1,6 +1,6 @@
 # 07. Implementation roadmap
 
-Implementation update: 2026-08-26にMilestone Aのschema、clock、fake runner、semantic testsと、Wave 0.5の非生成provider capability probeを完了。詳細は`15-milestone-a-implementation.md`と`16-wave-0.5-passive-capability-probe.md`。以下はroadmap全体として残します。
+Implementation update: 2026-08-26にMilestone Aのschema/clock/fake runner、Wave 0.5の非生成provider capability probe、Milestone Bのinitial S/M/L isolated fixtureを完了。詳細は`15`、`16`、`17-milestone-b-case-fixtures.md`。以下はroadmap全体として残します。
 
 ## 1. 現在地
 
@@ -11,13 +11,15 @@ Implementation update: 2026-08-26にMilestone Aのschema、clock、fake runner�
 - persistent observation volume
 - deterministic wrapper/control-plane benchmark
 - native task/result contract、read/write/isolated lane
-- duration studyのstudy / case / run schema v1とcapability schema v2
+- duration studyのstudy / run schema v1、case/capability schema v2
 - deterministic monotonic fake clock、derived duration validator、immutable run write
 - Codex / Claude / Grokのpassive version/help/catalog adapter
+- bounded implementation S/M/L case catalog、capsule、disposable one-commit Git builder
+- harness-only hidden evaluatorとknown-bad/good calibration
 
 不足しているもの:
 
-- versioned task case catalog contents
+- 12 familyへ広げたversioned task case catalog contents（initial F04 S/M/Lだけ実装）
 - study/run/config correlation
 - live providerからのT2/T4/V0/V1/T6/TX capture
 - task実行時のresolved model identity confidenceとrequested/applied generation setting capture
@@ -103,6 +105,8 @@ Deliverable:
 - measurement overhead report
 
 ## 5. Milestone B: case catalog and fixture isolation
+
+Status: initial F04 bounded-implementation S/M/L、capsule digest、deterministic snapshot、hidden oracle calibrationまで実装。historical replayとbroad 12-family corpusは未実装。
 
 追加:
 
@@ -254,8 +258,8 @@ generated outputはsource run digestを持ち、手編集しません。raw prom
 
 1. schema + fake clock harness
 2. identity/settingsのpassive capability probe — implemented; applied/progress canary remains
-3. case catalogのprofile descriptor部分
-4. deterministic read-only S case + online/offline oracle separation
+3. case catalogのprofile descriptor部分 — initial F04 S/M/L implemented
+4. deterministic isolated S/M/L case + online oracle separation — implemented
 5. primary-only provider canary
 6. atlasのraw-sample表示
 7. same-case repeat + variant summary

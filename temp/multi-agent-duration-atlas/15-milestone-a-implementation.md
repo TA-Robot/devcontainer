@@ -8,7 +8,7 @@ Status: schema + deterministic clock + fake runner implemented; no live provider
 
 Milestone Aの「測定器が嘘をつかない」範囲を実装しました。
 
-- study / case / runのJSON Schema v1（capabilityはWave 0.5でv2へ更新）
+- study / runのJSON Schema v1（capabilityはWave 0.5、caseはMilestone Bでv2へ更新）
 - UTC wall time + monotonic nanosecond event
 - missingを`not-applicable` / `not-observed` / `unknown`へ分離
 - observed eventからのみdurationを導出
