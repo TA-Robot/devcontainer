@@ -1207,7 +1207,14 @@ def _classify_provider_failure(provider: str, stderr: str) -> str:
     classifications = (
         (
             "generation-setting-rejected",
-            ("reasoning effort", "reasoning_effort", "invalid value", "invalid effort"),
+            (
+                "reasoning effort",
+                "reasoning_effort",
+                "invalid value",
+                "invalid effort",
+                "unknown effort",
+                "unsupported effort",
+            ),
         ),
         ("sandbox", ("bwrap", "sandbox", "landlock", "seccomp")),
         (
@@ -1243,7 +1250,13 @@ def _provider_failure_signals(stderr: str) -> list[str]:
         ("authentication-required", ("not logged in", "login required", "authentication failed")),
         (
             "effort-rejected",
-            ("invalid reasoning effort", "invalid reasoning_effort", "invalid effort"),
+            (
+                "invalid reasoning effort",
+                "invalid reasoning_effort",
+                "invalid effort",
+                "unknown effort",
+                "unsupported effort",
+            ),
         ),
         ("model-unavailable", ("unknown model", "model unavailable", "model is not")),
         ("network-failure", ("connection refused", "dns error", "network error")),
@@ -1760,10 +1773,10 @@ def run_isolated_provider_fixture(
                 "identity_confidence": "alias-only",
             }
         applied_effort = session_metadata.get("applied_effort")
-        if isinstance(applied_effort, str):
-            setting_status = "applied"
-        elif failure_class == "generation-setting-rejected":
+        if failure_class == "generation-setting-rejected":
             setting_status = "rejected"
+        elif infrastructure == "success" and isinstance(applied_effort, str):
+            setting_status = "applied"
         else:
             setting_status = "unknown"
         setting: dict[str, Any] = {

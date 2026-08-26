@@ -38,6 +38,7 @@ class AgentDurationLiveTests(unittest.TestCase):
         directory: Path,
         *,
         hidden_exit: int = 0,
+        grok_exit: int = 0,
     ) -> tuple[Path, Path, Path]:
         executable = directory / "fake-docker"
         call_log = directory / "fake-docker.calls"
@@ -109,6 +110,9 @@ if arguments[:1] == ["run"]:
             ]
         for event in events:
             print(json.dumps(event))
+        if is_grok and {grok_exit} != 0:
+            print("unknown effort requested", file=sys.stderr)
+            raise SystemExit({grok_exit})
     if "/harness/hidden_tests.py" in arguments:
         raise SystemExit({hidden_exit})
     raise SystemExit(0)
@@ -406,6 +410,38 @@ raise SystemExit(125)
             )
             self.assertIn("dst=/provider-bin/grok,readonly", serialized_run)
             self.assertNotIn(str(ROOT), serialized_run)
+
+    def test_grok_rejection_wins_over_pre_run_session_default(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="duration-live-grok-reject-") as raw_temp:
+            root = Path(raw_temp)
+            fixture_dir = self.build_s_fixture(root)
+            fake_docker, _, _ = self.make_fake_docker(root, grok_exit=2)
+            auth = self.write_provider_auth(root, "grok")
+
+            result = run_isolated_provider_fixture(
+                "grok",
+                fixture_dir,
+                image="provider-fixture:locked",
+                model="grok-4.6",
+                effort="max",
+                auth_file=auth,
+                live_generation_authorized=True,
+                docker_bin=str(fake_docker),
+                timeout_seconds=2,
+                output_bytes_cap=16 * 1024,
+                provider_binary=fake_docker,
+            )
+            self.assertEqual(result["infrastructure"], "failure")
+            self.assertEqual(result["failure_class"], "generation-setting-rejected")
+            self.assertEqual(
+                result["generation_settings"][0],
+                {
+                    "namespace": "grok.reasoning",
+                    "key": "effort",
+                    "requested_value": "max",
+                    "status": "rejected",
+                },
+            )
 
     def test_provider_effort_ladders_include_deep_reasoning_levels(self) -> None:
         core = {"medium", "high", "xhigh", "max"}

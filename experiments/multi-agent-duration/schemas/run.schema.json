@@ -748,7 +748,9 @@
             "managed-hook",
             "sandbox",
             "model-unavailable",
+            "generation-setting-rejected",
             "provider-network",
+            "provider-result-error",
             "provider-startup-unknown",
             "output-cap",
             "evaluator-infrastructure"
