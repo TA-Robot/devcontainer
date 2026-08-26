@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import re
 import sys
 import tomllib
 from pathlib import Path
@@ -17,6 +18,54 @@ EXPECTED_ROLE_MODES = {
     "implementer": ("write", "workspace-write", "default"),
     "reviewer": ("read", "read-only", "plan"),
 }
+
+
+ADAPTIVE_GUIDANCE_REQUIREMENTS = {
+    "AGENTS.md": (
+        "binding constraint",
+        "global default",
+        "hard guard / cost cap / planning prior / hypothesis",
+        "human review",
+    ),
+    "docs/agents/collaboration-playbook.md": (
+        "expected mechanism",
+        "binding constraint",
+        "derive participants",
+        "human review",
+        "parameter role",
+        "invalidation evidence",
+        "continue only while value changes",
+        "lifecycle",
+    ),
+    "docs/agents/tickets/collaboration-plan.template.md": (
+        "solo alternative",
+        "expected mechanism",
+        "binding constraint",
+        "participant basis",
+        "independence policy",
+        "human review / synthesis budget",
+        "invalidation evidence",
+        "continuation evidence",
+        "project-local learning",
+    ),
+}
+
+
+UNSUPPORTED_GLOBAL_DEFAULTS = (
+    re.compile(
+        r"通常\s*\d+\s*(?:agents?|エージェント|participants?|rounds?|往復|回|variants?|案|candidates?)",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"最大\s*\d+\s*(?:agents?|エージェント|participants?|rounds?|往復|回|variants?|案|candidates?)",
+        re.IGNORECASE,
+    ),
+    re.compile(
+        r"\b(?:normally|by\s+default|defaults?\s+to)\s*:?\s*\d+\s*(?:agents?|participants?|rounds?|exchanges?|variants?|candidates?)\b",
+        re.IGNORECASE,
+    ),
+    re.compile(r"\b(?:blind\s+first\s+round|first[- ]round[- ]blind)\b", re.IGNORECASE),
+)
 
 
 def parse_frontmatter(path: Path) -> dict[str, str]:
@@ -39,6 +88,16 @@ def parse_frontmatter(path: Path) -> dict[str, str]:
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise ContractValidationError(message)
+
+
+def validate_adaptive_guidance(path: Path, text: str, required_phrases: tuple[str, ...]) -> None:
+    lowered = text.lower()
+    for phrase in required_phrases:
+        require(phrase.lower() in lowered, f"adaptive collaboration guidance missing {phrase!r}: {path}")
+    for pattern in UNSUPPORTED_GLOBAL_DEFAULTS:
+        match = pattern.search(text)
+        if match:
+            raise ContractValidationError(f"unsupported global collaboration default {match.group(0)!r}: {path}")
 
 
 def validate_config(root: Path) -> dict[str, Any]:
@@ -69,11 +128,15 @@ def validate_operating_docs(root: Path) -> None:
     for relative in required:
         path = root / relative
         require(path.is_file(), f"missing operating document: {path}")
-    agents = (root / "AGENTS.md").read_text(encoding="utf-8")
+    agents_path = root / "AGENTS.md"
+    agents = agents_path.read_text(encoding="utf-8")
     require(
         "docs/agents/collaboration-playbook.md" in agents,
         "AGENTS.md must reference the collaboration playbook",
     )
+    for relative, phrases in ADAPTIVE_GUIDANCE_REQUIREMENTS.items():
+        path = root / relative
+        validate_adaptive_guidance(path, path.read_text(encoding="utf-8"), phrases)
 
 
 def validate_schemas_and_examples(root: Path, config: dict[str, Any]) -> None:

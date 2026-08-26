@@ -40,8 +40,21 @@ class AgentContractTests(unittest.TestCase):
         validator.validate_operating_docs(self.template)
         playbook = self.template / "docs/agents/collaboration-playbook.md"
         template = self.template / "docs/agents/tickets/collaboration-plan.template.md"
-        self.assertIn("Scheduled and event-triggered rules", playbook.read_text(encoding="utf-8"))
-        self.assertIn("usage / quota budget", template.read_text(encoding="utf-8"))
+        self.assertIn("Find the binding constraint", playbook.read_text(encoding="utf-8"))
+        self.assertIn("human review / synthesis budget", template.read_text(encoding="utf-8"))
+
+    def test_collaboration_guidance_rejects_unsupported_global_defaults(self) -> None:
+        validator = load_template_validator()
+        path = self.template / "docs/agents/collaboration-playbook.md"
+        for statement in (
+            "deliberationは通常2 rounds",
+            "最大3往復で停止する",
+            "variants normally 2 candidates",
+            "use a blind first round",
+        ):
+            with self.subTest(statement=statement):
+                with self.assertRaises(ContractValidationError):
+                    validator.validate_adaptive_guidance(path, statement, ())
 
     def test_valid_fixtures(self) -> None:
         validate(load_json(self.fixtures / "task.valid.json"), self.task_schema)
