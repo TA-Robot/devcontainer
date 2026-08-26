@@ -24,6 +24,7 @@ from agent_duration_fixtures import (  # noqa: E402
     _install_known_good_for_test,
     build_fixture,
     evaluate_fixture,
+    evaluate_fixture_isolated,
 )
 from agent_duration_study import (  # noqa: E402
     DurationStudyError,
@@ -34,6 +35,28 @@ from agent_duration_study import (  # noqa: E402
 
 
 class AgentDurationFixtureTests(unittest.TestCase):
+    def make_fake_docker(self, directory: Path) -> tuple[Path, Path]:
+        executable = directory / "fake-docker"
+        call_log = directory / "fake-docker.calls"
+        program = f'''#!/usr/bin/env python3
+import json
+from pathlib import Path
+import sys
+
+call_log = Path({str(call_log)!r})
+with call_log.open("a", encoding="utf-8") as handle:
+    handle.write(json.dumps(sys.argv[1:]) + "\\n")
+if sys.argv[1:3] == ["image", "inspect"]:
+    print("sha256:" + "a" * 64)
+elif sys.argv[1:2] in (["run"], ["rm"]):
+    raise SystemExit(0)
+else:
+    raise SystemExit(125)
+'''
+        executable.write_text(program, encoding="utf-8")
+        executable.chmod(0o700)
+        return executable, call_log
+
     def catalog(self) -> dict[str, object]:
         value = load_json(CATALOG_PATH)
         self.assertIsInstance(value, dict)
@@ -196,6 +219,55 @@ class AgentDurationFixtureTests(unittest.TestCase):
             tampered["initial_oracle"]["hidden_check"]["status"] = "pass"
             with self.assertRaises(DurationStudyError):
                 validate_fixture_record(tampered)
+
+    def test_isolated_evaluator_builds_a_bounded_content_free_docker_surface(self) -> None:
+        fixed_now = datetime(2026, 8, 26, 13, 50, tzinfo=timezone.utc)
+        with tempfile.TemporaryDirectory(prefix="duration-fixture-docker-") as raw_temp:
+            root = Path(raw_temp)
+            fixture_dir = root / "fixture"
+            build_fixture(
+                "F04-S-PY-001",
+                fixture_dir,
+                fixture_id="isolated-fixture",
+                now=fixed_now,
+            )
+            fake_docker, call_log = self.make_fake_docker(root)
+            result = evaluate_fixture_isolated(
+                fixture_dir,
+                image="fixture-evaluator:locked",
+                docker_bin=str(fake_docker),
+                timeout_seconds=2,
+            )
+            self.assertEqual(result["status"], "pass")
+            self.assertEqual(result["isolation"]["image_digest"], f"sha256:{'a' * 64}")
+            self.assertFalse(result["isolation"]["credential_mounts"])
+            self.assertFalse(result["isolation"]["control_bundle_mounted"])
+
+            calls = [
+                json.loads(line)
+                for line in call_log.read_text(encoding="utf-8").splitlines()
+            ]
+            run_calls = [call for call in calls if call[0] == "run"]
+            self.assertEqual(len(run_calls), 2)
+            for call in run_calls:
+                serialized = json.dumps(call)
+                self.assertIn("--network", call)
+                self.assertIn("none", call)
+                self.assertIn("--read-only", call)
+                self.assertIn("--cap-drop", call)
+                self.assertIn("no-new-privileges", call)
+                self.assertNotIn("base.bundle", serialized)
+                self.assertNotRegex(serialized.lower(), r"token|credential|secret")
+            self.assertNotIn("/harness/hidden_tests.py", json.dumps(run_calls[0]))
+            self.assertIn("/harness/hidden_tests.py", json.dumps(run_calls[1]))
+
+            with self.assertRaises(DurationStudyError):
+                evaluate_fixture_isolated(
+                    fixture_dir,
+                    image="fixture-evaluator:locked",
+                    docker_bin=str(fake_docker),
+                    timeout_seconds=float("nan"),
+                )
 
     def test_cli_build_validate_evaluate_and_no_overwrite(self) -> None:
         with tempfile.TemporaryDirectory(prefix="duration-fixture-cli-") as raw_temp:

@@ -1188,6 +1188,15 @@ def build_parser() -> argparse.ArgumentParser:
         help="acknowledge host execution is only for checked-in fixture calibration",
     )
 
+    isolated_evaluate = subparsers.add_parser(
+        "evaluate-fixture-isolated",
+        help="evaluate an agent artifact in a network-disabled read-only container",
+    )
+    isolated_evaluate.add_argument("fixture_dir", type=Path)
+    isolated_evaluate.add_argument("--image", required=True)
+    isolated_evaluate.add_argument("--docker-bin", default="docker")
+    isolated_evaluate.add_argument("--timeout-seconds", type=float, default=30)
+
     validate_command = subparsers.add_parser("validate", help="validate one study record")
     validate_command.add_argument("--kind", choices=tuple(SCHEMA_PATHS), required=True)
     validate_command.add_argument("path", type=Path)
@@ -1285,6 +1294,18 @@ def main(argv: list[str] | None = None) -> int:
                     "live artifacts require a network-disabled evaluator container"
                 )
             result = evaluate_fixture(args.fixture_dir.resolve())
+            print(json.dumps(result, sort_keys=True))
+            return 0 if result["status"] == "pass" else 1
+
+        if args.command == "evaluate-fixture-isolated":
+            from agent_duration_fixtures import evaluate_fixture_isolated
+
+            result = evaluate_fixture_isolated(
+                args.fixture_dir.resolve(),
+                image=args.image,
+                docker_bin=args.docker_bin,
+                timeout_seconds=args.timeout_seconds,
+            )
             print(json.dumps(result, sort_keys=True))
             return 0 if result["status"] == "pass" else 1
 

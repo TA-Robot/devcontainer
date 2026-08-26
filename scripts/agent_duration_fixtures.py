@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import copy
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -971,6 +972,215 @@ def evaluate_fixture(fixture_dir: Path) -> dict[str, Any]:
         ),
         manifest_value["execution_contract"]["online_evaluator_id"],
     )
+
+
+def _docker_image_digest(docker_bin: str, image: str) -> str:
+    try:
+        completed = subprocess.run(
+            [docker_bin, "image", "inspect", "--format", "{{.Id}}", image],
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            timeout=15,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired) as exc:
+        raise DurationStudyError("cannot inspect isolated evaluator image") from exc
+    digest = completed.stdout.strip()
+    if completed.returncode != 0 or re.fullmatch(r"sha256:[0-9a-f]{64}", digest) is None:
+        raise DurationStudyError("isolated evaluator image is unavailable or has no exact digest")
+    return digest
+
+
+def _isolated_check(
+    check_id: str,
+    argv: list[str],
+    *,
+    docker_bin: str,
+    image: str,
+    fixture_id: str,
+    workspace: Path,
+    hidden_evaluator: Path | None,
+    timeout_seconds: float,
+) -> dict[str, Any]:
+    container_name = f"mira-duration-eval-{os.getpid()}-{time.time_ns()}"
+    command = [
+        docker_bin,
+        "run",
+        "--rm",
+        "--pull",
+        "never",
+        "--name",
+        container_name,
+        "--label",
+        f"devcontainer.duration-study.fixture={fixture_id}",
+        "--network",
+        "none",
+        "--read-only",
+        "--cap-drop",
+        "ALL",
+        "--security-opt",
+        "no-new-privileges",
+        "--pids-limit",
+        "128",
+        "--memory",
+        "512m",
+        "--cpus",
+        "1.0",
+        "--ulimit",
+        "nofile=256:256",
+        "--tmpfs",
+        "/tmp:rw,nosuid,nodev,noexec,size=64m,mode=1777",
+        "--user",
+        f"{os.getuid()}:{os.getgid()}",
+        "--workdir",
+        "/case",
+        "--env",
+        "HOME=/tmp",
+        "--env",
+        "LANG=C.UTF-8",
+        "--env",
+        "LC_ALL=C.UTF-8",
+        "--env",
+        "TZ=UTC",
+        "--env",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "--env",
+        "PYTHONPATH=/case",
+        "--env",
+        "DURATION_FIXTURE_WORKSPACE=/case",
+        "--mount",
+        f"type=bind,src={workspace},dst=/case,readonly",
+    ]
+    if hidden_evaluator is not None:
+        command.extend(
+            [
+                "--mount",
+                f"type=bind,src={hidden_evaluator},dst=/harness/hidden_tests.py,readonly",
+            ]
+        )
+    command.extend([image, *argv])
+    started = time.monotonic_ns()
+    try:
+        completed = subprocess.run(
+            command,
+            stdin=subprocess.DEVNULL,
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=timeout_seconds,
+            check=False,
+        )
+        exit_code = completed.returncode
+    except subprocess.TimeoutExpired:
+        try:
+            subprocess.run(
+                [docker_bin, "rm", "--force", container_name],
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.DEVNULL,
+                stderr=subprocess.DEVNULL,
+                timeout=10,
+                check=False,
+            )
+        except (OSError, subprocess.TimeoutExpired) as exc:
+            raise DurationStudyError(
+                f"isolated evaluator timed out and cleanup could not be issued: {container_name}"
+            ) from exc
+        exit_code = 124
+    except OSError as exc:
+        raise DurationStudyError("cannot start isolated evaluator container") from exc
+    duration_ms = round((time.monotonic_ns() - started) / 1_000_000, 3)
+    if exit_code == 125:
+        raise DurationStudyError("isolated evaluator container failed before the check started")
+    return {
+        "check_id": check_id,
+        "status": "pass" if exit_code == 0 else "fail",
+        "exit_code": exit_code,
+        "duration_ms": duration_ms,
+    }
+
+
+def evaluate_fixture_isolated(
+    fixture_dir: Path,
+    *,
+    image: str,
+    docker_bin: str = "docker",
+    timeout_seconds: float = 30,
+) -> dict[str, Any]:
+    """Evaluate an agent artifact in a bounded network-disabled container."""
+
+    if not image or len(image) > 512:
+        raise DurationStudyError("isolated evaluator image reference is required")
+    if not math.isfinite(timeout_seconds) or timeout_seconds <= 0 or timeout_seconds > 300:
+        raise DurationStudyError("isolated evaluator timeout must be > 0 and <= 300 seconds")
+    manifest_value = load_json(fixture_dir / "fixture.json")
+    if not isinstance(manifest_value, dict):
+        raise DurationStudyError("fixture manifest root must be an object")
+    validate_fixture_record(manifest_value)
+    contract = manifest_value["execution_contract"]
+    if contract["evaluator_isolation_required"] != "network-disabled-read-only-container":
+        raise DurationStudyError("fixture does not authorize the isolated evaluator profile")
+
+    resolved_fixture = fixture_dir.resolve()
+    workspace = (resolved_fixture / manifest_value["paths"]["workspace"]).resolve()
+    hidden_evaluator = (
+        resolved_fixture / manifest_value["paths"]["hidden_evaluator"]
+    ).resolve()
+    try:
+        workspace.relative_to(resolved_fixture)
+        hidden_evaluator.relative_to(resolved_fixture)
+    except ValueError as exc:
+        raise DurationStudyError("fixture evaluator path escapes its owned root") from exc
+    if not workspace.is_dir() or not hidden_evaluator.is_file():
+        raise DurationStudyError("fixture workspace or hidden evaluator is missing")
+    if workspace == hidden_evaluator or workspace in hidden_evaluator.parents:
+        raise DurationStudyError("hidden evaluator must remain outside the agent workspace")
+    if any("," in str(path) or "\n" in str(path) for path in (workspace, hidden_evaluator)):
+        raise DurationStudyError("fixture path cannot be encoded as a Docker bind mount")
+
+    image_digest = _docker_image_digest(docker_bin, image)
+    workspace_checks = [
+        _isolated_check(
+            f"workspace-{index + 1}",
+            command,
+            docker_bin=docker_bin,
+            image=image,
+            fixture_id=manifest_value["fixture_id"],
+            workspace=workspace,
+            hidden_evaluator=None,
+            timeout_seconds=timeout_seconds,
+        )
+        for index, command in enumerate(contract["workspace_validation_commands"])
+    ]
+    hidden_check = _isolated_check(
+        contract["online_evaluator_id"],
+        ["python3", "/harness/hidden_tests.py"],
+        docker_bin=docker_bin,
+        image=image,
+        fixture_id=manifest_value["fixture_id"],
+        workspace=workspace,
+        hidden_evaluator=hidden_evaluator,
+        timeout_seconds=timeout_seconds,
+    )
+    checks = [*workspace_checks, hidden_check]
+    return {
+        "status": "pass" if all(item["status"] == "pass" for item in checks) else "fail",
+        "fixture_id": manifest_value["fixture_id"],
+        "case_id": manifest_value["case"]["case_id"],
+        "evaluator_id": contract["online_evaluator_id"],
+        "isolation": {
+            "profile": "network-disabled-read-only-container",
+            "image_reference": image,
+            "image_digest": image_digest,
+            "rootfs": "read-only",
+            "workspace_mount": "read-only",
+            "hidden_evaluator_mount": "read-only",
+            "network": "none",
+            "credential_mounts": False,
+            "control_bundle_mounted": False,
+        },
+        "workspace_checks": workspace_checks,
+        "hidden_check": hidden_check,
+    }
 
 
 def _install_known_good_for_test(case_id: str, workspace: Path) -> None:
