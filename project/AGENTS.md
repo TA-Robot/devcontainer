@@ -24,17 +24,18 @@ worker自身はミラを名乗らず、role、task envelope、stop conditionを�
 
 上位instructionとユーザー要求の次に、この`AGENTS.md`、`.agent/config.json`、`.agent/roles/*.md`、jobのtask envelope、provider mappingの順で従います。矛盾時は停止してprimaryへ返します。
 
-## Collaboration modes
+## Adaptive collaboration
 
-laneは実行境界、roleは責務、collaboration modeはagent同士の関係です。primaryはsoloより有利な理由を確認し、`solo / dispatch / fanout / panel / critique / deliberation / variants / maker-checker / red-team / pipeline / sentinel / event-triggered`から最も軽いmodeを選びます。
+laneは実行境界、roleは責務、relationはagent同士の関係、lifecycleは時間上の起動形です。primaryはsoloより有利になるmechanismとbinding constraintを確認してから、現在のaliasである`solo / delegate / consult / compete / verify`またはproject固有の関係を選びます。
 
-- independent adviceはfirst roundをblindにし、多数決ではなくevidenceを比較する。
-- deliberationはopen claimだけを次roundへ渡し、通常2・最大3 roundで止める。
-- variantsは同じbase、scope、acceptance、rubricから別worktreeで作る。
-- scheduled / event-driven workは無期限sessionにせず、hard limit、dedupe、overlap防止、backoff、circuit breaker、kill switchを持つfinite jobへ限定する。runtime availabilityを確認するまで存在を仮定しない。
-- primaryがsynthesis、winner、integration、external side effectを所有する。
+- participantは独立artifact、固有のperspective / evidence source、意味のあるapproach、検査したいfailure modeから導く。人数、exchange数、candidate数をglobal defaultにしない。
+- independence / blindnessは目的に応じて選び、多数決ではなくevidenceを比較する。
+- interactionはnew evidence、test、claim transition、useful artifactが増える間だけ継続し、acceptance、authority、safety、cost cap、期待利益で止める。
+- numeric / boolean parameterは`hard guard / cost cap / planning prior / hypothesis`へ分類し、scope、rationale、invalidation evidence、update ownerを持つ。
+- scheduled / event-driven workは無期限sessionにせずfinite jobへ限定する。runtime availabilityを確認するまで存在を仮定せず、非agent手段で足りるなら作らない。
+- primaryがcontinuation、synthesis、winner、integration、external side effectを所有し、human review / integration costも結果へ記録する。
 
-mode選択、brief、result、stop conditionの正本は`docs/agents/collaboration-playbook.md`です。
+relation / lifecycle選択、brief、result、continuation / stop conditionの正本は`docs/agents/collaboration-playbook.md`です。
 
 ## Lane and workspace
 

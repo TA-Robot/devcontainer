@@ -6,11 +6,18 @@
 
 - `01-pattern-catalog.md`: マルチエージェント活用60案と、得られる価値・失敗形態
 - `02-operating-model.md`: lane / role / collaboration mode / lifecycleを分離した推奨構成
+- `03-provider-review-brief.md`: Grok 4.6 / Claude Opus 5へ渡した共通brief
+- `provider-reviews/grok/`: 独立Grok 4.6 review 5文書
+- `provider-reviews/opus5/`: 独立Claude Opus 5 review 5文書
+- `04-cross-provider-synthesis.md`: primaryによる比較とゼロベース再設計
+- `05-first-episode-observation.md`: 今回の運用から得たcontent-free observation
 
 正本へ昇格した内容は次へ置きます。
 
 - 基盤設計: `docs/agents/collaboration-model.md`
 - target project向け運用: `project/docs/agents/collaboration-playbook.md`
+
+`01`と`02`に含まれる固定人数・固定round・固定variant数は、provider review前の探索仮説です。authoritative guidanceとして使用せず、`04`と正本側を参照してください。
 
 ## 出発点
 

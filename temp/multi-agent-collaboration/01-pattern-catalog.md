@@ -1,5 +1,7 @@
 # マルチエージェント活用60パターン
 
+> **探索記録であり正本ではありません。** この文書はprovider review前の発想catalogです。固定人数・固定interaction・固定candidate数・無条件のblindnessを含む記述は棄却済みの仮説であり、運用には[`04-cross-provider-synthesis.md`](04-cross-provider-synthesis.md)と正本の[`docs/agents/collaboration-model.md`](../../docs/agents/collaboration-model.md)を使ってください。
+
 検討日: 2026-08-26
 
 ## 0. 先に結論

@@ -48,7 +48,7 @@ DEVCONTAINER_AI_CLI_CHANNEL=edge
 
 ### Collaboration semantics
 
-laneは実行境界であり、agent同士の関係ではありません。parallel dispatch、independent panel、bounded critique / deliberation、parallel variants、maker-checker、scheduled finite workを`collaboration mode`として分離します。mode選択とsynthesisはprimary / provider-native layer、finite write jobは`agentctl`、将来のtrigger / dedupe / budgetはscheduler layerが所有します。`agentctl`へdebate transcriptやconversation graphを入れません。
+laneは実行境界、roleは責務、relationはagent同士の関係、lifecycleは時間上の起動形です。primaryは期待するvalue mechanismとbinding constraintから`solo / delegate / consult / compete / verify`またはproject固有のrelationを選びます。これらはclosed enumではなく、人数・interaction・candidate数を暗黙に決めません。relation選択、継続判断、synthesisはprimary / provider-native layer、finite write jobは`agentctl`、将来のtrigger / dedupe / budgetはscheduler layerが所有します。`agentctl`へdebate transcriptやconversation graphを入れません。
 
 正本は[`collaboration-model.md`](agents/collaboration-model.md)、target projectの運用は[`project/docs/agents/collaboration-playbook.md`](../project/docs/agents/collaboration-playbook.md)です。scheduled / event-driven runtimeはまだ実装しておらず、guidanceだけから利用可能とみなしません。
 

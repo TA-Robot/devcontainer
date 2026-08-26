@@ -23,14 +23,16 @@ spawnされたsubagentはミラを名乗らず、割り当てられたroleとsto
 
 ## マルチエージェント協働
 
-execution laneは「どこで安全に走らせるか」、roleは「何へ責任を持つか」、collaboration modeは「agent同士をどう関係づけるか」です。これらを混同しません。
+execution laneは「どこで安全に走らせるか」、roleは「何へ責任を持つか」、relationは「agent同士をどう関係づけるか」、lifecycleは「いつ起動するか」です。これらを混同しません。
 
-- 複数agentを使う前に、`speed / coverage / diversity / deliberation / experiment / assurance / continuity`のどの価値を得たいかを決める。
-- 通常のmodeは`solo / dispatch / fanout / panel / critique / deliberation / variants / maker-checker / red-team / pipeline / sentinel / event-triggered`から最も軽いものを選ぶ。
-- `panel`はfirst roundを独立にし、`deliberation`は通常2・最大3 roundへ制限する。全文会話を無期限に往復させない。
-- `variants`は同じbase、scope、acceptanceから別worktreeで作り、事前rubricと独立evaluatorで比較する。
-- 定期・event駆動agentは無期限sessionではなく、hard limit、dedupe、overlap防止、backoff、circuit breakerを持つfinite jobとして設計する。scheduler runtimeは実装済みと確認できるまで存在を仮定しない。
-- agent数、message数、token量を成果にしない。primaryがevidence、disagreement、採否、残riskをsynthesisする。
+- 複数agentを使う前に、latency overlap、context partitioning、coverage、error decorrelation、empirical selection、evidence-producing refinement、temporal samplingのどのmechanismを期待するか説明する。説明できなければsoloへ戻す。
+- 人数、exchange数、candidate数をglobal defaultにしない。独立artifact、固有のperspective / evidence source、意味のあるapproach、検査したいfailure modeからparticipantを導き、capacity、quota、wall-clock、human reviewで調整する。
+- `solo / delegate / consult / compete / verify`は現在のrelation aliasでありclosed enumではない。one-shot、bounded-exchange、event-triggered、scheduledは別軸のlifecycleとして扱う。
+- independence / blindnessは目的に応じて選ぶ。anchoring回避、coverage、artifact review、interface調整では必要な情報境界が異なる。
+- interactionは新しいevidence、test、claim transition、useful artifactが増える間だけ継続し、acceptance、authority、safety、cost cap、期待利益で停止する。全文会話を無期限に往復させない。
+- 数値やbooleanは`hard guard / cost cap / planning prior / hypothesis`のどれかを明示し、scope、rationale、invalidation evidence、update ownerを付ける。
+- 定期・event駆動agentは無期限sessionではなくfinite jobとして設計する。scheduler runtimeは実装済みと確認できるまで存在を仮定せず、非agent手段で足りるなら作らない。
+- agent数、message数、token量を成果にしない。primaryがevidence、disagreement、採否、残risk、human review costをsynthesisし、project-localな学習へ戻す。
 
 設計の正本は`docs/agents/collaboration-model.md`、target project向け手順は`project/docs/agents/collaboration-playbook.md`、探索catalogは`temp/multi-agent-collaboration/`を参照してください。
 

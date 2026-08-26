@@ -40,27 +40,19 @@ subagentはミラを名乗らず、割り当てられたrole、task envelope、s
 
 矛盾を見つけたagentは、都合よく解釈せずprimaryへ返します。
 
-## Collaboration modes
+## Adaptive collaboration
 
-execution laneはworkspace / permission境界、roleは責務、collaboration modeはagent同士の関係です。
+execution laneはworkspace / permission境界、roleは責務、relationはagent同士の関係、lifecycleは時間上の起動形です。
 
-| mode | 主な用途 | default bound |
-|---|---|---|
-| `solo` | 小さく明確なtask | primaryのみ |
-| `dispatch` / `fanout` | bounded delegation / independent parallel work | one-shot |
-| `panel` | 独立した意見・観点の収集 | blind first round |
-| `critique` / `deliberation` | 初案の反証とboundedな再検討 | 1 revision / 通常2・最大3 round |
-| `variants` | 複数案を同条件で実装・比較 | 通常2 variants |
-| `maker-checker` / `red-team` | 独立検証と敵対的risk探索 | timeboxed |
-| `pipeline` | artifactをstage間で受け渡す | finite stages |
-| `sentinel` / `event-triggered` | 定期・event駆動の点検 | finite runs + hard limits |
-
-- multi-agentを使う前に、soloより有利な理由と得たい価値を明示する。
-- `panel`のfirst roundは他案を見せず、primaryは多数決でなくevidenceを比較する。
-- discussionはopen claimだけをround間で渡し、同じ主張の言い換えになったら停止する。
-- `variants`は同じbase SHA、scope、acceptance、rubricから別worktreeで開始する。
-- scheduled workは無期限agentにせず、dedupe、overlap防止、time / usage / retry上限、backoff、circuit breaker、kill switchを持つfinite jobにする。runtime availabilityを確認するまでscheduleの存在を仮定しない。
-- primaryがsynthesis、winner、integration、external side effectを所有する。
+- multi-agentを使う前に、soloより有利になるcausal mechanismと、今回最初に尽きるbinding constraintを明示する。
+- `solo / delegate / consult / compete / verify`はrelationを説明する現在のaliasで、project固有の関係を排除するclosed enumではない。
+- one-shot、bounded-exchange、event-triggered、scheduledはlifecycleとしてrelationと分離する。
+- participantは独立artifact、固有のperspective / evidence source、意味のあるapproach、検査したいfailure modeから導く。人数、exchange数、candidate数をglobal defaultにしない。
+- independence policyはanchoring回避、coverage、artifact review、interface coordinationなど今回の目的に合わせて選び、理由を書く。
+- interactionはnew evidence、test、claim transition、useful artifactが増える間だけ継続し、acceptance、authority、safety、cost cap、期待利益で停止する。
+- numeric / boolean parameterは`hard guard / cost cap / planning prior / hypothesis`へ分類し、scope、rationale、invalidation evidence、update ownerを持つ。
+- scheduled workは無期限agentにせずfinite jobにする。runtime availabilityを確認するまでscheduleの存在を仮定せず、deterministic CIや通常cronで足りるならagent schedulerを作らない。
+- primaryがcontinuation、synthesis、winner、integration、external side effectを所有し、human review / integration costも結果へ記録する。
 
 詳細は`docs/agents/collaboration-playbook.md`を参照します。`project/` copy sourceを使う場合は同fileも一緒に導入してください。
 

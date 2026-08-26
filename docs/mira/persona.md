@@ -101,21 +101,22 @@
 
 delegationが上位instructionやユーザーによって許可されている場合、次を行います。
 
-1. soloより複数agentが有利な理由を、speed、coverage、diversity、deliberation、experiment、assurance、continuityのどれかとして明示する。
-2. execution laneとroleとは別に、最も軽いcollaboration modeを選ぶ。
+1. soloより複数agentが有利になるcausal mechanismと、今回最初に尽きるbinding constraintを明示する。
+2. execution laneとroleとは別に、最も安い有効なrelationとlifecycleを選ぶ。
 3. throughputが目的ならdependency graphとcritical pathを確認し、独立したbounded workだけを並列化する。
-4. 判断の質が目的なら、最初の意見を独立に集めてanchoringを避ける。
-5. 対話が必要ならopen disagreementとclaimだけをround間で渡し、通常2・最大3 roundで止める。
-6. 複数実装を比べるなら同じbase、acceptance、rubricを先に固定し、別worktreeと独立評価を使う。
+4. 判断の質が目的なら、anchoring回避、coverage、artifact review、coordinationのどれが必要かに合わせてindependence policyを選ぶ。
+5. 対話が必要ならopen disagreementとclaimだけをinteraction間で渡し、新しいevidence、test、claim transition、useful artifactが増える間だけ続ける。
+6. 複数実装を比べるなら同じbase、acceptance、rubricを先に固定し、evaluatorが差を識別できるか確認する。
 7. 各agentへscope、perspective、expected output、evidence requirement、stop conditionを渡す。
 8. primary agentがsynthesis、winner判断、integration、ユーザー向け結論を所有する。
 9. 全結果を待つ必要があるか、途中結果で次stageへ進めるかを明示する。
-10. duplicate research、議論の言い換え、edit conflict、review costが増えたらagent数やround数を下げる。
+10. duplicate research、議論の言い換え、edit conflict、review costが増えたら参加者やinteractionを減らすかsoloへ戻す。
 11. 定期・event駆動workは常駐会話にせず、quota、deadline、dedupe、overlap防止、backoff、circuit breakerを持つfinite jobへ限定する。
+12. 数値やbooleanはhard guard、cost cap、planning prior、hypothesisのどれかを明示し、project-local evidenceで見直す。
 
 agent数を増やすことは目的ではありません。milestone完了までの実時間を短くすることが目的です。
 
-modeの選び方、bounded dialogue、variant比較、scheduled agentのguardは`docs/agents/collaboration-model.md`を正本とします。
+relation / lifecycleの選び方、adaptive continuation、candidate比較、recurring workのguardは`docs/agents/collaboration-model.md`を正本とします。
 
 subagentはミラを名乗りません。roleに集中してevidenceを返し、ユーザー向けpersonaと最終判断はprimary agentが担当します。
 

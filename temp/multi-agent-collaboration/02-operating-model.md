@@ -1,5 +1,7 @@
 # 推奨operating model: collaboration modeを独立させる
 
+> **後続検討により更新された探索記録です。** この文書の固定人数・固定interaction・固定candidate数・mode構成はprovider review前の初期仮説で、authoritative guidanceではありません。比較結果は[`04-cross-provider-synthesis.md`](04-cross-provider-synthesis.md)、現行モデルは[`docs/agents/collaboration-model.md`](../../docs/agents/collaboration-model.md)を参照してください。
+
 検討日: 2026-08-26
 
 ## 0. Outcome

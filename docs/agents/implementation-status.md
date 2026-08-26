@@ -31,13 +31,15 @@ The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-r
 - Wrapper choreography is isolated in the legacy compatibility runbook.
 - Failure classification, orphan recovery, clean retry, resource collision, integration, and GC are centralized in the target-project runbook.
 
-### Collaboration guidance C0 and initial C1
+### Adaptive collaboration guidance C0 and initial C1
 
-- Execution lane, role, collaboration mode, lifecycle, and authority are separate axes; multi-agent work is no longer described only as independent fan-out.
-- Sixty candidate patterns are reduced to twelve operational modes covering dispatch, independent advice, bounded deliberation, parallel variants, independent assurance, and temporal work.
-- The target playbook defines blind first rounds, claim-bounded dialogue, common-base variant comparison, primary-owned synthesis, and explicit stop conditions.
-- A reusable collaboration-plan template records expected value, participants, artifact flow, evaluation, lane, budgets, and recurring-trigger guards.
-- The native-agent template validator now requires the playbook and plan template in the project copy source.
+- Execution lane, role, relation, lifecycle, and authority are separate axes; multi-agent work is no longer described only as independent fan-out.
+- The sixty-pattern catalog remains exploratory. Grok 4.6 and Claude Opus 5 independently reviewed the model, and the primary synthesis rejected unsupported global participant, exchange, candidate, and blindness defaults.
+- The canonical model starts from a causal value mechanism and binding constraint, derives participants from distinct work or evidence, and continues only while evidence or artifact value changes.
+- `solo / delegate / consult / compete / verify` are current relation aliases rather than a closed enum; one-shot, bounded-exchange, event-triggered, and scheduled are a separate lifecycle axis.
+- A reusable collaboration-plan template records the solo alternative, mechanism, constraint, participant derivation, independence rationale, human review, parameter roles, continuation evidence, and project-local learning.
+- Numeric and boolean parameters are classified as hard guard, cost cap, planning prior, or hypothesis, with scope, rationale, invalidation evidence, and update ownership.
+- The native-agent template validator requires the adaptive playbook and plan template and rejects reintroduction of unsupported fixed defaults in the project copy source.
 - Scheduled and event-triggered agents are guidance only. `agentctl` 0.7 has no cron or event-trigger runtime; recurring work must not be inferred from the capacity scheduler.
 
 ### Phase 3a: foreground job / workspace fabric
@@ -100,4 +102,4 @@ Run the same fixture on intentional `sbx --clone` and Docker Agent installations
 
 ## Next: collaboration C1-C2
 
-Exercise panel, critique, deliberation, variants, and maker-checker against representative tasks using native provider capabilities. Record content-free mode, elapsed time, accepted artifact, decisive finding, rework, and integration effort, then compare them with a solo baseline. Only fields that prove useful should enter a separate machine-readable collaboration-plan contract. A disabled-by-default read-only scheduler pilot belongs to a later C4 gate after trigger, dedupe, overlap, usage budget, backoff, circuit-breaker, and restart semantics are specified and fault-tested.
+Exercise delegate, consult, compete, and verify relations only where a representative task has a credible mechanism over solo. Record content-free relation / lifecycle, participant derivation, elapsed time, accepted artifact, decisive finding, rework, human review, integration effort, stop reason, and whether collaboration changed the outcome. Use those observations to remove unused fields and form project-local planning priors; do not infer global optima from provider count or invocation count. A comparison harness requires evidence that the evaluator can distinguish candidates. A read-only trigger pilot requires evidence that manual, CI, deterministic script, and ordinary cron alternatives are insufficient, plus specified trigger, dedupe, overlap, usage, backoff, circuit, restart, owner, expiry, and kill-path semantics.

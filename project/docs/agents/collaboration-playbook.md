@@ -1,215 +1,218 @@
-# Multi-agent collaboration playbook
+# Adaptive multi-agent collaboration playbook
 
-このplaybookは、primary / managerが「複数agentをどう使うか」を選ぶための正本です。workspace、permission、process recoveryは`AGENTS.md`と`docs/agents/runbook.md`、individual write jobは`.agent/schemas/`を使います。
+このplaybookは、primary / managerが「複数agentを使うと何が改善し、どう関係づけ、いつ止めるか」を決めるための正本です。workspace、permission、process recoveryは`AGENTS.md`と`docs/agents/runbook.md`、individual write jobは`.agent/schemas/`を使います。
 
-delegationやsubagent利用が上位instruction、tool、ユーザーによって許可されている場合だけ適用します。利用可能でない時は、同じ分析枠組みをprimary一人のsequential reviewへ縮退します。
+delegationやsubagent利用が上位instruction、tool、ユーザーによって許可されている場合だけ適用します。利用できない時は同じ分析枠組みをprimary一人のsequential reviewへ縮退し、独立性や並列性を得たとは主張しません。
 
-## Start with the value, not the agent count
+## Start from the expected mechanism
 
-複数agentを使う前に、得たい価値を一つ以上選びます。
+人数や呼び出し回数より先に、soloに対して期待するmechanismを説明します。
 
-- `speed`: 独立作業を並行してwall-clockを短縮する。
-- `coverage`: repository、evidence、riskの見落としを減らす。
-- `diversity`: 独立した初期判断と異なる観点を得る。
-- `deliberation`: critiqueと再提案で初案を強くする。
-- `experiment`: 複数案を同じ条件で作り、実測で選ぶ。
-- `assurance`: makerとcheckerを分ける。
-- `continuity`: 時間またはeventをまたいでdriftを観測する。
+- **latency overlap**: 独立workを重ね、critical pathを短くする。
+- **context partitioning**: contextを狭く分け、制約とevidenceの密度を上げる。
+- **coverage**: 異なるshard、観点、source、failure surfaceを探索する。
+- **error decorrelation**: makerとfresh checkerの目的・情報・commitmentを分ける。
+- **empirical selection**: candidate差をtestやmeasurementで識別する。
+- **evidence-producing refinement**: critiqueにより新しいevidence、test、claim transitionを生む。
+- **temporal sampling**: eventや時間をまたぐdriftを有限runで観測する。
 
-soloより有利な理由を説明できない場合はagentを増やしません。
+「複数agentを使いたい」以外のmechanismを説明できない場合はsoloを選びます。同じpromptの複製、provider数、回答の多数一致はmechanismの成立を保証しません。
 
-## Collaboration modes
+## Find the binding constraint
 
-| mode | 使う時 | 基本形 | 上限 / stop |
-|---|---|---|---|
-| `solo` | 小さく明確で可逆 | primaryだけで完了 | task完了 |
-| `dispatch` | bounded artifactを委任できる | primary → worker → result | one-shot |
-| `fanout` | 独立task / shardがある | N workers → primary synthesis | 必要shard回収 |
-| `panel` | 正解が明らかでない | blind independent opinions → compare | first round 1回 |
-| `critique` | 初案のriskを探したい | proposal → reviewer → revision | revision 1回 |
-| `deliberation` | disagreementがevidenceで変わり得る | claim exchange → adjudication | 通常2、最大3 round |
-| `variants` | 複数案を安価に実装・測定できる | isolated candidates → evaluator | 通常2 variants |
-| `maker-checker` | write失敗の影響が大きい | implementer → independent reviewer | Must finding解消 |
-| `red-team` | security / abuse / failureを探す | bounded adversarial probe | timebox到達 |
-| `pipeline` | 成果物を順番に加工する | A artifact → B → C | finite stages |
-| `sentinel` | 同じ点検を定期的に行う | schedule → finite job → report | per-run hard limits |
-| `event-triggered` | commit / PR / incident等へ反応 | deduped event → finite workflow | eventごとに一回terminal |
+今回最初に尽きるものを確認します。
 
-`mode`と`lane`は別です。たとえば`panel`は通常read、`variants`のprototypeはwrite、untrusted codeのvariantはisolatedを使います。
+- briefを外へ渡すserialization cost
+- primary / humanのreview・synthesis capacity
+- wall-clockと待ち許容時間
+- provider quota / rate window
+- `agentctl` capacity、queue、shared resource
+- integrationとrework cost
+- context coupling
+- evaluator availability
+- late failure cost
 
-`proposer`、`critic`、`evaluator`はcollaboration上の責任です。現在のprovider roleを無意味に増やさず、researcher、reviewer、implementerまたはprimaryへ明示的に割り当てます。
+たとえばreviewが律速なら、生成artifactを増やすより相談や独立検証の方が有益な場合があります。capacityは同時実行数とwaveの制約であり、価値ある参加者数の推奨値ではありません。
 
-## Quick routing
+## Separate relation, lane, role, and lifecycle
 
-1. 一人で速く正しく終わるなら`solo`。
-2. 作業を独立artifactへ切れるなら`dispatch` / `fanout`。
-3. 解決策が不明なら`panel`。
-4. 案はあるが弱点が不明なら`critique`。security境界なら`red-team`。
-5. 重要なdisagreementだけが残り、追加evidenceで変化し得るなら`deliberation`。
-6. 共通acceptanceとbenchmarkがあり、prototype costが低いなら`variants`。
-7. write resultを独立検証する価値が高ければ`maker-checker`。
-8. 同じbounded taskが繰り返すなら`sentinel` / `event-triggered`候補。ただしruntime availabilityを先に確認する。
+| axis | question | examples |
+|---|---|---|
+| relation | agent同士をどう関係づけるか | `solo`、`delegate`、`consult`、`compete`、`verify` |
+| role | 誰が何へ責任を持つか | researcher、implementer、reviewer、primary |
+| lane | どのworkspace / permissionで走るか | read、write、isolated |
+| lifecycle | いつ、どんなtriggerで起動するか | one-shot、bounded-exchange、event-triggered、scheduled |
+| authority | 誰が判断とside effectを所有するか | primary、single writer、human owner |
 
-## Collaboration brief
+relation名は説明を短くするaliasで、closed enumではありません。
 
-複数agentを開始する前に、`docs/agents/tickets/collaboration-plan.template.md`を埋めるか、同じ内容をtask planへ持ちます。
+- `solo`: primaryが直接処理し、coordination costを払わない。
+- `delegate`: bounded artifactを渡す。fan-outやDAG handoffも含む。
+- `consult`: option、assumption、critique、evidenceを集め、必要なら交換する。
+- `compete`: 分岐したcandidateを同じ評価契約で比較する。
+- `verify`: fixed artifactをneutralまたはadversarialに独立検査する。
 
-- goal
-- `why_multi_agent`
-- modeとparticipants
-- shared factsとagentごとのperspective
-- independent first roundかsequential handoffか
+旧来の`dispatch`、`panel`、`deliberation`、`variants`、`maker-checker`などはidea catalogや対応aliasとして使えます。pipelineはdependency graph、scheduled / event-triggeredはlifecycleであり、relationと同じ分類表へ混ぜません。
+
+## Derive participants instead of choosing a count
+
+- delegate: non-overlapping shard、stage、artifactから導く。
+- consult: 固有のperspective、evidence source、failure modeから導く。
+- compete: 実質的に異なるapproachと識別可能な評価から導く。
+- verify: 独立させたいerror mode、probe、review surfaceから導く。
+
+その後、capacity、quota、wall-clock、human review、integration costで実行可能な同時数とwaveを調整します。追加participantが固有の価値を説明できなければ増やしません。
+
+## Prepare a collaboration brief
+
+複数agentを開始する前に、`docs/agents/tickets/collaboration-plan.template.md`を埋めるか、同じ情報をtask planへ持ちます。
+
+- required decision / artifactとdefinition of done
+- expected mechanismとbinding constraint
+- relation、lifecycle、参加者を導いた理由
+- shared facts、perspective、independence policyとその理由
 - artifact flow
 - lane、permission、base SHA、workspace
-- evaluation criteria
-- round、elapsed time、concurrency、usage budget
-- stop conditions
-- synthesis / integration / external side effect owner
+- acceptance、comparison criteria、disconfirming evidence
+- human review budget、capacity / quota / integrationへの影響
+- parameterのrole、scope、rationale、invalidation evidence、update owner
+- continuation / stop condition
+- synthesis、integration、external side effect owner
 
-各workerにはtask全体ではなく、担当scope、expected output、evidence requirement、stop conditionだけを渡します。
+各workerへtask全体を丸投げせず、担当scope、expected output、evidence requirement、stop conditionを渡します。
 
-## Advice result
+## Classify every parameter
 
-相談・review・議論の回答には次を求めます。
+数値やbooleanは次のどれかとして扱います。
+
+| parameter role | purpose | treatment |
+|---|---|---|
+| `hard guard` | safety / authority invariant | 違反を拒否し、明示的な設計変更だけで更新 |
+| `cost cap` | runawayやresource starvationの防止 | task / projectのcapacityとriskから設定 |
+| `planning prior` | 過去の観測に基づく見積り | project-local evidenceで更新 |
+| `hypothesis` | 未検証のstarting assumption | experimentで採用・修正・棄却 |
+
+cost capを品質最適値、planning priorをtermination rule、provider既定値をcollaboration既定値として扱いません。各parameterへscope、rationale、無効化するevidence、更新ownerを付けます。
+
+## Choose independence for the purpose
+
+independenceやblindnessを無条件に適用しません。
+
+| purpose / constraint | candidate policy |
+|---|---|
+| option enumerationでanchoringを避けたい、独立agentが使える | isolated-blind candidates |
+| coverageを広げたい | context / source / failure surfaceをpartition |
+| fixed proposalやdiffをreviewする | artifactを共有し、makerの試行軌跡やprimaryの選好を隠す |
+| interfaceやfixtureの事実確認 | shared contextまたはbounded direct exchange |
+| delegationが使えない | sequential reviewへ縮退し、独立性を主張しない |
+
+provider diversityは品質の代理指標ではありません。generatorとevaluatorのどちらへ割り当てると価値があるかもprojectごとに観測します。
+
+## Continue only while value changes
+
+各interaction後、primaryは次を判断します。
+
+- acceptanceまたはdecisive evidenceを得たか。
+- new evidence、test、claim transition、useful artifactが増えたか。
+- disagreementはmeasurementで解けるか。解けるなら会話より測定を優先する。
+- disagreementがuser preference / authorityへ到達したか。
+- scope、safety、cost capへ到達したか。
+- 残る期待利益がcoordination、synthesis、review costを上回るか。
+
+継続回数は結果として観測します。全文transcriptやprivate reasoningを連鎖させず、必要ならopen claim、evidence pointer、未解決questionだけを渡します。budget到達時はfalse successにせず、partial resultと次に必要なevidenceを返します。
+
+primaryがbudget、authority、synthesisを所有します。provider-native peer messagingを使う場合も、topic、authority、cost cap、interrupt owner、result contractを先に固定します。winner、risk acceptance、permission escalationをpeer agreementへ委ねません。
+
+## Keep exchange artifacts small
+
+全文transcriptの代わりに、目的に応じた小さいartifactを渡します。必要なfieldだけを使い、形式自体を成果にしません。
+
+相談・reviewの例:
 
 ```text
 recommendation
-evidence
+evidence pointers
 assumptions
 alternatives considered
-risks / failure modes
-unknowns
-confidence: low | medium | high
+risks / unknowns
+confidence and why
 disconfirming test
 ```
 
-primaryは多数決で決めず、evidenceとproject constraintを比較し、採用・不採用と理由をsynthesisします。
-
-## Panel rules
-
-- first roundは互いの回答とprimaryの推奨案を見せない。
-- 共通のfacts、scope、question、output formatだけを揃える。
-- 観点を変える時はsecurity、operations、UX、performance等を明示する。
-- 同じ結論が多いことをconfidenceの唯一の根拠にしない。
-- reportを集めたらprimaryがconsensus、disagreement、decisive evidence、unknownを整理する。
-
-## Deliberation rules
-
-- proposal、claim、evidenceへstable IDを付ける。
-- 次roundへ渡すのはopen disagreementと新しいquestionだけ。全文transcriptを連鎖させない。
-- criticは相手の人格や文章ではなくclaimを批評する。
-- proposerは変更した点、維持した点、理由を返す。
-- 通常2 round、最大3 round。新しいevidenceが出なければ止める。
-- final synthesisと判断はprimaryが所有する。
-- peer messagingを使う場合もfacilitator、participant、topic、message上限、interrupt ownerを固定する。
-
-## Variant rules
-
-- full base SHA、scope、acceptance、fixture、deadline、resourceを全variantで揃える。
-- variantごとに別job ID、branch、worktreeを使う。
-- 途中実装を相互に見せず、探索の独立性を守る。
-- correctness / safety不合格案を性能や好みで救済しない。
-- evaluatorへ可能ならauthor / providerを伏せる。
-- rubricは事前に固定し、少なくともcorrectness、maintainability、performance、risk、migration costを含める。
-- winner、再実験、hybridの判断はprimaryが行う。
-- hybridは新しいintegration taskとして検証する。
-
-## Scheduled and event-triggered rules
-
-定期実行はlong-running agentではなく、毎回terminalになるfinite jobとして設計します。基盤にschedulerが実装・有効化されていると確認できない限り、scheduleが存在すると仮定しません。
-
-最低限必要なguard:
-
-- scheduleはdisabledで作成し、人またはprimaryが明示enableする。
-- default read-only、default overlap `forbid`、default concurrency 1。
-- max runs / day、wall time、attempt、usage / credit / quotaをhard limitにする。
-- trigger ID / event keyでdedupeする。
-- failureはbackoffし、連続失敗でcircuitを開く。
-- missed runを無制限にcatch upしない。
-- last result、current run、next run、budget、circuit stateを表示する。
-- pause / disable / kill switchをagent外へ置く。
-- agent自身へschedule、quota、permission変更を許さない。
-- writeを許しても専用worktreeのcandidate commitまで。merge、push、PR、releaseはsingle writerへ戻す。
-
-登録してよいtaskは、toolchain canary、dependency drift report、flaky-test集計、docs drift report、performance trend、GC dry-run inventoryのようにscopeとterminationが明確なものです。
-
-次は登録しません。
-
-- 「projectを改善し続ける」
-- 「問題がなくなるまでretryする」
-- broad cleanup、dependency update、migration、releaseの無人実行
-- 前runが終わらないまま重複するjob
-
-## Safe composition examples
-
-### Ambiguous architecture
+継続するclaimの例:
 
 ```text
-panel (independent options)
-  -> critique (top proposal only)
-  -> primary decision
+claim_id
+status: proposed | supported | refuted | unresolved
+new evidence or test result
+what changed since the previous interaction
+next measurement, authority decision, or stop reason
 ```
 
-### Competing implementation
+candidateは既存task / result contractを使い、approach差、acceptance evidence、既知risk、未完了事項を補足します。private reasoning、人格的debate、単なるagreement countは次へ渡しません。
 
-```text
-panel (choose 2 plausible approaches)
-  -> variants (separate worktrees)
-  -> blinded evaluator
-  -> primary integration
-  -> maker-checker aggregate validation
-```
+## Compare candidates only when comparison can decide
 
-### Difficult bug
+`compete`を使う前に次を満たします。
 
-```text
-fanout (different root-cause hypotheses)
-  -> primary selects supported hypothesis
-  -> dispatch one fix
-  -> independent regression review
-```
+- candidate間に意味のあるapproach差がある。
+- common base、scope、acceptance、resource boundaryがある。
+- correctness / safetyを先に判定できる。
+- evaluatorが差を識別できる根拠またはpilotがある。
+- human reviewを含むcomparison costが失敗 / rework costに見合う。
 
-### Recurring maintenance
+明らかな不合格は早く止め、全candidateをproduction品質まで仕上げることを目的にしません。rubricを結果確認後に変更せず、hybridは新しいartifactとして再検証します。held-out check、blinded evaluator、cross-provider evaluatorは有力な仮説ですが、global requirementではありません。
 
-```text
-sentinel (read-only finite report)
-  -> primary triage
-  -> explicit write job if needed
-  -> normal review / integration
-```
+## Bound recurring work
 
-一つのphaseへ3 mode以上を同時に積まず、stageごとにentry / exitを決めます。
+定期・event駆動workは常駐agentではなく、毎回terminalになるfinite jobとして設計します。repository eventならevent-triggered、external driftや履歴集計ならscheduledを検討します。CI、deterministic script、通常cronで足りるならagent schedulerを作りません。
 
-## Stop and synthesize
+runtimeを実装する場合のhard guard候補:
 
-primaryは次でcollaborationを止めます。
+- finite jobだけを発行する。
+- creationとenableを分離する。
+- enablement、budget、circuit stateをjob worktree外へ置く。
+- safe permission以外を暗黙選択しない。
+- same inputまたはactive runを重複発行しない。
+- trigger evaluationをcontent-free auditへ残す。
+- agent自身がschedule、quota、permission、circuitを変更しない。
+- merge、push、PR、releaseへ直結しない。
+- owner、expiry、kill pathを持たないscheduleをenableしない。
 
-- acceptanceに必要なartifactが揃った。
-- decisive evidenceまたはtestが得られた。
-- 新しいevidence、claim、findingが出ない。
-- round / time / usage budgetへ達した。
-- coordination / integration costが残りの期待利益を超えた。
-- user preference、権限、外部状態なしには決められない。
+interval、expiry、wall time、attempt、usage、backoff、circuit threshold、retention、notification、capacity shareはproject-localなadaptive parameterです。scheduler runtimeが実装・有効化されていると確認できるまで、scheduleが存在すると仮定しません。
 
-最終報告では、agent topologyの実況ではなく次を伝えます。
+## Synthesize and learn locally
 
-- 何を決めた / 作ったか
-- どのevidenceが決定的だったか
-- 重要なdisagreementとどう扱ったか
+primaryは多数決で決めず、evidenceとproject constraintを比較します。最終報告には次を残します。
+
+- 決めた / 作ったもの
+- decisive evidence
+- 重要なdisagreementと扱い
 - 採らなかった案と理由
 - 残るrisk、validation、次のowner
+- multi-agentが結果を変えたか、review / integration costに見合ったか
+- 次回変えるparameterまたはsoloへ戻す条件
 
-agent数、message数、token量を成果として報告しません。
+agent数、message数、token量を成果として報告しません。観測をproject-localなplanning priorへ更新し、他projectの標準値にはしません。
+
+## Current tooling boundary
+
+- provider-native layer: interactive consultation、delegation、peer UX。
+- `agentctl`: finite job / attempt、worktree、process、resource、structured result。
+- primary / integrator: relation選択、continuation、synthesis、winner、integration。
+- future trigger layer: trigger、dedupe、budget、audit、finite job emission。
+
+`agentctl`へconversation graph、transcript、private reasoning、consensus stateを入れません。episode ledger、comparison harness、resource-aware recommender、schedulerは、手動観測が価値と必要fieldを示してから実装します。
 
 ## Anti-patterns
 
 - agent count theater
-- first round前のanchoring
+- unsupported fixed participant / exchange / candidate defaults
 - 同一prompt複製を多様性と呼ぶこと
 - evidenceの増えないdebate
 - recursive delegation explosion
 - shared-checkout parallel writes
-- variant確認後の評価基準変更
+- candidate確認後の評価基準変更
 - reportだけ集めてsynthesis ownerがいない状態
-- unbounded scheduled agent
+- unbounded recurring agent
 - recurring writeからauto merge / pushへの直結
