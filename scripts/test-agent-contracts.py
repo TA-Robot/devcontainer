@@ -41,7 +41,9 @@ class AgentContractTests(unittest.TestCase):
         playbook = self.template / "docs/agents/collaboration-playbook.md"
         template = self.template / "docs/agents/tickets/collaboration-plan.template.md"
         self.assertIn("Find the binding constraint", playbook.read_text(encoding="utf-8"))
+        self.assertIn("human inputを要求しません", playbook.read_text(encoding="utf-8"))
         self.assertIn("human review / synthesis budget", template.read_text(encoding="utf-8"))
+        self.assertIn("do not ask the user", template.read_text(encoding="utf-8"))
 
     def test_collaboration_guidance_rejects_unsupported_global_defaults(self) -> None:
         validator = load_template_validator()

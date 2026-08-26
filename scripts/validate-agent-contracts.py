@@ -10,7 +10,7 @@ import tomllib
 from pathlib import Path
 from typing import Any
 
-from agent_contracts import ContractValidationError, load_json, validate, validate_file
+from agent_contracts import ContractValidationError, load_json, validate_file
 
 
 EXPECTED_ROLE_MODES = {
@@ -26,6 +26,7 @@ ADAPTIVE_GUIDANCE_REQUIREMENTS = {
         "global default",
         "hard guard / cost cap / planning prior / hypothesis",
         "human review",
+        "ユーザーへform",
     ),
     "docs/agents/collaboration-playbook.md": (
         "expected mechanism",
@@ -36,6 +37,7 @@ ADAPTIVE_GUIDANCE_REQUIREMENTS = {
         "invalidation evidence",
         "continue only while value changes",
         "lifecycle",
+        "human input",
     ),
     "docs/agents/tickets/collaboration-plan.template.md": (
         "solo alternative",
@@ -47,6 +49,7 @@ ADAPTIVE_GUIDANCE_REQUIREMENTS = {
         "invalidation evidence",
         "continuation evidence",
         "project-local learning",
+        "do not ask the user",
     ),
 }
 
