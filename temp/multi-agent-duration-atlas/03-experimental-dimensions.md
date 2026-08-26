@@ -90,19 +90,17 @@ modelIdentity:
   identityConfidence: exact | alias-only | default-unspecified | unknown
   snapshotHint
 
-generationSettings:
-  requested[]
-  applied[]
-  unsupported[]
-  ignoredOrUnknown[]
-  capabilityStatus: supported | rejected | not-advertised | unknown
+generationSettings[]:
+  namespace / key / requestedValue
+  status: applied | rejected | not-advertised | unknown
+  appliedValue  # status=appliedのときだけ
 
 runtimeIdentity:
   provider / cliName / cliVersion / cliSource
   imageDigest / executionSurface / permissionMode / observedAt
 ```
 
-`requested effort=high`は`applied effort=high`の証拠ではありません。CLIがrejectした設定はcapability結果、受理してもappliedを確認できない設定はdiagnostic-onlyです。requested値だけでduration stratumを作りません。
+`requested effort=high`は`applied effort=high`の証拠ではありません。CLIがrejectした設定はcapability結果、受理してもappliedを確認できない設定はdiagnostic-onlyです。statusをsetting keyごとに持ち、requested値だけでduration stratumを作りません。
 
 provider固有settingを一つの共通`low/medium/high`へ畳みません。Codex reasoning effort、Claude thinking、Grok reasoning effortはnamespace付きで保持し、同じprovider/model/setting内だけを直接比較します。cross-providerでは各構成を並置しますが「同一effort」とは呼びません。
 

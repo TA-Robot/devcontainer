@@ -2,7 +2,7 @@
 
 検討開始: 2026-08-26
 
-このdirectoryは、agentへ「どんな仕事を、どの構成でさせると、実際にどれくらい時間がかかるか」を計測し、projectが後から判断材料として参照できる時間atlasを作るための計画です。現時点では実験設計であり、live providerを使った計測結果ではありません。
+このdirectoryは、agentへ「どんな仕事を、どの構成でさせると、実際にどれくらい時間がかかるか」を計測し、projectが後から判断材料として参照できる時間atlasを作るための計画・実装記録です。Milestone Aのschemaとdeterministic fake runnerまでは実装済みですが、まだlive providerを使った時間計測結果ではありません。
 
 ## 今回作るもの
 
@@ -53,6 +53,7 @@ evidence grade:              single-observation
 - `12-grok-followup-brief.md`: 改訂版をfresh Grokへ再監査させたbrief
 - `13-grok-revised-plan-audit.md`: 改訂版監査の原文
 - `14-final-plan-closure.md`: 再監査で残ったblockerの解消記録
+- `15-milestone-a-implementation.md`: schema、fake clock、runner、testの実装記録
 
 ## 正本との関係
 

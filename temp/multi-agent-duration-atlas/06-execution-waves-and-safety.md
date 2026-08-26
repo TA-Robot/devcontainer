@@ -17,7 +17,7 @@
 
 目的: agent品質を測る前に、時計とcorrelationが正しいことを証明する。
 
-- fake provider / deterministic workerでP0/P1、T0–T6、V0/V1、S0/S1を発生
+- fake provider / deterministic workerでP0/P1、T0–T6、V0/V1、TX、S0/S1を発生
 - parallel workerのaggregate time、active union、tracked spanをdeterministic fixtureで検証
 - failure、timeout、cancel、harness restartを模擬
 - episode ID、agentctl job/attempt ID、run IDの重複・二重計上を確認

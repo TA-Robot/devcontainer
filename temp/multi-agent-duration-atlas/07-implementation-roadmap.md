@@ -1,5 +1,7 @@
 # 07. Implementation roadmap
 
+Implementation update: 2026-08-26にMilestone Aのschema、clock、fake runner、semantic testsを完了。詳細は`15-milestone-a-implementation.md`。以下はroadmap全体として残します。
+
 ## 1. 現在地
 
 既にあるもの:
@@ -9,13 +11,15 @@
 - persistent observation volume
 - deterministic wrapper/control-plane benchmark
 - native task/result contract、read/write/isolated lane
+- duration studyのstudy / case / capability / run schema v1
+- deterministic monotonic fake clock、derived duration validator、immutable run write
 
 不足しているもの:
 
-- versioned task case catalog
+- versioned task case catalog contents
 - study/run/config correlation
-- P0/P1、T2/T4/T6、V0/V1、S0/S1 milestone
-- model identity confidenceとrequested/applied generation setting capture
+- live providerからのT2/T4/V0/V1/T6/TX capture
+- live model identity confidenceとrequested/applied generation setting capture
 - execution surface、permission mode、instruction/compaction diagnostic
 - case-specific quality oracle
 - adaptive sampling state
@@ -66,7 +70,7 @@ raw timing recordは一run一JSONをtemporary fileからatomic renameする方�
 
 検索性能が必要になった場合だけderived SQLite indexを追加します。SQLiteを最初からsource of truthにして既存`agentctl` DBへ実験schemaを混ぜません。
 
-## 4. Milestone A: schema and deterministic clock
+## 4. Milestone A: schema and deterministic clock — implemented
 
 追加:
 
@@ -75,7 +79,7 @@ raw timing recordは一run一JSONをtemporary fileからatomic renameする方�
 - model identity / generation settings / runtime identity schema
 - online user-waitとoffline scoringを分離したlandmark schema
 - monotonic clock collector
-- fake runnerでP0/P1、T0–T6、V0/V1、S0/S1、worker、dialogue exchangeを再生
+- fake runnerでP0/P1、T0–T6、V0/V1、TX、S0/S1、worker、dialogue exchangeを再生
 - duration derivationとmissing landmark handling
 
 Tests:

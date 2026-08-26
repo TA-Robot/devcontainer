@@ -25,6 +25,7 @@ provisioningをT0より前に行うcaseと、request後に行うcaseを区別し
 | V0 | online validation start | 利用者へ返す前に必要なtest/build/validationを開始した |
 | V1 | online validation terminal | online test/build/validationが完了した |
 | T6 | user result ready | final result envelopeを利用者へ渡せる状態になった |
+| TX | run terminal | success/failure/timeout/cancelを問わずrunが終了した |
 
 ### Offline study landmarks
 
@@ -55,6 +56,7 @@ synthesis tail           = T4 - T3            # explicit T4時だけ
 online validation time   = V1 - V0            # T3/T4に依存しない
 post-validation tail     = T6 - V1             # online validation実行時だけ
 user-result wall time    = T6 - T0
+terminal wall time       = TX - T0             # 全outcome
 aggregate worker time    = sum(tracked worker stop - start)
 worker active union      = union(tracked worker intervals)
 recovery user time       = accepted T6 - first failed attempt terminal
@@ -157,39 +159,32 @@ flatな`model`/`reasoning`文字列を使いません。
 
 ```json
 {
-  "modelIdentity": {
-    "requestedAlias": "grok-4.6",
-    "requestedSource": "flag",
-    "resolvedId": null,
-    "identityConfidence": "alias-only",
-    "snapshotHint": null
+  "model_identity": {
+    "requested_alias": "grok-4.6",
+    "requested_source": "flag",
+    "identity_confidence": "alias-only"
   },
-  "generationSettings": {
-    "requested": [
-      {"namespace": "grok.reasoning", "key": "effort", "value": "high"}
-    ],
-    "applied": [],
-    "unsupported": [],
-    "ignoredOrUnknown": [
-      {"namespace": "grok.reasoning", "key": "effort", "value": "high"}
-    ],
-    "capabilityStatus": "unknown"
-  },
-  "runtimeIdentity": {
+  "generation_settings": [
+    {
+      "namespace": "grok.reasoning",
+      "key": "effort",
+      "requested_value": "high",
+      "status": "unknown"
+    }
+  ],
+  "runtime_identity": {
     "provider": "grok",
-    "cliName": "grok",
-    "cliVersion": "1.0.5",
-    "cliSource": "host-sync",
-    "imageDigest": "sha256:...",
-    "executionSurface": "agentctl-job",
-    "permissionMode": "automatic",
-    "authChannelClass": "subscription",
-    "observedAt": "2026-08-26T00:00:00Z"
+    "cli_name": "grok",
+    "cli_version": "1.0.5",
+    "cli_source": "host-sync",
+    "execution_surface": "agentctl-job",
+    "permission_mode": "automatic",
+    "observed_at": "2026-08-26T00:00:00Z"
   }
 }
 ```
 
-`null`はschemaで意味が曖昧になるため、実装時はoptional fieldまたはexplicit status objectのどちらかへ統一します。この例は概念形です。resolved IDやapplied settingをproviderが返さない場合、推測しません。
+v1 schemaはoptional fieldとkey単位setting statusへ統一しました。resolved IDやapplied settingをproviderが返さない場合、fieldを捏造しません。実装正本は`experiments/multi-agent-duration/schemas/run.schema.json`です。
 
 ## 8. Provenance
 
@@ -204,6 +199,8 @@ flatな`model`/`reasoning`文字列を使いません。
 agentの自己申告時間はclock sourceとして使いません。agentが「完了」と書いたことと、harnessがenvelopeを受領した時刻を分けます。欠けたlandmarkに依存するduration keyはrecordからomitし、0や`null`をdurationとして入れません。
 
 ## 9. Run record案
+
+以下は検討時の読みやすい概念表示です。実装済みv1のfield名、enum、required条件はsnake_caseの`experiments/multi-agent-duration/schemas/run.schema.json`を正本とします。
 
 ```json
 {
@@ -255,11 +252,7 @@ agentの自己申告時間はclock sourceとして使いません。agentが「�
         "requestedSource": "flag",
         "identityConfidence": "alias-only"
       },
-      "generationSettings": {
-        "requested": [],
-        "applied": [],
-        "capabilityStatus": "unknown"
-      },
+      "generationSettings": [],
       "runtimeIdentity": {
         "provider": "codex",
         "cliVersion": "...",
@@ -295,6 +288,7 @@ agentの自己申告時間はclock sourceとして使いません。agentが「�
     "V0": {"status": "observed", "wallTime": "...", "monotonicMs": 4},
     "V1": {"status": "observed", "wallTime": "...", "monotonicMs": 5},
     "T6": {"status": "observed", "wallTime": "...", "monotonicMs": 6},
+    "TX": {"status": "observed", "wallTime": "...", "monotonicMs": 6},
     "S0": {"status": "observed", "wallTime": "...", "monotonicMs": 7},
     "S1": {"status": "observed", "wallTime": "...", "monotonicMs": 8}
   },
