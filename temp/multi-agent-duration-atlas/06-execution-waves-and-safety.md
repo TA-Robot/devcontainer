@@ -136,6 +136,9 @@ parallel taskでは、runtimeのsafe width内を段階的に測ります。exact
 - collaboration、case、surface、session、permission、cacheを固定したpaired block
 - model alias/CLI/server driftでseriesを切り、旧値をstale候補にする
 - provider固有effortを共通尺度へ正規化しない
+- `high`を上端とみなさず、現在のcore coverageは`medium / high / xhigh / max`
+- providerがさらに深い値を明示広告する場合はprovider-native extensionとして測る（現在のSol `ultra`）
+- flagだけを広告するsurfaceは、実run metadataでapplied確認できるまでrequested seriesに留める
 
 effort比較は「highが良いか」を決める実験ではなく、同じtaskで各applied settingのuser wait・worker time・qualityがどう分布したかを提供します。
 
