@@ -1450,6 +1450,46 @@ def build_parser() -> argparse.ArgumentParser:
         help="explicitly authorize exactly one provider generation request",
     )
 
+    provider_study = subparsers.add_parser(
+        "run-provider-study",
+        help=(
+            "run and immutably record one isolated Codex, Claude, or Grok sample "
+            "plus criterion-level evaluation"
+        ),
+    )
+    provider_study.add_argument("--provider", required=True, choices=("codex", "claude", "grok"))
+    provider_study.add_argument("--case-id", required=True)
+    provider_study.add_argument("--output-dir", type=Path, required=True)
+    provider_study.add_argument("--image", required=True)
+    provider_study.add_argument("--model", required=True)
+    provider_study.add_argument(
+        "--effort",
+        required=True,
+        choices=("low", "medium", "high", "xhigh", "max", "ultra"),
+    )
+    provider_study.add_argument("--study-id", default="duration-atlas-wave1")
+    provider_study.add_argument("--block-id")
+    provider_study.add_argument("--run-id")
+    provider_study.add_argument(
+        "--auth-file",
+        type=Path,
+        help="provider credential JSON; defaults to the provider's standard user path",
+    )
+    provider_study.add_argument(
+        "--provider-binary",
+        type=Path,
+        help="optional read-only host-synced Grok executable",
+    )
+    provider_study.add_argument("--docker-bin", default="docker")
+    provider_study.add_argument("--timeout-seconds", type=float, default=900)
+    provider_study.add_argument("--evaluator-timeout-seconds", type=float, default=30)
+    provider_study.add_argument("--output-bytes-cap", type=int, default=8 * 1024 * 1024)
+    provider_study.add_argument(
+        "--confirm-live-provider",
+        action="store_true",
+        help="explicitly authorize exactly one provider generation request",
+    )
+
     report_runs = subparsers.add_parser(
         "report-runs",
         help="show bounded raw samples without producing a typical band or routing rule",
@@ -1629,6 +1669,56 @@ def main(argv: list[str] | None = None) -> int:
                 json.dumps(
                     {
                         "status": "written",
+                        "run_id": record["run_id"],
+                        "path": str(path),
+                        "infrastructure": record["outcome"]["infrastructure"],
+                        "online_acceptance": record["outcome"]["online_acceptance"],
+                        "quality_pass": record["outcome"]["quality_pass"],
+                        "terminal_wall_ms": record["durations_ms"]["terminal_wall"],
+                        "provider_wall_ms": record["diagnostics"]["provider"][
+                            "terminal_wall_ms"
+                        ],
+                    },
+                    sort_keys=True,
+                )
+            )
+            return 0 if record["outcome"]["quality_pass"] is True else 1
+
+        if args.command == "run-provider-study":
+            from agent_duration_live import run_provider_study_once
+
+            auth_defaults = {
+                "codex": Path.home() / ".codex" / "auth.json",
+                "claude": Path.home() / ".claude" / ".credentials.json",
+                "grok": Path.home() / ".grok" / "auth.json",
+            }
+            auth_file = (args.auth_file or auth_defaults[args.provider]).resolve()
+            provider_binary = (
+                args.provider_binary.resolve() if args.provider_binary is not None else None
+            )
+            record, path = run_provider_study_once(
+                args.provider,
+                args.case_id,
+                args.output_dir,
+                image=args.image,
+                model=args.model,
+                effort=args.effort,
+                auth_file=auth_file,
+                live_generation_authorized=args.confirm_live_provider,
+                study_id=args.study_id,
+                block_id=args.block_id,
+                run_id=args.run_id,
+                docker_bin=args.docker_bin,
+                timeout_seconds=args.timeout_seconds,
+                evaluator_timeout_seconds=args.evaluator_timeout_seconds,
+                output_bytes_cap=args.output_bytes_cap,
+                provider_binary=provider_binary,
+            )
+            print(
+                json.dumps(
+                    {
+                        "status": "written",
+                        "provider": args.provider,
                         "run_id": record["run_id"],
                         "path": str(path),
                         "infrastructure": record["outcome"]["infrastructure"],

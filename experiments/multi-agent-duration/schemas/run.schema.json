@@ -840,6 +840,9 @@
         "generation_request_performed"
       ],
       "properties": {
+        "assurance": {
+          "enum": ["probed", "configured"]
+        },
         "status": {
           "const": "pass"
         },
@@ -850,13 +853,13 @@
           "$ref": "#/$defs/sha256"
         },
         "workspace_write": {
-          "const": "observed"
+          "enum": ["observed", "configured"]
         },
         "unrelated_read": {
-          "const": "denied"
+          "enum": ["denied", "configured"]
         },
         "command_network": {
-          "const": "denied"
+          "enum": ["denied", "configured"]
         },
         "generation_request_performed": {
           "const": false
@@ -937,11 +940,45 @@
         "usage": {
           "$ref": "#/$defs/token_usage"
         },
+        "tool_error_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "result_is_error": {
+          "type": "boolean"
+        },
+        "event_failure_terms": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "terminal_event": {
+          "$ref": "#/$defs/id"
+        },
         "thread_id_digest": {
           "$ref": "#/$defs/sha256"
         },
         "generation_request_performed": {
           "type": "boolean"
+        },
+        "failure_signals": {
+          "type": "array",
+          "maxItems": 32,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "failure_terms": {
+          "type": "array",
+          "maxItems": 64,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
         },
         "prompt_persisted": {
           "const": false
@@ -959,7 +996,11 @@
           "enum": ["disabled-by-feature", "not-applicable"]
         },
         "task_network": {
-          "enum": ["denied-by-permission-profile", "not-applicable"]
+          "enum": [
+            "denied-by-permission-profile",
+            "denied-by-provider-sandbox",
+            "not-applicable"
+          ]
         },
         "sandbox_preflight": {
           "$ref": "#/$defs/sandbox_preflight"
