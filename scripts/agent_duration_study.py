@@ -1396,6 +1396,21 @@ def build_parser() -> argparse.ArgumentParser:
         help="explicitly authorize exactly one provider generation request",
     )
 
+    report_runs = subparsers.add_parser(
+        "report-runs",
+        help="show bounded raw samples without producing a typical band or routing rule",
+    )
+    report_runs.add_argument("inputs", nargs="+", type=Path)
+    report_runs.add_argument("--format", choices=("table", "json"), default="table")
+    report_runs.add_argument("--case-id")
+    report_runs.add_argument("--provider", choices=("codex", "claude", "grok", "fixture"))
+    report_runs.add_argument(
+        "--quality",
+        choices=("all", "pass", "fail", "unknown"),
+        default="all",
+    )
+    report_runs.add_argument("--limit", type=int, default=50)
+
     validate_command = subparsers.add_parser("validate", help="validate one study record")
     validate_command.add_argument("--kind", choices=tuple(SCHEMA_PATHS), required=True)
     validate_command.add_argument("path", type=Path)
@@ -1574,6 +1589,26 @@ def main(argv: list[str] | None = None) -> int:
                 )
             )
             return 0 if record["outcome"]["quality_pass"] is True else 1
+
+        if args.command == "report-runs":
+            from agent_duration_report import (
+                build_raw_sample_report,
+                load_run_records,
+                render_raw_sample_table,
+            )
+
+            report = build_raw_sample_report(
+                load_run_records(args.inputs),
+                case_id=args.case_id,
+                provider=args.provider,
+                quality=args.quality,
+                limit=args.limit,
+            )
+            if args.format == "json":
+                print(json.dumps(report, ensure_ascii=False, indent=2, sort_keys=True))
+            else:
+                print(render_raw_sample_table(report))
+            return 0
 
         record = load_json(args.path)
         if not isinstance(record, dict):
