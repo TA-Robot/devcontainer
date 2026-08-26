@@ -2,7 +2,7 @@
 
 検討開始: 2026-08-26
 
-このdirectoryは、agentへ「どんな仕事を、どの構成でさせると、実際にどれくらい時間がかかるか」を計測し、projectが後から判断材料として参照できる時間atlasを作るための計画・実装記録です。schema/fake runner、非生成capability probe、S/M/L isolated fixture、network-disabled evaluator、Codex workspace-only live runner、raw sample reporterまで実装済みです。live taskはS/C0を有限3件記録しましたが全件quality failであり、時間目安やtypical bandを出せる段階ではありません。
+このdirectoryは、agentへ「どんな仕事を、どの構成でさせると、実際にどれくらい時間がかかるか」を計測し、projectが後から判断材料として参照できる時間atlasを作るための計画・実装記録です。schema/fake runner、非生成capability probe、S/M/L isolated fixture、network-disabled evaluator、Codex workspace-only live runner、raw sample reporter、criterion-level quality scoreまで実装済みです。live taskは旧rubricのS/C0を有限3件記録しましたが全件quality failであり、時間目安やtypical bandを出せる段階ではありません。
 
 ## 今回作るもの
 
@@ -59,6 +59,7 @@ evidence grade:              single-observation
 - `18-isolated-evaluator.md`: live artifactをhost credential/networkから分離して検査するcontainer
 - `19-first-recorded-codex-canary.md`: provider時間とhidden評価を結合した最初のCodex live record
 - `20-raw-sample-reporter.md`: failureをquality-pass時間へ混ぜないbounded raw inventory
+- `21-criterion-quality-scoring.md`: binary failの内訳を比較可能にするversioned rubric
 
 ## 正本との関係
 
