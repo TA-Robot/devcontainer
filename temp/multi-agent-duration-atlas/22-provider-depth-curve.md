@@ -2,7 +2,7 @@
 
 実施日: 2026-08-27
 
-Status: Codex / Claude / Grok共通one-shot runner、provider別sandbox、credential freshness gate、S path canaryを実装。Grok 4.6 / mediumはcriterion 5/5、Sol / mediumは4/5を観測。Claudeはhost OAuth再ログイン待ち。L caseのdepth curveは次の有限batch。
+Status: Codex / Claude / Grok共通one-shot runner、provider別sandbox、credential freshness gate、S path canaryを実装。Grok 4.6 / mediumはcriterion 5/5、Sol / mediumは4/5を観測。L depth coverageはGrokとSolで完了し、詳細を`23-first-l-depth-coverage.md`へ記録。Claudeはhost OAuth再ログイン待ち。
 
 ## 方針修正
 
@@ -92,7 +92,7 @@ Solは`hidden-empty-result`だけ失敗しました。これはbinary `fail`だ�
 
 難題で深度差を見る本体は`F04-L-PYBASH-001`です。構造的にLである理由はcross-process persistent state、Python / Bash boundary、restart-delayed failure、unit + integration + lifecycle oracleであり、実行前の想定時間ではありません。
 
-最初のcoverage passは直列実行します。
+最初のcoverage passは直列実行します。GrokとSolは完了、Claudeはauth復旧待ちです。
 
 ```text
 Sol:      medium -> high -> xhigh -> max -> ultra(extension)

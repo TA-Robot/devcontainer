@@ -61,6 +61,7 @@ evidence grade:              single-observation
 - `20-raw-sample-reporter.md`: failureをquality-pass時間へ混ぜないbounded raw inventory
 - `21-criterion-quality-scoring.md`: binary failの内訳を比較可能にするversioned rubric
 - `22-provider-depth-curve.md`: 3 provider runner、sandbox/auth知見、mediumからmax/ultraまでのdepth curve
+- `23-first-l-depth-coverage.md`: L caseでのGrok applied curve、Sol requested curve、max rejection、rubric飽和
 
 ## 正本との関係
 

@@ -1,0 +1,351 @@
+{
+  "block_id": "depth-curve-l-coverage-1",
+  "case": {
+    "capsule_digest": "sha256:668f0779c196cedddd95c7d4dd14ee43881febb56235ea3b7fea621ac5ff5889",
+    "case_id": "F04-L-PYBASH-001",
+    "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
+    "family": "bounded-implementation",
+    "profile_id": "L-cross-boundary-deterministic-python-bash",
+    "revision": 1,
+    "size": "L",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 1878.139,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-2",
+          "duration_ms": 670.809,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "hidden-restart-idempotence",
+          "duration_ms": 1324.656,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "hidden-invalid-state-integrity",
+          "duration_ms": 1073.164,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f04-l-python-bash-hidden-v2",
+      "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+      "isolation_profile": "network-disabled-read-only-container",
+      "score": {
+        "all_checks_required": true,
+        "failed_check_ids": [],
+        "hidden_passed": 2,
+        "hidden_total": 2,
+        "passed": 4,
+        "public_passed": 2,
+        "public_total": 2,
+        "ratio": 1.0,
+        "resolution": "criterion",
+        "total": 4
+      },
+      "status": "pass"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 13,
+          "name": "available_commands"
+        },
+        {
+          "count": 1,
+          "name": "end"
+        },
+        {
+          "count": 366,
+          "name": "text"
+        },
+        {
+          "count": 311,
+          "name": "thought"
+        },
+        {
+          "count": 19,
+          "name": "tool_call"
+        },
+        {
+          "count": 52,
+          "name": "tool_call_update"
+        },
+        {
+          "count": 11,
+          "name": "usage"
+        }
+      ],
+      "event_failure_terms": [],
+      "exit_code": 0,
+      "failure_signals": [],
+      "failure_terms": [],
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 322150,
+      "output_cap_bytes": 8388608,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "result_is_error": false,
+      "sandbox_preflight": {
+        "assurance": "configured",
+        "command_network": "configured",
+        "generation_request_performed": false,
+        "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+        "profile_digest": "sha256:ebdde48d42688e4ba31d9566d616d4d978ea6d00724d3956feb1be240e16cb35",
+        "status": "pass",
+        "unrelated_read": "configured",
+        "workspace_write": "configured"
+      },
+      "status": "success",
+      "stderr_bytes": 0,
+      "task_network": "denied-by-provider-sandbox",
+      "terminal_wall_ms": 176225.981,
+      "thread_id_digest": "sha256:cfa9a9c5cca21133648fbf77fb0724397dd171658c991f60fc5ea57f664f860a",
+      "tool_error_count": 0,
+      "usage": {
+        "cached_input_tokens": 102656,
+        "input_tokens": 49302,
+        "output_tokens": 12486
+      },
+      "workspace_changed_path_count": 7
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.014,
+    "online_validation": 4997.324,
+    "post_validation_tail": 0.042,
+    "provision": 2129.173,
+    "terminal_wall": 181362.993,
+    "user_result": 181362.985,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider"
+    ],
+    "unknown": []
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 63871163157517,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T18:45:09.214Z"
+    },
+    "P1": {
+      "monotonic_ns": 63873292330623,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T18:45:11.343Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 63873299414951,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T18:45:11.350Z"
+    },
+    "T1": {
+      "monotonic_ns": 63873299428639,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T18:45:11.350Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 64054662399648,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T18:48:12.713Z"
+    },
+    "TX": {
+      "monotonic_ns": 64054662407517,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T18:48:12.713Z"
+    },
+    "V0": {
+      "monotonic_ns": 64049665033798,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T18:48:07.715Z"
+    },
+    "V1": {
+      "monotonic_ns": 64054662357700,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T18:48:12.713Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 900000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": null,
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "pass",
+    "quality_basis": "strong-online-oracle",
+    "quality_pass": true,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "applied_value": "xhigh",
+          "key": "effort",
+          "namespace": "grok.reasoning",
+          "requested_value": "xhigh",
+          "status": "applied"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "exact",
+        "requested_alias": "grok-4.6",
+        "requested_source": "flag",
+        "resolved_id": "grok-4.6"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "grok",
+        "cli_source": "host-sync",
+        "cli_version": "1.0.5",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+        "observed_at": "2026-08-26T18:45:11.343Z",
+        "permission_mode": "automatic",
+        "provider": "grok"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "grok-f04-l-46-xhigh-20260827-r01",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "970464fc8d9bf5825f07bf35288e3058373d63b0",
+    "bundle_digest": "sha256:eb7d0d5a1c1fa24983c8ae41afcb3ecfd3ffd9df64607ad47613972feb0c5d77",
+    "fixture_revision": "f04-l-python-bash-restart-v2-r1",
+    "instruction_set_digest": "sha256:83239308c474dce5e9bcdcf98bf70cdd5631410b63e77e2e16ccceb3782fa700"
+  },
+  "study_id": "duration-atlas-wave3",
+  "workers": []
+}
