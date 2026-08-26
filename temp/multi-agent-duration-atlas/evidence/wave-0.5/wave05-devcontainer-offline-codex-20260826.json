@@ -1,0 +1,250 @@
+{
+  "capability_id": "wave05-devcontainer-offline-codex-20260826",
+  "coverage": {
+    "limitations": [
+      "model-default-unresolved",
+      "no-generation-request",
+      "setting-application-unobserved"
+    ],
+    "model_inventory": "exact",
+    "runtime_identity": "exact",
+    "setting_advertisement": "exact",
+    "setting_application": "not-observed"
+  },
+  "model_identity": {
+    "identity_confidence": "default-unspecified",
+    "requested_source": "unknown"
+  },
+  "model_inventory": [
+    {
+      "catalog_status": "available",
+      "display_name": "GPT-5.6-Sol",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.6-sol",
+      "snapshot_hint": "3000"
+    },
+    {
+      "catalog_status": "available",
+      "display_name": "GPT-5.6-Terra",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.6-terra",
+      "snapshot_hint": "3000"
+    },
+    {
+      "catalog_status": "available",
+      "display_name": "GPT-5.6-Luna",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.6-luna",
+      "snapshot_hint": "3000"
+    },
+    {
+      "catalog_status": "available",
+      "display_name": "GPT-5.5",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.5",
+      "snapshot_hint": "2911"
+    },
+    {
+      "catalog_status": "hidden",
+      "display_name": "GPT-5.4",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.4",
+      "snapshot_hint": "2911"
+    },
+    {
+      "catalog_status": "hidden",
+      "display_name": "GPT-5.4-Mini",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.4-mini",
+      "snapshot_hint": "2911"
+    },
+    {
+      "catalog_status": "available",
+      "display_name": "GPT-5.2",
+      "identity_confidence": "catalog-id",
+      "model_id": "gpt-5.2"
+    },
+    {
+      "catalog_status": "hidden",
+      "display_name": "Codex Auto Review",
+      "identity_confidence": "catalog-id",
+      "model_id": "codex-auto-review"
+    }
+  ],
+  "observed_at": "2026-08-26T10:47:49.447Z",
+  "probe": {
+    "commands": [
+      {
+        "command_id": "version",
+        "duration_ms": 172.259,
+        "evidence_source": "version-output",
+        "exit_code": 0,
+        "status": "observed"
+      },
+      {
+        "command_id": "root-help",
+        "duration_ms": 254.192,
+        "evidence_source": "root-help",
+        "exit_code": 0,
+        "status": "observed"
+      },
+      {
+        "command_id": "model-catalog",
+        "duration_ms": 201.645,
+        "evidence_source": "model-catalog-json",
+        "exit_code": 0,
+        "status": "observed"
+      }
+    ],
+    "generation_request_performed": false,
+    "metadata_scope": "bundled",
+    "mode": "passive-cli",
+    "provider_metadata_request_attempted": false,
+    "raw_output_persisted": false
+  },
+  "runtime_identity": {
+    "cli_name": "codex",
+    "cli_source": "container-image",
+    "cli_version": "0.146.0",
+    "environment_kind": "devcontainer",
+    "execution_surface": "capability-probe",
+    "image_digest": "sha256:3f58b6614a86e40bd3adfa49f9a9b5711bcf24b8a28fe574dec8ea1e0872cc9d",
+    "observed_at": "2026-08-26T10:47:49.447Z",
+    "permission_mode": "unknown",
+    "provider": "codex"
+  },
+  "schema_version": 2,
+  "setting_probes": [],
+  "setting_surfaces": [
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "low",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.6-sol",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.6-terra",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.6-luna",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.5",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.4",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.4-mini",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.2",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "codex-auto-review",
+      "namespace": "codex.reasoning"
+    }
+  ],
+  "surfaces": {
+    "permission_mode": "unknown",
+    "progress_artifact": "unknown",
+    "synthesis_envelope": "unknown"
+  }
+}

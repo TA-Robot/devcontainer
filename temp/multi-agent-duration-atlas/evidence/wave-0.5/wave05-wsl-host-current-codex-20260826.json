@@ -1,0 +1,275 @@
+{
+  "capability_id": "wave05-wsl-host-current-codex-20260826",
+  "coverage": {
+    "limitations": [
+      "model-default-unresolved",
+      "no-generation-request",
+      "setting-application-unobserved"
+    ],
+    "model_inventory": "exact",
+    "runtime_identity": "exact",
+    "setting_advertisement": "exact",
+    "setting_application": "not-observed"
+  },
+  "model_identity": {
+    "identity_confidence": "default-unspecified",
+    "requested_source": "unknown"
+  },
+  "model_inventory": [
+    {
+      "catalog_status": "available",
+      "display_name": "GPT-5.6-Sol",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.6-sol",
+      "snapshot_hint": "3000"
+    },
+    {
+      "catalog_status": "available",
+      "display_name": "GPT-5.6-Terra",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.6-terra",
+      "snapshot_hint": "3000"
+    },
+    {
+      "catalog_status": "available",
+      "display_name": "GPT-5.6-Luna",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.6-luna",
+      "snapshot_hint": "3000"
+    },
+    {
+      "catalog_status": "hidden",
+      "display_name": "GPT-Reserve",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-reserve",
+      "snapshot_hint": "3000"
+    },
+    {
+      "catalog_status": "available",
+      "display_name": "GPT-5.5",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.5",
+      "snapshot_hint": "2911"
+    },
+    {
+      "catalog_status": "available",
+      "display_name": "GPT-5.4",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.4",
+      "snapshot_hint": "2911"
+    },
+    {
+      "catalog_status": "available",
+      "display_name": "GPT-5.4-Mini",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.4-mini",
+      "snapshot_hint": "2911"
+    },
+    {
+      "catalog_status": "available",
+      "display_name": "GPT-5.3-Codex-Spark",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "gpt-5.3-codex-spark",
+      "snapshot_hint": "2911"
+    },
+    {
+      "catalog_status": "hidden",
+      "display_name": "Codex Auto Review",
+      "identity_confidence": "catalog-id-with-snapshot",
+      "model_id": "codex-auto-review",
+      "snapshot_hint": "3000"
+    }
+  ],
+  "observed_at": "2026-08-26T10:47:48.944Z",
+  "probe": {
+    "commands": [
+      {
+        "command_id": "version",
+        "duration_ms": 146.482,
+        "evidence_source": "version-output",
+        "exit_code": 0,
+        "status": "observed"
+      },
+      {
+        "command_id": "root-help",
+        "duration_ms": 119.943,
+        "evidence_source": "root-help",
+        "exit_code": 0,
+        "status": "observed"
+      },
+      {
+        "command_id": "model-catalog",
+        "duration_ms": 203.145,
+        "evidence_source": "model-catalog-json",
+        "exit_code": 0,
+        "status": "observed"
+      }
+    ],
+    "generation_request_performed": false,
+    "metadata_scope": "provider-current",
+    "mode": "passive-cli",
+    "provider_metadata_request_attempted": true,
+    "raw_output_persisted": false
+  },
+  "runtime_identity": {
+    "cli_name": "codex",
+    "cli_source": "unknown",
+    "cli_version": "0.146.0",
+    "environment_kind": "host",
+    "execution_surface": "capability-probe",
+    "observed_at": "2026-08-26T10:47:48.944Z",
+    "permission_mode": "unknown",
+    "provider": "codex"
+  },
+  "schema_version": 2,
+  "setting_probes": [],
+  "setting_surfaces": [
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "low",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.6-sol",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max",
+        "ultra"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.6-terra",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.6-luna",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-reserve",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.5",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.4",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.4-mini",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "high",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "gpt-5.3-codex-spark",
+      "namespace": "codex.reasoning"
+    },
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "default_value": "medium",
+      "evidence_source": "model-catalog",
+      "key": "effort",
+      "model_selector": "codex-auto-review",
+      "namespace": "codex.reasoning"
+    }
+  ],
+  "surfaces": {
+    "permission_mode": "unknown",
+    "progress_artifact": "unknown",
+    "synthesis_envelope": "unknown"
+  }
+}

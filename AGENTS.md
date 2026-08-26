@@ -113,10 +113,10 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-agentctl.py scripts/t
 scripts/agentctl doctor --json --workspace .
 ```
 
-multi-agent duration studyのschema、clock、fake runnerを触ったら:
+multi-agent duration studyのschema、clock、fake runner、capability probeを触ったら:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile scripts/agent_contracts.py scripts/agent_duration_study.py scripts/agent-duration-study
+PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile scripts/agent_contracts.py scripts/agent_duration_study.py scripts/agent_duration_capability.py scripts/agent-duration-study
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-agent-duration-study.py scripts/test-agent-contracts.py
 ```
 

@@ -8,7 +8,7 @@ Status: schema + deterministic clock + fake runner implemented; no live provider
 
 Milestone Aの「測定器が嘘をつかない」範囲を実装しました。
 
-- study / case / capability / runのJSON Schema v1
+- study / case / runのJSON Schema v1（capabilityはWave 0.5でv2へ更新）
 - UTC wall time + monotonic nanosecond event
 - missingを`not-applicable` / `not-observed` / `unknown`へ分離
 - observed eventからのみdurationを導出
@@ -129,12 +129,12 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
 
 ## Deliberately not implemented
 
-- live Codex / Claude / Grok capability probe
-- provider/model/applied effortの実観測adapter
+- generationを伴うCodex / Claude / Grok live canary
+- providerのresolved model / applied effort実観測adapter
 - case catalog contentsとfixture repository
 - `agentctl` / episode correlation injection
 - persistent duration-atlas volume integration
 - adaptive sampler、aggregate report、lookup skill
 - schedulerまたは定期実行
 
-次のcritical pathはWave 0.5 / Milestone Cの前半です。各providerのCLI/event surfaceからresolved-or-alias identity、setting status、progress/synthesis capabilityを一件ずつ取得し、取得不能なfieldを非掲載にできることを確認します。
+Wave 0.5の非生成CLI probeは後続の`16-wave-0.5-passive-capability-probe.md`で実装しました。次のcritical pathはMilestone Bのcase catalogと、Milestone Cのexplicit live canaryです。受動広告と実適用を混ぜず、取得不能なfieldを非掲載にできることを確認します。

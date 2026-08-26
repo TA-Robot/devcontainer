@@ -1,6 +1,6 @@
 # 07. Implementation roadmap
 
-Implementation update: 2026-08-26にMilestone Aのschema、clock、fake runner、semantic testsを完了。詳細は`15-milestone-a-implementation.md`。以下はroadmap全体として残します。
+Implementation update: 2026-08-26にMilestone Aのschema、clock、fake runner、semantic testsと、Wave 0.5の非生成provider capability probeを完了。詳細は`15-milestone-a-implementation.md`と`16-wave-0.5-passive-capability-probe.md`。以下はroadmap全体として残します。
 
 ## 1. 現在地
 
@@ -11,15 +11,16 @@ Implementation update: 2026-08-26にMilestone Aのschema、clock、fake runner�
 - persistent observation volume
 - deterministic wrapper/control-plane benchmark
 - native task/result contract、read/write/isolated lane
-- duration studyのstudy / case / capability / run schema v1
+- duration studyのstudy / case / run schema v1とcapability schema v2
 - deterministic monotonic fake clock、derived duration validator、immutable run write
+- Codex / Claude / Grokのpassive version/help/catalog adapter
 
 不足しているもの:
 
 - versioned task case catalog contents
 - study/run/config correlation
 - live providerからのT2/T4/V0/V1/T6/TX capture
-- live model identity confidenceとrequested/applied generation setting capture
+- task実行時のresolved model identity confidenceとrequested/applied generation setting capture
 - execution surface、permission mode、instruction/compaction diagnostic
 - case-specific quality oracle
 - adaptive sampling state
@@ -126,6 +127,8 @@ Deliverable:
 - Wave 1用の小さなcalibration case set
 
 ## 6. Milestone C: provider and agentctl adapters
+
+Status: passive CLI advertisement probeまで実装。generationを伴うidentity/settings/progress canaryとagentctl correlationは未実装。
 
 追加:
 
@@ -250,7 +253,7 @@ generated outputはsource run digestを持ち、手編集しません。raw prom
 次turn以降に実装へ進める場合のcritical pathは次です。
 
 1. schema + fake clock harness
-2. identity/settings/progress capability probe
+2. identity/settingsのpassive capability probe — implemented; applied/progress canary remains
 3. case catalogのprofile descriptor部分
 4. deterministic read-only S case + online/offline oracle separation
 5. primary-only provider canary
