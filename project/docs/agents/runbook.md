@@ -4,6 +4,7 @@
 
 ## Operating rule
 
+- 複数agentの関係、round、variant、scheduled workを設計する時は`collaboration-playbook.md`を使い、lane / role / mode / lifecycleを分ける。
 - Lane Rはprovider-nativeのread-only subagentを使い、worktreeを作らない。
 - Lane Wはimmutableなfull base SHAからjob専用branch / worktreeを作る。
 - Lane Iはdisposableまたはprivate runtimeを使う。

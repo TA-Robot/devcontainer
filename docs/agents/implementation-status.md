@@ -1,6 +1,6 @@
 # Native-first multi-agent refresh status
 
-Updated: 2026-08-22
+Updated: 2026-08-26
 
 The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-roadmap.md`. This file records implementation state; design changes belong in the ADR or architecture docs.
 
@@ -30,6 +30,15 @@ The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-r
 - `AGENTS_TEMPLATE.md` and `project/AGENTS.md` now contain only scope, lanes, permissions, completion, and single-writer integration rules.
 - Wrapper choreography is isolated in the legacy compatibility runbook.
 - Failure classification, orphan recovery, clean retry, resource collision, integration, and GC are centralized in the target-project runbook.
+
+### Collaboration guidance C0 and initial C1
+
+- Execution lane, role, collaboration mode, lifecycle, and authority are separate axes; multi-agent work is no longer described only as independent fan-out.
+- Sixty candidate patterns are reduced to twelve operational modes covering dispatch, independent advice, bounded deliberation, parallel variants, independent assurance, and temporal work.
+- The target playbook defines blind first rounds, claim-bounded dialogue, common-base variant comparison, primary-owned synthesis, and explicit stop conditions.
+- A reusable collaboration-plan template records expected value, participants, artifact flow, evaluation, lane, budgets, and recurring-trigger guards.
+- The native-agent template validator now requires the playbook and plan template in the project copy source.
+- Scheduled and event-triggered agents are guidance only. `agentctl` 0.7 has no cron or event-trigger runtime; recurring work must not be inferred from the capacity scheduler.
 
 ### Phase 3a: foreground job / workspace fabric
 
@@ -88,3 +97,7 @@ The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-r
 ## Next: Phase 4b
 
 Run the same fixture on intentional `sbx --clone` and Docker Agent installations, then compare credential exposure, main-checkout/worktree constraints, cache, Compose, disk, teardown, and rollback before choosing an adapter. Destructive worktree/branch GC, verified job-scoped Docker teardown, evidence expiry, and live provider-log rotation remain unclaimed follow-ups; none should be inferred from Phase 3e eligibility.
+
+## Next: collaboration C1-C2
+
+Exercise panel, critique, deliberation, variants, and maker-checker against representative tasks using native provider capabilities. Record content-free mode, elapsed time, accepted artifact, decisive finding, rework, and integration effort, then compare them with a solo baseline. Only fields that prove useful should enter a separate machine-readable collaboration-plan contract. A disabled-by-default read-only scheduler pilot belongs to a later C4 gate after trigger, dedupe, overlap, usage budget, backoff, circuit-breaker, and restart semantics are specified and fault-tested.

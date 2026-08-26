@@ -46,6 +46,12 @@ DEVCONTAINER_AI_CLI_CHANNEL=edge
 
 正本は[`ADR-0001`](adr/0001-native-first-multi-agent-execution.md)、比較scenarioは[`representative-scenarios.md`](agents/representative-scenarios.md)です。
 
+### Collaboration semantics
+
+laneは実行境界であり、agent同士の関係ではありません。parallel dispatch、independent panel、bounded critique / deliberation、parallel variants、maker-checker、scheduled finite workを`collaboration mode`として分離します。mode選択とsynthesisはprimary / provider-native layer、finite write jobは`agentctl`、将来のtrigger / dedupe / budgetはscheduler layerが所有します。`agentctl`へdebate transcriptやconversation graphを入れません。
+
+正本は[`collaboration-model.md`](agents/collaboration-model.md)、target projectの運用は[`project/docs/agents/collaboration-playbook.md`](../project/docs/agents/collaboration-playbook.md)です。scheduled / event-driven runtimeはまだ実装しておらず、guidanceだけから利用可能とみなしません。
+
 ### Project contract (Phase 2)
 
 target projectのcopy sourceは`project/`です。

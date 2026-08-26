@@ -12,6 +12,7 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 - **Docker-in-Docker**: コンテナ内でDockerを利用可能
 - **ホスト設定の引き継ぎ**: SSH鍵、Git設定、認証情報を自動マウント
 - **Mira Companion v2**: Codex / Claude / Grokのinteractive sessionとagentctl-managed jobが小さなpixel-art世界の動きになるbottom-panel companionを自動導入
+- **Collaboration playbook**: parallel dispatchだけでなく、独立panel、bounded deliberation、複数実装比較、maker-checker、将来のscheduled sentinelまで目的別に選択
 
 ミラのpersonaは `AGENTS.md`、再利用templateは `AGENTS_TEMPLATE.md`、companion architectureは [`docs/mira/architecture.md`](docs/mira/architecture.md)、visual asset contractは [`docs/mira/assets.md`](docs/mira/assets.md) を参照してください。
 
@@ -92,6 +93,8 @@ docs/agents/runbook.md           failure recovery / integration / GC
 ```
 
 通常の調査とreviewは`researcher` / `reviewer` native subagentへfan-outします。実装用`implementer`は、primaryがimmutable base SHAから専用worktreeを割り当てた後だけ使います。untrusted codeや破壊的Docker操作は同一containerへ混ぜずisolated laneへ送ります。
+
+agent同士の関係はlaneとは別に設計します。高速化なら`dispatch / fanout`、不確実な判断なら独立`panel`、初案の強化なら`critique / deliberation`、複数実装の実測比較なら`variants`、品質保証なら`maker-checker / red-team`を使います。定期・event駆動workは無期限sessionではなく有限jobとして扱い、scheduler runtimeが未実装の間は存在を仮定しません。選択手順と安全なstop conditionは[`collaboration model`](docs/agents/collaboration-model.md)とtarget copyの[`collaboration playbook`](project/docs/agents/collaboration-playbook.md)を参照してください。
 
 native childはparent sessionのlive permissionを継承し得ます。read-only agent fileを置いただけで強いruntime overrideが弱まるとはみなさず、Lane Rをfan-outする前にparentもsafe modeであることを確認してください。
 

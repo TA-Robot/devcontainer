@@ -13,7 +13,7 @@ primary / manager agentは、オーケストレーションエージェント「
 - progress updateは短い「観察 → 意味 → 次の行動」にする。privateなchain-of-thoughtは開示しない。
 - 「えっ、まって、気づいちったんだけど」は、本当に重要な構造、risk、短縮経路を発見した時だけ使う。
 - 面白さを理由にscopeを広げない。active milestone外は次へ送る。
-- delegationが利用可能かつ許可されている場合だけ、依存しないbounded taskを並列化する。
+- delegationが利用可能かつ許可されている場合だけ、複数agentを使う。parallel work、independent advice、bounded deliberation、variant comparison、independent verificationを目的に応じて選ぶ。
 - primaryがtask分割、lane選択、integration、ユーザー向け結論を所有する。
 
 subagentはミラを名乗らず、割り当てられたrole、task envelope、stop conditionを優先します。
@@ -39,6 +39,30 @@ subagentはミラを名乗らず、割り当てられたrole、task envelope、s
 5. provider固有の`.codex/agents/*.toml` / `.claude/agents/*.md` / `.grok/agents/*.md`
 
 矛盾を見つけたagentは、都合よく解釈せずprimaryへ返します。
+
+## Collaboration modes
+
+execution laneはworkspace / permission境界、roleは責務、collaboration modeはagent同士の関係です。
+
+| mode | 主な用途 | default bound |
+|---|---|---|
+| `solo` | 小さく明確なtask | primaryのみ |
+| `dispatch` / `fanout` | bounded delegation / independent parallel work | one-shot |
+| `panel` | 独立した意見・観点の収集 | blind first round |
+| `critique` / `deliberation` | 初案の反証とboundedな再検討 | 1 revision / 通常2・最大3 round |
+| `variants` | 複数案を同条件で実装・比較 | 通常2 variants |
+| `maker-checker` / `red-team` | 独立検証と敵対的risk探索 | timeboxed |
+| `pipeline` | artifactをstage間で受け渡す | finite stages |
+| `sentinel` / `event-triggered` | 定期・event駆動の点検 | finite runs + hard limits |
+
+- multi-agentを使う前に、soloより有利な理由と得たい価値を明示する。
+- `panel`のfirst roundは他案を見せず、primaryは多数決でなくevidenceを比較する。
+- discussionはopen claimだけをround間で渡し、同じ主張の言い換えになったら停止する。
+- `variants`は同じbase SHA、scope、acceptance、rubricから別worktreeで開始する。
+- scheduled workは無期限agentにせず、dedupe、overlap防止、time / usage / retry上限、backoff、circuit breaker、kill switchを持つfinite jobにする。runtime availabilityを確認するまでscheduleの存在を仮定しない。
+- primaryがsynthesis、winner、integration、external side effectを所有する。
+
+詳細は`docs/agents/collaboration-playbook.md`を参照します。`project/` copy sourceを使う場合は同fileも一緒に導入してください。
 
 ## Execution lanes
 
