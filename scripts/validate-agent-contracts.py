@@ -59,6 +59,23 @@ def validate_config(root: Path) -> dict[str, Any]:
     return config
 
 
+def validate_operating_docs(root: Path) -> None:
+    required = (
+        "docs/agents/runbook.md",
+        "docs/agents/collaboration-playbook.md",
+        "docs/agents/tickets/task-ticket.template.md",
+        "docs/agents/tickets/collaboration-plan.template.md",
+    )
+    for relative in required:
+        path = root / relative
+        require(path.is_file(), f"missing operating document: {path}")
+    agents = (root / "AGENTS.md").read_text(encoding="utf-8")
+    require(
+        "docs/agents/collaboration-playbook.md" in agents,
+        "AGENTS.md must reference the collaboration playbook",
+    )
+
+
 def validate_schemas_and_examples(root: Path, config: dict[str, Any]) -> None:
     contracts = config.get("contracts", {})
     task_schema_path = root / contracts.get("task", "")
@@ -119,6 +136,7 @@ def validate_grok_templates(root: Path) -> None:
 
 def validate_template(root: Path) -> None:
     config = validate_config(root)
+    validate_operating_docs(root)
     validate_schemas_and_examples(root, config)
     validate_codex_templates(root)
     validate_claude_templates(root)

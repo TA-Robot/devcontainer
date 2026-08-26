@@ -35,6 +35,14 @@ class AgentContractTests(unittest.TestCase):
     def test_template_provider_mappings_are_consistent(self) -> None:
         load_template_validator().validate_template(self.template)
 
+    def test_collaboration_guidance_is_part_of_the_copy_source(self) -> None:
+        validator = load_template_validator()
+        validator.validate_operating_docs(self.template)
+        playbook = self.template / "docs/agents/collaboration-playbook.md"
+        template = self.template / "docs/agents/tickets/collaboration-plan.template.md"
+        self.assertIn("Scheduled and event-triggered rules", playbook.read_text(encoding="utf-8"))
+        self.assertIn("usage / quota budget", template.read_text(encoding="utf-8"))
+
     def test_valid_fixtures(self) -> None:
         validate(load_json(self.fixtures / "task.valid.json"), self.task_schema)
         validate(load_json(self.fixtures / "result.valid.json"), self.result_schema)
