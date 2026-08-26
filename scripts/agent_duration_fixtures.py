@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from agent_contracts import load_json
+from agent_duration_cases import load_family_recipes
 from agent_duration_study import (
     DurationStudyError,
     ROOT,
@@ -667,6 +668,11 @@ RECIPES: dict[str, dict[str, Any]] = {
     },
 }
 
+for _recipe_id, _recipe in load_family_recipes().items():
+    if _recipe_id in RECIPES:
+        raise RuntimeError(f"duplicate duration recipe ID: {_recipe_id}")
+    RECIPES[_recipe_id] = _recipe
+
 
 def _load_catalog(path: Path) -> dict[str, Any]:
     value = load_json(path)
@@ -680,6 +686,18 @@ def _entry_for_case(catalog: dict[str, Any], case_id: str) -> dict[str, Any]:
     matches = [entry for entry in catalog["entries"] if entry["case"]["case_id"] == case_id]
     if len(matches) != 1:
         raise DurationStudyError(f"case catalog does not contain exactly one {case_id!r} entry")
+    return matches[0]
+
+
+def _recipe_for_case(case_id: str, recipe_id: str | None = None) -> dict[str, Any]:
+    if recipe_id is not None:
+        recipe = RECIPES.get(recipe_id)
+        if recipe is None or recipe.get("case_id") != case_id:
+            raise DurationStudyError(f"fixture recipe is not registered for {case_id}")
+        return recipe
+    matches = [recipe for recipe in RECIPES.values() if recipe.get("case_id") == case_id]
+    if len(matches) != 1:
+        raise DurationStudyError(f"fixture case does not have exactly one recipe: {case_id}")
     return matches[0]
 
 
@@ -870,9 +888,7 @@ def build_fixture(
     entry = _entry_for_case(catalog, case_id)
     case = entry["case"]
     contract = entry["fixture"]
-    recipe = RECIPES.get(contract["recipe_id"])
-    if recipe is None or recipe["case_id"] != case_id:
-        raise DurationStudyError(f"fixture recipe is not registered for {case_id}")
+    recipe = _recipe_for_case(case_id, contract["recipe_id"])
     if contract["recipe_revision"] != 1:
         raise DurationStudyError(f"unsupported fixture recipe revision for {case_id}")
 
@@ -1231,10 +1247,37 @@ def evaluate_fixture_isolated(
 def _install_known_good_for_test(case_id: str, workspace: Path) -> None:
     """Install the private known-good variant for evaluator calibration tests only."""
 
-    recipe = next((item for item in RECIPES.values() if item["case_id"] == case_id), None)
-    if recipe is None:
-        raise DurationStudyError(f"unknown fixture case: {case_id}")
+    recipe = _recipe_for_case(case_id)
     for raw_path, content in recipe["good"].items():
         path = workspace / _safe_relative(raw_path)
         path.write_text(content, encoding="utf-8")
         path.chmod(0o700 if raw_path in set(recipe["executable"]) else 0o600)
+
+
+def _install_mutant_for_test(case_id: str, mutant_id: str, workspace: Path) -> list[str]:
+    """Install one private negative calibration artifact and return expected failing checks."""
+
+    recipe = _recipe_for_case(case_id)
+    mutants = recipe.get("mutants", {})
+    mutant = mutants.get(mutant_id) if isinstance(mutants, dict) else None
+    if not isinstance(mutant, dict):
+        raise DurationStudyError(f"unknown fixture mutant: {case_id}/{mutant_id}")
+    files = mutant.get("files")
+    expected = mutant.get("expected_failed_check_ids")
+    if not isinstance(files, dict) or not files:
+        raise DurationStudyError(f"fixture mutant has no file overlay: {case_id}/{mutant_id}")
+    if not isinstance(expected, list) or not expected or not all(
+        isinstance(item, str) and item for item in expected
+    ):
+        raise DurationStudyError(
+            f"fixture mutant has no expected failed check IDs: {case_id}/{mutant_id}"
+        )
+    executable = set(mutant.get("executable", []))
+    for raw_path, content in files.items():
+        if not isinstance(raw_path, str) or not isinstance(content, str):
+            raise DurationStudyError(f"fixture mutant file overlay is invalid: {case_id}/{mutant_id}")
+        path = workspace / _safe_relative(raw_path)
+        path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        path.chmod(0o700 if raw_path in executable else 0o600)
+    return expected
