@@ -131,6 +131,21 @@ class AgentContractTests(unittest.TestCase):
         with self.assertRaises(ContractValidationError):
             validate(candidate, self.result_schema)
 
+    def test_dependency_free_validator_enforces_numeric_bounds(self) -> None:
+        schema = {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 3,
+            "exclusiveMinimum": 0,
+            "exclusiveMaximum": 4,
+        }
+        validate(1, schema)
+        validate(3.0, schema)
+        for value in (0, 4):
+            with self.subTest(value=value):
+                with self.assertRaises(ContractValidationError):
+                    validate(value, schema)
+
 
 if __name__ == "__main__":
     unittest.main()

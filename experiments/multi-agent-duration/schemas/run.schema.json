@@ -1,0 +1,842 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devcontainer.local/schemas/agent-duration-run-v1.schema.json",
+  "title": "Agent Duration Run v1",
+  "description": "Content-free timing, identity, outcome, and coverage record for one study attempt.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "study_id",
+    "run_id",
+    "block_id",
+    "case",
+    "snapshot",
+    "configuration",
+    "participants",
+    "environment",
+    "limits",
+    "landmarks",
+    "workers",
+    "dialogue_exchanges",
+    "durations_ms",
+    "correlation",
+    "outcome",
+    "quality",
+    "coverage",
+    "field_provenance"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "study_id": {
+      "$ref": "#/$defs/id"
+    },
+    "run_id": {
+      "$ref": "#/$defs/id"
+    },
+    "block_id": {
+      "$ref": "#/$defs/id"
+    },
+    "case": {
+      "$ref": "#/$defs/case_ref"
+    },
+    "snapshot": {
+      "$ref": "#/$defs/snapshot"
+    },
+    "configuration": {
+      "$ref": "#/$defs/configuration"
+    },
+    "participants": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/participant"
+      }
+    },
+    "environment": {
+      "$ref": "#/$defs/environment"
+    },
+    "limits": {
+      "$ref": "#/$defs/limits"
+    },
+    "landmarks": {
+      "$ref": "#/$defs/landmarks"
+    },
+    "workers": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/worker"
+      }
+    },
+    "dialogue_exchanges": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/dialogue_exchange"
+      }
+    },
+    "durations_ms": {
+      "$ref": "#/$defs/durations"
+    },
+    "correlation": {
+      "$ref": "#/$defs/correlation"
+    },
+    "outcome": {
+      "$ref": "#/$defs/outcome"
+    },
+    "quality": {
+      "$ref": "#/$defs/quality"
+    },
+    "coverage": {
+      "$ref": "#/$defs/coverage"
+    },
+    "field_provenance": {
+      "$ref": "#/$defs/field_provenance"
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "git_sha": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "utc_timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"
+    },
+    "scalar": {
+      "type": ["string", "number", "boolean"]
+    },
+    "bounded_string": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "case_ref": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "case_id",
+        "revision",
+        "catalog_digest",
+        "capsule_digest",
+        "source_type",
+        "family",
+        "size",
+        "profile_id",
+        "strong_online_oracle"
+      ],
+      "properties": {
+        "case_id": {
+          "$ref": "#/$defs/id"
+        },
+        "revision": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "catalog_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "capsule_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "source_type": {
+          "enum": ["fixture", "historical-replay", "natural-live"]
+        },
+        "family": {
+          "enum": [
+            "repository-trace",
+            "code-review",
+            "failing-test-diagnosis",
+            "bounded-implementation",
+            "refactor-migration",
+            "test-design",
+            "documentation-runbook",
+            "architecture-design",
+            "security-isolation",
+            "performance-resource",
+            "devcontainer-operations",
+            "evidence-synthesis"
+          ]
+        },
+        "size": {
+          "enum": ["S", "M", "L"]
+        },
+        "profile_id": {
+          "$ref": "#/$defs/id"
+        },
+        "strong_online_oracle": {
+          "type": "boolean"
+        }
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base_sha", "bundle_digest", "fixture_revision", "instruction_set_digest"],
+      "properties": {
+        "base_sha": {
+          "$ref": "#/$defs/git_sha"
+        },
+        "bundle_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "fixture_revision": {
+          "$ref": "#/$defs/id"
+        },
+        "instruction_set_digest": {
+          "$ref": "#/$defs/sha256"
+        }
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "configuration_id",
+        "relation",
+        "participant_plan",
+        "participants_actual",
+        "workers_actual",
+        "peak_concurrent",
+        "nested_delegation",
+        "independence_policy",
+        "lane"
+      ],
+      "properties": {
+        "configuration_id": {
+          "$ref": "#/$defs/id"
+        },
+        "relation": {
+          "enum": [
+            "primary-only",
+            "bounded-delegation",
+            "parallel-shards",
+            "independent-candidates",
+            "maker-verifier",
+            "evidence-dialogue",
+            "staged-pipeline"
+          ]
+        },
+        "participant_plan": {
+          "$ref": "#/$defs/id"
+        },
+        "participants_actual": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "workers_actual": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "peak_concurrent": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "nested_delegation": {
+          "enum": ["disabled", "allowed-tracked", "detected-untracked"]
+        },
+        "independence_policy": {
+          "$ref": "#/$defs/id"
+        },
+        "lane": {
+          "enum": ["read", "write", "isolated"]
+        }
+      }
+    },
+    "model_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requested_source", "identity_confidence"],
+      "properties": {
+        "requested_alias": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "requested_source": {
+          "enum": ["flag", "config-file", "runtime-default", "unknown"]
+        },
+        "resolved_id": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "identity_confidence": {
+          "enum": ["exact", "alias-only", "default-unspecified", "unknown"]
+        },
+        "snapshot_hint": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "identity_confidence": {
+                "const": "exact"
+              }
+            },
+            "required": ["identity_confidence"]
+          },
+          "then": {
+            "required": ["resolved_id"]
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "identity_confidence": {
+                "const": "alias-only"
+              }
+            },
+            "required": ["identity_confidence"]
+          },
+          "then": {
+            "required": ["requested_alias"]
+          }
+        }
+      ]
+    },
+    "generation_setting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["namespace", "key", "requested_value", "status"],
+      "properties": {
+        "namespace": {
+          "$ref": "#/$defs/id"
+        },
+        "key": {
+          "$ref": "#/$defs/id"
+        },
+        "requested_value": {
+          "$ref": "#/$defs/scalar"
+        },
+        "status": {
+          "enum": ["applied", "rejected", "not-advertised", "unknown"]
+        },
+        "applied_value": {
+          "$ref": "#/$defs/scalar"
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "status": {
+                "const": "applied"
+              }
+            },
+            "required": ["status"]
+          },
+          "then": {
+            "required": ["applied_value"]
+          }
+        }
+      ]
+    },
+    "runtime_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "cli_name",
+        "cli_version",
+        "cli_source",
+        "execution_surface",
+        "permission_mode",
+        "observed_at"
+      ],
+      "properties": {
+        "provider": {
+          "enum": ["codex", "claude", "grok", "fixture"]
+        },
+        "cli_name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "cli_version": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256
+        },
+        "cli_source": {
+          "enum": ["container-image", "host-sync", "fixture", "unknown"]
+        },
+        "image_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "execution_surface": {
+          "enum": ["direct-provider", "agentctl-job", "legacy-comparator", "fixture"]
+        },
+        "permission_mode": {
+          "enum": ["automatic", "approval-gated", "unknown"]
+        },
+        "observed_at": {
+          "$ref": "#/$defs/utc_timestamp"
+        }
+      }
+    },
+    "participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "participant_id",
+        "role",
+        "model_identity",
+        "generation_settings",
+        "runtime_identity"
+      ],
+      "properties": {
+        "participant_id": {
+          "$ref": "#/$defs/id"
+        },
+        "role": {
+          "$ref": "#/$defs/id"
+        },
+        "model_identity": {
+          "$ref": "#/$defs/model_identity"
+        },
+        "generation_settings": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/generation_setting"
+          }
+        },
+        "runtime_identity": {
+          "$ref": "#/$defs/runtime_identity"
+        }
+      }
+    },
+    "environment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "image_digest",
+        "machine_class",
+        "session_context",
+        "repository_cache",
+        "dependency_cache",
+        "docker_cache",
+        "provider_prompt_cache",
+        "compaction",
+        "competing_load",
+        "timezone"
+      ],
+      "properties": {
+        "image_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "machine_class": {
+          "$ref": "#/$defs/id"
+        },
+        "session_context": {
+          "enum": ["fresh", "warm-task", "warm-repository", "unknown"]
+        },
+        "repository_cache": {
+          "enum": ["cold", "warm", "unknown", "not-applicable"]
+        },
+        "dependency_cache": {
+          "enum": ["cold", "warm", "unknown", "not-applicable"]
+        },
+        "docker_cache": {
+          "enum": ["cold", "warm", "unknown", "not-applicable"]
+        },
+        "provider_prompt_cache": {
+          "enum": ["hit", "miss", "unknown", "not-applicable"]
+        },
+        "compaction": {
+          "enum": ["observed", "not-observed", "unknown", "not-applicable"]
+        },
+        "competing_load": {
+          "enum": ["none-observed", "measured", "unknown"]
+        },
+        "timezone": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        }
+      }
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["wall_clock_ms", "role", "retry_policy"],
+      "properties": {
+        "wall_clock_ms": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "role": {
+          "const": "safety-censoring-cap"
+        },
+        "retry_policy": {
+          "enum": ["none", "harness-explicit"]
+        }
+      }
+    },
+    "observed_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "wall_time", "monotonic_ns", "provenance"],
+      "properties": {
+        "status": {
+          "const": "observed"
+        },
+        "wall_time": {
+          "$ref": "#/$defs/utc_timestamp"
+        },
+        "monotonic_ns": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "provenance": {
+          "enum": ["observed", "declared-by-harness"]
+        }
+      }
+    },
+    "missing_event": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "provenance"],
+      "properties": {
+        "status": {
+          "enum": ["not-applicable", "not-observed", "unknown"]
+        },
+        "provenance": {
+          "enum": ["observed", "declared-by-harness"]
+        }
+      }
+    },
+    "event": {
+      "oneOf": [
+        {
+          "$ref": "#/$defs/observed_event"
+        },
+        {
+          "$ref": "#/$defs/missing_event"
+        }
+      ]
+    },
+    "landmarks": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["T0", "TX"],
+      "properties": {
+        "P0": {"$ref": "#/$defs/event"},
+        "P1": {"$ref": "#/$defs/event"},
+        "T0": {"$ref": "#/$defs/observed_event"},
+        "T1": {"$ref": "#/$defs/event"},
+        "T2": {"$ref": "#/$defs/event"},
+        "T3": {"$ref": "#/$defs/event"},
+        "T4": {"$ref": "#/$defs/event"},
+        "V0": {"$ref": "#/$defs/event"},
+        "V1": {"$ref": "#/$defs/event"},
+        "T6": {"$ref": "#/$defs/event"},
+        "S0": {"$ref": "#/$defs/event"},
+        "S1": {"$ref": "#/$defs/event"},
+        "TX": {"$ref": "#/$defs/observed_event"}
+      }
+    },
+    "worker": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["worker_id", "role", "provider", "required_for_result", "start", "stop"],
+      "properties": {
+        "worker_id": {
+          "$ref": "#/$defs/id"
+        },
+        "parent_worker_id": {
+          "$ref": "#/$defs/id"
+        },
+        "role": {
+          "$ref": "#/$defs/id"
+        },
+        "provider": {
+          "enum": ["codex", "claude", "grok", "fixture"]
+        },
+        "required_for_result": {
+          "type": "boolean"
+        },
+        "start": {
+          "$ref": "#/$defs/observed_event"
+        },
+        "stop": {
+          "$ref": "#/$defs/event"
+        }
+      }
+    },
+    "dialogue_exchange": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "exchange_id",
+        "role",
+        "recipient",
+        "admitted",
+        "dispatched",
+        "returned",
+        "claim_count",
+        "evidence_count",
+        "test_count",
+        "state_change_count",
+        "unresolved_crux_count",
+        "stop_reason"
+      ],
+      "properties": {
+        "exchange_id": {
+          "$ref": "#/$defs/id"
+        },
+        "parent_exchange_id": {
+          "$ref": "#/$defs/id"
+        },
+        "role": {
+          "$ref": "#/$defs/id"
+        },
+        "recipient": {
+          "$ref": "#/$defs/id"
+        },
+        "admitted": {
+          "$ref": "#/$defs/observed_event"
+        },
+        "dispatched": {
+          "$ref": "#/$defs/event"
+        },
+        "returned": {
+          "$ref": "#/$defs/event"
+        },
+        "claim_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "evidence_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "test_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "state_change_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "unresolved_crux_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "stop_reason": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "durations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["terminal_wall"],
+      "properties": {
+        "provision": {"type": "number", "minimum": 0},
+        "dispatch_delay": {"type": "number", "minimum": 0},
+        "first_artifact_latency": {"type": "number", "minimum": 0},
+        "required_workers_ready": {"type": "number", "minimum": 0},
+        "worker_terminal_span": {"type": "number", "minimum": 0},
+        "synthesis_tail": {"type": "number", "minimum": 0},
+        "online_validation": {"type": "number", "minimum": 0},
+        "post_validation_tail": {"type": "number", "minimum": 0},
+        "user_result": {"type": "number", "minimum": 0},
+        "terminal_wall": {"type": "number", "minimum": 0},
+        "aggregate_worker": {"type": "number", "minimum": 0},
+        "worker_active_union": {"type": "number", "minimum": 0},
+        "offline_scoring": {"type": "number", "minimum": 0}
+      }
+    },
+    "correlation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["episode_ids", "agentctl_job_ids", "attempt_ids"],
+      "properties": {
+        "episode_ids": {
+          "$ref": "#/$defs/id_list"
+        },
+        "agentctl_job_ids": {
+          "$ref": "#/$defs/id_list"
+        },
+        "attempt_ids": {
+          "$ref": "#/$defs/id_list"
+        }
+      }
+    },
+    "id_list": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "$ref": "#/$defs/id"
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "infrastructure",
+        "artifact",
+        "online_acceptance",
+        "offline_score",
+        "quality_pass",
+        "quality_basis",
+        "failure_class",
+        "stop_reason"
+      ],
+      "properties": {
+        "infrastructure": {
+          "enum": ["success", "failure", "timeout", "cancelled", "invalid"]
+        },
+        "artifact": {
+          "enum": ["valid", "invalid", "missing", "not-applicable"]
+        },
+        "online_acceptance": {
+          "enum": ["pass", "fail", "partial", "unavailable"]
+        },
+        "offline_score": {
+          "enum": ["pass", "fail", "partial", "unavailable", "not-run"]
+        },
+        "quality_pass": {
+          "type": ["boolean", "null"]
+        },
+        "quality_basis": {
+          "enum": ["offline-score", "strong-online-oracle", "online-fail", "unavailable"]
+        },
+        "failure_class": {
+          "enum": [
+            null,
+            "timeout-cap",
+            "rate-limit",
+            "provider-refusal",
+            "approval-wait",
+            "nested-worker-untracked",
+            "gold-leak",
+            "clock-anomaly",
+            "fixture-invalid",
+            "artifact-invalid",
+            "online-validation-failed"
+          ]
+        },
+        "stop_reason": {
+          "$ref": "#/$defs/id"
+        }
+      }
+    },
+    "quality_metric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "value", "provenance"],
+      "properties": {
+        "name": {
+          "$ref": "#/$defs/id"
+        },
+        "value": {
+          "$ref": "#/$defs/scalar"
+        },
+        "provenance": {
+          "const": "evaluated"
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evaluator_id", "metrics"],
+      "properties": {
+        "evaluator_id": {
+          "type": ["string", "null"]
+        },
+        "metrics": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/quality_metric"
+          }
+        }
+      }
+    },
+    "coverage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "duration_catalog_version",
+        "clock_landmarks",
+        "first_artifact_resolution",
+        "synthesis_resolution",
+        "worker_tree",
+        "nested_worker_detected"
+      ],
+      "properties": {
+        "duration_catalog_version": {
+          "const": 1
+        },
+        "clock_landmarks": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": ["P0", "P1", "T0", "T1", "T2", "T3", "T4", "V0", "V1", "T6", "S0", "S1", "TX"]
+          }
+        },
+        "first_artifact_resolution": {
+          "enum": ["progress-envelope", "not-observed", "not-applicable", "unknown"]
+        },
+        "synthesis_resolution": {
+          "enum": ["explicit-envelope", "not-observed", "not-applicable", "unknown"]
+        },
+        "worker_tree": {
+          "enum": ["exact", "lower-bound", "untracked"]
+        },
+        "nested_worker_detected": {
+          "type": "boolean"
+        }
+      }
+    },
+    "field_provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["observed", "declared_by_harness", "derived", "evaluated", "unknown"],
+      "properties": {
+        "observed": {
+          "$ref": "#/$defs/pointer_list"
+        },
+        "declared_by_harness": {
+          "$ref": "#/$defs/pointer_list"
+        },
+        "derived": {
+          "$ref": "#/$defs/pointer_list"
+        },
+        "evaluated": {
+          "$ref": "#/$defs/pointer_list"
+        },
+        "unknown": {
+          "$ref": "#/$defs/pointer_list"
+        }
+      }
+    },
+    "pointer_list": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 512,
+        "pattern": "^/"
+      }
+    }
+  }
+}

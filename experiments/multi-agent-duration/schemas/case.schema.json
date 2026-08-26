@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devcontainer.local/schemas/agent-duration-case-v1.schema.json",
+  "title": "Agent Duration Case v1",
+  "description": "Content-free identity and structural profile for one versioned duration-study case.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "case_id",
+    "revision",
+    "capsule_digest",
+    "source_type",
+    "family",
+    "size",
+    "profile_id",
+    "descriptors",
+    "ambiguity",
+    "oracle_strength",
+    "decomposability",
+    "artifact_type",
+    "strong_online_oracle"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": 1
+    },
+    "case_id": {
+      "$ref": "#/$defs/id"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "capsule_digest": {
+      "$ref": "#/$defs/sha256"
+    },
+    "source_type": {
+      "enum": ["fixture", "historical-replay", "natural-live"]
+    },
+    "family": {
+      "enum": [
+        "repository-trace",
+        "code-review",
+        "failing-test-diagnosis",
+        "bounded-implementation",
+        "refactor-migration",
+        "test-design",
+        "documentation-runbook",
+        "architecture-design",
+        "security-isolation",
+        "performance-resource",
+        "devcontainer-operations",
+        "evidence-synthesis"
+      ]
+    },
+    "size": {
+      "enum": ["S", "M", "L"]
+    },
+    "profile_id": {
+      "$ref": "#/$defs/id"
+    },
+    "descriptors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "context_surface",
+        "artifact_surface",
+        "coupling",
+        "validation_depth",
+        "environment_setup",
+        "failure_distance",
+        "statefulness",
+        "language_toolchain"
+      ],
+      "properties": {
+        "context_surface": {
+          "$ref": "#/$defs/bounded_string"
+        },
+        "artifact_surface": {
+          "$ref": "#/$defs/bounded_string"
+        },
+        "coupling": {
+          "$ref": "#/$defs/bounded_string"
+        },
+        "validation_depth": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "environment_setup": {
+          "$ref": "#/$defs/bounded_string"
+        },
+        "failure_distance": {
+          "$ref": "#/$defs/bounded_string"
+        },
+        "statefulness": {
+          "$ref": "#/$defs/bounded_string"
+        },
+        "language_toolchain": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        }
+      }
+    },
+    "ambiguity": {
+      "enum": ["exact", "bounded-open", "open"]
+    },
+    "oracle_strength": {
+      "enum": ["deterministic", "structured", "calibrated", "weak"]
+    },
+    "decomposability": {
+      "enum": ["serial", "partial", "independent"]
+    },
+    "artifact_type": {
+      "enum": ["answer", "findings", "patch", "tests", "design", "runbook", "synthesis"]
+    },
+    "strong_online_oracle": {
+      "type": "boolean"
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "bounded_string": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    }
+  }
+}

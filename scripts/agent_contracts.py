@@ -87,6 +87,16 @@ def validate(
     if "enum" in schema and instance not in schema["enum"]:
         raise ContractValidationError(f"{path}: value {instance!r} is not in enum")
 
+    if isinstance(instance, (int, float)) and not isinstance(instance, bool):
+        if "minimum" in schema and instance < schema["minimum"]:
+            raise ContractValidationError(f"{path}: number is less than minimum")
+        if "maximum" in schema and instance > schema["maximum"]:
+            raise ContractValidationError(f"{path}: number is greater than maximum")
+        if "exclusiveMinimum" in schema and instance <= schema["exclusiveMinimum"]:
+            raise ContractValidationError(f"{path}: number is not greater than exclusiveMinimum")
+        if "exclusiveMaximum" in schema and instance >= schema["exclusiveMaximum"]:
+            raise ContractValidationError(f"{path}: number is not less than exclusiveMaximum")
+
     if isinstance(instance, str):
         if len(instance) < schema.get("minLength", 0):
             raise ContractValidationError(f"{path}: string is shorter than minLength")
