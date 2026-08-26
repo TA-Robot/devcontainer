@@ -1,6 +1,6 @@
 # 07. Implementation roadmap
 
-Implementation update: 2026-08-26にMilestone Aのschema/clock/fake runner、Wave 0.5の非生成provider capability probe、Milestone Bのinitial S/M/L isolated fixtureを完了。詳細は`15`、`16`、`17-milestone-b-case-fixtures.md`。以下はroadmap全体として残します。
+Implementation update: 2026-08-26にMilestone Aのschema/clock/fake runner、Wave 0.5の非生成provider capability probe、Milestone Bのinitial S/M/L isolated fixtureとnetwork-disabled evaluatorを完了。詳細は`15`から`18-isolated-evaluator.md`。以下はroadmap全体として残します。
 
 ## 1. 現在地
 
@@ -16,6 +16,7 @@ Implementation update: 2026-08-26にMilestone Aのschema/clock/fake runner、Wav
 - Codex / Claude / Grokのpassive version/help/catalog adapter
 - bounded implementation S/M/L case catalog、capsule、disposable one-commit Git builder
 - harness-only hidden evaluatorとknown-bad/good calibration
+- read-only root/workspace、network none、credentialなしのisolated evaluator container
 
 不足しているもの:
 

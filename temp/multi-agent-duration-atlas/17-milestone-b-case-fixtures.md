@@ -95,7 +95,7 @@ frozen imageへ`workspace`だけをbind mountしたsmokeでは、case source/pub
 
 agent変更後のcodeを評価するprocessはcredential environmentを継承してはいけません。local calibration evaluatorはPATH、locale、UTC、workspace pathだけのallowlist environmentを使います。live artifactはさらに`network-disabled-read-only-container`で評価するcontractです。
 
-`evaluate-fixture`は安全な既定としてhost実行を拒否します。checked-in bad/good fixture calibrationだけは明示的な`--trusted-calibration`で実行できます。live artifact用のisolated evaluator runnerは次sliceです。
+`evaluate-fixture`は安全な既定としてhost実行を拒否します。checked-in bad/good fixture calibrationだけは明示的な`--trusted-calibration`で実行できます。live artifact用のisolated evaluator runnerは後続の`18-isolated-evaluator.md`で実装しました。
 
 ## Oracle calibration
 
@@ -142,12 +142,11 @@ scripts/agent-duration-study evaluate-fixture \
 
 ## Next gate
 
-live provider canary前に次を実装します。
+live provider canary前の残りを次へ絞りました。
 
 1. agent container: workspaceだけをwrite mountし、task networkをprovider別sandboxで禁止
-2. evaluator container: workspace read-only、hidden evaluator read-only、network none、credential mountなし
+2. evaluator container: workspace read-only、hidden evaluator read-only、network none、credential mountなし — implemented
 3. task capsuleをCLI promptへ渡し、prompt自体はanalytic recordへ保存しない
 4. T0/TX/V0/V1/T6とcase/catalog/fixture snapshotをrun recordへ接続
 
 このgateを通った最初のS primary-only runから、初めてtask durationの`single-observation`を公開できます。
-

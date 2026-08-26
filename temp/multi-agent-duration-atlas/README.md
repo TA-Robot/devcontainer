@@ -2,7 +2,7 @@
 
 検討開始: 2026-08-26
 
-このdirectoryは、agentへ「どんな仕事を、どの構成でさせると、実際にどれくらい時間がかかるか」を計測し、projectが後から判断材料として参照できる時間atlasを作るための計画・実装記録です。Milestone Aのschemaとdeterministic fake runner、Wave 0.5の非生成capability probe、Milestone BのS/M/L isolated fixtureまでは実装済みですが、まだlive providerを使ったtask時間計測結果ではありません。
+このdirectoryは、agentへ「どんな仕事を、どの構成でさせると、実際にどれくらい時間がかかるか」を計測し、projectが後から判断材料として参照できる時間atlasを作るための計画・実装記録です。Milestone Aのschemaとdeterministic fake runner、Wave 0.5の非生成capability probe、Milestone BのS/M/L isolated fixtureとnetwork-disabled evaluatorまでは実装済みですが、まだlive providerを使ったtask時間計測結果ではありません。
 
 ## 今回作るもの
 
@@ -56,6 +56,7 @@ evidence grade:              single-observation
 - `15-milestone-a-implementation.md`: schema、fake clock、runner、testの実装記録
 - `16-wave-0.5-passive-capability-probe.md`: provider別のmodel/effort広告面とhost/container観測差
 - `17-milestone-b-case-fixtures.md`: structural S/M/L catalog、disposable repo、gold/oracle isolation
+- `18-isolated-evaluator.md`: live artifactをhost credential/networkから分離して検査するcontainer
 
 ## 正本との関係
 
