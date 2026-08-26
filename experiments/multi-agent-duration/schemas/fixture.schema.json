@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://devcontainer.local/schemas/agent-duration-fixture-v1.schema.json",
-  "title": "Agent Duration Disposable Fixture v1",
+  "$id": "https://devcontainer.local/schemas/agent-duration-fixture-v2.schema.json",
+  "title": "Agent Duration Disposable Fixture v2",
   "description": "Content-free snapshot and isolation manifest for one generated case workspace.",
   "type": "object",
   "additionalProperties": false,
@@ -18,7 +18,7 @@
   ],
   "properties": {
     "schema_version": {
-      "const": 1
+      "const": 2
     },
     "fixture_id": {
       "$ref": "#/$defs/id"
@@ -89,6 +89,7 @@
         "evaluator_isolation_required",
         "gold_visibility",
         "workspace_validation_commands",
+        "hidden_validation_targets",
         "online_evaluator_id"
       ],
       "properties": {
@@ -113,6 +114,14 @@
           "maxItems": 8,
           "items": {
             "$ref": "#/$defs/argv"
+          }
+        },
+        "hidden_validation_targets": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 32,
+          "items": {
+            "$ref": "#/$defs/hidden_validation_target"
           }
         },
         "online_evaluator_id": {
@@ -148,7 +157,7 @@
     "initial_oracle": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["expected", "observed", "workspace_checks", "hidden_check"],
+      "required": ["expected", "observed", "workspace_checks", "hidden_checks"],
       "properties": {
         "expected": {
           "const": "fail"
@@ -163,8 +172,12 @@
             "$ref": "#/$defs/check_result"
           }
         },
-        "hidden_check": {
-          "$ref": "#/$defs/check_result"
+        "hidden_checks": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/$defs/check_result"
+          }
         }
       }
     }
@@ -203,13 +216,32 @@
         "maxLength": 256
       }
     },
-    "check_result": {
+    "hidden_validation_target": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["check_id", "status", "exit_code", "duration_ms"],
+      "required": ["check_id", "test_target"],
       "properties": {
         "check_id": {
           "$ref": "#/$defs/id"
+        },
+        "test_target": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[A-Za-z_][A-Za-z0-9_.]*$"
+        }
+      }
+    },
+    "check_result": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["check_id", "scope", "status", "exit_code", "duration_ms"],
+      "properties": {
+        "check_id": {
+          "$ref": "#/$defs/id"
+        },
+        "scope": {
+          "enum": ["public", "hidden"]
         },
         "status": {
           "enum": ["pass", "fail"]

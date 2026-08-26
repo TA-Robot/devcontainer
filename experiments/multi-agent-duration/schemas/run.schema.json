@@ -974,6 +974,9 @@
         "check_id": {
           "$ref": "#/$defs/id"
         },
+        "scope": {
+          "enum": ["public", "hidden"]
+        },
         "status": {
           "enum": ["pass", "fail"]
         },
@@ -1026,6 +1029,69 @@
           "items": {
             "$ref": "#/$defs/evaluator_check"
           }
+        },
+        "score": {
+          "$ref": "#/$defs/evaluator_score"
+        }
+      }
+    },
+    "evaluator_score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resolution",
+        "passed",
+        "total",
+        "ratio",
+        "public_passed",
+        "public_total",
+        "hidden_passed",
+        "hidden_total",
+        "failed_check_ids",
+        "all_checks_required"
+      ],
+      "properties": {
+        "resolution": {
+          "enum": ["criterion", "aggregate-check"]
+        },
+        "passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total": {
+          "type": "integer",
+          "minimum": 1
+        },
+        "ratio": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "public_passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "public_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hidden_passed": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "hidden_total": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "failed_check_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "$ref": "#/$defs/id"
+          }
+        },
+        "all_checks_required": {
+          "const": true
         }
       }
     },

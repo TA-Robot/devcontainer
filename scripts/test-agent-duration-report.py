@@ -42,9 +42,28 @@ def quality_fail_record() -> dict[str, object]:
     )
     evaluator = record["diagnostics"]["evaluator"]  # type: ignore[index]
     evaluator["status"] = "fail"
-    evaluator["checks"][0].update(  # type: ignore[index]
-        {"status": "fail", "exit_code": 1}
+    evaluator["checks"][0]["scope"] = "public"  # type: ignore[index]
+    evaluator["checks"].append(  # type: ignore[union-attr]
+        {
+            "check_id": "hidden-edge-case",
+            "scope": "hidden",
+            "status": "fail",
+            "exit_code": 1,
+            "duration_ms": 1.0,
+        }
     )
+    evaluator["score"] = {
+        "resolution": "criterion",
+        "passed": 1,
+        "total": 2,
+        "ratio": 0.5,
+        "public_passed": 1,
+        "public_total": 1,
+        "hidden_passed": 0,
+        "hidden_total": 1,
+        "failed_check_ids": ["hidden-edge-case"],
+        "all_checks_required": True,
+    }
     setting = record["participants"][0]["generation_settings"][0]  # type: ignore[index]
     setting.update({"requested_value": "low", "status": "unknown"})
     setting.pop("applied_value")
@@ -86,6 +105,16 @@ class AgentDurationReportTests(unittest.TestCase):
             self.assertEqual(roles["quality-pass"], "quality-pass-user-result")
             self.assertEqual(roles["quality-fail"], "failed-terminal")
             self.assertEqual(roles["quality-unknown"], "unknown-terminal")
+            failed_sample = next(
+                sample
+                for sample in report["samples"]
+                if sample["quality_population"] == "quality-fail"
+            )
+            self.assertEqual(failed_sample["quality_score"]["ratio"], 0.5)
+            self.assertEqual(
+                failed_sample["quality_score"]["failed_check_ids"],
+                ["hidden-edge-case"],
+            )
             serialized = json.dumps(report, sort_keys=True)
             self.assertNotIn("typical", serialized)
             self.assertNotIn("quantile", serialized)
@@ -116,6 +145,8 @@ class AgentDurationReportTests(unittest.TestCase):
             table = render_raw_sample_table(report)
             self.assertIn("effort=low/unknown", table)
             self.assertIn("failed-terminal", table)
+            self.assertIn("1/2 (50.0%) hidden=0/1", table)
+            self.assertIn("hidden-edge-case", table)
             self.assertIn("aggregation: none", table)
 
             completed = subprocess.run(

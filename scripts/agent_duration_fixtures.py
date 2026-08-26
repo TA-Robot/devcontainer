@@ -105,11 +105,13 @@ class HiddenTagNormalizerTests(unittest.TestCase):
     def test_ascii_contract(self):
         self.assertEqual(normalize_tag("RÉSUMÉ-42"), "rsum-42")
 
-    def test_empty_and_length_bounds(self):
+    def test_empty_result_rejected(self):
         for value in ("___", "!!!", "éé"):
             with self.subTest(value=value):
                 with self.assertRaises(ValueError):
                     normalize_tag(value)
+
+    def test_length_bound(self):
         with self.assertRaises(ValueError):
             normalize_tag("a" * 33)
 
@@ -642,21 +644,21 @@ if __name__ == "__main__":
 
 
 RECIPES: dict[str, dict[str, Any]] = {
-    "f04-s-python-normalizer-v1": {
+    "f04-s-python-normalizer-v2": {
         "case_id": "F04-S-PY-001",
         "files": S_FILES,
         "hidden": S_HIDDEN,
         "good": S_GOOD,
         "executable": [],
     },
-    "f04-m-python-state-cli-v1": {
+    "f04-m-python-state-cli-v2": {
         "case_id": "F04-M-PY-001",
         "files": M_FILES,
         "hidden": M_HIDDEN,
         "good": M_GOOD,
         "executable": [],
     },
-    "f04-l-python-bash-restart-v1": {
+    "f04-l-python-bash-restart-v2": {
         "case_id": "F04-L-PYBASH-001",
         "files": L_FILES,
         "hidden": L_HIDDEN,
@@ -759,6 +761,7 @@ def _run_check(
     check_id: str,
     argv: list[str],
     *,
+    scope: str,
     workspace: Path,
     environment: dict[str, str],
     timeout_seconds: float = 30,
@@ -781,9 +784,32 @@ def _run_check(
     duration_ms = round((time.monotonic_ns() - started) / 1_000_000, 3)
     return {
         "check_id": check_id,
+        "scope": scope,
         "status": "pass" if exit_code == 0 else "fail",
         "exit_code": exit_code,
         "duration_ms": duration_ms,
+    }
+
+
+def _score_checks(checks: list[dict[str, Any]]) -> dict[str, Any]:
+    if not checks:
+        raise DurationStudyError("quality score requires at least one evaluator check")
+    passed = sum(item["status"] == "pass" for item in checks)
+    public = [item for item in checks if item["scope"] == "public"]
+    hidden = [item for item in checks if item["scope"] == "hidden"]
+    return {
+        "resolution": "criterion",
+        "passed": passed,
+        "total": len(checks),
+        "ratio": round(passed / len(checks), 6),
+        "public_passed": sum(item["status"] == "pass" for item in public),
+        "public_total": len(public),
+        "hidden_passed": sum(item["status"] == "pass" for item in hidden),
+        "hidden_total": len(hidden),
+        "failed_check_ids": [
+            item["check_id"] for item in checks if item["status"] == "fail"
+        ],
+        "all_checks_required": True,
     }
 
 
@@ -791,7 +817,7 @@ def _evaluate_paths(
     workspace: Path,
     hidden_evaluator: Path,
     workspace_commands: list[list[str]],
-    online_evaluator_id: str,
+    hidden_targets: list[dict[str, str]],
 ) -> dict[str, Any]:
     environment = {
         "PATH": os.environ.get("PATH", "/usr/local/bin:/usr/bin:/bin"),
@@ -807,22 +833,28 @@ def _evaluate_paths(
         _run_check(
             f"workspace-{index + 1}",
             command,
+            scope="public",
             workspace=workspace,
             environment=environment,
         )
         for index, command in enumerate(workspace_commands)
     ]
-    hidden_check = _run_check(
-        online_evaluator_id,
-        ["python3", str(hidden_evaluator)],
-        workspace=workspace,
-        environment=environment,
-    )
-    all_checks = [*workspace_checks, hidden_check]
+    hidden_checks = [
+        _run_check(
+            target["check_id"],
+            ["python3", str(hidden_evaluator), target["test_target"]],
+            scope="hidden",
+            workspace=workspace,
+            environment=environment,
+        )
+        for target in hidden_targets
+    ]
+    all_checks = [*workspace_checks, *hidden_checks]
     return {
         "status": "pass" if all(item["status"] == "pass" for item in all_checks) else "fail",
         "workspace_checks": workspace_checks,
-        "hidden_check": hidden_check,
+        "hidden_checks": hidden_checks,
+        "score": _score_checks(all_checks),
     }
 
 
@@ -891,7 +923,7 @@ def build_fixture(
         workspace,
         hidden_evaluator,
         copy.deepcopy(contract["workspace_validation_commands"]),
-        contract["online_evaluator_id"],
+        copy.deepcopy(contract["hidden_validation_targets"]),
     )
     if initial["status"] != "fail":
         raise DurationStudyError(f"seeded fixture unexpectedly passes before work: {case_id}")
@@ -899,7 +931,7 @@ def build_fixture(
         raise DurationStudyError("fixture validation modified the base workspace")
 
     manifest = {
-        "schema_version": 1,
+        "schema_version": 2,
         "fixture_id": chosen_fixture_id,
         "created_at": observed_at,
         "case": {
@@ -929,6 +961,9 @@ def build_fixture(
             "workspace_validation_commands": copy.deepcopy(
                 contract["workspace_validation_commands"]
             ),
+            "hidden_validation_targets": copy.deepcopy(
+                contract["hidden_validation_targets"]
+            ),
             "online_evaluator_id": contract["online_evaluator_id"],
         },
         "paths": {
@@ -941,7 +976,7 @@ def build_fixture(
             "expected": "fail",
             "observed": initial["status"],
             "workspace_checks": initial["workspace_checks"],
-            "hidden_check": initial["hidden_check"],
+            "hidden_checks": initial["hidden_checks"],
         },
     }
     validate_fixture_record(manifest)
@@ -970,7 +1005,9 @@ def evaluate_fixture(fixture_dir: Path) -> dict[str, Any]:
         copy.deepcopy(
             manifest_value["execution_contract"]["workspace_validation_commands"]
         ),
-        manifest_value["execution_contract"]["online_evaluator_id"],
+        copy.deepcopy(
+            manifest_value["execution_contract"]["hidden_validation_targets"]
+        ),
     )
 
 
@@ -996,6 +1033,7 @@ def _isolated_check(
     check_id: str,
     argv: list[str],
     *,
+    scope: str,
     docker_bin: str,
     image: str,
     fixture_id: str,
@@ -1093,6 +1131,7 @@ def _isolated_check(
         raise DurationStudyError("isolated evaluator container failed before the check started")
     return {
         "check_id": check_id,
+        "scope": scope,
         "status": "pass" if exit_code == 0 else "fail",
         "exit_code": exit_code,
         "duration_ms": duration_ms,
@@ -1142,6 +1181,7 @@ def evaluate_fixture_isolated(
         _isolated_check(
             f"workspace-{index + 1}",
             command,
+            scope="public",
             docker_bin=docker_bin,
             image=image,
             fixture_id=manifest_value["fixture_id"],
@@ -1151,17 +1191,21 @@ def evaluate_fixture_isolated(
         )
         for index, command in enumerate(contract["workspace_validation_commands"])
     ]
-    hidden_check = _isolated_check(
-        contract["online_evaluator_id"],
-        ["python3", "/harness/hidden_tests.py"],
-        docker_bin=docker_bin,
-        image=image,
-        fixture_id=manifest_value["fixture_id"],
-        workspace=workspace,
-        hidden_evaluator=hidden_evaluator,
-        timeout_seconds=timeout_seconds,
-    )
-    checks = [*workspace_checks, hidden_check]
+    hidden_checks = [
+        _isolated_check(
+            target["check_id"],
+            ["python3", "/harness/hidden_tests.py", target["test_target"]],
+            scope="hidden",
+            docker_bin=docker_bin,
+            image=image,
+            fixture_id=manifest_value["fixture_id"],
+            workspace=workspace,
+            hidden_evaluator=hidden_evaluator,
+            timeout_seconds=timeout_seconds,
+        )
+        for target in contract["hidden_validation_targets"]
+    ]
+    checks = [*workspace_checks, *hidden_checks]
     return {
         "status": "pass" if all(item["status"] == "pass" for item in checks) else "fail",
         "fixture_id": manifest_value["fixture_id"],
@@ -1179,7 +1223,8 @@ def evaluate_fixture_isolated(
             "control_bundle_mounted": False,
         },
         "workspace_checks": workspace_checks,
-        "hidden_check": hidden_check,
+        "hidden_checks": hidden_checks,
+        "score": _score_checks(checks),
     }
 
 

@@ -268,6 +268,26 @@ raise SystemExit(125)
             )
             self.assertEqual(record["diagnostics"]["provider"]["status"], "success")
             self.assertEqual(record["diagnostics"]["evaluator"]["status"], "fail")
+            self.assertEqual(
+                record["diagnostics"]["evaluator"]["score"],
+                {
+                    "resolution": "criterion",
+                    "passed": 1,
+                    "total": 5,
+                    "ratio": 0.2,
+                    "public_passed": 1,
+                    "public_total": 1,
+                    "hidden_passed": 0,
+                    "hidden_total": 4,
+                    "failed_check_ids": [
+                        "hidden-separator-normalization",
+                        "hidden-ascii-filtering",
+                        "hidden-empty-result",
+                        "hidden-length-bound",
+                    ],
+                    "all_checks_required": True,
+                },
+            )
             self.assertEqual(record["landmarks"]["T2"]["status"], "not-observed")
             self.assertIn("online_validation", record["durations_ms"])
 

@@ -778,7 +778,7 @@ def _not_run_evaluator_diagnostics() -> dict[str, Any]:
 
 
 def _evaluator_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
-    checks = [*result["workspace_checks"], result["hidden_check"]]
+    checks = [*result["workspace_checks"], *result["hidden_checks"]]
     isolation = result["isolation"]
     return {
         "status": result["status"],
@@ -790,12 +790,14 @@ def _evaluator_diagnostics(result: dict[str, Any]) -> dict[str, Any]:
         "checks": [
             {
                 "check_id": item["check_id"],
+                "scope": item["scope"],
                 "status": item["status"],
                 "exit_code": item["exit_code"],
                 "duration_ms": item["duration_ms"],
             }
             for item in checks
         ],
+        "score": dict(result["score"]),
     }
 
 

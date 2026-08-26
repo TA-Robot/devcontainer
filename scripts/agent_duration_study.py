@@ -321,6 +321,13 @@ def validate_case_catalog_record(
             raise DurationStudyError(
                 f"capsule digest mismatch for {case_id}: expected {actual_capsule_digest}"
             )
+        hidden_targets = fixture["hidden_validation_targets"]
+        hidden_check_ids = [item["check_id"] for item in hidden_targets]
+        hidden_test_targets = [item["test_target"] for item in hidden_targets]
+        if len(hidden_check_ids) != len(set(hidden_check_ids)):
+            raise DurationStudyError(f"hidden check IDs must be unique for {case_id}")
+        if len(hidden_test_targets) != len(set(hidden_test_targets)):
+            raise DurationStudyError(f"hidden test targets must be unique for {case_id}")
 
         case_ids.append(case_id)
         recipe_ids.append(fixture["recipe_id"])
@@ -362,10 +369,16 @@ def validate_fixture_record(record: dict[str, Any]) -> None:
             raise DurationStudyError("fixture workspace inventory must not expose Git internals")
 
     initial_oracle = record["initial_oracle"]
-    checks = [*initial_oracle["workspace_checks"], initial_oracle["hidden_check"]]
+    checks = [*initial_oracle["workspace_checks"], *initial_oracle["hidden_checks"]]
     check_ids = [item["check_id"] for item in checks]
     if len(check_ids) != len(set(check_ids)):
         raise DurationStudyError("fixture oracle check IDs must be unique")
+    expected_hidden_ids = [
+        item["check_id"] for item in record["execution_contract"]["hidden_validation_targets"]
+    ]
+    observed_hidden_ids = [item["check_id"] for item in initial_oracle["hidden_checks"]]
+    if observed_hidden_ids != expected_hidden_ids:
+        raise DurationStudyError("fixture hidden oracle checks do not match the execution contract")
     for check in checks:
         expected_status = "pass" if check["exit_code"] == 0 else "fail"
         if check["status"] != expected_status:
@@ -670,6 +683,47 @@ def validate_run_record(record: dict[str, Any]) -> None:
         expected_status = "pass" if check["exit_code"] == 0 else "fail"
         if check["status"] != expected_status:
             raise DurationStudyError("evaluator check status disagrees with exit_code")
+    score = evaluator.get("score")
+    if score is not None:
+        checks = evaluator["checks"]
+        if not checks:
+            raise DurationStudyError("evaluator score requires checks")
+        if score["total"] != len(checks):
+            raise DurationStudyError("evaluator score total disagrees with checks")
+        passed = sum(item["status"] == "pass" for item in checks)
+        if score["passed"] != passed:
+            raise DurationStudyError("evaluator score passed count disagrees with checks")
+        if score["ratio"] != round(passed / len(checks), 6):
+            raise DurationStudyError("evaluator score ratio disagrees with checks")
+        failed_ids = [item["check_id"] for item in checks if item["status"] == "fail"]
+        if score["failed_check_ids"] != failed_ids:
+            raise DurationStudyError("evaluator failed check IDs are not canonical")
+        if score["resolution"] == "criterion":
+            if any("scope" not in item for item in checks):
+                raise DurationStudyError("criterion score requires scoped checks")
+            public = [item for item in checks if item["scope"] == "public"]
+            hidden = [item for item in checks if item["scope"] == "hidden"]
+            expected_scope_counts = (
+                sum(item["status"] == "pass" for item in public),
+                len(public),
+                sum(item["status"] == "pass" for item in hidden),
+                len(hidden),
+            )
+            observed_scope_counts = (
+                score["public_passed"],
+                score["public_total"],
+                score["hidden_passed"],
+                score["hidden_total"],
+            )
+            if observed_scope_counts != expected_scope_counts:
+                raise DurationStudyError("evaluator score scope counts disagree with checks")
+        elif (
+            score["public_passed"]
+            or score["public_total"]
+            or score["hidden_passed"]
+            or score["hidden_total"]
+        ):
+            raise DurationStudyError("aggregate evaluator score cannot claim scope counts")
     if evaluator["status"] == "pass":
         if not evaluator["checks"] or any(item["status"] != "pass" for item in evaluator["checks"]):
             raise DurationStudyError("passing evaluator requires passing checks")

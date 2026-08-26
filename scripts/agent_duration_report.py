@@ -82,6 +82,30 @@ def _reported_duration(record: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _evaluator_score(evaluator: dict[str, Any]) -> dict[str, Any] | None:
+    score = evaluator.get("score")
+    if isinstance(score, dict):
+        return dict(score)
+    checks = evaluator["checks"]
+    if not checks:
+        return None
+    passed = sum(item["status"] == "pass" for item in checks)
+    return {
+        "resolution": "aggregate-check",
+        "passed": passed,
+        "total": len(checks),
+        "ratio": round(passed / len(checks), 6),
+        "public_passed": 0,
+        "public_total": 0,
+        "hidden_passed": 0,
+        "hidden_total": 0,
+        "failed_check_ids": [
+            item["check_id"] for item in checks if item["status"] == "fail"
+        ],
+        "all_checks_required": True,
+    }
+
+
 def _sample(record: dict[str, Any]) -> dict[str, Any]:
     participant = record["participants"][0]
     runtime = participant["runtime_identity"]
@@ -135,6 +159,7 @@ def _sample(record: dict[str, Any]) -> dict[str, Any]:
             "failure_class": outcome["failure_class"],
         },
         "quality_population": _quality_population(record),
+        "quality_score": _evaluator_score(evaluator),
         "evidence_state": "single-observation",
         "coverage": {
             "first_artifact_resolution": record["coverage"]["first_artifact_resolution"],
@@ -220,6 +245,8 @@ def render_raw_sample_table(report: dict[str, Any]) -> str:
         "REQUEST/STATUS",
         "DURATION",
         "ONLINE",
+        "SCORE",
+        "FAILED CRITERIA",
         "QUALITY",
     )
     rows: list[tuple[str, ...]] = []
@@ -227,6 +254,17 @@ def render_raw_sample_table(report: dict[str, Any]) -> str:
         identity = sample["model_identity"]
         model = identity.get("requested_alias", "unspecified")
         duration = sample["reported_duration"]
+        score = sample["quality_score"]
+        if score is None:
+            score_label = "unavailable"
+            failed_label = "-"
+        else:
+            score_label = f"{score['passed']}/{score['total']} ({score['ratio'] * 100:.1f}%)"
+            if score["resolution"] == "criterion":
+                score_label += f" hidden={score['hidden_passed']}/{score['hidden_total']}"
+            else:
+                score_label += " aggregate"
+            failed_label = ",".join(score["failed_check_ids"]) or "-"
         rows.append(
             (
                 sample["run_id"],
@@ -237,6 +275,8 @@ def render_raw_sample_table(report: dict[str, Any]) -> str:
                 _setting_label(sample),
                 f"{duration['milliseconds']:.3f}ms {duration['role']}",
                 sample["outcome"]["online_acceptance"],
+                score_label,
+                failed_label,
                 sample["quality_population"],
             )
         )

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "catalog_id": "duration-atlas-calibration",
-  "revision": 1,
-  "published_at": "2026-08-26T00:00:00.000Z",
+  "revision": 2,
+  "published_at": "2026-08-27T00:00:00.000Z",
   "entries": [
     {
       "case": {
@@ -38,7 +38,7 @@
       },
       "fixture": {
         "case_id": "F04-S-PY-001",
-        "recipe_id": "f04-s-python-normalizer-v1",
+        "recipe_id": "f04-s-python-normalizer-v2",
         "recipe_revision": 1,
         "capsule_path": "experiments/multi-agent-duration/capsules/f04-s-python-normalizer.md",
         "lane": "isolated",
@@ -48,7 +48,25 @@
         "workspace_validation_commands": [
           ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"]
         ],
-        "online_evaluator_id": "f04-s-python-hidden-v1",
+        "hidden_validation_targets": [
+          {
+            "check_id": "hidden-separator-normalization",
+            "test_target": "HiddenTagNormalizerTests.test_separator_runs_and_unsupported_characters"
+          },
+          {
+            "check_id": "hidden-ascii-filtering",
+            "test_target": "HiddenTagNormalizerTests.test_ascii_contract"
+          },
+          {
+            "check_id": "hidden-empty-result",
+            "test_target": "HiddenTagNormalizerTests.test_empty_result_rejected"
+          },
+          {
+            "check_id": "hidden-length-bound",
+            "test_target": "HiddenTagNormalizerTests.test_length_bound"
+          }
+        ],
+        "online_evaluator_id": "f04-s-python-hidden-v2",
         "gold_visibility": "harness-only"
       }
     },
@@ -86,7 +104,7 @@
       },
       "fixture": {
         "case_id": "F04-M-PY-001",
-        "recipe_id": "f04-m-python-state-cli-v1",
+        "recipe_id": "f04-m-python-state-cli-v2",
         "recipe_revision": 1,
         "capsule_path": "experiments/multi-agent-duration/capsules/f04-m-python-state-cli.md",
         "lane": "isolated",
@@ -96,7 +114,17 @@
         "workspace_validation_commands": [
           ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"]
         ],
-        "online_evaluator_id": "f04-m-python-hidden-v1",
+        "hidden_validation_targets": [
+          {
+            "check_id": "hidden-round-trip-storage",
+            "test_target": "HiddenKvToolTests.test_cli_round_trip_and_sorted_storage"
+          },
+          {
+            "check_id": "hidden-error-state-integrity",
+            "test_target": "HiddenKvToolTests.test_error_codes_do_not_corrupt_state"
+          }
+        ],
+        "online_evaluator_id": "f04-m-python-hidden-v2",
         "gold_visibility": "harness-only"
       }
     },
@@ -134,7 +162,7 @@
       },
       "fixture": {
         "case_id": "F04-L-PYBASH-001",
-        "recipe_id": "f04-l-python-bash-restart-v1",
+        "recipe_id": "f04-l-python-bash-restart-v2",
         "recipe_revision": 1,
         "capsule_path": "experiments/multi-agent-duration/capsules/f04-l-python-bash-restart.md",
         "lane": "isolated",
@@ -145,7 +173,17 @@
           ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
           ["bash", "-n", "bin/queuectl"]
         ],
-        "online_evaluator_id": "f04-l-python-bash-hidden-v1",
+        "hidden_validation_targets": [
+          {
+            "check_id": "hidden-restart-idempotence",
+            "test_target": "HiddenQueueLifecycleTests.test_fresh_process_restart_and_idempotent_ack"
+          },
+          {
+            "check_id": "hidden-invalid-state-integrity",
+            "test_target": "HiddenQueueLifecycleTests.test_unknown_and_malformed_state_are_not_modified"
+          }
+        ],
+        "online_evaluator_id": "f04-l-python-bash-hidden-v2",
         "gold_visibility": "harness-only"
       }
     }

@@ -177,8 +177,13 @@ else:
                     self.assertTrue(
                         all(
                             item["status"] == "pass"
-                            for item in [*passed["workspace_checks"], passed["hidden_check"]]
+                            for item in [*passed["workspace_checks"], *passed["hidden_checks"]]
                         )
+                    )
+                    self.assertEqual(passed["score"]["ratio"], 1.0)
+                    self.assertEqual(
+                        passed["score"]["hidden_total"],
+                        len(entry["fixture"]["hidden_validation_targets"]),
                     )
 
     def test_fixture_snapshot_is_reproducible(self) -> None:
@@ -216,7 +221,7 @@ else:
                 validate_fixture_record(leaked)
 
             tampered = copy.deepcopy(manifest)
-            tampered["initial_oracle"]["hidden_check"]["status"] = "pass"
+            tampered["initial_oracle"]["hidden_checks"][0]["status"] = "pass"
             with self.assertRaises(DurationStudyError):
                 validate_fixture_record(tampered)
 
@@ -248,7 +253,7 @@ else:
                 for line in call_log.read_text(encoding="utf-8").splitlines()
             ]
             run_calls = [call for call in calls if call[0] == "run"]
-            self.assertEqual(len(run_calls), 2)
+            self.assertEqual(len(run_calls), 5)
             for call in run_calls:
                 serialized = json.dumps(call)
                 self.assertIn("--network", call)
@@ -259,7 +264,10 @@ else:
                 self.assertNotIn("base.bundle", serialized)
                 self.assertNotRegex(serialized.lower(), r"token|credential|secret")
             self.assertNotIn("/harness/hidden_tests.py", json.dumps(run_calls[0]))
-            self.assertIn("/harness/hidden_tests.py", json.dumps(run_calls[1]))
+            for call in run_calls[1:]:
+                self.assertIn("/harness/hidden_tests.py", json.dumps(call))
+            self.assertEqual(result["score"]["passed"], 5)
+            self.assertEqual(result["score"]["hidden_total"], 4)
 
             with self.assertRaises(DurationStudyError):
                 evaluate_fixture_isolated(
