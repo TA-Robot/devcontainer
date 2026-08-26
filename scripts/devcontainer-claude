@@ -3,12 +3,15 @@ set -euo pipefail
 
 ai_cli_prefix="${DEVCONTAINER_AI_CLI_PREFIX:-/opt/devcontainer-ai-cli}"
 real_claude_bin="${DEVCONTAINER_CLAUDE_REAL_BIN:-$ai_cli_prefix/bin/claude}"
+provider_sandbox_bin="${DEVCONTAINER_PROVIDER_SANDBOX_BIN:-/usr/local/lib/provider-sandbox}"
 dangerous_flag="--dangerously-skip-permissions"
 
 if [[ ! -x "$real_claude_bin" ]]; then
   echo "error: claude real binary not found or not executable: $real_claude_bin" >&2
   exit 127
 fi
+
+export PATH="$provider_sandbox_bin:$PATH"
 
 for argument in "$@"; do
   if [[ "$argument" == "$dangerous_flag" ]]; then

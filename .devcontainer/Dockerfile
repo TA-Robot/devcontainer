@@ -10,6 +10,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
 # 基本パッケージのインストール
 RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-transport-https \
+    bubblewrap \
     build-essential \
     ca-certificates \
     curl \
@@ -30,6 +31,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     wget \
     xz-utils \
     zsh \
+    && rm -rf /var/lib/apt/lists/*
+
+# Claude Code's fail-closed Linux sandbox uses socat for its network proxy.
+# Keep this separate from the base package layer so sandbox-helper updates do
+# not invalidate the full developer toolchain package installation.
+RUN apt-get update && apt-get install -y --no-install-recommends socat \
     && rm -rf /var/lib/apt/lists/*
 
 # ロケール設定
@@ -99,6 +106,13 @@ RUN npm install -g --prefix "${DEVCONTAINER_AI_CLI_PREFIX}" \
     @google/gemini-cli@${GEMINI_CLI_VERSION} \
     @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
     && npm cache clean --force
+
+# Codex 0.146 uses its digest-checked bundled bubblewrap when /usr/bin/bwrap is
+# absent. Ubuntu 22.04's older bwrap takes Codex's compatibility path and cannot
+# resolve the synthetic codex-linux-sandbox helper under the strict profile.
+# Claude and Grok discover the distro helper through their wrapper-scoped PATH.
+RUN install -d -m 0755 /usr/local/lib/provider-sandbox \
+    && mv /usr/bin/bwrap /usr/local/lib/provider-sandbox/bwrap
 
 # Grok Build is an official native binary rather than an npm runtime dependency.
 # Pin both its versioned artifact and digest on the stable channel.

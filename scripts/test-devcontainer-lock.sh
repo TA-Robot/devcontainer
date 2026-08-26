@@ -55,6 +55,10 @@ if docker inspect "$image_name" --format '{{range .Config.Env}}{{println .}}{{en
 fi
 echo "ok - stable image ENV contains no API key variables"
 
+docker run --rm --network none "$image_name" bash -lc \
+  'test ! -e /usr/bin/bwrap; test ! -e /usr/local/bin/bwrap; test -x /usr/local/lib/provider-sandbox/bwrap; /usr/local/lib/provider-sandbox/bwrap --version >/dev/null; command -v socat >/dev/null; socat -V >/dev/null'
+echo "ok - provider sandbox runtime: bubblewrap + socat"
+
 if [[ "${DEVCONTAINER_FROZEN_RUN_SMOKE:-1}" == "1" ]]; then
   # Feature entrypoints are runtime metadata and are not written into the image
   # Config by `devcontainer build`, so invoke docker-init explicitly here.

@@ -3,11 +3,14 @@ set -euo pipefail
 
 ai_cli_prefix="${DEVCONTAINER_AI_CLI_PREFIX:-/opt/devcontainer-ai-cli}"
 real_grok_bin="${DEVCONTAINER_GROK_REAL_BIN:-$ai_cli_prefix/bin/grok}"
+provider_sandbox_bin="${DEVCONTAINER_PROVIDER_SANDBOX_BIN:-/usr/local/lib/provider-sandbox}"
 
 if [[ ! -x "$real_grok_bin" ]]; then
   echo "error: grok real binary not found or not executable: $real_grok_bin" >&2
   exit 127
 fi
+
+export PATH="$provider_sandbox_bin:$PATH"
 
 # The managed stable/edge channel owns upgrades, so suppress Grok's background
 # self-updater. Keep an explicitly supplied flag singular because clap rejects

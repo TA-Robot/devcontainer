@@ -14,6 +14,7 @@ Current direct pins:
 | Component | Version/source |
 |---|---|
 | Ubuntu | `22.04` image digest in `Dockerfile` |
+| Provider sandbox helpers | Ubuntu `bubblewrap` and `socat` packages from the pinned base distribution |
 | Node | `22.22.3` plus archive SHA-256 |
 | TypeScript | `5.9.3` |
 | ts-node | `10.9.2` |
@@ -42,6 +43,27 @@ Its CLI source is also published in xAI's official
 [grok-build repository](https://github.com/xai-org/grok-build). The immutable
 image digest produced by CI remains the distribution/rollback unit; adding a
 fully locked npm installation is a separate hardening item.
+
+`bubblewrap` and `socat` are installed because Claude Code's fail-closed Linux
+sandbox requires both its filesystem sandbox and network proxy helpers; Grok
+custom profiles with read-deny rules also require `bwrap`. Without them, the safe
+provider path either refuses to start or cannot enforce the declared boundary.
+They add two small OS executables and no extension/runtime API. The alternative
+is to use provider bypass modes, which is not acceptable for controlled agent
+runs. To remove them, first remove or replace every Claude sandbox and Grok
+custom-deny profile, update their safety contracts, then delete the Dockerfile
+package entries and rebuild the image; the previous image digest is the rollback
+unit.
+
+The Ubuntu 22.04 `bwrap` executable is relocated from `/usr/bin` to
+`/usr/local/lib/provider-sandbox` and is added to `PATH` only by the Claude/Grok
+wrappers and their isolated study runner. Codex 0.146 otherwise discovers the
+distro version, enters an old-bwrap compatibility path, and cannot resolve its
+synthetic sandbox helper under the strict duration profile. Keeping the distro
+helper outside the global and Codex runner paths makes Codex use its own
+digest-checked bundled build, matching the frozen-image behavior. Remove this
+split only after a Codex/Ubuntu update passes the no-generation workspace-write,
+unrelated-read, and network-denial probe with the system helper.
 
 ## Edge is explicit
 

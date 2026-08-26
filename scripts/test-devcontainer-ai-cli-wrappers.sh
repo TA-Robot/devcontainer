@@ -13,7 +13,7 @@ fail() {
 make_stub() {
   local path="$1"
   apply_stub="$path"
-  printf '#!/usr/bin/env bash\nprintf "PROFILE=%%s\\n" "${AGENTCTL_PERMISSION_PROFILE:-}" >"${CAPTURE_PATH:?}"\nprintf "%%s\\n" "$@" >>"$CAPTURE_PATH"\n' >"$apply_stub"
+  printf '#!/usr/bin/env bash\nprintf "PROFILE=%%s\\n" "${AGENTCTL_PERMISSION_PROFILE:-}" >"${CAPTURE_PATH:?}"\nprintf "PATH=%%s\\n" "$PATH" >>"$CAPTURE_PATH"\nprintf "%%s\\n" "$@" >>"$CAPTURE_PATH"\n' >"$apply_stub"
   chmod +x "$apply_stub"
 }
 
@@ -55,6 +55,8 @@ grep -qx 'PROFILE=trusted-fast' "$capture" || fail "codex-trusted must identify 
 
 CAPTURE_PATH="$capture" DEVCONTAINER_CLAUDE_REAL_BIN="$claude_real" \
   "$script_dir/devcontainer-claude" safe
+grep -q '^PATH=/usr/local/lib/provider-sandbox:' "$capture" \
+  || fail "Claude wrapper must expose only the provider sandbox helper path"
 [[ "$(count_exact "$capture" '--dangerously-skip-permissions')" == "0" ]] \
   || fail "normal claude must not inject the dangerous flag"
 
@@ -78,6 +80,8 @@ grep -qx 'PROFILE=trusted-fast' "$capture" || fail "claude-trusted must identify
 
 CAPTURE_PATH="$capture" DEVCONTAINER_GROK_REAL_BIN="$grok_real" \
   "$script_dir/devcontainer-grok" safe
+grep -q '^PATH=/usr/local/lib/provider-sandbox:' "$capture" \
+  || fail "Grok wrapper must expose only the provider sandbox helper path"
 [[ "$(count_exact "$capture" '--no-auto-update')" == "1" ]] \
   || fail "managed grok must suppress its background self-updater"
 [[ "$(count_exact "$capture" 'bypassPermissions')" == "0" ]] \
