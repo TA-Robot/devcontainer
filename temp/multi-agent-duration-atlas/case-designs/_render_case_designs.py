@@ -20,6 +20,7 @@ DOC_NAMES = (
     "06-implementation-handoff.md",
 )
 PLACEHOLDER = re.compile(r"\b(?:TBD|TODO|FIXME)\b", re.IGNORECASE)
+CORPUS_STATUS = "observed"
 
 
 def bullets(items: list[str]) -> str:
@@ -312,7 +313,7 @@ def main() -> int:
             raise ValueError(f"unexpected design document set: {case['case_id']}: {actual}")
         index_rows.append(
             f"| `{case['case_id']}` | {case['family']} | {case['size']} | "
-            f"`{case['profile_id']}` | designed |"
+            f"`{case['profile_id']}` | {CORPUS_STATUS} |"
         )
     index = "\n".join(
         [
