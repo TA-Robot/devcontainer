@@ -1,0 +1,146 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devcontainer.local/schemas/agent-duration-collaboration-v1.schema.json",
+  "title": "Finite Agent Duration Collaboration Manifest v1",
+  "description": "A provider-agnostic finite collaboration DAG. Relation semantics, DAG acyclicity, participant identity separation and transitive evidence dependencies are additionally enforced by the control-plane parser.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "batch_id",
+    "configuration_id",
+    "relation",
+    "participant_plan",
+    "steps",
+    "limits",
+    "failure_policy"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "batch_id": {"$ref": "#/$defs/id"},
+    "configuration_id": {"$ref": "#/$defs/id"},
+    "relation": {
+      "enum": [
+        "bounded-delegation",
+        "parallel-shards",
+        "independent-candidates",
+        "maker-verifier",
+        "evidence-dialogue",
+        "staged-pipeline"
+      ]
+    },
+    "participant_plan": {"$ref": "#/$defs/participant_plan"},
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4096,
+      "items": {"$ref": "#/$defs/step"}
+    },
+    "limits": {"$ref": "#/$defs/limits"},
+    "failure_policy": {"$ref": "#/$defs/failure_policy"}
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["participant_id", "role", "adapter_id"],
+      "properties": {
+        "participant_id": {"$ref": "#/$defs/id"},
+        "role": {"$ref": "#/$defs/id"},
+        "adapter_id": {"$ref": "#/$defs/id"}
+      }
+    },
+    "participant_plan": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "plan_id",
+        "independence_policy",
+        "nested_delegation",
+        "participants"
+      ],
+      "properties": {
+        "plan_id": {"$ref": "#/$defs/id"},
+        "independence_policy": {"$ref": "#/$defs/id"},
+        "nested_delegation": {"const": "disabled"},
+        "participants": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 256,
+          "items": {"$ref": "#/$defs/participant"}
+        }
+      }
+    },
+    "step": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "step_id",
+        "kind",
+        "relation_role",
+        "participant_id",
+        "depends_on",
+        "task_ref"
+      ],
+      "properties": {
+        "step_id": {"$ref": "#/$defs/id"},
+        "kind": {"enum": ["worker", "synthesis", "dialogue"]},
+        "relation_role": {"$ref": "#/$defs/id"},
+        "participant_id": {"$ref": "#/$defs/id"},
+        "depends_on": {
+          "type": "array",
+          "maxItems": 4096,
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"}
+        },
+        "task_ref": {"$ref": "#/$defs/id"},
+        "exchange_id": {"$ref": "#/$defs/id"},
+        "parent_exchange_id": {"$ref": "#/$defs/id"}
+      },
+      "allOf": [
+        {
+          "if": {
+            "type": "object",
+            "required": ["kind"],
+            "properties": {"kind": {"const": "dialogue"}}
+          },
+          "then": {"required": ["exchange_id"]}
+        }
+      ]
+    },
+    "limits": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_participants",
+        "max_exchanges",
+        "deadline_ms",
+        "per_step_timeout_ms",
+        "max_concurrency"
+      ],
+      "properties": {
+        "max_participants": {"type": "integer", "minimum": 1, "maximum": 256},
+        "max_exchanges": {"type": "integer", "minimum": 0, "maximum": 4096},
+        "deadline_ms": {"type": "integer", "minimum": 1, "maximum": 604800000},
+        "per_step_timeout_ms": {"type": "integer", "minimum": 1, "maximum": 86400000},
+        "max_concurrency": {"type": "integer", "minimum": 1, "maximum": 256}
+      }
+    },
+    "failure_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "on_dependency_failure", "retry_policy"],
+      "properties": {
+        "mode": {"enum": ["fail-fast", "continue-independent"]},
+        "on_dependency_failure": {"const": "skip"},
+        "retry_policy": {"const": "none"}
+      }
+    }
+  }
+}

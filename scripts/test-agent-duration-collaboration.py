@@ -20,12 +20,24 @@ from agent_duration_collaboration import (  # noqa: E402
     CollaborationManifestError,
     DialogueMetrics,
     FakeExecutionAdapter,
+    MAX_DEADLINE_MS_HARD_GUARD,
+    MAX_EXCHANGES_HARD_GUARD,
+    MAX_PARTICIPANTS_HARD_GUARD,
+    MAX_STEP_TIMEOUT_MS_HARD_GUARD,
+    MAX_STEPS_HARD_GUARD,
     SynthesisMetrics,
     manifest_summary,
     parse_manifest,
     run_collaboration,
 )
+from agent_contracts import load_json, validate  # noqa: E402
 from agent_duration_study import FakeClock  # noqa: E402
+
+
+COLLABORATION_SCHEMA = (
+    SCRIPT_DIR.parent
+    / "experiments/multi-agent-duration/schemas/collaboration.schema.json"
+)
 
 
 def participant(participant_id: str, role: str) -> dict[str, object]:
@@ -282,6 +294,38 @@ class CancelledResultAdapter:
 
 
 class CollaborationManifestTests(unittest.TestCase):
+    def test_all_relation_fixtures_satisfy_machine_schema(self) -> None:
+        schema = load_json(COLLABORATION_SCHEMA)
+        for relation in (
+            "bounded-delegation",
+            "parallel-shards",
+            "independent-candidates",
+            "maker-verifier",
+            "evidence-dialogue",
+            "staged-pipeline",
+        ):
+            with self.subTest(relation=relation):
+                validate(relation_manifest(relation), schema)
+
+    def test_schema_resource_guards_match_control_plane(self) -> None:
+        schema = load_json(COLLABORATION_SCHEMA)
+        definitions = schema["$defs"]
+        self.assertEqual(
+            MAX_PARTICIPANTS_HARD_GUARD,
+            definitions["participant_plan"]["properties"]["participants"]["maxItems"],
+        )
+        self.assertEqual(
+            MAX_STEPS_HARD_GUARD,
+            schema["properties"]["steps"]["maxItems"],
+        )
+        limits = definitions["limits"]["properties"]
+        self.assertEqual(MAX_EXCHANGES_HARD_GUARD, limits["max_exchanges"]["maximum"])
+        self.assertEqual(MAX_DEADLINE_MS_HARD_GUARD, limits["deadline_ms"]["maximum"])
+        self.assertEqual(
+            MAX_STEP_TIMEOUT_MS_HARD_GUARD,
+            limits["per_step_timeout_ms"]["maximum"],
+        )
+
     def test_all_six_relation_shapes_validate_without_fixed_global_count(self) -> None:
         for relation in (
             "bounded-delegation",
