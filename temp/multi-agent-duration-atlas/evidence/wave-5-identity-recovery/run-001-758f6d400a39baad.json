@@ -1,0 +1,416 @@
+{
+  "block_id": "c0-sol-medium-f06l-current-identity",
+  "case": {
+    "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
+    "case_id": "F06-L-PYBASH-001",
+    "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
+    "family": "test-design",
+    "profile_id": "L-cross-process-lifecycle-test-design",
+    "revision": 1,
+    "size": "L",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 416.759,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-2",
+          "duration_ms": 416.74,
+          "exit_code": 1,
+          "scope": "public",
+          "status": "fail"
+        },
+        {
+          "check_id": "workspace-3",
+          "duration_ms": 467.516,
+          "exit_code": 1,
+          "scope": "public",
+          "status": "fail"
+        },
+        {
+          "check_id": "workspace-4",
+          "duration_ms": 417.35,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-kills-lost-wakeup",
+          "duration_ms": 1069.547,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-kills-stale-lease",
+          "duration_ms": 1069.487,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-kills-duplicate-owner",
+          "duration_ms": 1020.206,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-kills-broad-cleanup",
+          "duration_ms": 1573.483,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-repeatability",
+          "duration_ms": 4835.092,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-bounded-cleanup",
+          "duration_ms": 2324.723,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-production-untouched",
+          "duration_ms": 516.809,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f06-l-lease-lifecycle-mutation-v1",
+      "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+      "isolation_profile": "network-disabled-read-only-container",
+      "score": {
+        "all_checks_required": true,
+        "failed_check_ids": [
+          "workspace-2",
+          "workspace-3",
+          "test-kills-lost-wakeup",
+          "test-kills-stale-lease",
+          "test-kills-duplicate-owner",
+          "test-kills-broad-cleanup",
+          "test-repeatability",
+          "test-bounded-cleanup"
+        ],
+        "hidden_passed": 1,
+        "hidden_total": 7,
+        "passed": 3,
+        "public_passed": 2,
+        "public_total": 4,
+        "ratio": 0.272727,
+        "resolution": "criterion",
+        "total": 11
+      },
+      "status": "fail"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 35,
+          "name": "item.completed"
+        },
+        {
+          "count": 29,
+          "name": "item.started"
+        },
+        {
+          "count": 1,
+          "name": "thread.started"
+        },
+        {
+          "count": 1,
+          "name": "turn.completed"
+        },
+        {
+          "count": 1,
+          "name": "turn.started"
+        }
+      ],
+      "event_failure_terms": [],
+      "exit_code": 0,
+      "failure_signals": [],
+      "failure_terms": [],
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [
+        {
+          "count": 6,
+          "name": "agent_message"
+        },
+        {
+          "count": 52,
+          "name": "command_execution"
+        },
+        {
+          "count": 6,
+          "name": "file_change"
+        }
+      ],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 40417,
+      "output_cap_bytes": 1048576,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "result_is_error": false,
+      "sandbox_preflight": {
+        "assurance": "probed",
+        "command_network": "denied",
+        "generation_request_performed": false,
+        "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+        "profile_digest": "sha256:e3b76b6d4d473e01898811a3933665dff68aacd1101e1e438734bca310655724",
+        "status": "pass",
+        "unrelated_read": "denied",
+        "workspace_write": "observed"
+      },
+      "status": "success",
+      "stderr_bytes": 0,
+      "task_network": "denied-by-permission-profile",
+      "terminal_event": "turn.completed",
+      "terminal_wall_ms": 664093.347,
+      "thread_id_digest": "sha256:f282d4c9e6770d1f713936f1f1c32a6763e7f5a1c699f3323fabbf2fe24993cf",
+      "tool_error_count": 0,
+      "usage": {
+        "cached_input_tokens": 354304,
+        "input_tokens": 415279,
+        "output_tokens": 13092,
+        "reasoning_output_tokens": 5585
+      },
+      "workspace_changed_path_count": 2
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.005,
+    "online_validation": 14151.964,
+    "post_validation_tail": 0.024,
+    "provision": 3776.441,
+    "terminal_wall": 678286.534,
+    "user_result": 678286.528,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider"
+    ],
+    "unknown": [
+      "/participants/0/generation_settings/0/applied_value"
+    ]
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 103098572640445,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T06:07:11.666Z"
+    },
+    "P1": {
+      "monotonic_ns": 103102349081092,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T06:07:15.442Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 103102367544682,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T06:07:15.461Z"
+    },
+    "T1": {
+      "monotonic_ns": 103102367549262,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T06:07:15.461Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 103780654072621,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T06:18:45.043Z"
+    },
+    "TX": {
+      "monotonic_ns": 103780654079078,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T06:18:45.043Z"
+    },
+    "V0": {
+      "monotonic_ns": 103766502085341,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T06:18:30.367Z"
+    },
+    "V1": {
+      "monotonic_ns": 103780654048929,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T06:18:45.043Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 1800000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": "online-validation-failed",
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "fail",
+    "quality_basis": "online-fail",
+    "quality_pass": false,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "key": "effort",
+          "namespace": "codex.reasoning",
+          "requested_value": "medium",
+          "status": "unknown"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "alias-only",
+        "requested_alias": "gpt-5.6-sol",
+        "requested_source": "flag"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+        "observed_at": "2026-08-27T06:07:15.442Z",
+        "permission_mode": "automatic",
+        "provider": "codex"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "run-001-758f6d400a39baad",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "a41685e60ec9e83713a0682e1209e09c7085e200",
+    "bundle_digest": "sha256:4663cb59494a727556365cfe615251121817906daa9b0f98de76e7ccc062caac",
+    "fixture_revision": "f06-l-lease-lifecycle-tests-v1-r1",
+    "instruction_set_digest": "sha256:e95b2a3cd9c10ed97a6785a56b0e8e4ba88cc1271dc86d221b6d5576fec710c0"
+  },
+  "study_id": "duration-atlas-wave5-identity-recovery",
+  "workers": []
+}
