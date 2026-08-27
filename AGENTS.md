@@ -128,6 +128,34 @@ PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate-agent-contracts.py
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-agent-contracts.py
 ```
 
+duration atlasのcatalog、fixture/evaluator、batch、aggregate、query、report、collaboration control-plane、skillを触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile scripts/agent_duration_*.py scripts/query_agent_duration_atlas.py project/.codex/skills/lookup-agent-duration/scripts/query_atlas.py
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
+  scripts/test-agent-duration-study.py \
+  scripts/test-agent-duration-catalog.py \
+  scripts/test-agent-duration-corpus-audit.py \
+  scripts/test-agent-duration-batch-plan.py \
+  scripts/test-agent-duration-batch.py \
+  scripts/test-agent-duration-atlas.py \
+  scripts/test-agent-duration-atlas-query.py \
+  scripts/test-agent-duration-study-report.py \
+  scripts/test-agent-duration-collaboration.py \
+  scripts/test-agent-duration-skill.py
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate-agent-contracts.py
+python3 "${CODEX_HOME:-$HOME/.codex}/skills/.system/skill-creator/scripts/quick_validate.py" project/.codex/skills/lookup-agent-duration
+```
+
+全36 caseのrecipe/hidden oracleを触った場合は、focused testに加えてprovider-free corpus auditを実行します。`--max-cases`と停止方針は必ず明示し、live provider batchとは同時に走らせません。
+
+```bash
+scripts/audit-agent-duration-corpus \
+  --catalog experiments/multi-agent-duration/catalog/cases.json \
+  --max-cases 36 \
+  --continue-on-failure
+```
+
 `assets/mira/`、そのmanifest、asset validatorを触ったら:
 
 ```bash
