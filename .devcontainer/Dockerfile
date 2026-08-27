@@ -137,6 +137,29 @@ COPY scripts/agentctl /usr/local/bin/agentctl
 COPY scripts/agentctl_jobs.py /usr/local/lib/agentctl/agentctl_jobs.py
 COPY scripts/agentctl_supervisor.py /usr/local/lib/agentctl/agentctl_supervisor.py
 COPY scripts/agent_contracts.py /usr/local/lib/agentctl/agent_contracts.py
+
+# Provider-free duration-atlas query runtime. Preserve the repository-relative
+# layout expected by agent_duration_study.py so schema discovery is anchored to
+# this root-owned bundle rather than whichever target project is open.
+COPY scripts/devcontainer-query-agent-duration-atlas /usr/local/bin/query-agent-duration-atlas
+COPY scripts/agent_contracts.py \
+    scripts/agent_duration_study.py \
+    scripts/agent_duration_atlas.py \
+    scripts/query_agent_duration_atlas.py \
+    /usr/local/lib/mira-duration-atlas-runtime/scripts/
+COPY experiments/multi-agent-duration/schemas/study.schema.json \
+    experiments/multi-agent-duration/schemas/case.schema.json \
+    experiments/multi-agent-duration/schemas/case-catalog.schema.json \
+    experiments/multi-agent-duration/schemas/capability.schema.json \
+    experiments/multi-agent-duration/schemas/fixture.schema.json \
+    experiments/multi-agent-duration/schemas/run.schema.json \
+    experiments/multi-agent-duration/schemas/batch.schema.json \
+    experiments/multi-agent-duration/schemas/atlas.schema.json \
+    /usr/local/lib/mira-duration-atlas-runtime/experiments/multi-agent-duration/schemas/
+RUN chmod 0555 /usr/local/bin/query-agent-duration-atlas \
+    && chmod 0444 /usr/local/lib/mira-duration-atlas-runtime/scripts/*.py \
+      /usr/local/lib/mira-duration-atlas-runtime/experiments/multi-agent-duration/schemas/*.json
+
 COPY .devcontainer/codex-requirements.toml /etc/codex/requirements.toml
 COPY .devcontainer/claude-mira-managed-settings.json /etc/claude-code/managed-settings.d/50-mira-companion.json
 COPY .devcontainer/grok-mira-managed-config.toml /etc/grok/managed_config.toml
