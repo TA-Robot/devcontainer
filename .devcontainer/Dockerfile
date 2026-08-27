@@ -145,6 +145,7 @@ COPY scripts/devcontainer-query-agent-duration-atlas /usr/local/bin/query-agent-
 COPY scripts/agent_contracts.py \
     scripts/agent_duration_study.py \
     scripts/agent_duration_atlas.py \
+    scripts/agent_duration_validity.py \
     scripts/query_agent_duration_atlas.py \
     /usr/local/lib/mira-duration-atlas-runtime/scripts/
 COPY experiments/multi-agent-duration/schemas/study.schema.json \
@@ -155,13 +156,17 @@ COPY experiments/multi-agent-duration/schemas/study.schema.json \
     experiments/multi-agent-duration/schemas/run.schema.json \
     experiments/multi-agent-duration/schemas/batch.schema.json \
     experiments/multi-agent-duration/schemas/atlas.schema.json \
+    experiments/multi-agent-duration/schemas/validity.schema.json \
     /usr/local/lib/mira-duration-atlas-runtime/experiments/multi-agent-duration/schemas/
 COPY --chown=root:root generated/duration-atlas/current.json \
     /usr/local/share/mira-duration-atlas/current.json
+COPY --chown=root:root generated/duration-atlas/current-validity.json \
+    /usr/local/share/mira-duration-atlas/current-validity.json
 RUN chmod 0555 /usr/local/bin/query-agent-duration-atlas \
     && chmod 0444 /usr/local/lib/mira-duration-atlas-runtime/scripts/*.py \
       /usr/local/lib/mira-duration-atlas-runtime/experiments/multi-agent-duration/schemas/*.json \
-      /usr/local/share/mira-duration-atlas/current.json
+      /usr/local/share/mira-duration-atlas/current.json \
+      /usr/local/share/mira-duration-atlas/current-validity.json
 
 COPY .devcontainer/codex-requirements.toml /etc/codex/requirements.toml
 COPY .devcontainer/claude-mira-managed-settings.json /etc/claude-code/managed-settings.d/50-mira-companion.json

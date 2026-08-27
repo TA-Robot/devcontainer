@@ -42,6 +42,8 @@ if pending:
 runtime_root = "/usr/local/lib/mira-duration-atlas-runtime"
 snapshot_source = "generated/duration-atlas/current.json"
 snapshot_target = "/usr/local/share/mira-duration-atlas/current.json"
+validity_source = "generated/duration-atlas/current-validity.json"
+validity_target = "/usr/local/share/mira-duration-atlas/current-validity.json"
 shim_copy = (
     "COPY scripts/devcontainer-query-agent-duration-atlas "
     "/usr/local/bin/query-agent-duration-atlas"
@@ -53,6 +55,7 @@ module_sources = (
     "scripts/agent_contracts.py",
     "scripts/agent_duration_study.py",
     "scripts/agent_duration_atlas.py",
+    "scripts/agent_duration_validity.py",
     "scripts/query_agent_duration_atlas.py",
 )
 module_copy = next(
@@ -78,6 +81,7 @@ schema_sources = tuple(
         "run",
         "batch",
         "atlas",
+        "validity",
     )
 )
 schema_copy = next(
@@ -99,6 +103,11 @@ snapshot_copy = (
 )
 if snapshot_copy not in logical:
     raise AssertionError("Dockerfile does not install the root-owned duration-atlas snapshot")
+validity_copy = (
+    f"COPY --chown=root:root {validity_source} {validity_target}"
+)
+if validity_copy not in logical:
+    raise AssertionError("Dockerfile does not install the duration validity companion")
 snapshot_permissions = next(
     (
         line
@@ -111,6 +120,8 @@ snapshot_permissions = next(
 )
 if snapshot_permissions is None:
     raise AssertionError("Dockerfile does not make the duration-atlas snapshot read-only")
+if validity_target not in snapshot_permissions:
+    raise AssertionError("Dockerfile does not make the validity companion read-only")
 
 dockerfile_text = dockerfile.read_text(encoding="utf-8")
 user_position = dockerfile_text.index("USER $USERNAME")
@@ -118,6 +129,8 @@ if dockerfile_text.index(shim_copy) > user_position:
     raise AssertionError("root-owned runtime must be installed before switching users")
 if dockerfile_text.index("COPY --chown=root:root generated/duration-atlas/current.json") > user_position:
     raise AssertionError("root-owned snapshot must be installed before switching users")
+if dockerfile_text.index("COPY --chown=root:root generated/duration-atlas/current-validity.json") > user_position:
+    raise AssertionError("root-owned validity companion must be installed before switching users")
 
 shim_text = shim.read_text(encoding="utf-8")
 required_shim_lines = (
@@ -196,12 +209,13 @@ docker run --rm \
   "$image" -ceu '
 runtime=/usr/local/lib/mira-duration-atlas-runtime
 snapshot=/usr/local/share/mira-duration-atlas/current.json
+validity=/usr/local/share/mira-duration-atlas/current-validity.json
 test -x /usr/local/bin/query-agent-duration-atlas
-for module in agent_contracts.py agent_duration_study.py agent_duration_atlas.py query_agent_duration_atlas.py; do
+for module in agent_contracts.py agent_duration_study.py agent_duration_atlas.py agent_duration_validity.py query_agent_duration_atlas.py; do
   test -r "$runtime/scripts/$module"
   test ! -w "$runtime/scripts/$module"
 done
-for schema in study case case-catalog capability fixture run batch atlas; do
+for schema in study case case-catalog capability fixture run batch atlas validity; do
   test -r "$runtime/experiments/multi-agent-duration/schemas/$schema.schema.json"
   test ! -w "$runtime/experiments/multi-agent-duration/schemas/$schema.schema.json"
 done
@@ -212,22 +226,35 @@ test -r "$snapshot"
 test ! -w "$snapshot"
 test "$(stat -c %a "$snapshot")" = 444
 test "$(stat -c %u:%g "$snapshot")" = 0:0
+test -f "$validity"
+test -r "$validity"
+test ! -w "$validity"
+test "$(stat -c %a "$validity")" = 444
+test "$(stat -c %u:%g "$validity")" = 0:0
 if (exec 2>/dev/null; printf x >>"$snapshot"); then
   echo "duration-atlas snapshot unexpectedly accepted a write" >&2
   exit 1
 fi
+if (exec 2>/dev/null; printf x >>"$validity"); then
+  echo "duration validity companion unexpectedly accepted a write" >&2
+  exit 1
+fi
 PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$runtime/scripts" \
-  /usr/bin/python3 - "$snapshot" <<PY
+  /usr/bin/python3 - "$snapshot" "$validity" <<PY
 from pathlib import Path
 import json
 import sys
 
 from agent_duration_atlas import validate_atlas
+from agent_duration_validity import validate_validity_record
 
 
 with Path(sys.argv[1]).open(encoding="utf-8") as handle:
     atlas = json.load(handle)
 validate_atlas(atlas)
+with Path(sys.argv[2]).open(encoding="utf-8") as handle:
+    validity = json.load(handle)
+validate_validity_record(validity)
 PY
 '
 
@@ -237,6 +264,7 @@ docker run --rm \
   --entrypoint /usr/local/bin/query-agent-duration-atlas \
   "$image" \
   /usr/local/share/mira-duration-atlas/current.json \
+  --validity /usr/local/share/mira-duration-atlas/current-validity.json \
   --mode coverage \
   --format json \
   --max-rows 1 \
@@ -248,6 +276,7 @@ jq -e '
   and .status == "measured"
   and .match.case_strata > 0
   and .match.displayed_rows == 1
+  and .validity.status == "supplied"
   and (.rows | length) == 1
   and ([.. | objects | has("samples")] | any | not)
 ' "$tmp/bundled-result.json" >/dev/null \
