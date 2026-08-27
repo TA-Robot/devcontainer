@@ -2,7 +2,9 @@
 
 検討開始: 2026-08-26
 
-このdirectoryは、agentへ「どんな仕事を、どの構成でさせると、実際にどれくらい時間がかかるか」を計測し、projectが後から判断材料として参照できる時間atlasを作るための計画・実装記録です。schema/fake runner、非生成capability probe、S/M/L isolated fixture、network-disabled evaluator、Codex / Claude / Grok one-shot runner、raw sample reporter、criterion-level quality scoreまで実装済みです。12 family × S/M/Lの全36 candidateは`case-designs/`で各6文書へ具体化済みですが、fixture実装とlive観測が済んでいるのはまだF04の一部です。current rubricのS/C0ではGrok 4.6 / mediumが5/5、Sol / mediumが4/5の単一観測です。時間目安やtypical bandを出せる段階ではありません。
+このdirectoryは、agentへ「どんな仕事を、どの構成でさせると、実際にどれくらい時間がかかるか」を計測し、projectが後から判断材料として参照できる時間atlasを作るための計画・設計・実験provenanceです。12 family × S/M/Lの全36 caseは`case-designs/`で各6文書へ具体化し、全fixture/evaluator、known-good、153 negative mutantsをprovider-freeで校正済みです。有限live manifestとimmutable observationは`evidence/`、machine aggregateは`generated/duration-atlas/current.json`、人間向けcurrent reportは`docs/agents/duration-atlas/studies/current.md`、target project向けquery skillは`project/.codex/skills/lookup-agent-duration/`が正本です。
+
+36 caseの校正完了はprovider × model × effort × relation × environmentの全cellを測定済みという意味ではありません。実測は単一観測、same-case repeat、quality-pass/fail/unknown、censoring、requested/applied settingを分離して残し、未測定cellを近傍値で補間しません。現在のoperator contractは[`docs/agents/duration-atlas/README.md`](../../docs/agents/duration-atlas/README.md)を参照してください。
 
 ## 今回作るもの
 
