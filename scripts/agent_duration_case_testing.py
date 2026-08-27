@@ -10,9 +10,9 @@ import unittest
 
 from agent_contracts import load_json
 from agent_duration_fixtures import (
-    RECIPES,
     _install_known_good_for_test,
     _install_mutant_for_test,
+    _recipe_for_case,
     build_fixture,
     evaluate_fixture,
 )
@@ -41,8 +41,7 @@ def assert_family_calibrated(
         for entry in entries:
             case_id = entry["case"]["case_id"]
             recipe_id = entry["fixture"]["recipe_id"]
-            testcase.assertIn(recipe_id, RECIPES)
-            recipe = RECIPES[recipe_id]
+            recipe = _recipe_for_case(case_id, recipe_id)
             testcase.assertEqual(recipe.get("case_id"), case_id)
 
             fixture_dir = root / f"good-{case_id.lower()}"

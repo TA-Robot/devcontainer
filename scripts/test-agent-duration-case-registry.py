@@ -11,10 +11,37 @@ from unittest import mock
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from agent_duration_cases import load_family_recipes  # noqa: E402
+from agent_duration_cases import (  # noqa: E402
+    load_case_family_recipes,
+    load_family_recipes,
+)
 
 
 class DurationCaseRegistryTests(unittest.TestCase):
+    def test_case_loader_imports_only_requested_family(self) -> None:
+        requested = mock.Mock(
+            RECIPES={"f01-s-test-v1": {"case_id": "F01-S-PY-001"}}
+        )
+        with mock.patch(
+            "agent_duration_cases.importlib.import_module", return_value=requested
+        ) as importer:
+            recipes = load_case_family_recipes("F01-S-PY-001")
+        self.assertEqual(recipes, requested.RECIPES)
+        importer.assert_called_once_with("agent_duration_cases.f01")
+
+    def test_case_loader_rejects_recipe_owned_by_another_family(self) -> None:
+        wrong_owner = mock.Mock(
+            RECIPES={"f01-s-test-v1": {"case_id": "F02-S-PY-001"}}
+        )
+        with (
+            mock.patch(
+                "agent_duration_cases.importlib.import_module",
+                return_value=wrong_owner,
+            ),
+            self.assertRaisesRegex(RuntimeError, "does not own recipe"),
+        ):
+            load_case_family_recipes("F01-S-PY-001")
+
     def test_registry_is_deterministic_and_well_formed_during_rollout(self) -> None:
         first = load_family_recipes()
         second = load_family_recipes()

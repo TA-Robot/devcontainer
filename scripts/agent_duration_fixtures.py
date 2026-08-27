@@ -15,7 +15,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 from agent_contracts import load_json
-from agent_duration_cases import load_family_recipes
+from agent_duration_cases import load_case_family_recipes
 from agent_duration_study import (
     DurationStudyError,
     ROOT,
@@ -731,12 +731,6 @@ RECIPES: dict[str, dict[str, Any]] = {
     },
 }
 
-for _recipe_id, _recipe in load_family_recipes().items():
-    if _recipe_id in RECIPES:
-        raise RuntimeError(f"duplicate duration recipe ID: {_recipe_id}")
-    RECIPES[_recipe_id] = _recipe
-
-
 def _load_catalog(path: Path) -> dict[str, Any]:
     value = load_json(path)
     if not isinstance(value, dict):
@@ -753,6 +747,16 @@ def _entry_for_case(catalog: dict[str, Any], case_id: str) -> dict[str, Any]:
 
 
 def _recipe_for_case(case_id: str, recipe_id: str | None = None) -> dict[str, Any]:
+    if not any(recipe.get("case_id") == case_id for recipe in RECIPES.values()):
+        try:
+            family_recipes = load_case_family_recipes(case_id)
+        except (ImportError, RuntimeError) as exc:
+            raise DurationStudyError(f"fixture recipe is not registered for {case_id}") from exc
+        for loaded_id, loaded_recipe in family_recipes.items():
+            existing = RECIPES.get(loaded_id)
+            if existing is not None and existing is not loaded_recipe:
+                raise DurationStudyError(f"duplicate duration recipe ID: {loaded_id}")
+            RECIPES[loaded_id] = loaded_recipe
     if recipe_id is not None:
         recipe = RECIPES.get(recipe_id)
         if recipe is None or recipe.get("case_id") != case_id:
