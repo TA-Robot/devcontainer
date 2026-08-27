@@ -21,7 +21,7 @@ This repository is a disposable duration-study fixture.
 
 
 def _test_only_checker(*allowed_paths: str) -> str:
-    allowed = repr(set(allowed_paths))
+    allowed = "{" + ", ".join(repr(path) for path in sorted(allowed_paths)) + "}"
     return f'''#!/usr/bin/env python3
 from __future__ import annotations
 
@@ -1714,8 +1714,9 @@ RECIPES: dict[str, dict[str, Any]] = {
             },
         },
     },
-    "f06-l-lease-lifecycle-tests-v1": {
+    "f06-l-lease-lifecycle-tests-v2": {
         "case_id": "F06-L-PYBASH-001",
+        "recipe_revision": 2,
         "files": L_FILES,
         "hidden": L_HIDDEN,
         "good": L_GOOD,

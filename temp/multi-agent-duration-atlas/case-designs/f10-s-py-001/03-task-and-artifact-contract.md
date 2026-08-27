@@ -4,7 +4,7 @@
 
 Diagnose the local report hot path and write `performance.json` with reproducible commands, raw observations, scaling evidence, root cause, and a safe optimization hypothesis. Do not patch production.
 
-Revision 2 requires the author to use the identifiers published in `performance-contract.json`. The public contract fixes vocabulary and shape while the benchmark counters determine which candidate is primary.
+Revision 5 requires copying `performance-template.json` and filling its complete shape with identifiers from `performance-contract.json`. The counters still determine which candidate is primary. `performance.json` is the sole editable path; benchmark output is piped to validation rather than left as a scratch artifact.
 
 ## Required result
 
@@ -29,8 +29,7 @@ Revision 2 requires the author to use the identifiers published in `performance-
 ## Public validation
 
 - `python3 -m unittest discover -s tests -v`
-- `python3 bench.py --json > observed.json`
-- `python3 tools/validate_performance.py performance.json observed.json`
+- `python3 bench.py --json | python3 tools/validate_performance.py performance.json -`
 
 ## Completion signal
 

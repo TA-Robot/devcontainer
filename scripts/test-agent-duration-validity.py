@@ -29,10 +29,16 @@ class AgentDurationValidityTests(unittest.TestCase):
     def test_checked_in_audit_matches_current_catalog(self) -> None:
         record = load_validated_validity()
         index = validity_index(record)
+        self.assertEqual(index[("F06-L-PYBASH-001", 1)]["design_status"], "conditional")
+        self.assertEqual(index[("F06-L-PYBASH-001", 2)]["design_status"], "eligible")
         self.assertEqual(index[("F10-S-PY-001", 1)]["design_status"], "ineligible")
-        self.assertEqual(index[("F10-S-PY-001", 2)]["design_status"], "eligible")
+        self.assertEqual(index[("F10-S-PY-001", 2)]["design_status"], "ineligible")
+        self.assertEqual(index[("F10-S-PY-001", 3)]["design_status"], "conditional")
+        self.assertEqual(index[("F10-S-PY-001", 4)]["design_status"], "conditional")
+        self.assertEqual(index[("F10-S-PY-001", 5)]["design_status"], "eligible")
         self.assertEqual(index[("F12-L-MDJSON-001", 1)]["design_status"], "ineligible")
-        self.assertEqual(index[("F12-L-MDJSON-001", 2)]["solution_space_calibration"], "plural-gold")
+        self.assertEqual(index[("F12-L-MDJSON-001", 2)]["design_status"], "ineligible")
+        self.assertEqual(index[("F12-L-MDJSON-001", 3)]["solution_space_calibration"], "plural-gold")
         self.assertEqual(index[("F09-L-PYBASHDOCKER-001", 1)]["design_status"], "conditional")
 
     def test_rejects_catalog_digest_drift(self) -> None:
@@ -45,7 +51,7 @@ class AgentDurationValidityTests(unittest.TestCase):
 
     def test_failed_observation_needs_retained_artifact(self) -> None:
         record = load_validated_validity()
-        entry = validity_index(record)[("F06-L-PYBASH-001", 1)]
+        entry = validity_index(record)[("F06-L-PYBASH-001", 2)]
         self.assertEqual(
             classify_observation(
                 entry,
@@ -91,7 +97,7 @@ class AgentDurationValidityTests(unittest.TestCase):
         validity = load_validated_validity()
         case = {
             "primary_stratum": {
-                "case": {"case_id": "F06-L-PYBASH-001", "revision": 1}
+                "case": {"case_id": "F06-L-PYBASH-001", "revision": 2}
             },
             "samples": [
                 {

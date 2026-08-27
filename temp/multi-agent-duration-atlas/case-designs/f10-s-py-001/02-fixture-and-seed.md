@@ -8,6 +8,7 @@
 | `bench.py` | counter and timing harness | working |
 | `tests/test_report.py` | correctness | passing |
 | `performance-contract.json` | public controlled vocabulary and output shape | complete |
+| `performance-template.json` | complete artifact skeleton | complete |
 | `performance.json` | required diagnosis | absent |
 
 agent workspaceには上表、`AGENTS.md`、public checksだけを置く。capsule、hidden evaluator、private known-good、base bundleはcontrol directoryへ隔離し、workspaceへmountしない。
@@ -29,7 +30,7 @@ Output correctness is unaffected, but `canonical_json` is called N times for N f
 
 The report captures 8/64/512-field runs, shows serialization calls scale with fields while sort calls do not, cites the loop, and proposes caching canonical bytes once per object under equivalence validation.
 
-Revision 2 publishes every identifier required by the evaluator in `performance-contract.json`; the private gold does not introduce an undisclosed candidate, relation, strategy, condition, or preservation token.
+Revision 5 publishes every evaluator-required identifier in `performance-contract.json` and every required field/nesting decision in `performance-template.json`. The private gold introduces no undisclosed vocabulary or output shape.
 
 ## Reproducibility and leakage controls
 

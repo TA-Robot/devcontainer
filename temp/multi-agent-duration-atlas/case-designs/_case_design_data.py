@@ -56,6 +56,10 @@ def C(
     non_goals: list[str] | None = None,
     allowed: list[str] | None = None,
     implementation: list[str] | None = None,
+    fixture_note: str | None = None,
+    task_note: str | None = None,
+    oracle_note: str | None = None,
+    definition_of_done_extra: list[str] | None = None,
 ) -> dict[str, Any]:
     context, artifact, coupling, validation, setup, distance, state = descriptors
     chosen_timeout = timeout or {"S": "20 minutes", "M": "45 minutes", "L": "90 minutes"}[size]
@@ -136,13 +140,16 @@ def C(
         "seed": seed,
         "work_path": work_path,
         "known_good": known_good,
+        "fixture_note": fixture_note,
         "task": task,
+        "task_note": task_note,
         "requirements": requirements,
         "allowed": allowed or default_allowed,
         "public_checks": public_checks,
         "hidden": [{"id": item_id, "criterion": criterion, "signal": signal} for item_id, criterion, signal in hidden],
         "mutants": mutants,
         "rubric_boundary": rubric_boundary,
+        "oracle_note": oracle_note,
         "execution": execution,
         "collaboration": collaboration,
         "timeout": chosen_timeout,
@@ -155,7 +162,7 @@ def C(
             "initial evaluatorがfailし、private known-goodがpublic/hidden全criterionをpassする。",
             "各negative mutantが意図したcriterionでrejectされるfocused testがある。",
             "network-disabled read-only isolated evaluatorで同じscoreが得られる。",
-        ],
+        ] + (definition_of_done_extra or []),
     }
 
 
@@ -840,6 +847,8 @@ CASES: list[dict[str, Any]] = [
         capsule_path="experiments/multi-agent-duration/capsules/f06-l-lease-lifecycle-tests.md",
         timeout="120 minutes",
         depth_sensitive=True,
+        fixture_note="Revision 2 renders the multi-path test-only allowlist in sorted order. Revision 1 used `repr(set(...))`, so different Python hash seeds could create distinct bundle digests under the same revision; those observations remain operational evidence but are not pooled across identities.",
+        definition_of_done_extra=["Generating the fixture under different `PYTHONHASHSEED` values yields the same workspace tree, base SHA, and bundle digest."],
     ),
     C(
         case_id="F07-S-MD-001",
@@ -1224,13 +1233,15 @@ CASES: list[dict[str, Any]] = [
             ("report.py", "report generation", "repeats canonical serialization"),
             ("bench.py", "counter and timing harness", "working"),
             ("tests/test_report.py", "correctness", "passing"),
+            ("performance-contract.json", "public controlled vocabulary and output shape", "complete"),
+            ("performance-template.json", "complete artifact skeleton", "complete"),
             ("performance.json", "required diagnosis", "absent"),
         ],
         seed="Output correctness is unaffected, but `canonical_json` is called N times for N fields instead of once. A nearby list sort consumes some time but is not the scaling cause.",
         work_path=["Run correctness and benchmark/counter baselines.", "Vary field count and compare call-count scaling.", "Localize the repeated canonicalization and rule out the sort using evidence.", "Record command, raw observations, diagnosis, and bounded optimization direction."],
         task="Diagnose the local report hot path and write `performance.json` with reproducible commands, raw observations, scaling evidence, root cause, and a safe optimization hypothesis. Do not patch production.",
         requirements=["Measurements include multiple input sizes and deterministic call counts.", "Root cause identifies repeated canonical serialization, not timing noise alone.", "The sort distractor is ruled out by comparative evidence.", "No universal speedup claim is made from one machine."],
-        public_checks=["`python3 -m unittest discover -s tests -v`", "`python3 bench.py --json > observed.json`", "`python3 tools/validate_performance.py performance.json observed.json`"],
+        public_checks=["`python3 -m unittest discover -s tests -v`", "`python3 bench.py --json | python3 tools/validate_performance.py performance.json -`"],
         hidden=[
             ("perf-repro-command", "Recorded commands reproduce observations.", "rerun data schema and digest match"),
             ("perf-scaling-evidence", "Multiple sizes show N serialization calls.", "counter slope equals gold relation"),
@@ -1246,6 +1257,10 @@ CASES: list[dict[str, Any]] = [
         collaboration=["C0 only; the hot path and evidence are local."],
         analysis=["Time spent executing measurements versus interpreting them.", "Whether deeper settings avoid absolute-speedup overclaiming.", "How frequently agents chase the visible sort distractor."],
         capsule_path="experiments/multi-agent-duration/capsules/f10-s-python-canonical-json-perf.md",
+        fixture_note="Revision 5 publishes every evaluator-required identifier in `performance-contract.json` and every required field/nesting decision in `performance-template.json`. The private gold introduces no undisclosed vocabulary or output shape.",
+        task_note="Revision 5 requires copying `performance-template.json` and filling its complete shape with identifiers from `performance-contract.json`. The counters still determine which candidate is primary. `performance.json` is the sole editable path; benchmark output is piped to validation rather than left as a scratch artifact.",
+        oracle_note="Revision 5 hidden checks require only identifiers and fields visible in the contract/template. The public validator owns the single exact-edit-surface criterion; hidden semantic criteria verify protected inputs but do not repeat scope failure, so one scope error cannot masquerade as five semantic failures.",
+        definition_of_done_extra=["Evaluator-required vocabulary and artifact shape are visible in the contract/template, and the sole editable path is `performance.json`."],
     ),
     C(
         case_id="F10-M-PY-001",
@@ -1543,6 +1558,9 @@ CASES: list[dict[str, Any]] = [
             ("evidence/incidents/", "failure/recovery reports", "complete"),
             ("evidence/security/", "threat findings", "complete"),
             ("constraints.json", "migration/operations requirements", "complete"),
+            ("decision-contract.json", "public vocabulary and bounded decision space", "complete"),
+            ("decision-record.template.json", "complete structured artifact skeleton", "complete"),
+            ("DECISION-RECORD.template.md", "complete human artifact skeleton", "complete"),
             ("DECISION-RECORD.md", "target human artifact", "absent"),
             ("decision-record.json", "target claim/evidence graph", "absent"),
         ],
@@ -1575,5 +1593,9 @@ CASES: list[dict[str, Any]] = [
         capsule_path="experiments/multi-agent-duration/capsules/f12-l-fabric-decision-record.md",
         timeout="150 minutes",
         depth_sensitive=True,
+        fixture_note="Revision 3 calibrates two semantically distinct valid artifacts: a D→B target and a D→A target with different control, unknown, and trigger IDs. Every evaluator-required entity type and field is visible in the templates; target files remain absent initially.",
+        task_note="Revision 3 starts from `decision-record.template.json` and `DECISION-RECORD.template.md`. `decision-contract.json` publishes required vocabulary, minimum evidence obligations, decision dependencies, and the complete editable surface. Control, unknown, and trigger IDs remain author-chosen; either A or B may follow the D bridge when its obligations are satisfied.",
+        oracle_note="Revision 3 checks semantic evidence coverage rather than private identifiers. Exact vocabulary, entity shapes, minimum evidence sets, and dependencies are visible in the contract/templates and enforced publicly. Both calibrated targets are accepted; D→B is not a hidden preferred architecture.",
+        definition_of_done_extra=["D→B known-good and the distinct D→A valid alternative both full-pass, and evaluator-required artifact shapes/editable surfaces are recoverable from visible contract/templates."],
     ),
 ]

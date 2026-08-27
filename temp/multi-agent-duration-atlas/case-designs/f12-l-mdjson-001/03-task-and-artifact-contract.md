@@ -4,7 +4,7 @@
 
 Integrate all proposals and evidence into `DECISION-RECORD.md` and `decision-record.json`. Preserve workload conditions and uncertainty, reject invalid/unsupported claims, state the selected or staged design, alternatives, gates, rollback, risks, unknowns, and evidence refresh conditions.
 
-`decision-contract.json` publishes the required claim/option/constraint/refresh vocabulary, confidence/status values, and minimum evidence obligations. Control, unknown, and trigger IDs are author-chosen. After the D bridge, either A or B may be the target when its published evidence/control obligations are satisfied.
+Revision 3 starts from `decision-record.template.json` and `DECISION-RECORD.template.md`. `decision-contract.json` publishes required vocabulary, minimum evidence obligations, decision dependencies, and the complete editable surface. Control, unknown, and trigger IDs remain author-chosen; either A or B may follow the D bridge when its obligations are satisfied.
 
 ## Required result
 

@@ -29,6 +29,8 @@ def _hidden_with_integrity(
     body: str,
     files: dict[str, str],
     editable_paths: set[str],
+    *,
+    scope_in_each_check: bool = True,
 ) -> str:
     protected = {
         path: hashlib.sha256(content.encode("utf-8")).hexdigest()
@@ -49,6 +51,7 @@ import unittest
 WORKSPACE = Path(os.environ["DURATION_FIXTURE_WORKSPACE"])
 PROTECTED_DIGESTS = {protected!r}
 ALLOWED_ARTIFACTS = {sorted(editable_paths)!r}
+SCOPE_IN_EACH_CHECK = {scope_in_each_check!r}
 
 
 def assert_fixture_integrity(testcase: unittest.TestCase) -> None:
@@ -56,6 +59,8 @@ def assert_fixture_integrity(testcase: unittest.TestCase) -> None:
         path = WORKSPACE / raw_path
         testcase.assertTrue(path.is_file(), f"protected file is missing: {{raw_path}}")
         testcase.assertEqual(hashlib.sha256(path.read_bytes()).hexdigest(), expected)
+    if not SCOPE_IN_EACH_CHECK:
+        return
     completed = subprocess.run(
         ["git", "status", "--porcelain", "--untracked-files=all"],
         cwd=WORKSPACE,
@@ -758,6 +763,8 @@ L_EVIDENCE_INDEX = {
 L_DECISION_CONTRACT_VALUE = {
     "schema_version": 2,
     "artifact": "decision-record.json",
+    "templates": ["decision-record.template.json", "DECISION-RECORD.template.md"],
+    "editable_paths": ["decision-record.json", "DECISION-RECORD.md"],
     "claim_ids": [
         "A-WARM",
         "A-COLD",
@@ -789,6 +796,32 @@ L_DECISION_CONTRACT_VALUE = {
         "C": ["BM-C-POOLED"],
         "D": ["PROP-D", "INC-D-RECOVERY", "CON-OWNER"],
     },
+    "required_control_evidence": [
+        "INC-A-CLEANUP",
+        "INC-D-RECOVERY",
+        "SEC-A-BIND",
+        "SEC-B-ISOLATION",
+    ],
+    "required_decision_dependencies": [
+        "D-MIGRATION",
+        "CON-MIGRATION",
+        "CON-OWNER",
+        "CON-ROLLBACK",
+    ],
+    "required_fields": {
+        "claim": ["claim_id", "provenance", "disposition", "evidence", "condition", "confidence", "missing_evidence"],
+        "metric": ["evidence_id", "proposal", "workload", "sample_count", "censored", "valid", "median_ms", "exclusion_reason"],
+        "control": ["control_id", "evidence", "owner", "decision_effect"],
+        "constraint": ["constraint_id", "status", "gate_id"],
+        "phase": ["phase", "option", "purpose", "owner", "gates", "rollback_triggers"],
+        "gate": ["gate_id", "check", "expected"],
+        "rollback_trigger": ["trigger_id", "check", "condition", "action"],
+        "conditional_optimization": ["option", "eligible_only_if", "evidence"],
+        "alternative": ["option", "disposition", "counterexample", "evidence"],
+        "unknown": ["unknown_id", "status", "evidence", "missing_evidence"],
+        "refresh": ["trigger_id", "category", "condition", "action"],
+    },
+    "minimum_counts": {"phases": 2, "unknowns": 2},
     "decision_space": {
         "migration_bridge_option": "D",
         "permitted_target_options": ["A", "B"],
@@ -810,12 +843,111 @@ L_DECISION_CONTRACT_VALUE = {
 L_DECISION_CONTRACT = _document(L_DECISION_CONTRACT_VALUE)
 
 
+def _blank_claim(claim_id: str) -> dict[str, Any]:
+    return {
+        "claim_id": claim_id,
+        "provenance": [],
+        "disposition": "",
+        "evidence": [],
+        "condition": "",
+        "confidence": "",
+        "missing_evidence": [],
+    }
+
+
+def _blank_metric(evidence_id: str) -> dict[str, Any]:
+    return {
+        "evidence_id": evidence_id,
+        "proposal": "",
+        "workload": "",
+        "sample_count": 0,
+        "censored": 0,
+        "valid": False,
+        "median_ms": None,
+        "exclusion_reason": None,
+    }
+
+
+L_DECISION_TEMPLATE_VALUE = {
+    "version": 1,
+    "claims": [_blank_claim(claim_id) for claim_id in L_DECISION_CONTRACT_VALUE["claim_ids"]],
+    "metrics": [
+        _blank_metric(evidence_id)
+        for evidence_id in (
+            "BM-A-WARM",
+            "BM-A-COLD",
+            "BM-B-WARM",
+            "BM-B-COLD",
+            "BM-C-POOLED",
+            "BM-D-WARM",
+            "BM-D-COLD",
+        )
+    ],
+    "controls": [
+        {"control_id": "", "evidence": [], "owner": "", "decision_effect": ""}
+    ],
+    "constraint_matrix": [
+        {"constraint_id": constraint_id, "status": "", "gate_id": ""}
+        for constraint_id in L_DECISION_CONTRACT_VALUE["constraint_ids"]
+    ],
+    "decision": {
+        "strategy": "",
+        "depends_on": [],
+        "phases": [
+            {
+                "phase": 1,
+                "option": "D",
+                "purpose": "",
+                "owner": "",
+                "gates": [{"gate_id": "", "check": "", "expected": ""}],
+                "rollback_triggers": [
+                    {"trigger_id": "", "check": "", "condition": "", "action": ""}
+                ],
+            },
+            {
+                "phase": 2,
+                "option": "",
+                "purpose": "",
+                "owner": "",
+                "gates": [{"gate_id": "", "check": "", "expected": ""}],
+                "rollback_triggers": [
+                    {"trigger_id": "", "check": "", "condition": "", "action": ""}
+                ],
+            },
+        ],
+        "conditional_optimization": {"option": "", "eligible_only_if": [], "evidence": []},
+    },
+    "alternatives": [
+        {"option": option, "disposition": "", "counterexample": "", "evidence": []}
+        for option in L_DECISION_CONTRACT_VALUE["proposal_options"]
+    ],
+    "unknowns": [
+        {"unknown_id": "", "status": "unknown", "evidence": [], "missing_evidence": ""},
+        {"unknown_id": "", "status": "unknown", "evidence": [], "missing_evidence": ""},
+    ],
+    "refresh_plan": [
+        {"trigger_id": "", "category": category, "condition": "", "action": ""}
+        for category in L_DECISION_CONTRACT_VALUE["refresh_categories"]
+    ],
+}
+
+L_DECISION_TEMPLATE = _document(L_DECISION_TEMPLATE_VALUE)
+L_DECISION_MARKDOWN_TEMPLATE = """# Fabric decision record
+
+| claim_id | disposition | evidence | condition | confidence |
+| --- | --- | --- | --- | --- |
+
+<!-- decision-summary {"strategy":"","phase_options":[],"unknown_ids":[]} -->
+"""
+
+
 L_VALIDATE = r'''#!/usr/bin/env python3
 from __future__ import annotations
 
 import json
 from pathlib import Path
 import re
+import subprocess
 import sys
 
 
@@ -834,6 +966,24 @@ def rows(text: str) -> list[tuple[str, str, tuple[str, ...], str, str]]:
     return result
 
 
+def changed_paths() -> set[str]:
+    completed = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=5,
+        check=False,
+    )
+    if completed.returncode != 0:
+        return set()
+    return {
+        line[3:].split(" -> ")[-1]
+        for line in completed.stdout.splitlines()
+        if len(line) >= 4
+    }
+
+
 def main() -> int:
     if len(sys.argv) != 3:
         return 2
@@ -842,6 +992,8 @@ def main() -> int:
         markdown = Path(sys.argv[2]).read_text(encoding="utf-8")
         contract = json.loads(Path("decision-contract.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
+        return 1
+    if changed_paths() != set(contract["editable_paths"]):
         return 1
     if not isinstance(value, dict) or value.get("version") != 1:
         return 1
@@ -876,6 +1028,23 @@ def main() -> int:
     for key in ("metrics", "alternatives", "constraint_matrix", "unknowns", "refresh_plan"):
         if not isinstance(value.get(key), list):
             return 1
+    required_fields = contract["required_fields"]
+    collections = {
+        "claim": claims,
+        "metric": value["metrics"],
+        "control": value.get("controls", []),
+        "constraint": value["constraint_matrix"],
+        "alternative": value["alternatives"],
+        "unknown": value["unknowns"],
+        "refresh": value["refresh_plan"],
+    }
+    for kind, items in collections.items():
+        expected_fields = set(required_fields[kind])
+        if not isinstance(items, list) or any(
+            not isinstance(item, dict) or not expected_fields.issubset(item)
+            for item in items
+        ):
+            return 1
     phases = decision.get("phases", [])
     phase_options = [item.get("option") for item in phases if isinstance(item, dict)]
     decision_space = contract["decision_space"]
@@ -885,11 +1054,41 @@ def main() -> int:
         return 1
     if any(item not in contract["proposal_options"] for item in phase_options):
         return 1
+    if len(phases) < contract["minimum_counts"]["phases"]:
+        return 1
+    phase_fields = set(required_fields["phase"])
+    gate_fields = set(required_fields["gate"])
+    rollback_fields = set(required_fields["rollback_trigger"])
+    for phase in phases:
+        if not isinstance(phase, dict) or not phase_fields.issubset(phase):
+            return 1
+        if not phase["gates"] or any(
+            not isinstance(item, dict) or not gate_fields.issubset(item)
+            for item in phase["gates"]
+        ):
+            return 1
+        if not phase["rollback_triggers"] or any(
+            not isinstance(item, dict) or not rollback_fields.issubset(item)
+            for item in phase["rollback_triggers"]
+        ):
+            return 1
+    conditional = decision.get("conditional_optimization")
+    if not isinstance(conditional, dict) or not set(
+        required_fields["conditional_optimization"]
+    ).issubset(conditional):
+        return 1
     if {item.get("option") for item in value["alternatives"] if isinstance(item, dict)} != set(contract["proposal_options"]):
         return 1
     if {item.get("constraint_id") for item in value["constraint_matrix"] if isinstance(item, dict)} != set(contract["constraint_ids"]):
         return 1
     if any(item.get("status") not in contract["constraint_status_values"] for item in value["constraint_matrix"] if isinstance(item, dict)):
+        return 1
+    control_evidence = {
+        evidence
+        for item in value.get("controls", [])
+        for evidence in item.get("evidence", [])
+    }
+    if not set(contract["required_control_evidence"]).issubset(control_evidence):
         return 1
     alternatives = {item.get("option"): item for item in value["alternatives"] if isinstance(item, dict)}
     for option, required_evidence in contract["alternative_minimum_evidence"].items():
@@ -907,6 +1106,19 @@ def main() -> int:
     for claim_id, term in contract["claim_condition_terms"].items():
         if term not in str(claims_by_id[claim_id].get("condition", "")).lower():
             return 1
+    dependencies = set(decision.get("depends_on", []))
+    if not set(contract["required_decision_dependencies"]).issubset(dependencies):
+        return 1
+    target = phase_options[-1]
+    target_claims = {
+        item
+        for item in contract["decision_space"]["target_evidence"][target]
+        if item in claims_by_id
+    }
+    if not target_claims.issubset(dependencies):
+        return 1
+    if len(value["unknowns"]) < contract["minimum_counts"]["unknowns"]:
+        return 1
     if {item.get("category") for item in value["refresh_plan"] if isinstance(item, dict)} != set(contract["refresh_categories"]):
         return 1
     return 0
@@ -1008,6 +1220,8 @@ if __name__ == "__main__":
 L_FILES = {
     "AGENTS.md": AGENT_INSTRUCTIONS,
     "decision-contract.json": L_DECISION_CONTRACT,
+    "decision-record.template.json": L_DECISION_TEMPLATE,
+    "DECISION-RECORD.template.md": L_DECISION_MARKDOWN_TEMPLATE,
     "proposals/A.md": "# Proposal A\n\nCLAIM A-WARM: lowest warm median. CLAIM A-COLD: acceptable cold behavior. Evidence BM-A-WARM, BM-A-COLD.\n",
     "proposals/B.md": "# Proposal B\n\nCLAIM B-ISOLATION: strongest supplied isolation. CLAIM B-MIGRATION: immediate migration is feasible. Evidence SEC-B-ISOLATION, CON-MIGRATION.\n",
     "proposals/C.md": "# Proposal C\n\nCLAIM C-THROUGHPUT: highest universal throughput from pooled samples. Evidence BM-C-POOLED.\n",
@@ -1384,6 +1598,7 @@ L_HIDDEN = _hidden_with_integrity(
     L_HIDDEN_BODY,
     L_FILES,
     {"DECISION-RECORD.md", "decision-record.json"},
+    scope_in_each_check=False,
 )
 
 
@@ -1517,9 +1732,9 @@ RECIPES: dict[str, dict[str, Any]] = {
             },
         },
     },
-    "f12-l-fabric-decision-record-v2": {
+    "f12-l-fabric-decision-record-v3": {
         "case_id": "F12-L-MDJSON-001",
-        "recipe_revision": 2,
+        "recipe_revision": 3,
         "files": L_FILES,
         "hidden": L_HIDDEN,
         "good": {
@@ -1584,6 +1799,14 @@ RECIPES: dict[str, dict[str, Any]] = {
                     "decision-record.json": _document(L_MUTANT_NO_TRACE),
                 },
                 "expected_failed_check_ids": ["synthesis-decision-trace"],
+            },
+            "outside-contract": {
+                "files": {
+                    "DECISION-RECORD.md": L_GOOD_MD,
+                    "decision-record.json": _document(L_GOOD),
+                    "notes.txt": "extra artifact\n",
+                },
+                "expected_failed_check_ids": ["workspace-1"],
             },
         },
     },

@@ -171,9 +171,22 @@ if __name__ == "__main__":
 S_CONTRACT_VALUE = {
     "schema_version": 1,
     "artifact": "performance.json",
+    "template": "performance-template.json",
+    "editable_paths": ["performance.json"],
     "candidate_ids": ["repeated-canonical-json", "field-sort"],
     "relation_ids": ["one-call-per-output-field", "one-sort-per-run"],
     "counter_ids": ["canonical_json_calls", "sort_calls"],
+    "candidate_counter_map": {
+        "repeated-canonical-json": "canonical_json_calls",
+        "field-sort": "sort_calls",
+    },
+    "candidate_relation_map": {
+        "repeated-canonical-json": "one-call-per-output-field",
+        "field-sort": "one-sort-per-run",
+    },
+    "required_strategy_by_primary": {
+        "repeated-canonical-json": "cache-canonical-bytes-once-per-input-object"
+    },
     "strategy_ids": [
         "cache-canonical-bytes-once-per-input-object",
         "remove-canonical-json",
@@ -194,6 +207,48 @@ S_CONTRACT_VALUE = {
 
 S_CONTRACT = _json_file(S_CONTRACT_VALUE)
 
+S_TEMPLATE_VALUE = {
+    "schema_version": 1,
+    "command": "",
+    "observation_digest": "",
+    "observations": [],
+    "diagnosis": {
+        "primary": {
+            "candidate": "",
+            "source": {"path": "", "symbol": "", "line": 0, "snippet": ""},
+            "relation": "",
+            "counter": "",
+        },
+        "candidates": [
+            {
+                "candidate": "repeated-canonical-json",
+                "scales_with": "",
+                "observed_calls": [],
+                "primary": False,
+            },
+            {
+                "candidate": "field-sort",
+                "scales_with": "",
+                "observed_calls": [],
+                "primary": False,
+            },
+        ],
+    },
+    "optimization": {
+        "strategy": "",
+        "condition": "",
+        "preserves": [],
+        "portable_speedup_claim": None,
+    },
+    "claim_scope": {
+        "environment": "fixture-local",
+        "elapsed_time": "not-used-as-portable-gold",
+        "generalization": "none",
+    },
+}
+
+S_TEMPLATE = _json_file(S_TEMPLATE_VALUE)
+
 
 S_VALIDATOR = r'''#!/usr/bin/env python3
 from __future__ import annotations
@@ -201,6 +256,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+import subprocess
 import sys
 
 
@@ -214,18 +270,44 @@ def require(condition: bool, message: str) -> None:
         raise ValueError(message)
 
 
+def changed_paths() -> set[str]:
+    completed = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=5,
+        check=False,
+    )
+    require(completed.returncode == 0, "cannot inspect editable surface")
+    return {
+        line[3:].split(" -> ")[-1]
+        for line in completed.stdout.splitlines()
+        if len(line) >= 4
+    }
+
+
 def main(argv: list[str]) -> int:
     if len(argv) != 3:
         return 2
     try:
         report = json.loads(Path(argv[1]).read_text(encoding="utf-8"))
-        observed = json.loads(Path(argv[2]).read_text(encoding="utf-8"))
+        observed = (
+            json.load(sys.stdin)
+            if argv[2] == "-"
+            else json.loads(Path(argv[2]).read_text(encoding="utf-8"))
+        )
         contract = json.loads(Path("performance-contract.json").read_text(encoding="utf-8"))
+        require(
+            changed_paths() == set(contract["editable_paths"]),
+            "working tree must contain only the declared artifact",
+        )
         require(report.get("schema_version") == 1, "report schema_version must be one")
         require(report.get("observation_digest") == digest(observed), "observation digest mismatch")
         require(report.get("command") == observed.get("command"), "command mismatch")
         runs = observed.get("runs")
         require(isinstance(runs, list) and len(runs) >= 3, "at least three runs are required")
+        require(report.get("observations") == runs, "embedded observations must match benchmark runs")
         diagnosis = report.get("diagnosis")
         optimization = report.get("optimization")
         require(isinstance(diagnosis, dict), "diagnosis is required")
@@ -234,6 +316,23 @@ def main(argv: list[str]) -> int:
         require(primary.get("candidate") in contract["candidate_ids"], "unknown candidate ID")
         require(primary.get("relation") in contract["relation_ids"], "unknown relation ID")
         require(primary.get("counter") in contract["counter_ids"], "unknown counter ID")
+        require(
+            primary.get("counter") == contract["candidate_counter_map"].get(primary.get("candidate")),
+            "primary candidate/counter mismatch",
+        )
+        require(
+            primary.get("relation") == contract["candidate_relation_map"].get(primary.get("candidate")),
+            "primary candidate/relation mismatch",
+        )
+        source = primary.get("source")
+        require(isinstance(source, dict), "primary source evidence is required")
+        source_path = Path(source.get("path", ""))
+        require(not source_path.is_absolute() and ".." not in source_path.parts, "unsafe source path")
+        source_lines = source_path.read_text(encoding="utf-8").splitlines()
+        source_line = source.get("line")
+        require(isinstance(source_line, int) and 1 <= source_line <= len(source_lines), "source line is invalid")
+        require(isinstance(source.get("snippet"), str) and source["snippet"] in source_lines[source_line - 1], "source snippet mismatch")
+        require(isinstance(source.get("symbol"), str) and source["symbol"] in source_path.read_text(encoding="utf-8"), "source symbol mismatch")
         candidates = diagnosis.get("candidates")
         require(isinstance(candidates, list), "candidate comparison is required")
         require(
@@ -241,12 +340,43 @@ def main(argv: list[str]) -> int:
             == set(contract["candidate_ids"]),
             "every contract candidate must be compared",
         )
+        require(len(candidates) == len(contract["candidate_ids"]), "candidate IDs must be unique")
+        by_candidate = {item["candidate"]: item for item in candidates if isinstance(item, dict)}
+        for candidate, counter in contract["candidate_counter_map"].items():
+            require(
+                by_candidate[candidate].get("observed_calls")
+                == [run["counters"][counter] for run in runs],
+                f"candidate observations mismatch: {candidate}",
+            )
+            require(isinstance(by_candidate[candidate].get("primary"), bool), "candidate primary flag is required")
+            require(isinstance(by_candidate[candidate].get("scales_with"), str), "candidate scaling relation is required")
+        primary_ids = [candidate for candidate, item in by_candidate.items() if item["primary"]]
+        require(primary_ids == [primary.get("candidate")], "exactly one compared candidate must be primary")
+        field_counts = [run["field_count"] for run in runs]
+        scaling_ids = [
+            candidate
+            for candidate, item in by_candidate.items()
+            if item["observed_calls"] == field_counts
+        ]
+        require(
+            scaling_ids == [primary.get("candidate")],
+            "primary must be the sole candidate whose call count scales with field count",
+        )
         require(optimization.get("strategy") in contract["strategy_ids"], "unknown strategy ID")
+        require(
+            optimization.get("strategy")
+            == contract["required_strategy_by_primary"].get(primary.get("candidate")),
+            "optimization strategy does not match the primary cause",
+        )
         require(optimization.get("condition") in contract["condition_ids"], "unknown condition ID")
         require(
-            set(optimization.get("preserves", [])).issubset(contract["preservation_ids"]),
-            "unknown preservation ID",
+            set(optimization.get("preserves", [])) == set(contract["preservation_ids"]),
+            "all preservation IDs are required",
         )
+        require(optimization.get("portable_speedup_claim") is None, "portable speedup claim must be null")
+        claim_scope = report.get("claim_scope")
+        require(isinstance(claim_scope, dict), "claim_scope is required")
+        require(claim_scope.get("generalization") == "none", "generalization must be none")
     except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
         print(f"invalid performance report: {exc}", file=sys.stderr)
         return 1
@@ -263,6 +393,7 @@ S_FILES = {
     "report.py": S_REPORT,
     "bench.py": S_BENCH,
     "performance-contract.json": S_CONTRACT,
+    "performance-template.json": S_TEMPLATE,
     "tests/test_report.py": S_TESTS,
     "tools/validate_performance.py": S_VALIDATOR,
 }
@@ -375,17 +506,6 @@ def rerun() -> dict:
 
 
 def assert_scope(testcase: unittest.TestCase) -> None:
-    completed = subprocess.run(
-        ["git", "status", "--porcelain", "--untracked-files=all"],
-        cwd=WORKSPACE,
-        text=True,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
-    )
-    testcase.assertEqual(completed.returncode, 0)
-    changed = {line[3:].split(" -> ")[-1] for line in completed.stdout.splitlines() if len(line) >= 4}
-    testcase.assertTrue(changed.issubset(ALLOWED), changed)
     for raw_path, expected in EXPECTED.items():
         testcase.assertEqual((WORKSPACE / raw_path).read_bytes(), expected.encode("utf-8"), raw_path)
 
@@ -455,6 +575,7 @@ S_HIDDEN = S_HIDDEN_TEMPLATE.replace(
             "report.py": S_REPORT,
             "bench.py": S_BENCH,
             "performance-contract.json": S_CONTRACT,
+            "performance-template.json": S_TEMPLATE,
             "tests/test_report.py": S_TESTS,
             "tools/validate_performance.py": S_VALIDATOR,
         }
@@ -1758,9 +1879,9 @@ L_HIDDEN = L_HIDDEN_TEMPLATE.replace(
 
 
 RECIPES: dict[str, dict[str, Any]] = {
-    "f10-s-python-canonical-json-perf-v2": {
+    "f10-s-python-canonical-json-perf-v5": {
         "case_id": "F10-S-PY-001",
-        "recipe_revision": 2,
+        "recipe_revision": 5,
         "files": S_FILES,
         "hidden": S_HIDDEN,
         "good": S_GOOD,
@@ -1792,7 +1913,7 @@ RECIPES: dict[str, dict[str, Any]] = {
             },
             "outside-contract": {
                 "files": {"performance.json": _json_file(S_GOOD_REPORT), "notes.txt": "extra artifact\n"},
-                "expected_failed_check_ids": ["perf-repro-command"],
+                "expected_failed_check_ids": ["workspace-2"],
             },
         },
     },

@@ -30,6 +30,8 @@ Mutants lose wakeups under two workers, retain a stale lease after crash, allow 
 
 Barrier-driven subprocess tests cover overlap, crash cut, lease expiry, fresh restart, owner uniqueness, scoped cleanup, repeated calibration, and preserve all production bytes.
 
+Revision 2 renders the multi-path test-only allowlist in sorted order. Revision 1 used `repr(set(...))`, so different Python hash seeds could create distinct bundle digests under the same revision; those observations remain operational evidence but are not pooled across identities.
+
 ## Reproducibility and leakage controls
 
 - fixed git author/date、single reachable commit、remote/tagなしで生成する。

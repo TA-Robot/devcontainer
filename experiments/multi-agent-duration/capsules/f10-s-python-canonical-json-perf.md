@@ -2,6 +2,13 @@
 
 Diagnose the local report hot path and write `performance.json`. Do not patch source or tests.
 
+Copy `performance-template.json` to `performance.json`, then replace every
+placeholder from local evidence. `performance.json` is the only editable path;
+do not create scratch reports or benchmark-output files. Commands may write to
+stdout, which must be embedded directly in the declared artifact.
+Put any temporary data under `/tmp`. Before returning, `git status --short`
+must list exactly `?? performance.json`; the public validator enforces this.
+
 `performance-contract.json` is the public output vocabulary. Use its candidate,
 relation, counter, strategy, condition, and preservation IDs verbatim. The contract defines
 the answer shape, not which candidate the observations support; derive that from
@@ -22,8 +29,7 @@ Validation:
 
 ```bash
 python3 -m unittest discover -s tests -v
-python3 bench.py --json > observed.json
-python3 tools/validate_performance.py performance.json observed.json
+python3 bench.py --json | python3 tools/validate_performance.py performance.json -
 ```
 
 Return the measured counter relationship and validation results.

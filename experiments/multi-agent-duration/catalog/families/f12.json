@@ -121,8 +121,8 @@
       "case": {
         "schema_version": 2,
         "case_id": "F12-L-MDJSON-001",
-        "revision": 2,
-        "capsule_digest": "sha256:2f440ea0eef9b391499f21eb9deced0061602781504ca793dc2c345bb732615f",
+        "revision": 3,
+        "capsule_digest": "sha256:6f799280ed8c5f808a5ce016fc52c8c2c5cf104dd43a6bd5d03dd7510f3688f4",
         "source_type": "fixture",
         "family": "evidence-synthesis",
         "size": "L",
@@ -151,8 +151,8 @@
       },
       "fixture": {
         "case_id": "F12-L-MDJSON-001",
-        "recipe_id": "f12-l-fabric-decision-record-v2",
-        "recipe_revision": 2,
+        "recipe_id": "f12-l-fabric-decision-record-v3",
+        "recipe_revision": 3,
         "capsule_path": "experiments/multi-agent-duration/capsules/f12-l-fabric-decision-record.md",
         "lane": "isolated",
         "task_network_policy": "disabled",
@@ -174,7 +174,7 @@
           {"check_id": "synthesis-refresh-plan", "test_target": "HiddenFabricDecisionTests.test_refresh_plan"},
           {"check_id": "synthesis-doc-json-sync", "test_target": "HiddenFabricDecisionTests.test_doc_json_sync"}
         ],
-        "online_evaluator_id": "f12-l-fabric-decision-hidden-v2",
+        "online_evaluator_id": "f12-l-fabric-decision-hidden-v3",
         "gold_visibility": "harness-only"
       }
     }

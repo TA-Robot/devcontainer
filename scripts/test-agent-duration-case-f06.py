@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+import os
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -53,6 +56,52 @@ class F06TestDesignCaseTests(unittest.TestCase):
                 self.assertEqual(first["snapshot"], second["snapshot"])
                 self.assertEqual(first["workspace_files"], second["workspace_files"])
                 self.assertEqual(first["execution_contract"], second["execution_contract"])
+
+    def test_large_snapshot_is_stable_across_python_hash_seeds(self) -> None:
+        program = r'''import json
+import sys
+from pathlib import Path
+
+sys.path.insert(0, sys.argv[1])
+from agent_duration_case_testing import FIXED_CALIBRATION_TIME
+from agent_duration_fixtures import build_fixture
+
+manifest = build_fixture(
+    "F06-L-PYBASH-001",
+    Path(sys.argv[3]),
+    catalog_path=Path(sys.argv[2]),
+    fixture_id="f06-hash-seed-repro",
+    now=FIXED_CALIBRATION_TIME,
+)
+print(json.dumps(manifest["snapshot"], sort_keys=True))
+'''
+        with tempfile.TemporaryDirectory(prefix="duration-f06-hash-seed-") as raw:
+            root = Path(raw)
+            snapshots = []
+            for seed in ("1", "987654"):
+                environment = dict(os.environ)
+                environment.update(
+                    {"PYTHONHASHSEED": seed, "PYTHONDONTWRITEBYTECODE": "1"}
+                )
+                completed = subprocess.run(
+                    [
+                        sys.executable,
+                        "-c",
+                        program,
+                        str(SCRIPT_DIR),
+                        str(CATALOG_PATH),
+                        str(root / f"seed-{seed}"),
+                    ],
+                    env=environment,
+                    text=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.PIPE,
+                    timeout=90,
+                    check=False,
+                )
+                self.assertEqual(completed.returncode, 0, completed.stderr)
+                snapshots.append(json.loads(completed.stdout))
+            self.assertEqual(snapshots[0], snapshots[1])
 
     def test_test_only_artifact_cannot_modify_public_validator(self) -> None:
         with tempfile.TemporaryDirectory(prefix="duration-f06-integrity-") as raw:

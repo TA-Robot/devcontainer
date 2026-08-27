@@ -154,7 +154,7 @@
       "case": {
         "schema_version": 2,
         "case_id": "F06-L-PYBASH-001",
-        "revision": 1,
+        "revision": 2,
         "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
         "source_type": "fixture",
         "family": "test-design",
@@ -184,8 +184,8 @@
       },
       "fixture": {
         "case_id": "F06-L-PYBASH-001",
-        "recipe_id": "f06-l-lease-lifecycle-tests-v1",
-        "recipe_revision": 1,
+        "recipe_id": "f06-l-lease-lifecycle-tests-v2",
+        "recipe_revision": 2,
         "capsule_path": "experiments/multi-agent-duration/capsules/f06-l-lease-lifecycle-tests.md",
         "lane": "isolated",
         "task_network_policy": "disabled",
@@ -227,7 +227,7 @@
             "test_target": "HiddenLargeTestDesignTests.test_production_untouched"
           }
         ],
-        "online_evaluator_id": "f06-l-lease-lifecycle-mutation-v1",
+        "online_evaluator_id": "f06-l-lease-lifecycle-mutation-v2",
         "gold_visibility": "harness-only"
       }
     }

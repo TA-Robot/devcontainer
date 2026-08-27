@@ -95,6 +95,7 @@ def render_fixture(case: dict[str, object]) -> str:
         f"| `{item['path']}` | {item['role']} | {item['initial']} |"
         for item in case["files"]
     )
+    fixture_note = f"\n\n{case['fixture_note']}" if case.get("fixture_note") else ""
     return f"""# {case['case_id']}: fixture and seeded state
 
 ## Disposable repository
@@ -117,7 +118,7 @@ agent workspaceには上表、`AGENTS.md`、public checksだけを置く。capsu
 
 ## Private known-good outline
 
-{case['known_good']}
+{case['known_good']}{fixture_note}
 
 ## Reproducibility and leakage controls
 
@@ -130,11 +131,12 @@ agent workspaceには上表、`AGENTS.md`、public checksだけを置く。capsu
 
 
 def render_task(case: dict[str, object]) -> str:
+    task_note = f"\n\n{case['task_note']}" if case.get("task_note") else ""
     return f"""# {case['case_id']}: task and artifact contract
 
 ## Agent-visible task
 
-{case['task']}
+{case['task']}{task_note}
 
 ## Required result
 
@@ -166,6 +168,7 @@ def render_oracle(case: dict[str, object]) -> str:
         f"| `{item['id']}` | {item['criterion']} | {item['signal']} |"
         for item in case["hidden"]
     )
+    oracle_note = f"\n\n{case['oracle_note']}" if case.get("oracle_note") else ""
     return f"""# {case['case_id']}: oracle and quality rubric
 
 ## Quality-pass rule
@@ -174,7 +177,7 @@ public checksと以下のhidden criterionをcriterion-levelで別々に記録す
 
 | Check ID | Criterion | Observable signal |
 | --- | --- | --- |
-{hidden_rows}
+{hidden_rows}{oracle_note}
 
 ## Negative calibration set
 

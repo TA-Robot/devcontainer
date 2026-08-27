@@ -23,6 +23,7 @@
 3. initial evaluatorがfailし、private known-goodがpublic/hidden全criterionをpassする。
 4. 各negative mutantが意図したcriterionでrejectされるfocused testがある。
 5. network-disabled read-only isolated evaluatorで同じscoreが得られる。
+6. Generating the fixture under different `PYTHONHASHSEED` values yields the same workspace tree, base SHA, and bundle digest.
 
 ## Stop and return to primary when
 

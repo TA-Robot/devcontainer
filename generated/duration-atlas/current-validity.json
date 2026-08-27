@@ -1,12 +1,12 @@
 {
   "schema_version": 1,
-  "validity_id": "duration-effort-quality-audit-20260827",
+  "validity_id": "duration-effort-quality-audit-20260828",
   "catalog": {
     "catalog_id": "duration-atlas-calibration",
-    "revision": 4,
-    "digest": "sha256:c3c386e697885b96ce20571628e1923b27498db720afd34605a4931c47a3ff59"
+    "revision": 8,
+    "digest": "sha256:d51bca6a32f5396dceae3b928de6d358ee70e7507a882f4cf9843833c44fcc2c"
   },
-  "audited_at": "2026-08-27T15:00:00.000Z",
+  "audited_at": "2026-08-28T01:15:00.000Z",
   "scope": "same-case-effort-quality-inference",
   "policy": {
     "case_design_gates": [
@@ -104,13 +104,25 @@
     {
       "case_id": "F06-L-PYBASH-001",
       "case_revision": 1,
+      "design_status": "conditional",
+      "inference_use": "conditional-only",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "contract-bound",
+      "solution_space_calibration": "not-required",
+      "artifact_retention_requirement": "required-for-all-quality",
+      "reason_codes": ["visible-lifecycle-invariants", "behavioral-oracle", "nondeterministic-fixture-bundle", "cross-identity-pooling-forbidden", "superseded-by-revision-2"],
+      "evidence_paths": ["scripts/agent_duration_cases/f06.py", "temp/multi-agent-duration-atlas/26-wave8-identifiable-remeasurement.md"]
+    },
+    {
+      "case_id": "F06-L-PYBASH-001",
+      "case_revision": 2,
       "design_status": "eligible",
       "inference_use": "eligible-after-observation-gates",
       "task_contract_visibility": "complete",
       "oracle_alignment": "contract-bound",
       "solution_space_calibration": "not-required",
       "artifact_retention_requirement": "required-for-fail-adjudication",
-      "reason_codes": ["visible-lifecycle-invariants", "behavioral-oracle"],
+      "reason_codes": ["visible-lifecycle-invariants", "behavioral-oracle", "hash-seed-stable-fixture"],
       "evidence_paths": ["experiments/multi-agent-duration/capsules/f06-l-lease-lifecycle-tests.md", "scripts/agent_duration_cases/f06.py"]
     },
     {
@@ -170,19 +182,55 @@
       "oracle_alignment": "overfit",
       "solution_space_calibration": "single-gold",
       "artifact_retention_requirement": "required-for-all-quality",
-      "reason_codes": ["hidden-controlled-vocabulary", "semantic-false-negative-risk", "superseded-by-revision-2"],
+      "reason_codes": ["hidden-controlled-vocabulary", "semantic-false-negative-risk", "superseded-by-revision-3"],
       "evidence_paths": ["temp/multi-agent-duration-atlas/25-effort-inference-validity-review.md"]
     },
     {
       "case_id": "F10-S-PY-001",
       "case_revision": 2,
+      "design_status": "ineligible",
+      "inference_use": "excluded",
+      "task_contract_visibility": "partial",
+      "oracle_alignment": "overfit",
+      "solution_space_calibration": "not-required",
+      "artifact_retention_requirement": "required-for-all-quality",
+      "reason_codes": ["incomplete-public-output-shape", "incomplete-edit-surface", "live-floor-observed", "superseded-by-revision-3"],
+      "evidence_paths": ["scripts/agent_duration_cases/f10.py", "temp/multi-agent-duration-atlas/26-wave8-identifiable-remeasurement.md"]
+    },
+    {
+      "case_id": "F10-S-PY-001",
+      "case_revision": 3,
+      "design_status": "conditional",
+      "inference_use": "conditional-only",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "contract-bound",
+      "solution_space_calibration": "not-required",
+      "artifact_retention_requirement": "required-for-all-quality",
+      "reason_codes": ["public-controlled-vocabulary", "public-artifact-template", "scope-failure-replicated-across-semantic-criteria", "live-floor-observed", "superseded-by-revision-4"],
+      "evidence_paths": ["scripts/agent_duration_cases/f10.py", "temp/multi-agent-duration-atlas/26-wave8-identifiable-remeasurement.md"]
+    },
+    {
+      "case_id": "F10-S-PY-001",
+      "case_revision": 4,
+      "design_status": "conditional",
+      "inference_use": "conditional-only",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "contract-bound",
+      "solution_space_calibration": "not-required",
+      "artifact_retention_requirement": "required-for-all-quality",
+      "reason_codes": ["public-edit-surface-enforcement", "scope-failure-still-replicated-in-hidden-setup", "live-floor-observed", "superseded-by-revision-5"],
+      "evidence_paths": ["scripts/agent_duration_cases/f10.py", "temp/multi-agent-duration-atlas/26-wave8-identifiable-remeasurement.md"]
+    },
+    {
+      "case_id": "F10-S-PY-001",
+      "case_revision": 5,
       "design_status": "eligible",
       "inference_use": "eligible-after-observation-gates",
       "task_contract_visibility": "complete",
       "oracle_alignment": "contract-bound",
       "solution_space_calibration": "not-required",
       "artifact_retention_requirement": "required-for-fail-adjudication",
-      "reason_codes": ["public-controlled-vocabulary", "counter-derived-answer", "revision-2-repair"],
+      "reason_codes": ["public-controlled-vocabulary", "public-artifact-template", "single-public-edit-surface-criterion", "independent-semantic-criteria", "counter-derived-answer", "revision-5-repair"],
       "evidence_paths": ["experiments/multi-agent-duration/capsules/f10-s-python-canonical-json-perf.md", "scripts/agent_duration_cases/f10.py"]
     },
     {
@@ -206,19 +254,31 @@
       "oracle_alignment": "overfit",
       "solution_space_calibration": "single-gold",
       "artifact_retention_requirement": "required-for-all-quality",
-      "reason_codes": ["preferred-architecture-enforced", "invented-identifiers-enforced", "superseded-by-revision-2"],
+      "reason_codes": ["preferred-architecture-enforced", "invented-identifiers-enforced", "superseded-by-revision-3"],
       "evidence_paths": ["temp/multi-agent-duration-atlas/25-effort-inference-validity-review.md"]
     },
     {
       "case_id": "F12-L-MDJSON-001",
       "case_revision": 2,
+      "design_status": "ineligible",
+      "inference_use": "excluded",
+      "task_contract_visibility": "partial",
+      "oracle_alignment": "overfit",
+      "solution_space_calibration": "plural-gold",
+      "artifact_retention_requirement": "required-for-all-quality",
+      "reason_codes": ["incomplete-public-output-shape", "incomplete-edit-surface", "superseded-by-revision-3"],
+      "evidence_paths": ["scripts/agent_duration_cases/f12.py", "temp/multi-agent-duration-atlas/26-wave8-identifiable-remeasurement.md"]
+    },
+    {
+      "case_id": "F12-L-MDJSON-001",
+      "case_revision": 3,
       "design_status": "eligible",
       "inference_use": "eligible-after-observation-gates",
       "task_contract_visibility": "complete",
       "oracle_alignment": "semantic",
       "solution_space_calibration": "plural-gold",
       "artifact_retention_requirement": "required-for-fail-adjudication",
-      "reason_codes": ["public-bounded-decision-space", "semantic-identifiers", "plural-target-designs", "revision-2-repair"],
+      "reason_codes": ["public-bounded-decision-space", "public-artifact-templates", "public-edit-surface", "semantic-identifiers", "plural-target-designs", "revision-3-repair"],
       "evidence_paths": ["experiments/multi-agent-duration/capsules/f12-l-fabric-decision-record.md", "scripts/agent_duration_cases/f12.py", "scripts/test-agent-duration-case-f12.py"]
     }
   ]

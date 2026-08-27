@@ -11,7 +11,7 @@
 
 ## Implementation requirements
 
-- recipeは`case_id/recipe_revision/files/hidden/good/executable`の共通interfaceを満たし、stdlibだけで構成する。
+- recipeは`case_id/files/hidden/good/executable`の共通interfaceを満たし、stdlibだけで構成する。
 - initial state、plausible negative mutant、private known-goodを同じsource contractから校正できるようにする。
 - hidden check IDはこの設計と一致させ、criterionごとのpass/failを保持する。
 - capsule digest、catalog descriptor、visible path allowlistを実体と一致させる。
@@ -23,7 +23,7 @@
 3. initial evaluatorがfailし、private known-goodがpublic/hidden全criterionをpassする。
 4. 各negative mutantが意図したcriterionでrejectされるfocused testがある。
 5. network-disabled read-only isolated evaluatorで同じscoreが得られる。
-6. evaluatorが要求するcontrolled vocabularyはすべてvisible contractへ存在する。
+6. Evaluator-required vocabulary and artifact shape are visible in the contract/template, and the sole editable path is `performance.json`.
 
 ## Stop and return to primary when
 

@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "catalog_id": "duration-atlas-calibration",
-  "revision": 4,
-  "published_at": "2026-08-27T15:00:00.000Z",
+  "revision": 8,
+  "published_at": "2026-08-28T01:15:00.000Z",
   "entries": [
     {
       "case": {
@@ -1441,7 +1441,7 @@
       "case": {
         "schema_version": 2,
         "case_id": "F06-L-PYBASH-001",
-        "revision": 1,
+        "revision": 2,
         "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
         "source_type": "fixture",
         "family": "test-design",
@@ -1489,8 +1489,8 @@
       },
       "fixture": {
         "case_id": "F06-L-PYBASH-001",
-        "recipe_id": "f06-l-lease-lifecycle-tests-v1",
-        "recipe_revision": 1,
+        "recipe_id": "f06-l-lease-lifecycle-tests-v2",
+        "recipe_revision": 2,
         "capsule_path": "experiments/multi-agent-duration/capsules/f06-l-lease-lifecycle-tests.md",
         "lane": "isolated",
         "task_network_policy": "disabled",
@@ -1551,7 +1551,7 @@
             "test_target": "HiddenLargeTestDesignTests.test_production_untouched"
           }
         ],
-        "online_evaluator_id": "f06-l-lease-lifecycle-mutation-v1",
+        "online_evaluator_id": "f06-l-lease-lifecycle-mutation-v2",
         "gold_visibility": "harness-only"
       }
     },
@@ -2919,8 +2919,8 @@
       "case": {
         "schema_version": 2,
         "case_id": "F10-S-PY-001",
-        "revision": 2,
-        "capsule_digest": "sha256:be344b012ae324fad601efc1874d7f0939dadfc75d98cb4be9659f03a11739a0",
+        "revision": 5,
+        "capsule_digest": "sha256:d488ba8a084a3f8c25e608043670f419383052ab5f9fe923c08a09ccced94766",
         "source_type": "fixture",
         "family": "performance-resource",
         "size": "S",
@@ -2962,8 +2962,8 @@
       },
       "fixture": {
         "case_id": "F10-S-PY-001",
-        "recipe_id": "f10-s-python-canonical-json-perf-v2",
-        "recipe_revision": 2,
+        "recipe_id": "f10-s-python-canonical-json-perf-v5",
+        "recipe_revision": 5,
         "capsule_path": "experiments/multi-agent-duration/capsules/f10-s-python-canonical-json-perf.md",
         "lane": "isolated",
         "task_network_policy": "disabled",
@@ -3007,7 +3007,7 @@
             "test_target": "HiddenSmallPerformanceTests.test_claim_bounded"
           }
         ],
-        "online_evaluator_id": "f10-s-canonical-json-performance-v2",
+        "online_evaluator_id": "f10-s-canonical-json-performance-v5",
         "gold_visibility": "harness-only"
       }
     },
@@ -3314,8 +3314,8 @@
       "case": {
         "schema_version": 2,
         "case_id": "F12-L-MDJSON-001",
-        "revision": 2,
-        "capsule_digest": "sha256:2f440ea0eef9b391499f21eb9deced0061602781504ca793dc2c345bb732615f",
+        "revision": 3,
+        "capsule_digest": "sha256:6f799280ed8c5f808a5ce016fc52c8c2c5cf104dd43a6bd5d03dd7510f3688f4",
         "source_type": "fixture",
         "family": "evidence-synthesis",
         "size": "L",
@@ -3364,8 +3364,8 @@
       },
       "fixture": {
         "case_id": "F12-L-MDJSON-001",
-        "recipe_id": "f12-l-fabric-decision-record-v2",
-        "recipe_revision": 2,
+        "recipe_id": "f12-l-fabric-decision-record-v3",
+        "recipe_revision": 3,
         "capsule_path": "experiments/multi-agent-duration/capsules/f12-l-fabric-decision-record.md",
         "lane": "isolated",
         "task_network_policy": "disabled",
@@ -3428,7 +3428,7 @@
             "test_target": "HiddenFabricDecisionTests.test_doc_json_sync"
           }
         ],
-        "online_evaluator_id": "f12-l-fabric-decision-hidden-v2",
+        "online_evaluator_id": "f12-l-fabric-decision-hidden-v3",
         "gold_visibility": "harness-only"
       }
     },

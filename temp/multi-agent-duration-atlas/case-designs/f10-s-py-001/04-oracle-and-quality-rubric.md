@@ -12,7 +12,7 @@ public checksと以下のhidden criterionをcriterion-levelで別々に記録す
 | `perf-distractor-rejected` | Sort is not claimed as the primary scaling cause. | comparative counter evidence present |
 | `perf-claim-bounded` | Optimization claim is conditional and preserves canonical bytes. | unsupported absolute speedup claims absent |
 
-Revision 2 boundary: hidden checks may require only identifiers present in `performance-contract.json`. They must not use an undisclosed exact string as a semantic proxy.
+Revision 5 hidden checks require only identifiers and fields visible in the contract/template. The public validator owns the single exact-edit-surface criterion; hidden semantic criteria verify protected inputs but do not repeat scope failure, so one scope error cannot masquerade as five semantic failures.
 
 ## Negative calibration set
 
