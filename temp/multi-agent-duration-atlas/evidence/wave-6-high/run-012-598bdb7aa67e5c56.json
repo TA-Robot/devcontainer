@@ -1,0 +1,379 @@
+{
+  "block_id": "wave6-c0-grok-high-family12",
+  "case": {
+    "capsule_digest": "sha256:c0efce6cb9cc78eda89064eb70cc2c2634495c331e19263b4fa38d57b25d3242",
+    "case_id": "F10-S-PY-001",
+    "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
+    "family": "performance-resource",
+    "profile_id": "S-local-benchmark-diagnosis-python",
+    "revision": 1,
+    "size": "S",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 516.512,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-2",
+          "duration_ms": 518.413,
+          "exit_code": 1,
+          "scope": "public",
+          "status": "fail"
+        },
+        {
+          "check_id": "perf-repro-command",
+          "duration_ms": 517.12,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "perf-scaling-evidence",
+          "duration_ms": 618.833,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "perf-root-cause",
+          "duration_ms": 619.087,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "perf-distractor-rejected",
+          "duration_ms": 568.048,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "perf-claim-bounded",
+          "duration_ms": 576.136,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f10-s-canonical-json-performance-v1",
+      "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+      "isolation_profile": "network-disabled-read-only-container",
+      "score": {
+        "all_checks_required": true,
+        "failed_check_ids": [
+          "workspace-2",
+          "perf-repro-command",
+          "perf-scaling-evidence",
+          "perf-root-cause",
+          "perf-distractor-rejected",
+          "perf-claim-bounded"
+        ],
+        "hidden_passed": 0,
+        "hidden_total": 5,
+        "passed": 1,
+        "public_passed": 1,
+        "public_total": 2,
+        "ratio": 0.142857,
+        "resolution": "criterion",
+        "total": 7
+      },
+      "status": "fail"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 6,
+          "name": "available_commands"
+        },
+        {
+          "count": 1,
+          "name": "end"
+        },
+        {
+          "count": 64,
+          "name": "text"
+        },
+        {
+          "count": 121,
+          "name": "thought"
+        },
+        {
+          "count": 9,
+          "name": "tool_call"
+        },
+        {
+          "count": 21,
+          "name": "tool_call_update"
+        },
+        {
+          "count": 4,
+          "name": "usage"
+        }
+      ],
+      "event_failure_terms": [],
+      "exit_code": 0,
+      "failure_signals": [],
+      "failure_terms": [],
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 68257,
+      "output_cap_bytes": 1048576,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "result_is_error": false,
+      "sandbox_preflight": {
+        "assurance": "configured",
+        "command_network": "configured",
+        "generation_request_performed": false,
+        "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+        "profile_digest": "sha256:ebdde48d42688e4ba31d9566d616d4d978ea6d00724d3956feb1be240e16cb35",
+        "status": "pass",
+        "unrelated_read": "configured",
+        "workspace_write": "configured"
+      },
+      "status": "success",
+      "stderr_bytes": 0,
+      "task_network": "denied-by-provider-sandbox",
+      "terminal_wall_ms": 52904.649,
+      "thread_id_digest": "sha256:d67b7ee368e65619aa908afbba0124a20f86a4d915bd01cdd092ae91c376916f",
+      "tool_error_count": 0,
+      "usage": {
+        "cached_input_tokens": 11776,
+        "input_tokens": 11381,
+        "output_tokens": 2950
+      },
+      "workspace_changed_path_count": 2
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.007,
+    "online_validation": 3959.361,
+    "post_validation_tail": 0.054,
+    "provision": 2237.749,
+    "terminal_wall": 56971.561,
+    "user_result": 56971.538,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider"
+    ],
+    "unknown": []
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 101703217549780,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T05:43:42.325Z"
+    },
+    "P1": {
+      "monotonic_ns": 101705455299216,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T05:43:44.563Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 101705487788584,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T05:43:44.595Z"
+    },
+    "T1": {
+      "monotonic_ns": 101705487796036,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T05:43:44.595Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 101762459326882,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T05:44:41.567Z"
+    },
+    "TX": {
+      "monotonic_ns": 101762459349704,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T05:44:41.567Z"
+    },
+    "V0": {
+      "monotonic_ns": 101758499911034,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T05:44:37.607Z"
+    },
+    "V1": {
+      "monotonic_ns": 101762459272516,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T05:44:41.567Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 1800000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": "online-validation-failed",
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "fail",
+    "quality_basis": "online-fail",
+    "quality_pass": false,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "applied_value": "high",
+          "key": "effort",
+          "namespace": "grok.reasoning",
+          "requested_value": "high",
+          "status": "applied"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "exact",
+        "requested_alias": "grok-4.6",
+        "requested_source": "flag",
+        "resolved_id": "grok-4.6"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "grok",
+        "cli_source": "container-image",
+        "cli_version": "1.0.3",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+        "observed_at": "2026-08-27T05:43:44.563Z",
+        "permission_mode": "automatic",
+        "provider": "grok"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "run-012-598bdb7aa67e5c56",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "6d14dfbff162662b293ebe74acbbbfcacd4bcb64",
+    "bundle_digest": "sha256:f16e55ddfe14f59a8d93568e3dab48cbf2415d3e35e93e12ed5c6e52ae322ceb",
+    "fixture_revision": "f10-s-python-canonical-json-perf-v1-r1",
+    "instruction_set_digest": "sha256:515e1f39556360f1ddfbd903ca45e438a5053cebd86306dc6ac82fae3d1d8fb2"
+  },
+  "study_id": "duration-atlas-wave6-provider",
+  "workers": []
+}
