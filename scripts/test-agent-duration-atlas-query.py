@@ -259,6 +259,15 @@ class AgentDurationAtlasQueryTests(unittest.TestCase):
             [{"check_id": "hidden-contract", "sample_count": 1}],
         )
 
+    def test_audit_uses_the_stable_consolidated_report_reference(self) -> None:
+        result = self.query(mode="audit")
+        self.assertEqual(
+            "docs/agents/duration-atlas/studies/current.md",
+            result["rows"][0]["detail_reference"],
+        )
+        self.assertEqual("not-verified", result["rows"][0]["reference_status"])
+        self.assertTrue(result["rows"][0]["source_runs"])
+
     def test_compare_row_cap_and_output_byte_cap_are_explicit(self) -> None:
         records: list[dict[str, object]] = []
         for index in range(5):

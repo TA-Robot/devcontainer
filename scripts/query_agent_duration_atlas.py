@@ -26,6 +26,7 @@ HARD_MAX_OUTPUT_BYTES = 32 * 1024 * 1024
 HARD_MAX_ATLAS_BYTES = 512 * 1024 * 1024
 MODES = ("summary", "compare", "curve", "coverage", "audit", "explain")
 FORMATS = ("json", "markdown")
+CURRENT_STUDY_REPORT = "docs/agents/duration-atlas/studies/current.md"
 SETTING_STATUSES = ("applied", "rejected", "not-advertised", "unknown")
 CURVE_AXES = ("participants-actual", "workers-actual", "peak-concurrent")
 COMPARE_AXES = (
@@ -496,7 +497,7 @@ def _audit_row(series: Mapping[str, Any], case: Mapping[str, Any]) -> dict[str, 
         "case_id": stratum["case"]["case_id"],
         "case_revision": stratum["case"]["revision"],
         "study_id": study_id,
-        "detail_reference": f"docs/agents/duration-atlas/studies/{study_id}.md",
+        "detail_reference": CURRENT_STUDY_REPORT,
         "reference_status": "not-verified",
         "source_runs": [
             {"run_id": sample["run_id"], "run_digest": sample["run_digest"]}

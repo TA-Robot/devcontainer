@@ -97,7 +97,7 @@ Provider-free calibrationがtaskとoracleを検証し、その後にだけ明示
 | `temp/multi-agent-duration-atlas/` | 設計、実験計画、review、implementation provenance | operator commandや現在値のruntime sourceにはしない |
 | `<private-run-dir>/<study-id>/*.json` | live runのimmutable raw evidence | private directoryへatomic create。credentialは含めない。既存run IDを上書きしない |
 | `generated/duration-atlas/current.json` | query/skillが読むmachine aggregate（atlas schema v2） | validated raw run setからprovider-freeで再生成し、derived fileとしてatomic replace |
-| `docs/agents/duration-atlas/studies/<study-id>.md` | 人間がauditするcontent-free study report | run-set digestを固定。releaseを残す場合はstudyごとに一意なpathを使う |
+| `docs/agents/duration-atlas/studies/current.md` | 人間がauditするcurrent aggregateのcontent-free study report | current atlasと同じrun-set digestで再生成。releaseを残す場合は別の一意なpathへcopyする |
 | `docs/agents/duration-atlas/README.md` | operator contract | この文書 |
 | `project/.codex/skills/lookup-agent-duration/` | target projectへ配るbounded lookup skill | project templateからcopyし、詳細datasetをskill本文へ埋め込まない |
 | `/usr/local/share/mira-duration-atlas/current.json` | Dev Container image同梱のversioned reference snapshot | image build時に固定。更新にはDev Container rebuildが必要 |
@@ -322,7 +322,7 @@ scripts/query-agent-duration-atlas \
 scripts/report-agent-duration-study \
   generated/duration-atlas/current.json \
   --catalog experiments/multi-agent-duration/catalog/cases.json \
-  --output docs/agents/duration-atlas/studies/<study-id>.md \
+  --output docs/agents/duration-atlas/studies/current.md \
   --max-series <explicit-series-cap> \
   --max-cases <explicit-case-strata-cap> \
   --max-output-bytes <explicit-report-byte-cap>
