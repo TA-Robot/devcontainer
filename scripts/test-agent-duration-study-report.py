@@ -175,6 +175,30 @@ class AgentDurationStudyReportTests(unittest.TestCase):
         self.assertIn("| none |", report)
         self.assertNotIn("fixture-online-v1", report)
 
+    def test_unexpected_change_summary_is_rendered_as_content_free_counts(self) -> None:
+        record = self.matched_run()
+        record["artifact_snapshot"] = {
+            "policy": "synthetic-task-artifacts-v1",
+            "completeness": "partial",
+            "unexpected_changed_path_count": 2,
+            "unexpected_change_summary": {
+                "total": 2,
+                "tracked": 0,
+                "untracked": 2,
+                "deleted": 0,
+            },
+            "total_bytes": 0,
+            "manifest_digest": canonical_json_digest([]),
+            "files": [],
+        }
+        record["field_provenance"]["observed"].append("/artifact_snapshot")  # type: ignore[index]
+        report = self.report(self.atlas([record]))
+        self.assertIn(
+            "unexpected(total=2; tracked=0; untracked=2; deleted=0)",
+            report,
+        )
+        self.assertNotIn("scratch", report)
+
     def test_null_quality_score_and_censoring_remain_explicit(self) -> None:
         timeout = self.matched_run("timeout")
         timeout["run_id"] = "timeout-observation"

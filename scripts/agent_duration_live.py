@@ -631,6 +631,8 @@ def _container_base(
         "--env",
         "TZ=UTC",
         "--env",
+        "PYTHONDONTWRITEBYTECODE=1",
+        "--env",
         "PATH=/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin",
         "--mount",
         f"type=bind,src={workspace},dst=/case",
@@ -924,7 +926,14 @@ def _capture_task_artifacts(
                 item["content_utf8"] = decoded
                 retained_bytes += len(content)
         files.append(item)
-    unexpected = len(all_changed_lines - allowed_changed_lines)
+    unexpected_lines = all_changed_lines - allowed_changed_lines
+    unexpected_summary = {
+        "total": len(unexpected_lines),
+        "tracked": sum(line[:2] != "??" for line in unexpected_lines),
+        "untracked": sum(line[:2] == "??" for line in unexpected_lines),
+        "deleted": sum(line[:2] != "??" and "D" in line[:2] for line in unexpected_lines),
+    }
+    unexpected = unexpected_summary["total"]
     manifest_files = [
         {key: value for key, value in item.items() if key != "content_utf8"}
         for item in files
@@ -936,6 +945,7 @@ def _capture_task_artifacts(
         "policy": "synthetic-task-artifacts-v1",
         "completeness": "partial" if partial else "complete",
         "unexpected_changed_path_count": unexpected,
+        "unexpected_change_summary": unexpected_summary,
         "total_bytes": retained_bytes,
         "manifest_digest": canonical_json_digest(manifest_files),
         "files": files,

@@ -1250,6 +1250,9 @@
           "type": "integer",
           "minimum": 0
         },
+        "unexpected_change_summary": {
+          "$ref": "#/$defs/unexpected_change_summary"
+        },
         "total_bytes": {
           "type": "integer",
           "minimum": 0,
@@ -1265,6 +1268,17 @@
             "$ref": "#/$defs/artifact_snapshot_file"
           }
         }
+      }
+    },
+    "unexpected_change_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "tracked", "untracked", "deleted"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "tracked": {"type": "integer", "minimum": 0},
+        "untracked": {"type": "integer", "minimum": 0},
+        "deleted": {"type": "integer", "minimum": 0}
       }
     },
     "field_provenance": {

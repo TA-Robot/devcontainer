@@ -13,7 +13,7 @@ Use the bundled discovery wrapper to query only the relevant atlas cells. Keep p
 2. If profile values are unknown, run `coverage` with the known filters. Return the compact value inventory and ask for refinement; do not select a nearby cell silently.
 3. Run `summary` for an exact cell. Start with `--max-rows 12 --max-output-bytes 32768`; these are context-safety caps, not agent-count or statistical defaults.
 4. Use `compare` or `curve` only for dimensions the user explicitly asks to inspect. Show every other differing primary field alongside the observations.
-5. Report the observation window, source run-set digest, evidence state, quality populations, failed criterion IDs, censoring, first-artifact resolution and inference-validity status with any duration.
+5. Report the observation window, source run-set digest, evidence state, quality populations, failed criterion IDs, artifact retention/completeness/unexpected-change counts, censoring, first-artifact resolution and inference-validity status with any duration.
 
 Run from the directory containing this skill, or pass its absolute path:
 
@@ -35,6 +35,8 @@ Set `AGENT_DURATION_ATLAS_PATH` or pass `--atlas PATH` to override data discover
 - Keep quality-pass, quality-fail and quality-unknown populations separate. Include content-free failed criterion IDs when available.
 - Treat `excluded` as unusable for effort-quality inference and `conditional-only` as exploratory evidence. `eligible-pending-comparison-gates` still requires matched identity, applied-setting evidence, repeat/singleton review and score headroom; it is not a recommendation. An all-pass ceiling does not prove reasoning saturation.
 - A failed observation without an actually present, complete retained task artifact cannot establish that more effort failed to improve reasoning; preserve `task-artifact-not-retained`, `task-artifact-partial`, or `task-artifact-missing`.
+- Keep fixture identities exact. Never pool case revisions or bundle identities that the Atlas/release disposition separates; an isomorphic-looking fixture is not evidence of identity equality.
+- Use `artifact_auditability.unexpected_change_summary` only as content-free counts. Do not infer or disclose paths/content that the record intentionally omits.
 - Keep right/admin-censored runs visible. Do not count a fast failure as a fast completion.
 - Emit first-artifact time only for `progress-envelope`; preserve `not-observed`, `not-applicable` and `unknown`.
 - Never rank providers/models/efforts/relations or generate a default configuration from this evidence.

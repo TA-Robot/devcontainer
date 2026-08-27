@@ -427,6 +427,46 @@ def _compact_quality_evidence(samples: Sequence[Mapping[str, Any]]) -> dict[str,
     return result
 
 
+def _compact_artifact_auditability(
+    samples: Sequence[Mapping[str, Any]],
+) -> dict[str, Any]:
+    audits = [sample["artifact_auditability"] for sample in samples]
+    summaries = [
+        item["unexpected_change_summary"]
+        for item in audits
+        if "unexpected_change_summary" in item
+    ]
+    return {
+        "retention": {
+            value: sum(item["retention"] == value for item in audits)
+            for value in ("content-free-only", "task-artifacts")
+        },
+        "completeness": {
+            value: sum(item["completeness"] == value for item in audits)
+            for value in ("not-retained", "complete", "partial")
+        },
+        "file_count": _numeric_representation([item["file_count"] for item in audits]),
+        "retained_bytes": _numeric_representation(
+            [item["total_bytes"] for item in audits]
+        ),
+        "unexpected_change_summary": {
+            "available": len(summaries),
+            "unavailable": len(audits) - len(summaries),
+            "samples_with_unexpected": sum(item["total"] > 0 for item in summaries),
+            "total": _numeric_representation([item["total"] for item in summaries]),
+            "tracked": _numeric_representation(
+                [item["tracked"] for item in summaries]
+            ),
+            "untracked": _numeric_representation(
+                [item["untracked"] for item in summaries]
+            ),
+            "deleted": _numeric_representation(
+                [item["deleted"] for item in summaries]
+            ),
+        },
+    }
+
+
 def _compact_participant(participant: Mapping[str, Any]) -> dict[str, Any]:
     result = {
         "role": participant["role"],
@@ -511,6 +551,7 @@ def _compact_row(
                 case["counts"]["first_artifact_resolution"]
             ),
             "quality_evidence": _compact_quality_evidence(case["samples"]),
+            "artifact_auditability": _compact_artifact_auditability(case["samples"]),
         },
         "censoring": {
             "counts": copy.deepcopy(case["counts"]["censoring"]),
@@ -935,6 +976,16 @@ def _quality_evidence_label(evidence: Mapping[str, Any]) -> str:
     )
 
 
+def _artifact_auditability_label(evidence: Mapping[str, Any]) -> str:
+    unexpected = evidence["unexpected_change_summary"]
+    return (
+        f"retention={json.dumps(evidence['retention'], sort_keys=True)}; "
+        f"completeness={json.dumps(evidence['completeness'], sort_keys=True)}; "
+        f"unexpected-samples={unexpected['samples_with_unexpected']}; "
+        f"unexpected-summary={unexpected['available']}/{unexpected['available'] + unexpected['unavailable']}"
+    )
+
+
 def render_markdown(result: Mapping[str, Any]) -> str:
     lines = [
         "# Duration atlas query",
@@ -987,6 +1038,7 @@ def render_markdown(result: Mapping[str, Any]) -> str:
                 f"caps={row['censoring']['safety_caps_ms']} | "
                 f"{row['evidence']['case_state']}; "
                 f"{_quality_evidence_label(row['evidence']['quality_evidence'])}; "
+                f"artifacts={_artifact_auditability_label(row['evidence']['artifact_auditability'])}; "
                 f"freshness={row['freshness']['status']}; "
                 f"effort-use={row['inference_validity']['effort_quality_use']}; "
                 "comparison-gates=not-evaluated |"

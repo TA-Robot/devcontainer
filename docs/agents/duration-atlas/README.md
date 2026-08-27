@@ -282,7 +282,7 @@ Atlasは次を保持します。
 - evaluator status、criterionまたはaggregate-check score、存在するfailed criterion IDs
 - complete / right-censored / administratively-censored countsとsafety cap
 - first-artifactの`progress-envelope` / `not-observed` / `not-applicable` / `unknown`
-- task artifactの`content-free-only` / `task-artifacts`と`not-retained` / `complete` / `partial` auditability metadata。Artifact本文はatlasへ複製しない
+- task artifactの`content-free-only` / `task-artifacts`と`not-retained` / `complete` / `partial` auditability metadata。Unexpected changeはtracked / untracked / deletedの件数だけを残し、pathや本文はatlasへ複製しない
 
 Aggregate生成はprovider-freeで、derived outputをatomic replaceします。
 

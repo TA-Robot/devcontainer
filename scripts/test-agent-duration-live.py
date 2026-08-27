@@ -187,6 +187,10 @@ raise SystemExit(125)
             snapshot = _capture_task_artifacts(fixture_dir, manifest, auth)
             self.assertEqual(snapshot["completeness"], "complete")
             self.assertEqual(snapshot["unexpected_changed_path_count"], 0)
+            self.assertEqual(
+                snapshot["unexpected_change_summary"],
+                {"total": 0, "tracked": 0, "untracked": 0, "deleted": 0},
+            )
             self.assertEqual([item["path"] for item in snapshot["files"]], ["tag_normalizer.py"])
             self.assertEqual(snapshot["files"][0]["content_status"], "retained")
             self.assertIn("def normalize_tag", snapshot["files"][0]["content_utf8"])
@@ -368,6 +372,7 @@ raise SystemExit(125)
             self.assertIn("--strict-config", run)
             self.assertIn("--ephemeral", run)
             self.assertIn("--ignore-rules", run)
+            self.assertIn("PYTHONDONTWRITEBYTECODE=1", run)
             self.assertIn("readonly", json.dumps(run))
             self.assertNotIn(str(ROOT), json.dumps(run))
 
@@ -723,6 +728,10 @@ raise SystemExit(125)
             )
             self.assertEqual(record["artifact_snapshot"]["completeness"], "partial")
             self.assertEqual(record["artifact_snapshot"]["unexpected_changed_path_count"], 1)
+            self.assertEqual(
+                record["artifact_snapshot"]["unexpected_change_summary"],
+                {"total": 1, "tracked": 0, "untracked": 1, "deleted": 0},
+            )
             serialized = json.dumps(record, sort_keys=True)
             self.assertNotIn("private-", serialized)
             self.assertNotIn(str(auth), serialized)

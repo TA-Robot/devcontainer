@@ -16,6 +16,11 @@ observations but cannot distinguish model saturation from a semantic evaluator
 false negative. `excluded` identifies a case design whose old evaluator encoded
 undisclosed vocabulary or one preferred answer.
 
+Artifact auditability reports retention, completeness, file-count ranges, and
+content-free unexpected-change counts. A `complete` snapshot with zero files can
+still mean the required artifact is missing; use the observation classification.
+Never reconstruct omitted paths/content from the counts.
+
 ## Time values
 
 - Report exact milliseconds or a readable conversion derived from them.
@@ -33,6 +38,11 @@ Do not infer first-artifact latency from final response time. `not-observed`, `n
 ## Comparisons
 
 Compare only cells that differ on the dimension the user requested while showing other differing primary fields. State paired status only when the records identify a controlled paired block. Do not label a provider, model, effort, relation or participant count a winner or default.
+
+Require exact case revision, base/bundle/instruction identity before pooling.
+When a release disposition excludes one identity under a duplicated revision,
+keep its times as side evidence only and do not merge its points with the chosen
+canonical identity.
 
 The atlas is reference evidence. Project-specific routing remains a separate decision using the project's goals, risk, available time and review cost.
 

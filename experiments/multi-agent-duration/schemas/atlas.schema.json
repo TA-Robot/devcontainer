@@ -562,7 +562,21 @@
         },
         "manifest_digest": {
           "$ref": "#/$defs/sha256"
+        },
+        "unexpected_change_summary": {
+          "$ref": "#/$defs/unexpected_change_summary"
         }
+      }
+    },
+    "unexpected_change_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["total", "tracked", "untracked", "deleted"],
+      "properties": {
+        "total": {"type": "integer", "minimum": 0},
+        "tracked": {"type": "integer", "minimum": 0},
+        "untracked": {"type": "integer", "minimum": 0},
+        "deleted": {"type": "integer", "minimum": 0}
       }
     },
     "range": {

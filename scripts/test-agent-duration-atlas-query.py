@@ -17,7 +17,7 @@ CLI = SCRIPT_DIR / "query-agent-duration-atlas"
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from agent_duration_atlas import build_atlas, encode_atlas  # noqa: E402
-from agent_duration_study import build_fake_run  # noqa: E402
+from agent_duration_study import build_fake_run, canonical_json_digest  # noqa: E402
 from query_agent_duration_atlas import (  # noqa: E402
     AtlasQueryError,
     QueryFilters,
@@ -103,7 +103,7 @@ class AgentDurationAtlasQueryTests(unittest.TestCase):
             validity=validity,
         )
 
-    def test_validity_companion_excludes_overfit_revision_and_conditions_missing_artifact(self) -> None:
+    def test_validity_companion_excludes_overfit_and_conditions_invalid_fixture_revision(self) -> None:
         atlas = json.loads(
             (ROOT / "generated/duration-atlas/current.json").read_text(encoding="utf-8")
         )
@@ -155,7 +155,14 @@ class AgentDurationAtlasQueryTests(unittest.TestCase):
             for item in row["inference_validity"]["observations"]
         ]
         self.assertTrue(
-            any(item["reason"] == "task-artifact-not-retained" for item in observations)
+            all(item["reason"] == "case-design-conditional" for item in observations)
+        )
+        self.assertTrue(
+            all(item["artifact_retention"] == "task-artifacts" for item in observations)
+        )
+        self.assertIn(
+            "nondeterministic-fixture-bundle",
+            conditional["rows"][0]["inference_validity"]["reason_codes"],
         )
 
     def test_exact_primary_stratum_filter_returns_one_compact_row(self) -> None:
@@ -202,6 +209,34 @@ class AgentDurationAtlasQueryTests(unittest.TestCase):
         self.assertNotIn("samples", row)
         self.assertNotIn("source", row)
         self.assertEqual(row["freshness"]["status"], "unknown")
+        self.assertEqual(
+            row["evidence"]["artifact_auditability"]["retention"],
+            {"content-free-only": 1, "task-artifacts": 0},
+        )
+
+    def test_unexpected_change_summary_is_compact_and_content_free(self) -> None:
+        record = clone_run(self.base, "artifact-auditability")
+        record["artifact_snapshot"] = {
+            "policy": "synthetic-task-artifacts-v1",
+            "completeness": "partial",
+            "unexpected_changed_path_count": 2,
+            "unexpected_change_summary": {
+                "total": 2,
+                "tracked": 0,
+                "untracked": 2,
+                "deleted": 0,
+            },
+            "total_bytes": 0,
+            "manifest_digest": canonical_json_digest([]),
+            "files": [],
+        }
+        record["field_provenance"]["observed"].append("/artifact_snapshot")  # type: ignore[index]
+        row = self.query(atlas_from([record]))["rows"][0]
+        audit = row["evidence"]["artifact_auditability"]
+        self.assertEqual(audit["completeness"]["partial"], 1)
+        self.assertEqual(audit["unexpected_change_summary"]["total"]["value"], 2)
+        self.assertEqual(audit["unexpected_change_summary"]["untracked"]["value"], 2)
+        self.assertNotIn("path", json.dumps(audit, sort_keys=True))
 
     def test_partial_summary_returns_refinement_dimensions_not_duration_rows(self) -> None:
         other = clone_run(self.base, "other-cli")

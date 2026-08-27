@@ -427,6 +427,21 @@ def _validate_artifact_snapshot(record: dict[str, Any]) -> None:
     paths = [item["path"] for item in files]
     if paths != sorted(paths) or len(paths) != len(set(paths)):
         raise DurationStudyError("artifact snapshot paths must be sorted and unique")
+    unexpected_summary = snapshot.get("unexpected_change_summary")
+    if unexpected_summary is not None:
+        unexpected = snapshot["unexpected_changed_path_count"]
+        if unexpected_summary["total"] != unexpected:
+            raise DurationStudyError(
+                "artifact unexpected-change summary total does not match path count"
+            )
+        if unexpected_summary["tracked"] + unexpected_summary["untracked"] != unexpected:
+            raise DurationStudyError(
+                "artifact unexpected-change summary categories do not match total"
+            )
+        if unexpected_summary["deleted"] > unexpected_summary["tracked"]:
+            raise DurationStudyError(
+                "artifact unexpected-change deleted count exceeds tracked count"
+            )
     retained_bytes = 0
     partial = snapshot["unexpected_changed_path_count"] > 0
     manifest: list[dict[str, Any]] = []

@@ -340,6 +340,19 @@ def _render_quality_evidence(
                 "total_bytes": 0,
             },
         )
+        auditability_label = (
+            f"{auditability['retention']}/{auditability['completeness']}; "
+            f"files={auditability['file_count']}; bytes={auditability['total_bytes']}"
+        )
+        unexpected = auditability.get("unexpected_change_summary")
+        if unexpected is not None:
+            auditability_label += (
+                "; unexpected("
+                f"total={unexpected['total']}; "
+                f"tracked={unexpected['tracked']}; "
+                f"untracked={unexpected['untracked']}; "
+                f"deleted={unexpected['deleted']})"
+            )
         inference_observation = inference_by_run[sample["run_id"]]
         lines.append(
             "| "
@@ -349,10 +362,7 @@ def _render_quality_evidence(
                     sample["run_id"],
                     outcome_label,
                     censoring_label,
-                    (
-                        f"{auditability['retention']}/{auditability['completeness']}; "
-                        f"files={auditability['file_count']}; bytes={auditability['total_bytes']}"
-                    ),
+                    auditability_label,
                     f"{inference_observation['status']}; {inference_observation['reason']}",
                     evidence["evaluator_status"],
                     evidence["check_count"],
@@ -504,6 +514,7 @@ def build_study_report(
         "- One observation is shown only as one raw point. A range requires at least two points in the same case stratum.",
         "- Requested generation values remain distinct from applied values; an applied value appears only when the atlas records status `applied`.",
         "- Criterion scores and failed criterion IDs are emitted only from each sample's content-free quality evidence. Missing scores remain unavailable and are not inferred.",
+        "- Retained artifact content and paths are omitted. When available, unexpected tracked, untracked, and deleted changes are shown only as counts.",
         "- Case-design and observation validity are reported separately. Comparison gates remain open until identity, applied setting, repeat/singleton conditions, and quality-measurement headroom are checked.",
         "- The report is descriptive only. It produces no provider/model ranking, automatic route, or preferred configuration.",
         "",

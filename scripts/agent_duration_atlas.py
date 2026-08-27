@@ -340,6 +340,10 @@ def _sample(record: Mapping[str, Any], run_digest: str) -> dict[str, Any]:
             "total_bytes": artifact_snapshot["total_bytes"],
             "manifest_digest": artifact_snapshot["manifest_digest"],
         }
+        if "unexpected_change_summary" in artifact_snapshot:
+            artifact_auditability["unexpected_change_summary"] = copy.deepcopy(
+                artifact_snapshot["unexpected_change_summary"]
+            )
     else:
         artifact_auditability = {
             "retention": "content-free-only",

@@ -538,6 +538,12 @@ else:
             "policy": "synthetic-task-artifacts-v1",
             "completeness": "complete",
             "unexpected_changed_path_count": 0,
+            "unexpected_change_summary": {
+                "total": 0,
+                "tracked": 0,
+                "untracked": 0,
+                "deleted": 0,
+            },
             "total_bytes": len(content.encode("utf-8")),
             "manifest_digest": canonical_json_digest([manifest_item]),
             "files": [item],
@@ -584,6 +590,11 @@ else:
         )
         with self.assertRaises(DurationStudyError):
             validate_run_record(unjustified_cap)
+
+        inconsistent_summary = copy.deepcopy(record)
+        inconsistent_summary["artifact_snapshot"]["unexpected_change_summary"]["total"] = 1
+        with self.assertRaises(DurationStudyError):
+            validate_run_record(inconsistent_summary)
 
     def test_atomic_run_record_is_private_and_immutable(self) -> None:
         record = build_fake_run("solo-complete")
