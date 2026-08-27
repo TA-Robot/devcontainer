@@ -1,0 +1,99 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devcontainer.local/schemas/agent-duration-batch-v1.schema.json",
+  "title": "Finite Agent Duration Batch v1",
+  "description": "An explicit, bounded, resumable list of live primary-only observations. It never implies routing defaults.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "batch_id",
+    "study_id",
+    "catalog_digest",
+    "created_at",
+    "purpose",
+    "safety",
+    "entries"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "batch_id": {"$ref": "#/$defs/id"},
+    "study_id": {"$ref": "#/$defs/id"},
+    "catalog_digest": {"$ref": "#/$defs/sha256"},
+    "created_at": {"$ref": "#/$defs/utc_timestamp"},
+    "purpose": {"$ref": "#/$defs/bounded_string"},
+    "safety": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "max_runs",
+        "deadline_seconds",
+        "concurrency",
+        "automatic_retry",
+        "continue_after_quality_fail"
+      ],
+      "properties": {
+        "max_runs": {"type": "integer", "minimum": 1, "maximum": 512},
+        "deadline_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 604800},
+        "concurrency": {"const": 1},
+        "automatic_retry": {"const": false},
+        "continue_after_quality_fail": {"const": true}
+      }
+    },
+    "entries": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 512,
+      "items": {"$ref": "#/$defs/entry"}
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "utc_timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"
+    },
+    "bounded_string": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 512
+    },
+    "entry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "order",
+        "run_id",
+        "block_id",
+        "case_id",
+        "provider",
+        "model",
+        "effort",
+        "timeout_seconds",
+        "evaluator_timeout_seconds",
+        "output_bytes_cap"
+      ],
+      "properties": {
+        "order": {"type": "integer", "minimum": 1, "maximum": 512},
+        "run_id": {"$ref": "#/$defs/id"},
+        "block_id": {"$ref": "#/$defs/id"},
+        "case_id": {"$ref": "#/$defs/id"},
+        "provider": {"enum": ["codex", "claude", "grok"]},
+        "model": {"$ref": "#/$defs/id"},
+        "effort": {"enum": ["low", "medium", "high", "xhigh", "max", "ultra"]},
+        "timeout_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 3600},
+        "evaluator_timeout_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 300},
+        "output_bytes_cap": {"type": "integer", "minimum": 1024, "maximum": 67108864}
+      }
+    }
+  }
+}

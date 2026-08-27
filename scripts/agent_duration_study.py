@@ -26,6 +26,7 @@ SCHEMA_PATHS = {
     "capability": SCHEMA_DIR / "capability.schema.json",
     "fixture": SCHEMA_DIR / "fixture.schema.json",
     "run": SCHEMA_DIR / "run.schema.json",
+    "batch": SCHEMA_DIR / "batch.schema.json",
 }
 LANDMARK_NAMES = (
     "P0",
