@@ -104,6 +104,9 @@ class DurationSkillCliTests(unittest.TestCase):
         )
         self.assertEqual(0, completed.returncode, completed.stderr)
         self.assertIn("Discovers and injects the atlas positional argument", completed.stdout)
+        self.assertIn("AGENT_DURATION_ATLAS_PATH", completed.stdout)
+        self.assertIn("nearest generated/duration-atlas/current.json", completed.stdout)
+        self.assertIn("exits without querying", completed.stdout)
         self.assertIn("--setting-requested-value", completed.stdout)
 
     def test_wrapper_forwards_selected_atlas_and_query_arguments(self) -> None:

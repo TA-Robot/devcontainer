@@ -89,7 +89,15 @@ def main(argv: list[str] | None = None) -> int:
                 "usage: query_atlas.py [--atlas PATH] [--print-atlas-path] "
                 "QUERY_OPTIONS...\n\n"
                 "Discovers and injects the atlas positional argument; do not pass it "
-                "again in QUERY_OPTIONS. Query options from the bounded CLI follow:\n",
+                "again in QUERY_OPTIONS.\n\n"
+                "Atlas discovery order:\n"
+                "  1. --atlas PATH\n"
+                "  2. AGENT_DURATION_ATLAS_PATH\n"
+                "  3. nearest generated/duration-atlas/current.json\n"
+                "  4. this skill's assets/current.json\n"
+                "  5. /usr/local/share/mira-duration-atlas/current.json\n\n"
+                "--print-atlas-path prints the selected file and exits without querying.\n\n"
+                "Query options from the bounded CLI follow:\n",
                 flush=True,
             )
             try:
