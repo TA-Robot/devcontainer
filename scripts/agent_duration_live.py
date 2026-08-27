@@ -11,12 +11,11 @@ import os
 from pathlib import Path
 import re
 import resource
-import shutil
 import stat
 import subprocess
 import tempfile
 import time
-from typing import Any
+from typing import Any, Mapping
 from datetime import datetime, timezone
 
 from agent_contracts import load_json
@@ -824,7 +823,6 @@ def probe_codex_agent_sandbox(
                 CODEX_SANDBOX_PROBE_SCRIPT,
             ]
         )
-        started = time.monotonic_ns()
         try:
             completed = subprocess.run(
                 command,
@@ -839,7 +837,6 @@ def probe_codex_agent_sandbox(
             raise DurationStudyError("Codex sandbox probe timed out")
         except OSError as exc:
             raise DurationStudyError("cannot start Codex sandbox probe") from exc
-        duration_ms = round((time.monotonic_ns() - started) / 1_000_000, 3)
         if completed.returncode != 0:
             diagnostic = "\n".join(
                 value.decode("utf-8", errors="replace")
@@ -884,6 +881,9 @@ def _parse_codex_events(path: Path) -> dict[str, Any]:
     thread_digest: str | None = None
     usage: dict[str, int] = {}
     final_message_observed = False
+    terminal_event: str | None = None
+    result_is_error = False
+    event_failure_terms: set[str] = set()
     with path.open("r", encoding="utf-8", errors="replace") as handle:
         for line in handle:
             try:
@@ -908,6 +908,7 @@ def _parse_codex_events(path: Path) -> dict[str, Any]:
                 if item_type == "agent_message" and event_type == "item.completed":
                     final_message_observed = True
             if event_type == "turn.completed" and isinstance(event.get("usage"), dict):
+                terminal_event = event_type
                 usage = {
                     key: value
                     for key, value in event["usage"].items()
@@ -922,13 +923,27 @@ def _parse_codex_events(path: Path) -> dict[str, Any]:
                     and not isinstance(value, bool)
                     and value >= 0
                 }
+            elif event_type == "turn.failed":
+                terminal_event = event_type
+                result_is_error = True
+                raw_error = event.get("error")
+                if isinstance(raw_error, (str, dict, list)):
+                    event_failure_terms.update(
+                        _provider_failure_terms(
+                            json.dumps(raw_error, ensure_ascii=False)
+                        )
+                    )
     summary: dict[str, Any] = {
         "event_counts": dict(sorted(event_counts.items())),
         "item_type_counts": dict(sorted(item_counts.items())),
         "invalid_lines": invalid_lines,
         "final_message_observed": final_message_observed,
         "usage": usage,
+        "result_is_error": result_is_error,
+        "event_failure_terms": sorted(event_failure_terms),
     }
+    if terminal_event is not None:
+        summary["terminal_event"] = terminal_event
     if thread_digest is not None:
         summary["thread_id_digest"] = f"sha256:{thread_digest}"
     return summary
@@ -1200,6 +1215,27 @@ def _classify_codex_failure(stderr: str) -> str:
     return "provider-startup-unknown"
 
 
+def _refine_codex_event_failure(
+    fallback: str,
+    event_summary: Mapping[str, Any],
+) -> str:
+    """Classify a content-free terminal event when stderr has no signal."""
+
+    if fallback != "provider-startup-unknown":
+        return fallback
+    terms = set(event_summary.get("event_failure_terms", []))
+    if terms & {"oauth", "auth", "authentication", "login"}:
+        return "authentication"
+    if "network" in terms:
+        return "provider-network"
+    if (
+        event_summary.get("result_is_error") is True
+        or event_summary.get("terminal_event") == "turn.failed"
+    ):
+        return "provider-result-error"
+    return fallback
+
+
 def _classify_provider_failure(provider: str, stderr: str) -> str:
     if provider == "codex":
         return _classify_codex_failure(stderr)
@@ -1462,7 +1498,9 @@ def run_codex_fixture(
         elif stop_reason == "output-cap":
             failure_class = "output-cap"
         else:
-            failure_class = _classify_codex_failure(error_text)
+            failure_class = _refine_codex_event_failure(
+                _classify_codex_failure(error_text), event_summary
+            )
 
     changed = subprocess.run(
         ["git", "status", "--porcelain"],

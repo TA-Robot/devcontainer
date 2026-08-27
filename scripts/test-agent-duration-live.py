@@ -22,6 +22,8 @@ from agent_duration_live import (  # noqa: E402
     CODEX_PROFILE,
     PROVIDER_EFFORTS,
     _classify_codex_failure,
+    _parse_codex_events,
+    _refine_codex_event_failure,
     _validate_auth_file,
     probe_codex_agent_sandbox,
     run_codex_fixture,
@@ -192,6 +194,51 @@ raise SystemExit(125)
         self.assertEqual(
             _classify_codex_failure("No prompt provided via stdin."),
             "prompt-input-missing",
+        )
+
+    def test_codex_failed_turn_is_not_mislabeled_as_startup_failure(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="duration-codex-events-") as raw:
+            events = Path(raw) / "events.jsonl"
+            events.write_text(
+                "\n".join(
+                    json.dumps(item)
+                    for item in (
+                        {"type": "thread.started", "thread_id": "private-thread"},
+                        {"type": "turn.started"},
+                        {
+                            "type": "turn.failed",
+                            "error": {
+                                "message": "private host path and network error"
+                            },
+                        },
+                    )
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            summary = _parse_codex_events(events)
+        self.assertTrue(summary["result_is_error"])
+        self.assertEqual("turn.failed", summary["terminal_event"])
+        self.assertIn("network", summary["event_failure_terms"])
+        self.assertNotIn("private", json.dumps(summary))
+        self.assertEqual(
+            "provider-network",
+            _refine_codex_event_failure("provider-startup-unknown", summary),
+        )
+        self.assertEqual(
+            "configuration",
+            _refine_codex_event_failure("configuration", summary),
+        )
+
+    def test_codex_failed_turn_without_allowlisted_detail_is_provider_result_error(self) -> None:
+        summary = {
+            "result_is_error": True,
+            "terminal_event": "turn.failed",
+            "event_failure_terms": [],
+        }
+        self.assertEqual(
+            "provider-result-error",
+            _refine_codex_event_failure("provider-startup-unknown", summary),
         )
 
     def test_no_generation_sandbox_probe_uses_only_owned_mounts(self) -> None:
