@@ -1,0 +1,112 @@
+{
+  "schema_version": 1,
+  "release_id": "duration-atlas-current-20260827",
+  "canonical_record_count": 108,
+  "canonical_case_count": 36,
+  "release_artifacts": {
+    "atlas_path": "generated/duration-atlas/current.json",
+    "atlas_sha256": "0713b2b9b3a1ce696ff5f3ec470e9265aa0e1f574f8ace231a7fd103132f7e62",
+    "atlas_run_set_digest": "sha256:402b7a5bb5efa351bd31f768a0058f296a2902a5586d327347bf8fac86244b3f",
+    "report_path": "docs/agents/duration-atlas/studies/current.md",
+    "report_sha256": "113a4b060ca94f3e6a5bea4d69d11593ebb917f50557e9d00dcf23dce59a8d1d",
+    "skill_snapshot_path": "project/.codex/skills/lookup-agent-duration/assets/current.json",
+    "skill_snapshot_sha256": "0713b2b9b3a1ce696ff5f3ec470e9265aa0e1f574f8ace231a7fd103132f7e62"
+  },
+  "canonical_input_groups": [
+    {
+      "group": "historical-wave-1-and-wave-2",
+      "record_count": 13
+    },
+    {
+      "group": "wave-3-machine-disposition-canonical-set",
+      "record_count": 9
+    },
+    {
+      "group": "wave-4-corpus-minus-obsolete-f06l",
+      "record_count": 35
+    },
+    {
+      "group": "wave-4-f09s-recovery",
+      "record_count": 1
+    },
+    {
+      "group": "wave-5-sol-depth",
+      "record_count": 20
+    },
+    {
+      "group": "wave-5-f06l-identity-recovery",
+      "record_count": 1
+    },
+    {
+      "group": "wave-6-grok-provider",
+      "record_count": 29
+    }
+  ],
+  "builder_contract": {
+    "atlas_schema_version": 2,
+    "explicit_run_allowlist": true,
+    "disposition_is_not_an_atlas_input": true
+  },
+  "excluded_records": [
+    {
+      "run_id": "grok-f04-l-46-max-20260827-r01",
+      "disposition": "instrumentation-invalid",
+      "reason_code": "pre-run-setting-metadata-misclassified"
+    },
+    {
+      "run_id": "run-021-e0e435c0d3282153",
+      "disposition": "calibration-obsolete",
+      "reason_code": "same-revision-fixture-identity-conflict",
+      "replacement_run_id": "run-001-758f6d400a39baad"
+    }
+  ],
+  "calibration_only_run_ids": [
+    "claude-f04-s-opus-medium-20260827-r01",
+    "claude-f04-s-opus-medium-20260827-r02",
+    "claude-f04-s-opus-medium-20260827-r03",
+    "claude-f04-s-opus-medium-20260827-r04",
+    "claude-f04-s-opus-medium-20260827-r05",
+    "claude-f04-s-opus-medium-20260827-r06",
+    "claude-f04-s-opus-medium-20260827-r07",
+    "grok-f04-s-46-medium-20260827-r01"
+  ],
+  "calibration_population_rule": "Retain these immutable terminal observations as operational evidence, but do not pool them into task-completion or effort-performance populations.",
+  "unmeasured_blocks": [
+    {
+      "manifest": "wave7-c0-claude-medium-family12.json",
+      "planned_entries": 12,
+      "reason_code": "credential-freshness-unobservable",
+      "provider_generation_started": false
+    },
+    {
+      "manifest": "wave7-c0-claude-high-family12.json",
+      "planned_entries": 12,
+      "reason_code": "credential-freshness-unobservable",
+      "provider_generation_started": false
+    },
+    {
+      "manifest": "wave7-c0-claude-xhigh-deep4.json",
+      "planned_entries": 4,
+      "reason_code": "credential-freshness-unobservable",
+      "provider_generation_started": false
+    },
+    {
+      "manifest": "wave7-c0-claude-max-deep4.json",
+      "planned_entries": 4,
+      "reason_code": "credential-freshness-unobservable",
+      "provider_generation_started": false
+    },
+    {
+      "manifest": "wave6-c0-grok-max-deep4.json",
+      "planned_entries": 3,
+      "run_ids": [
+        "run-002-92866a3941cc5def",
+        "run-003-dc244031055ccb1c",
+        "run-004-53035182311c01b6"
+      ],
+      "reason_code": "provider-wide-generation-setting-rejected",
+      "blocking_evidence_run_id": "run-001-b555a63a5f2dc998",
+      "provider_generation_started": false
+    }
+  ]
+}

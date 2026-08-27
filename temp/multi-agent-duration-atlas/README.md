@@ -6,6 +6,18 @@
 
 36 caseの校正完了はprovider × model × effort × relation × environmentの全cellを測定済みという意味ではありません。実測は単一観測、same-case repeat、quality-pass/fail/unknown、censoring、requested/applied settingを分離して残し、未測定cellを近傍値で補間しません。現在のoperator contractは[`docs/agents/duration-atlas/README.md`](../../docs/agents/duration-atlas/README.md)を参照してください。
 
+## Current release
+
+2026-08-27 current releaseは、108件のcanonical terminal recordからatlas schema v2を生成し、全36 case IDを一度以上観測しています。内訳はquality-pass 15、quality-fail 81、infrastructure failure / quality-unknown 12で、全件complete terminalです。Solはmedium/high/xhigh/max、Grokはmedium/high/xhighをcase scopeを変えて観測しました。Grok maxはprovider rejection、Claude current blockはcredential freshness不明のため、未測定cellを値で埋めずmachine dispositionへ残しています。
+
+正本は次です。
+
+- release closure: `24-complete-corpus-atlas-release.md`
+- canonical/excluded/unmeasured disposition: `final-release-disposition.json`
+- machine atlas: `../../generated/duration-atlas/current.json`
+- human report: `../../docs/agents/duration-atlas/studies/current.md`
+- bounded lookup skill: `../../project/.codex/skills/lookup-agent-duration/`
+
 ## 今回作るもの
 
 最終成果は、次のような**実測値つきの参照表**です。
@@ -64,6 +76,8 @@ evidence grade:              single-observation
 - `21-criterion-quality-scoring.md`: binary failの内訳を比較可能にするversioned rubric
 - `22-provider-depth-curve.md`: 3 provider runner、sandbox/auth知見、mediumからmax/ultraまでのdepth curve
 - `23-first-l-depth-coverage.md`: L caseでのGrok applied curve、Sol requested curve、max rejection、rubric飽和
+- `24-complete-corpus-atlas-release.md`: 36 case closure、108 record release、欠測・除外・skill/container配布の最終判断
+- `final-release-disposition.json`: final canonical input grouping、除外record、calibration-only、未測定block
 - `case-designs/`: 全36 candidateのprofile、fixture、task、rubric、execution、implementation handoff（各6文書）
 
 ## 正本との関係
