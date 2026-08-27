@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import copy
 from pathlib import Path
 import sys
 import tempfile
@@ -17,7 +18,9 @@ from agent_contracts import load_json  # noqa: E402
 from agent_duration_batch import execute_batch, load_and_validate_batch  # noqa: E402
 from agent_duration_study import (  # noqa: E402
     DurationStudyError,
+    build_fake_run,
     canonical_json_digest,
+    validate_run_record,
 )
 
 
@@ -61,6 +64,56 @@ class AgentDurationBatchTests(unittest.TestCase):
         path = directory / "batch.json"
         path.write_text(json.dumps(value), encoding="utf-8")
         return path
+
+    def existing_run(self, batch: dict[str, object], entry: dict[str, object]) -> dict[str, object]:
+        record = build_fake_run("solo-complete")
+        catalog = load_json(CATALOG)
+        case = next(
+            item["case"]
+            for item in catalog["entries"]
+            if item["case"]["case_id"] == entry["case_id"]
+        )
+        record["study_id"] = batch["study_id"]
+        record["run_id"] = entry["run_id"]
+        record["block_id"] = entry["block_id"]
+        record["case"] = {
+            key: case[key]
+            for key in (
+                "case_id",
+                "revision",
+                "capsule_digest",
+                "source_type",
+                "family",
+                "size",
+                "profile_id",
+                "strong_online_oracle",
+            )
+        }
+        record["case"]["catalog_digest"] = batch["catalog_digest"]
+        participant = record["participants"][0]
+        participant["model_identity"] = {
+            "requested_alias": entry["model"],
+            "requested_source": "flag",
+            "identity_confidence": "alias-only",
+        }
+        participant["generation_settings"] = [
+            {
+                "namespace": "codex.reasoning",
+                "key": "effort",
+                "requested_value": entry["effort"],
+                "status": "unknown",
+            }
+        ]
+        participant["runtime_identity"].update(
+            {
+                "provider": entry["provider"],
+                "cli_name": "codex",
+                "cli_source": "unknown",
+                "execution_surface": "direct-provider",
+            }
+        )
+        validate_run_record(record)
+        return record
 
     def test_validates_and_dry_runs_without_provider_calls(self) -> None:
         with tempfile.TemporaryDirectory(prefix="duration-batch-") as raw:
@@ -138,6 +191,65 @@ class AgentDurationBatchTests(unittest.TestCase):
                 live_generation_authorized=False,
                 execute=True,
             )
+
+    def test_resume_reuses_only_the_exact_declared_series(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="duration-batch-resume-") as raw:
+            root = Path(raw)
+            output = root / "runs"
+            output.mkdir()
+            batch = self.batch([self.entry(1)])
+            entry = batch["entries"][0]
+            record = self.existing_run(batch, entry)
+            path = output / f"{entry['run_id']}.json"
+            path.write_text(json.dumps(record), encoding="utf-8")
+            result = execute_batch(
+                batch,
+                output_dir=output,
+                image="fixture-image",
+                auth_files={},
+                live_generation_authorized=False,
+                execute=False,
+            )
+            self.assertEqual(result["observations"][0]["status"], "existing")
+
+            mismatches = {
+                "study/block": lambda value: value.__setitem__("study_id", "other-study"),
+                "catalog": lambda value: value["case"].__setitem__(
+                    "catalog_digest", f"sha256:{'9' * 64}"
+                ),
+                "relation": lambda value: value["configuration"].update(
+                    {
+                        "configuration_id": "C1",
+                        "relation": "bounded-delegation",
+                        "participant_plan": "primary-investigator",
+                        "participants_actual": 1,
+                        "workers_actual": 0,
+                    }
+                ),
+                "provider": lambda value: value["participants"][0]["runtime_identity"].__setitem__(
+                    "provider", "grok"
+                ),
+                "model": lambda value: value["participants"][0]["model_identity"].__setitem__(
+                    "requested_alias", "other-model"
+                ),
+                "effort": lambda value: value["participants"][0]["generation_settings"][0].__setitem__(
+                    "requested_value", "high"
+                ),
+            }
+            for label, mutate in mismatches.items():
+                with self.subTest(label=label):
+                    changed = copy.deepcopy(record)
+                    mutate(changed)
+                    path.write_text(json.dumps(changed), encoding="utf-8")
+                    with self.assertRaisesRegex(DurationStudyError, "does not match batch entry"):
+                        execute_batch(
+                            batch,
+                            output_dir=output,
+                            image="fixture-image",
+                            auth_files={},
+                            live_generation_authorized=False,
+                            execute=False,
+                        )
 
 
 if __name__ == "__main__":

@@ -60,16 +60,39 @@ def load_and_validate_batch(
     return batch
 
 
-def _validate_existing_run(path: Path, entry: dict[str, Any]) -> dict[str, Any]:
+def _validate_existing_run(
+    path: Path,
+    entry: dict[str, Any],
+    *,
+    study_id: str,
+    catalog_digest: str,
+) -> dict[str, Any]:
     value = load_json(path)
     if not isinstance(value, dict):
         raise DurationStudyError(f"existing duration run root must be an object: {path}")
     validate_run_record(value)
     if value["run_id"] != entry["run_id"] or value["case"]["case_id"] != entry["case_id"]:
         raise DurationStudyError(f"existing duration run does not match batch entry: {path}")
+    if value["study_id"] != study_id or value["block_id"] != entry["block_id"]:
+        raise DurationStudyError(f"existing duration run study/block does not match batch entry: {path}")
+    if value["case"]["catalog_digest"] != catalog_digest:
+        raise DurationStudyError(f"existing duration run catalog does not match batch entry: {path}")
+    if (
+        value["configuration"]["relation"] != "primary-only"
+        or value["configuration"]["participants_actual"] != 1
+        or value["configuration"]["workers_actual"] != 0
+    ):
+        raise DurationStudyError(f"existing duration run relation does not match batch entry: {path}")
     participant = value["participants"][0]
     if participant["runtime_identity"]["provider"] != entry["provider"]:
         raise DurationStudyError(f"existing duration run provider does not match batch entry: {path}")
+    if participant["model_identity"].get("requested_alias") != entry["model"]:
+        raise DurationStudyError(f"existing duration run model does not match batch entry: {path}")
+    requested_settings = {
+        item["requested_value"] for item in participant["generation_settings"]
+    }
+    if entry["effort"] not in requested_settings:
+        raise DurationStudyError(f"existing duration run effort does not match batch entry: {path}")
     return value
 
 
@@ -102,7 +125,12 @@ def execute_batch(
     for entry in sorted(batch["entries"], key=lambda item: item["order"]):
         record_path = output_dir / f"{entry['run_id']}.json"
         if record_path.exists():
-            record = _validate_existing_run(record_path, entry)
+            record = _validate_existing_run(
+                record_path,
+                entry,
+                study_id=batch["study_id"],
+                catalog_digest=batch["catalog_digest"],
+            )
             observations.append(
                 {
                     "run_id": entry["run_id"],
