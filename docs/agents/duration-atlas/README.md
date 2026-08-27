@@ -264,6 +264,8 @@ scripts/build-agent-duration-atlas \
 
 Builderはschema-v2 runだけを受理し、duplicate run ID、conflicting case identity、invalid requested/applied stateを拒否します。Seriesはstudy、profile、configuration、全participant、model identity、generation setting、CLI/surface、environmentのexact combinationです。Caseはseries内にnestされ、repeatとbetween-case variationを分離します。
 
+Catalog全体のdigestとfixture recipe revisionはsample provenanceとして保持します。無関係なfamily追加や、visible bundleを変えないharness revisionだけで同一caseを別identityへ分断しません。Case identityの衝突判定にはcase/revision、profile、capsule、oracle strength、visible base/bundle/instruction digestを使います。
+
 Atlasは次を保持します。
 
 - source run-set digestとobservation window
@@ -330,7 +332,7 @@ Reportはvalidated atlasだけを読み、raw runを直接読みません。Meth
 
 ### 6.9 Collaboration manifestをprovider-freeで検証する
 
-`run-agent-duration-collaboration`は、`bounded-delegation`、`parallel-shards`、`independent-candidates`、`maker-verifier`、`evidence-dialogue`、`staged-pipeline`の有限DAGを検証・計測するcontrol-planeです。人数や対話回数を決め打ちせず、manifestごとにparticipant、step、依存関係、上限、停止方針を指定します。
+`run-agent-duration-collaboration`は、`bounded-delegation`、`parallel-shards`、`independent-candidates`、`maker-verifier`、`evidence-dialogue`、`staged-pipeline`の有限DAGを検証・計測するcontrol-planeです。人数や対話回数を決め打ちせず、manifestごとにparticipant、step、依存関係、上限、停止方針を指定します。Machine contractは[`collaboration.schema.json`](../../../experiments/multi-agent-duration/schemas/collaboration.schema.json)です。
 
 ```bash
 scripts/run-agent-duration-collaboration validate <collaboration-manifest.json>
