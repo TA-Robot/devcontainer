@@ -1,0 +1,447 @@
+{
+  "artifact_snapshot": {
+    "completeness": "complete",
+    "files": [
+      {
+        "byte_count": 216,
+        "content_digest": "sha256:e9bf1a12154edf10b8b071676944c1c3b565531daa61cbd8db65aa5c68b23074",
+        "content_status": "retained",
+        "content_utf8": "#!/usr/bin/env bash\nset -euo pipefail\n\nscript_dir=$(cd -- \"$(dirname -- \"${BASH_SOURCE[0]}\")\" && pwd)\nrepository=$(cd -- \"$script_dir/..\" && pwd)\ncd -- \"$repository\"\n\nexec python3 -m unittest tests.test_lifecycle -v\n",
+        "git_status": " M",
+        "path": "tests/lifecycle.sh"
+      },
+      {
+        "byte_count": 13619,
+        "content_digest": "sha256:07cf6c076e7ca6db96b5d751a5ea19878e57503e36c988da70430543b19b359c",
+        "content_status": "retained",
+        "content_utf8": "import json\nimport os\nimport signal\nimport subprocess\nimport tempfile\nimport time\nimport unittest\nfrom pathlib import Path\n\n\nREPOSITORY = Path(__file__).resolve().parents[1]\nWORKER = REPOSITORY / \"bin\" / \"lease-worker\"\nPROCESS_TIMEOUT = 4.0\n\n\nclass LeaseLifecycleTests(unittest.TestCase):\n    def setUp(self):\n        self._temporary = tempfile.TemporaryDirectory(\n            prefix=\".lease-lifecycle-\", dir=REPOSITORY\n        )\n        self.root = Path(self._temporary.name)\n        self._processes = []\n        self.addCleanup(self._temporary.cleanup)\n        self.addCleanup(self._cleanup_processes)\n\n    def _tree(self):\n        if not self.root.exists():\n            return \"<temporary root no longer exists>\"\n        entries = []\n        for path in sorted(self.root.rglob(\"*\")):\n            kind = \"/\" if path.is_dir() else \"\"\n            entries.append(f\"{path.relative_to(self.root)}{kind}\")\n        return \"\\n\".join(entries) if entries else \"<empty>\"\n\n    def _diagnostic(self, message, *, command=None, stdout=\"\", stderr=\"\"):\n        details = [message]\n        if command is not None:\n            details.append(\"command: \" + \" \".join(map(str, command)))\n        if stdout:\n            details.append(f\"stdout:\\n{stdout}\")\n        if stderr:\n            details.append(f\"stderr:\\n{stderr}\")\n        details.append(f\"temporary state:\\n{self._tree()}\")\n        return \"\\n\".join(details)\n\n    def _command(self, action, resource, *arguments):\n        return [\n            str(WORKER),\n            action,\n            str(self.root),\n            resource,\n            *map(str, arguments),\n        ]\n\n    def _run(self, action, resource, *arguments):\n        command = self._command(action, resource, *arguments)\n        try:\n            completed = subprocess.run(\n                command,\n                cwd=REPOSITORY,\n                text=True,\n                capture_output=True,\n                timeout=PROCESS_TIMEOUT,\n                check=False,\n            )\n        except subprocess.TimeoutExpired as error:\n            self.fail(\n                self._diagnostic(\n                    f\"fresh worker exceeded {PROCESS_TIMEOUT:.1f}s timeout\",\n                    command=command,\n                    stdout=error.stdout or \"\",\n                    stderr=error.stderr or \"\",\n                )\n            )\n        self.assertEqual(\n            completed.returncode,\n            0,\n            self._diagnostic(\n                f\"fresh worker exited with status {completed.returncode}\",\n                command=command,\n                stdout=completed.stdout,\n                stderr=completed.stderr,\n            ),\n        )\n        try:\n            return json.loads(completed.stdout)\n        except json.JSONDecodeError as error:\n            self.fail(\n                self._diagnostic(\n                    f\"worker did not emit one JSON result: {error}\",\n                    command=command,\n                    stdout=completed.stdout,\n                    stderr=completed.stderr,\n                )\n            )\n\n    def _start_waiter(self, resource, owner, now, ttl, label, gate=None):\n        probe = self.root / f\"{label}.probe\"\n        if gate is None:\n            gate = self.root / f\"{label}.gate\"\n        command = self._command(\n            \"wait\", resource, owner, now, ttl, probe, gate, PROCESS_TIMEOUT\n        )\n        process = subprocess.Popen(\n            command,\n            cwd=REPOSITORY,\n            text=True,\n            stdout=subprocess.PIPE,\n            stderr=subprocess.PIPE,\n        )\n        self._processes.append(process)\n        self._wait_for_probe(process, probe, command)\n        return process, gate\n\n    def _wait_for_probe(self, process, probe, command):\n        deadline = time.monotonic() + PROCESS_TIMEOUT\n        observed = None\n        while time.monotonic() < deadline:\n            try:\n                observed = probe.read_text(encoding=\"utf-8\")\n            except (FileNotFoundError, OSError):\n                observed = None\n            if observed == \"ready\\n\":\n                return\n            status = process.poll()\n            if status is not None:\n                stdout, stderr = process.communicate()\n                self.fail(\n                    self._diagnostic(\n                        f\"waiter exited with status {status} before ready probe\",\n                        command=command,\n                        stdout=stdout,\n                        stderr=stderr,\n                    )\n                )\n            os.sched_yield()\n        self.fail(\n            self._diagnostic(\n                f\"waiter did not publish ready probe within {PROCESS_TIMEOUT:.1f}s; \"\n                f\"last probe value was {observed!r}\",\n                command=command,\n            )\n        )\n\n    def _finish(self, process, label):\n        try:\n            stdout, stderr = process.communicate(timeout=PROCESS_TIMEOUT)\n        except subprocess.TimeoutExpired:\n            process.kill()\n            stdout, stderr = process.communicate(timeout=PROCESS_TIMEOUT)\n            self.fail(\n                self._diagnostic(\n                    f\"{label} did not finish within {PROCESS_TIMEOUT:.1f}s\",\n                    stdout=stdout,\n                    stderr=stderr,\n                )\n            )\n        self.assertEqual(\n            process.returncode,\n            0,\n            self._diagnostic(\n                f\"{label} exited with status {process.returncode}\",\n                stdout=stdout,\n                stderr=stderr,\n            ),\n        )\n        try:\n            return json.loads(stdout)\n        except json.JSONDecodeError as error:\n            self.fail(\n                self._diagnostic(\n                    f\"{label} emitted invalid JSON: {error}\",\n                    stdout=stdout,\n                    stderr=stderr,\n                )\n            )\n\n    def _cleanup_processes(self):\n        for process in self._processes:\n            if process.poll() is None:\n                process.terminate()\n                try:\n                    process.communicate(timeout=1.0)\n                except subprocess.TimeoutExpired:\n                    process.kill()\n                    process.communicate(timeout=1.0)\n\n    def _assert_owner(self, resource, now, expected):\n        self.assertEqual(self._run(\"owner\", resource, now), {\"owner\": expected})\n\n    def _assert_resource_clean(self, resource):\n        self.assertFalse(\n            (self.root / \"leases\" / f\"{resource}.json\").exists(),\n            self._diagnostic(f\"lease for {resource!r} remained after release\"),\n        )\n        self.assertFalse(\n            (self.root / \"resources\" / resource).exists(),\n            self._diagnostic(f\"resource {resource!r} remained after release\"),\n        )\n\n    def test_preexpiry_exclusion_and_probe_gated_handoff(self):\n        resource = \"handoff\"\n        first = \"owner-first\"\n        second = \"owner-second\"\n\n        self.assertEqual(\n            self._run(\"hold\", resource, first, 100, 40),\n            {\"acquired\": True, \"owner\": first},\n        )\n\n        contender, contender_gate = self._start_waiter(\n            resource, second, 110, 40, \"preexpiry\"\n        )\n        self._assert_owner(resource, 110, first)\n        contender_gate.touch()\n        self.assertEqual(\n            self._finish(contender, \"pre-expiry contender\"),\n            {\"acquired\": False, \"owner\": None},\n        )\n        self._assert_owner(resource, 110, first)\n\n        successor, successor_gate = self._start_waiter(\n            resource, second, 111, 40, \"successor\"\n        )\n        self._assert_owner(resource, 111, first)\n        self.assertEqual(self._run(\"release\", resource, first), {\"released\": True})\n        self._assert_owner(resource, 111, None)\n        successor_gate.touch()\n        self.assertEqual(\n            self._finish(successor, \"gated successor\"),\n            {\"acquired\": True, \"owner\": second},\n        )\n        self._assert_owner(resource, 111, second)\n        self.assertEqual(self._run(\"release\", resource, second), {\"released\": True})\n        self._assert_resource_clean(resource)\n\n    def test_overlapping_contenders_cannot_displace_live_owner(self):\n        resource = \"contended\"\n        incumbent = \"owner-incumbent\"\n        self.assertEqual(\n            self._run(\"hold\", resource, incumbent, 190, 40),\n            {\"acquired\": True, \"owner\": incumbent},\n        )\n        common_gate = self.root / \"contenders.gate\"\n        left, _ = self._start_waiter(\n            resource, \"owner-left\", 200, 30, \"left\", gate=common_gate\n        )\n        right, _ = self._start_waiter(\n            resource, \"owner-right\", 200, 30, \"right\", gate=common_gate\n        )\n        self._assert_owner(resource, 200, incumbent)\n\n        common_gate.touch()\n        results = {\n            \"owner-left\": self._finish(left, \"left contender\"),\n            \"owner-right\": self._finish(right, \"right contender\"),\n        }\n        self.assertEqual(\n            results,\n            {\n                \"owner-left\": {\"acquired\": False, \"owner\": None},\n                \"owner-right\": {\"acquired\": False, \"owner\": None},\n            },\n        )\n        self._assert_owner(resource, 220, incumbent)\n        self.assertEqual(\n            self._run(\"release\", resource, \"owner-left\"), {\"released\": False}\n        )\n        self.assertEqual(\n            self._run(\"release\", resource, \"owner-right\"), {\"released\": False}\n        )\n        self._assert_owner(resource, 220, incumbent)\n        self.assertEqual(\n            self._run(\"release\", resource, incumbent), {\"released\": True}\n        )\n        self._assert_resource_clean(resource)\n\n    def test_crash_expiry_and_restart_from_fresh_processes(self):\n        resource = \"restart\"\n        crashed_owner = \"owner-crashed\"\n        restarted_owner = \"owner-restarted\"\n        hold_command = self._command(\"hold\", resource, crashed_owner, 500, 20)\n        owner_process = subprocess.Popen(\n            hold_command,\n            cwd=REPOSITORY,\n            stdin=subprocess.PIPE,\n            stdout=subprocess.PIPE,\n            stderr=subprocess.PIPE,\n            text=True,\n        )\n        self._processes.append(owner_process)\n\n        deadline = time.monotonic() + PROCESS_TIMEOUT\n        observed_owner = None\n        while time.monotonic() < deadline:\n            observed_owner = self._run(\"owner\", resource, 500)[\"owner\"]\n            if observed_owner == crashed_owner:\n                break\n            if owner_process.poll() is not None:\n                stdout, stderr = owner_process.communicate()\n                self.fail(\n                    self._diagnostic(\n                        \"hold worker exited before it could be force-crashed\",\n                        command=hold_command,\n                        stdout=stdout,\n                        stderr=stderr,\n                    )\n                )\n            os.sched_yield()\n        self.assertEqual(\n            observed_owner,\n            crashed_owner,\n            self._diagnostic(\n                f\"hold worker did not become owner within {PROCESS_TIMEOUT:.1f}s; \"\n                f\"last observed owner was {observed_owner!r}\",\n                command=hold_command,\n            ),\n        )\n        self.assertIsNone(owner_process.poll(), \"hold worker exited before forced crash\")\n\n        owner_process.kill()\n        owner_process.communicate(timeout=PROCESS_TIMEOUT)\n        self.assertEqual(owner_process.returncode, -signal.SIGKILL)\n\n        self._assert_owner(resource, 519, crashed_owner)\n        self._assert_owner(resource, 520, None)\n        self.assertEqual(\n            self._run(\"hold\", resource, restarted_owner, 520, 30),\n            {\"acquired\": True, \"owner\": restarted_owner},\n        )\n        self._assert_owner(resource, 520, restarted_owner)\n        self.assertEqual(\n            self._run(\"release\", resource, crashed_owner), {\"released\": False}\n        )\n        self._assert_owner(resource, 520, restarted_owner)\n        self.assertEqual(\n            self._run(\"release\", resource, restarted_owner), {\"released\": True}\n        )\n        self._assert_resource_clean(resource)\n\n    def test_release_cleans_exact_resource_and_preserves_peer_prefix(self):\n        resource = \"batch\"\n        peer = \"batch-peer\"\n        owner = \"owner-cleanup\"\n        sentinel_contents = b\"peer resource must survive exact cleanup\\n\"\n        sentinel = self.root / \"resources\" / peer / \"sentinel.bin\"\n        sentinel.parent.mkdir(parents=True)\n        sentinel.write_bytes(sentinel_contents)\n\n        self.assertEqual(\n            self._run(\"hold\", resource, owner, 900, 25),\n            {\"acquired\": True, \"owner\": owner},\n        )\n        self.assertEqual(\n            self._run(\"release\", resource, \"owner-not-authorized\"),\n            {\"released\": False},\n        )\n        self._assert_owner(resource, 924, owner)\n        self.assertEqual(sentinel.read_bytes(), sentinel_contents)\n\n        self.assertEqual(self._run(\"release\", resource, owner), {\"released\": True})\n        self._assert_resource_clean(resource)\n        self.assertTrue(sentinel.is_file(), self._diagnostic(\"peer sentinel was removed\"))\n        self.assertEqual(sentinel.read_bytes(), sentinel_contents)\n        self.assertEqual(\n            sorted(path.name for path in sentinel.parent.iterdir()), [\"sentinel.bin\"]\n        )\n\n        sentinel.unlink()\n        sentinel.parent.rmdir()\n        leases = self.root / \"leases\"\n        resources = self.root / \"resources\"\n        self.assertEqual(list(leases.iterdir()), [])\n        self.assertEqual(list(resources.iterdir()), [])\n\n\nif __name__ == \"__main__\":\n    unittest.main()\n",
+        "git_status": " M",
+        "path": "tests/test_lifecycle.py"
+      }
+    ],
+    "manifest_digest": "sha256:1df648b3f92cb2a0959e22c1f0803dc235cd7a8e3ee50d709cfcc7467219a16e",
+    "policy": "synthetic-task-artifacts-v1",
+    "total_bytes": 13835,
+    "unexpected_change_summary": {
+      "deleted": 0,
+      "total": 0,
+      "tracked": 0,
+      "untracked": 0
+    },
+    "unexpected_changed_path_count": 0
+  },
+  "block_id": "wave8d-c0-sol-f06-threshold",
+  "case": {
+    "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
+    "case_id": "F06-L-PYBASH-001",
+    "catalog_digest": "sha256:57955d2bc9471765fdc9338416b5acc5b02bb0302c208de95e474910994bd628",
+    "family": "test-design",
+    "profile_id": "L-cross-process-lifecycle-test-design",
+    "revision": 1,
+    "size": "L",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 417.546,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-2",
+          "duration_ms": 618.264,
+          "exit_code": 1,
+          "scope": "public",
+          "status": "fail"
+        },
+        {
+          "check_id": "workspace-3",
+          "duration_ms": 567.716,
+          "exit_code": 1,
+          "scope": "public",
+          "status": "fail"
+        },
+        {
+          "check_id": "workspace-4",
+          "duration_ms": 518.928,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-kills-lost-wakeup",
+          "duration_ms": 4704.747,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-kills-stale-lease",
+          "duration_ms": 4297.354,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-kills-duplicate-owner",
+          "duration_ms": 3228.737,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-kills-broad-cleanup",
+          "duration_ms": 4534.69,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-repeatability",
+          "duration_ms": 18194.204,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-bounded-cleanup",
+          "duration_ms": 7941.744,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-production-untouched",
+          "duration_ms": 517.142,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f06-l-lease-lifecycle-mutation-v1",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "isolation_profile": "network-disabled-read-only-container",
+      "score": {
+        "all_checks_required": true,
+        "failed_check_ids": [
+          "workspace-2",
+          "workspace-3"
+        ],
+        "hidden_passed": 7,
+        "hidden_total": 7,
+        "passed": 9,
+        "public_passed": 2,
+        "public_total": 4,
+        "ratio": 0.818182,
+        "resolution": "criterion",
+        "total": 11
+      },
+      "status": "fail"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 35,
+          "name": "item.completed"
+        },
+        {
+          "count": 26,
+          "name": "item.started"
+        },
+        {
+          "count": 1,
+          "name": "thread.started"
+        },
+        {
+          "count": 1,
+          "name": "turn.completed"
+        },
+        {
+          "count": 1,
+          "name": "turn.started"
+        }
+      ],
+      "event_failure_terms": [],
+      "exit_code": 0,
+      "failure_signals": [],
+      "failure_terms": [
+        "bash",
+        "error",
+        "failed",
+        "permitted"
+      ],
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [
+        {
+          "count": 9,
+          "name": "agent_message"
+        },
+        {
+          "count": 46,
+          "name": "command_execution"
+        },
+        {
+          "count": 6,
+          "name": "file_change"
+        }
+      ],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 34253,
+      "output_cap_bytes": 8388608,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "result_is_error": false,
+      "sandbox_preflight": {
+        "assurance": "probed",
+        "command_network": "denied",
+        "generation_request_performed": false,
+        "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+        "profile_digest": "sha256:e3b76b6d4d473e01898811a3933665dff68aacd1101e1e438734bca310655724",
+        "status": "pass",
+        "unrelated_read": "denied",
+        "workspace_write": "observed"
+      },
+      "status": "success",
+      "stderr_bytes": 1513,
+      "task_network": "denied-by-permission-profile",
+      "terminal_event": "turn.completed",
+      "terminal_wall_ms": 381188.752,
+      "thread_id_digest": "sha256:da4c25df2d25a8613d1461650efeeb6da2a29aa38c1a0abbd0d66d0415672732",
+      "tool_error_count": 0,
+      "usage": {
+        "cached_input_tokens": 428288,
+        "input_tokens": 463315,
+        "output_tokens": 17427,
+        "reasoning_output_tokens": 7796
+      },
+      "workspace_changed_path_count": 2
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.012,
+    "online_validation": 45577.74,
+    "post_validation_tail": 0.026,
+    "provision": 6090.644,
+    "terminal_wall": 426861.522,
+    "user_result": 426861.515,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider",
+      "/artifact_snapshot"
+    ],
+    "unknown": [
+      "/participants/0/generation_settings/0/applied_value"
+    ]
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 145605620566397,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:09:55.882Z"
+    },
+    "P1": {
+      "monotonic_ns": 145611711210274,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:10:01.972Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 145611757869185,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:10:02.019Z"
+    },
+    "T1": {
+      "monotonic_ns": 145611757881605,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:10:02.019Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 146038619384187,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:17:38.059Z"
+    },
+    "TX": {
+      "monotonic_ns": 146038619391172,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:17:38.059Z"
+    },
+    "V0": {
+      "monotonic_ns": 145993041617756,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:16:48.198Z"
+    },
+    "V1": {
+      "monotonic_ns": 146038619357954,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:17:38.059Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 1200000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": "online-validation-failed",
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "fail",
+    "quality_basis": "online-fail",
+    "quality_pass": false,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "key": "effort",
+          "namespace": "codex.reasoning",
+          "requested_value": "high",
+          "status": "unknown"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "alias-only",
+        "requested_alias": "gpt-5.6-sol",
+        "requested_source": "flag"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+        "observed_at": "2026-08-27T18:10:01.972Z",
+        "permission_mode": "automatic",
+        "provider": "codex"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "run-002-69ca64834f6cd0eb",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "178b4d44cb937a1d7c10d938af214a7e8e275eb0",
+    "bundle_digest": "sha256:42b81fa1eca375a52f72bc824a06ee73add9b329b7c9c920485ea68221a9ab6b",
+    "fixture_revision": "f06-l-lease-lifecycle-tests-v1-r1",
+    "instruction_set_digest": "sha256:e95b2a3cd9c10ed97a6785a56b0e8e4ba88cc1271dc86d221b6d5576fec710c0"
+  },
+  "study_id": "duration-atlas-wave8-identifiable",
+  "workers": []
+}

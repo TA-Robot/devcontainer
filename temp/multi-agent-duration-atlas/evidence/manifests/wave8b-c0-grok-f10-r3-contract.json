@@ -1,0 +1,66 @@
+{
+  "batch_id": "wave8b-c0-grok-f10-r3-contract",
+  "catalog_digest": "sha256:e4615beeb71c3e5a03f5175f515cb83d5e56166c9f1240d3eadbb61c0bb9d2d3",
+  "created_at": "2026-08-27T17:20:00.000Z",
+  "entries": [
+    {
+      "block_id": "wave8b-c0-grok-f10-r3-contract",
+      "case_id": "F10-S-PY-001",
+      "effort": "medium",
+      "evaluator_timeout_seconds": 60.0,
+      "model": "grok-4.6",
+      "order": 1,
+      "output_bytes_cap": 8388608,
+      "provider": "grok",
+      "run_id": "run-001-e37e0b7d937329d2",
+      "timeout_seconds": 600.0
+    },
+    {
+      "block_id": "wave8b-c0-grok-f10-r3-contract",
+      "case_id": "F10-S-PY-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 60.0,
+      "model": "grok-4.6",
+      "order": 2,
+      "output_bytes_cap": 8388608,
+      "provider": "grok",
+      "run_id": "run-002-6f799c190cba53bb",
+      "timeout_seconds": 600.0
+    },
+    {
+      "block_id": "wave8b-c0-grok-f10-r3-contract",
+      "case_id": "F10-S-PY-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 60.0,
+      "model": "grok-4.6",
+      "order": 3,
+      "output_bytes_cap": 8388608,
+      "provider": "grok",
+      "run_id": "run-003-020616e95de6b6d8",
+      "timeout_seconds": 600.0
+    },
+    {
+      "block_id": "wave8b-c0-grok-f10-r3-contract",
+      "case_id": "F10-S-PY-001",
+      "effort": "medium",
+      "evaluator_timeout_seconds": 60.0,
+      "model": "grok-4.6",
+      "order": 4,
+      "output_bytes_cap": 8388608,
+      "provider": "grok",
+      "run_id": "run-004-92b4a565d0616247",
+      "timeout_seconds": 600.0
+    }
+  ],
+  "purpose": "finite explicit C0 observations; repeat=2; rotation-seed=20260828; no routing recommendation or default winner",
+  "safety": {
+    "artifact_retention": "task-artifacts",
+    "automatic_retry": false,
+    "concurrency": 1,
+    "continue_after_quality_fail": true,
+    "deadline_seconds": 3600.0,
+    "max_runs": 4
+  },
+  "schema_version": 1,
+  "study_id": "duration-atlas-wave8-identifiable"
+}

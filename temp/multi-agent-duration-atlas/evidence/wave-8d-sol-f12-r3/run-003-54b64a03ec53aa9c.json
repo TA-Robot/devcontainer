@@ -1,0 +1,454 @@
+{
+  "artifact_snapshot": {
+    "completeness": "complete",
+    "files": [
+      {
+        "byte_count": 7386,
+        "content_digest": "sha256:9674d78da644b428de9efe79ac1ca8116e65d2fa7f5257fdbb9eea31ff72c5b6",
+        "content_status": "retained",
+        "content_utf8": "# Fabric decision record\n\nThe decision is to stage D as the legacy-compatible migration bridge and then cut over to B only after the migration, ownership, rollback, isolation, and bounded benchmark gates pass. A remains eligible only as a warm-workload optimization after its cold/censoring, cleanup-authorization, and bind-validation conditions are resolved. C is rejected because its sole pooled warm/cold series is invalid and cannot support a throughput distribution or universal winner.\n\n## Claim ledger\n\n| claim_id | disposition | evidence | condition | confidence |\n| --- | --- | --- | --- | --- |\n| A-WARM | supported within supplied warm samples | BM-A-WARM,BM-B-WARM,BM-D-WARM | Within the supplied warm workload distributions only, with three samples per A, B, and D, A's 40 ms median is below B's 70 ms and D's 85 ms; no population or future-window generalization is established. | medium |\n| A-COLD | unknown | BM-A-COLD | For the supplied cold workload, A has three recorded samples, a 200 ms median, and one censored observation; acceptable is undefined because no cold acceptance threshold or censoring outcome is supplied. | low |\n| B-ISOLATION | supported within supplied security findings | SEC-B-ISOLATION,SEC-A-BIND | Within the supplied security findings, B is supported for workspace-only mounts and scoped credentials; C and D have no supplied comparative isolation finding, so provider-independent or universal superiority is outside the evidence boundary. | medium |\n| B-MIGRATION | unknown | CON-MIGRATION | The supplied evidence states a legacy-compatible stage is required within 14 days; it does not demonstrate that immediate migration to B is feasible. | low |\n| C-THROUGHPUT | rejected | BM-C-POOLED | The cited pooled series mixes warm and cold latency samples, records no throughput unit, and is marked invalid; it cannot establish highest universal throughput or any single valid distribution. | high |\n| D-MIGRATION | gated | PROP-D,CON-MIGRATION | D is staged only as a legacy-compatible bridge and is accepted only if a timed rehearsal passes the compatibility predicate within the 14-day hard limit; PROP-D is a proposal source, not completed execution proof. | low |\n| D-RECOVERY | unknown | INC-D-RECOVERY | The supplied D incident records delayed recovery and says the recovery owner was not assigned, so complete recovery ownership is not established. | unknown |\n| CON-MIGRATION | hard constraint | CON-MIGRATION | A legacy-compatible stage must be available within 14 days. | high |\n| CON-OWNER | hard constraint | CON-OWNER | Named cleanup and recovery owners are required before cutover. | high |\n| CON-ROLLBACK | hard constraint | CON-ROLLBACK | Cutover requires a testable rollback trigger and preserved prior state. | high |\n\n## Evidence and bounded alternatives\n\n- A: supplied warm samples are 40, 42, and 38 ms (median 40 ms; n=3; zero censored). Supplied cold samples are 180, 220, and 200 ms (median 200 ms; n=3; one censored). It is not selected because the cold acceptance boundary and censoring outcome are unknown, cleanup needs owner-token authorization after a peer-resource removal incident, and bind construction requires structured validation.\n- B: supplied warm samples are 70, 72, and 68 ms (median 70 ms; n=3; zero censored); cold samples are 90, 95, and 100 ms (median 95 ms; n=3; zero censored). B is the phase-2 target because the supplied security finding supports workspace-only mounts and scoped credentials, not because it is a universal performance winner. Its provider-specific behavior remains unknown.\n- C: supplied pooled samples are 30, 300, 32, and 290 ms (n=4; zero censored). The series is invalid and its median is excluded because `workload-mixed samples cannot support one throughput distribution`; it records no throughput unit and is not revived as a universal claim.\n- D: supplied warm samples are 85, 80, and 90 ms (median 85 ms; n=3; zero censored); cold samples are 120, 125, and 130 ms (median 125 ms; n=3; zero censored). D is only the phase-1 bridge. The proposal says it meets the deadline, while the actual deadline is a hard constraint and a timed rehearsal is still required. Its incident records delayed recovery and an unassigned recovery owner.\n\nAll valid benchmark confidence is bounded by the small supplied samples and absent population or future-window guarantees. BM-A-COLD is lower-confidence because its one censored observation has no supplied reason, bound, or outcome. BM-C-POOLED has unknown metric confidence because it is invalid.\n\n## Phases, ownership, gates, and rollback\n\n1. Phase 1 uses D under the Execution Fabric Migration Lead. GATE-D-MIGRATION evaluates `legacy_compatibility_pass_rate == 1.0 and migration_elapsed_days <= 14`. GATE-D-OWNERS requires named cleanup, primary recovery, and backup recovery assignees plus a successful recovery drill. GATE-D-ROLLBACK requires preserved prior state, a tested trigger, and a successful rollback rehearsal. Compatibility below 100%, elapsed time above 14 days, any missing owner, or a failed recovery drill stops cutover and restores or retains the prior state.\n2. Phase 2 uses B under the Execution Fabric Operations Owner. GATE-B-ISOLATION requires zero non-workspace mounts and zero unscoped credentials. GATE-B-WINDOW keeps warm and cold distributions separate and checks the supplied bounded baselines of 70 ms warm and 95 ms cold. GATE-B-OPERATIONS requires cleanup and recovery owners, preserved prior state, and a passed rollback rehearsal. Isolation failure reverses cutover immediately; operational failure reverses it; two consecutive same-workload baseline failures pause expansion, refresh the evidence, and roll back if confirmed.\n\nThe incident/security controls are owned by the Runtime Operations Cleanup Owner for A cleanup authorization, the Execution Fabric Migration Lead with a required recovery assignee for D recovery, and the Execution Fabric Security Owner for A bind validation and B isolation. Owner role labels assign accountability but do not erase the evidence gap: the recovery assignee and backup are unresolved until GATE-D-OWNERS passes.\n\n## Unknowns and refresh\n\n- UNK-RECOVERY-OWNERSHIP: a named primary and backup, acknowledged runbook, and successful drill are absent from the supplied evidence.\n- UNK-PROVIDER-SEMANTICS: no provider is identified, so provider-specific mount, credential, failure, rollback, and recovery semantics are outside the supported boundary.\n- UNK-A-COLD-CENSORING: the censored observation's reason, bound, and outcome and an approved cold threshold are absent.\n\nIdentity or ownership changes trigger revalidation of cleanup, bind, credential, mount, and recovery controls. Workload, measurement-window, sample-count, or censoring changes trigger recomputation of separate distributions and reconsideration of the gates and optional A optimization. Any cleanup, recovery, isolation, credential, or rollback incident stops expansion, preserves or restores prior state, and triggers a full evidence and decision refresh.\n\n<!-- decision-summary {\"strategy\":\"Stage D as the legacy-compatible migration bridge, then cut over to B after gates; retain A only as a conditional warm-workload optimization and reject C's invalid pooled claim.\",\"phase_options\":[\"D\",\"B\"],\"unknown_ids\":[\"UNK-RECOVERY-OWNERSHIP\",\"UNK-PROVIDER-SEMANTICS\",\"UNK-A-COLD-CENSORING\"]} -->\n",
+        "git_status": "??",
+        "path": "DECISION-RECORD.md"
+      },
+      {
+        "byte_count": 21099,
+        "content_digest": "sha256:c56bb8839ceb5856e2688bc42fd9248af8d9f8b8846b57fbb1a61934ae4ada7d",
+        "content_status": "retained",
+        "content_utf8": "{\n  \"alternatives\": [\n    {\n      \"counterexample\": \"A has the lowest supplied warm median (40 ms), but its supplied cold median is 200 ms with one censored observation, and its cleanup and bind-construction controls remain mandatory; therefore the warm result is not a universal reason to select A.\",\n      \"disposition\": \"not selected; retained as a conditional warm-workload optimization\",\n      \"evidence\": [\n        \"BM-A-WARM\",\n        \"BM-A-COLD\",\n        \"INC-A-CLEANUP\",\n        \"SEC-A-BIND\"\n      ],\n      \"option\": \"A\"\n    },\n    {\n      \"counterexample\": \"B is not the fastest supplied warm result: its 70 ms warm median exceeds A's 40 ms median. Selection is bounded to the supplied isolation finding and does not establish universal performance or provider-independent isolation.\",\n      \"disposition\": \"selected phase-2 target after the D migration bridge and successful gates\",\n      \"evidence\": [\n        \"SEC-B-ISOLATION\",\n        \"CON-MIGRATION\",\n        \"BM-B-WARM\",\n        \"BM-B-COLD\"\n      ],\n      \"option\": \"B\"\n    },\n    {\n      \"counterexample\": \"The only supplied C series mixes warm and cold workloads, is explicitly invalid, and has no valid median; it cannot support a universal throughput comparison.\",\n      \"disposition\": \"rejected\",\n      \"evidence\": [\n        \"BM-C-POOLED\"\n      ],\n      \"option\": \"C\"\n    },\n    {\n      \"counterexample\": \"D supplies a compatibility-bridge proposal, but the recovery incident records delayed recovery and an unassigned recovery owner; D is therefore bounded to a gated migration stage rather than the final target.\",\n      \"disposition\": \"selected only as the gated phase-1 migration bridge\",\n      \"evidence\": [\n        \"PROP-D\",\n        \"INC-D-RECOVERY\",\n        \"CON-OWNER\",\n        \"CON-MIGRATION\",\n        \"BM-D-WARM\",\n        \"BM-D-COLD\"\n      ],\n      \"option\": \"D\"\n    }\n  ],\n  \"claims\": [\n    {\n      \"claim_id\": \"A-WARM\",\n      \"condition\": \"Within the supplied warm workload distributions only, with three samples per A, B, and D, A's 40 ms median is below B's 70 ms and D's 85 ms; no population or future-window generalization is established.\",\n      \"confidence\": \"medium\",\n      \"disposition\": \"supported within supplied warm samples\",\n      \"evidence\": [\n        \"BM-A-WARM\",\n        \"BM-B-WARM\",\n        \"BM-D-WARM\"\n      ],\n      \"missing_evidence\": [\n        \"Larger repeated warm-workload windows and a defined population are needed for generalization.\"\n      ],\n      \"provenance\": [\n        \"PROP-A\"\n      ]\n    },\n    {\n      \"claim_id\": \"A-COLD\",\n      \"condition\": \"For the supplied cold workload, A has three recorded samples, a 200 ms median, and one censored observation; acceptable is undefined because no cold acceptance threshold or censoring outcome is supplied.\",\n      \"confidence\": \"low\",\n      \"disposition\": \"unknown\",\n      \"evidence\": [\n        \"BM-A-COLD\"\n      ],\n      \"missing_evidence\": [\n        \"A predefined cold-latency acceptance threshold.\",\n        \"The reason, bound, and outcome for the one censored observation.\"\n      ],\n      \"provenance\": [\n        \"PROP-A\"\n      ]\n    },\n    {\n      \"claim_id\": \"B-ISOLATION\",\n      \"condition\": \"Within the supplied security findings, B is supported for workspace-only mounts and scoped credentials; C and D have no supplied comparative isolation finding, so provider-independent or universal superiority is outside the evidence boundary.\",\n      \"confidence\": \"medium\",\n      \"disposition\": \"supported within supplied security findings\",\n      \"evidence\": [\n        \"SEC-B-ISOLATION\",\n        \"SEC-A-BIND\"\n      ],\n      \"missing_evidence\": [\n        \"Equivalent isolation testing for every option and each eventual provider.\"\n      ],\n      \"provenance\": [\n        \"PROP-B\"\n      ]\n    },\n    {\n      \"claim_id\": \"B-MIGRATION\",\n      \"condition\": \"The supplied evidence states a legacy-compatible stage is required within 14 days; it does not demonstrate that immediate migration to B is feasible.\",\n      \"confidence\": \"low\",\n      \"disposition\": \"unknown\",\n      \"evidence\": [\n        \"CON-MIGRATION\"\n      ],\n      \"missing_evidence\": [\n        \"A timed B migration rehearsal with legacy-compatibility results.\"\n      ],\n      \"provenance\": [\n        \"PROP-B\"\n      ]\n    },\n    {\n      \"claim_id\": \"C-THROUGHPUT\",\n      \"condition\": \"The cited pooled series mixes warm and cold latency samples, records no throughput unit, and is marked invalid; it cannot establish highest universal throughput or any single valid distribution.\",\n      \"confidence\": \"high\",\n      \"disposition\": \"rejected\",\n      \"evidence\": [\n        \"BM-C-POOLED\"\n      ],\n      \"missing_evidence\": [],\n      \"provenance\": [\n        \"PROP-C\"\n      ]\n    },\n    {\n      \"claim_id\": \"D-MIGRATION\",\n      \"condition\": \"D is staged only as a legacy-compatible bridge and is accepted only if a timed rehearsal passes the compatibility predicate within the 14-day hard limit; PROP-D is a proposal source, not completed execution proof.\",\n      \"confidence\": \"low\",\n      \"disposition\": \"gated\",\n      \"evidence\": [\n        \"PROP-D\",\n        \"CON-MIGRATION\"\n      ],\n      \"missing_evidence\": [\n        \"A completed timed migration rehearsal and legacy-compatibility result.\"\n      ],\n      \"provenance\": [\n        \"PROP-D\"\n      ]\n    },\n    {\n      \"claim_id\": \"D-RECOVERY\",\n      \"condition\": \"The supplied D incident records delayed recovery and says the recovery owner was not assigned, so complete recovery ownership is not established.\",\n      \"confidence\": \"unknown\",\n      \"disposition\": \"unknown\",\n      \"evidence\": [\n        \"INC-D-RECOVERY\"\n      ],\n      \"missing_evidence\": [\n        \"A named recovery assignee and backup, acknowledged runbook, and successful recovery drill.\"\n      ],\n      \"provenance\": [\n        \"PROP-D\"\n      ]\n    },\n    {\n      \"claim_id\": \"CON-MIGRATION\",\n      \"condition\": \"A legacy-compatible stage must be available within 14 days.\",\n      \"confidence\": \"high\",\n      \"disposition\": \"hard constraint\",\n      \"evidence\": [\n        \"CON-MIGRATION\"\n      ],\n      \"missing_evidence\": [],\n      \"provenance\": [\n        \"CON-MIGRATION\"\n      ]\n    },\n    {\n      \"claim_id\": \"CON-OWNER\",\n      \"condition\": \"Named cleanup and recovery owners are required before cutover.\",\n      \"confidence\": \"high\",\n      \"disposition\": \"hard constraint\",\n      \"evidence\": [\n        \"CON-OWNER\"\n      ],\n      \"missing_evidence\": [],\n      \"provenance\": [\n        \"CON-OWNER\"\n      ]\n    },\n    {\n      \"claim_id\": \"CON-ROLLBACK\",\n      \"condition\": \"Cutover requires a testable rollback trigger and preserved prior state.\",\n      \"confidence\": \"high\",\n      \"disposition\": \"hard constraint\",\n      \"evidence\": [\n        \"CON-ROLLBACK\"\n      ],\n      \"missing_evidence\": [],\n      \"provenance\": [\n        \"CON-ROLLBACK\"\n      ]\n    }\n  ],\n  \"constraint_matrix\": [\n    {\n      \"constraint_id\": \"CON-MIGRATION\",\n      \"gate_id\": \"GATE-D-MIGRATION\",\n      \"requirement\": \"legacy-compatible stage within 14 days\",\n      \"status\": \"satisfied-by-stage-1\"\n    },\n    {\n      \"constraint_id\": \"CON-OWNER\",\n      \"gate_id\": \"GATE-D-OWNERS\",\n      \"requirement\": \"named cleanup and recovery owners before cutover\",\n      \"status\": \"gated\"\n    },\n    {\n      \"constraint_id\": \"CON-ROLLBACK\",\n      \"gate_id\": \"GATE-D-ROLLBACK\",\n      \"requirement\": \"testable rollback trigger and preserved prior state\",\n      \"status\": \"gated\"\n    }\n  ],\n  \"controls\": [\n    {\n      \"control_id\": \"CTRL-A-CLEANUP-AUTH\",\n      \"decision_effect\": \"A is ineligible unless cleanup requires an owner token and a negative test proves PID or name reuse cannot remove a peer resource.\",\n      \"evidence\": [\n        \"INC-A-CLEANUP\"\n      ],\n      \"observed_finding\": \"A peer resource was removed after PID or name reuse because owner-token cleanup authorization was missing.\",\n      \"owner\": \"Runtime Operations Cleanup Owner\",\n      \"source\": \"evidence/incidents/incidents.json#INC-A-CLEANUP\"\n    },\n    {\n      \"control_id\": \"CTRL-D-RECOVERY-OWNER\",\n      \"decision_effect\": \"D may bridge migration, but no cutover may occur until a named recovery assignee and backup pass the recovery drill; the current assignment remains an explicit unknown.\",\n      \"evidence\": [\n        \"INC-D-RECOVERY\"\n      ],\n      \"observed_finding\": \"Recovery was delayed and the recovery owner was not assigned.\",\n      \"owner\": \"Execution Fabric Migration Lead; recovery assignee required by GATE-D-OWNERS\",\n      \"source\": \"evidence/incidents/incidents.json#INC-D-RECOVERY\"\n    },\n    {\n      \"control_id\": \"CTRL-A-BIND-VALIDATION\",\n      \"decision_effect\": \"A is ineligible unless bind construction uses structured validation and its rejection tests pass.\",\n      \"evidence\": [\n        \"SEC-A-BIND\"\n      ],\n      \"observed_finding\": \"Bind construction requires structured validation.\",\n      \"owner\": \"Execution Fabric Security Owner\",\n      \"source\": \"evidence/security/findings.json#SEC-A-BIND\"\n    },\n    {\n      \"control_id\": \"CTRL-B-ISOLATION\",\n      \"decision_effect\": \"B phase-2 cutover requires a generated mount-manifest check showing workspace-only mounts and a credential-scope check showing scoped credentials only.\",\n      \"evidence\": [\n        \"SEC-B-ISOLATION\"\n      ],\n      \"observed_finding\": \"Workspace-only mounts and scoped credentials are supported for B.\",\n      \"owner\": \"Execution Fabric Security Owner\",\n      \"source\": \"evidence/security/findings.json#SEC-B-ISOLATION\"\n    }\n  ],\n  \"decision\": {\n    \"conditional_optimization\": {\n      \"eligible_only_if\": [\n        \"The production workload is explicitly classified as warm-dominant and a refreshed separate warm distribution confirms the A advantage.\",\n        \"A cold acceptance threshold is approved and the censored BM-A-COLD boundary is resolved.\",\n        \"CTRL-A-CLEANUP-AUTH and CTRL-A-BIND-VALIDATION pass, with named cleanup and recovery assignees.\",\n        \"The same preserved-state rollback rehearsal required for the selected path passes.\"\n      ],\n      \"evidence\": [\n        \"BM-A-WARM\",\n        \"BM-A-COLD\",\n        \"INC-A-CLEANUP\",\n        \"SEC-A-BIND\"\n      ],\n      \"option\": \"A\"\n    },\n    \"depends_on\": [\n      \"D-MIGRATION\",\n      \"D-RECOVERY\",\n      \"B-ISOLATION\",\n      \"CON-MIGRATION\",\n      \"CON-OWNER\",\n      \"CON-ROLLBACK\"\n    ],\n    \"phases\": [\n      {\n        \"gates\": [\n          {\n            \"check\": \"legacy_compatibility_pass_rate == 1.0 and migration_elapsed_days <= 14\",\n            \"expected\": \"true in a timed D migration rehearsal\",\n            \"gate_id\": \"GATE-D-MIGRATION\"\n          },\n          {\n            \"check\": \"cleanup_owner_assigned and recovery_owner_assigned and backup_recovery_owner_assigned and recovery_drill_passed\",\n            \"expected\": \"all boolean terms are true and assignees acknowledge the runbooks before cutover\",\n            \"gate_id\": \"GATE-D-OWNERS\"\n          },\n          {\n            \"check\": \"prior_state_preserved and rollback_trigger_tested and rollback_rehearsal_passed\",\n            \"expected\": \"all boolean terms are true before any traffic cutover\",\n            \"gate_id\": \"GATE-D-ROLLBACK\"\n          }\n        ],\n        \"option\": \"D\",\n        \"owner\": \"Execution Fabric Migration Lead\",\n        \"phase\": 1,\n        \"purpose\": \"Deliver the legacy-compatible bridge inside the 14-day limit while preserving the prior state and resolving cleanup and recovery ownership before cutover.\",\n        \"rollback_triggers\": [\n          {\n            \"action\": \"Stop the D rollout and restore the preserved prior state; do not start phase 2.\",\n            \"check\": \"legacy_compatibility_pass_rate and migration_elapsed_days\",\n            \"condition\": \"legacy_compatibility_pass_rate < 1.0 or migration_elapsed_days > 14\",\n            \"trigger_id\": \"RB-D-MIGRATION\"\n          },\n          {\n            \"action\": \"Stop cutover, retain the preserved prior state, assign owners, repair the runbook, and repeat the recovery drill.\",\n            \"check\": \"cleanup_owner_assigned, recovery_owner_assigned, backup_recovery_owner_assigned, and recovery_drill_passed\",\n            \"condition\": \"any owner term is false or recovery_drill_passed is false\",\n            \"trigger_id\": \"RB-D-RECOVERY\"\n          }\n        ]\n      },\n      {\n        \"gates\": [\n          {\n            \"check\": \"non_workspace_mount_count == 0 and unscoped_credential_count == 0\",\n            \"expected\": \"true for the generated B mount manifest and credential-scope scan\",\n            \"gate_id\": \"GATE-B-ISOLATION\"\n          },\n          {\n            \"check\": \"warm_workload_median_ms <= 70 and cold_workload_median_ms <= 95 and pooled_workload_count == 0\",\n            \"expected\": \"true in a refreshed same-workload B benchmark window with warm and cold distributions kept separate\",\n            \"gate_id\": \"GATE-B-WINDOW\"\n          },\n          {\n            \"check\": \"cleanup_owner_assigned and recovery_owner_assigned and prior_state_preserved and rollback_rehearsal_passed\",\n            \"expected\": \"all boolean terms are true immediately before B cutover\",\n            \"gate_id\": \"GATE-B-OPERATIONS\"\n          }\n        ],\n        \"option\": \"B\",\n        \"owner\": \"Execution Fabric Operations Owner\",\n        \"phase\": 2,\n        \"purpose\": \"Cut over from the D bridge to B for the supplied workspace-only mount and scoped-credential isolation properties, without claiming universal performance or provider-independent behavior.\",\n        \"rollback_triggers\": [\n          {\n            \"action\": \"Block or reverse B cutover to the preserved stable state, revoke exposed credentials if any, and rerun the isolation checks after remediation.\",\n            \"check\": \"non_workspace_mount_count and unscoped_credential_count\",\n            \"condition\": \"non_workspace_mount_count > 0 or unscoped_credential_count > 0\",\n            \"trigger_id\": \"RB-B-ISOLATION\"\n          },\n          {\n            \"action\": \"Reverse B cutover to the preserved stable state and require owner reassignment or a successful rollback rehearsal before retrying.\",\n            \"check\": \"cleanup_owner_assigned, recovery_owner_assigned, and rollback_rehearsal_passed\",\n            \"condition\": \"any checked boolean term is false\",\n            \"trigger_id\": \"RB-B-OPERATIONS\"\n          },\n          {\n            \"action\": \"Pause expansion, refresh the separate benchmark distributions, and roll back if a second same-workload window also fails its bounded baseline.\",\n            \"check\": \"warm_workload_median_ms, cold_workload_median_ms, and pooled_workload_count for two consecutive same-workload windows\",\n            \"condition\": \"pooled_workload_count > 0 or warm_workload_median_ms > 70 or cold_workload_median_ms > 95 in two consecutive windows\",\n            \"trigger_id\": \"RB-B-WINDOW\"\n          }\n        ]\n      }\n    ],\n    \"strategy\": \"Stage D as the legacy-compatible migration bridge, then cut over to B after gates; retain A only as a conditional warm-workload optimization and reject C's invalid pooled claim.\"\n  },\n  \"metrics\": [\n    {\n      \"censored\": 0,\n      \"confidence\": \"medium\",\n      \"evidence_id\": \"BM-A-WARM\",\n      \"exclusion_reason\": null,\n      \"median_ms\": 40,\n      \"proposal\": \"A\",\n      \"sample_count\": 3,\n      \"samples_ms\": [\n        40,\n        42,\n        38\n      ],\n      \"source\": \"evidence/benchmarks/raw.json#BM-A-WARM\",\n      \"unknown_boundary\": \"Three supplied warm samples only; no population, variance target, or future-window guarantee is supplied.\",\n      \"valid\": true,\n      \"workload\": \"warm\"\n    },\n    {\n      \"censored\": 1,\n      \"confidence\": \"low\",\n      \"evidence_id\": \"BM-A-COLD\",\n      \"exclusion_reason\": null,\n      \"median_ms\": 200,\n      \"proposal\": \"A\",\n      \"sample_count\": 3,\n      \"samples_ms\": [\n        180,\n        220,\n        200\n      ],\n      \"source\": \"evidence/benchmarks/raw.json#BM-A-COLD\",\n      \"unknown_boundary\": \"One observation is censored but its reason, bound, and outcome are not supplied; no cold acceptance threshold is supplied.\",\n      \"valid\": true,\n      \"workload\": \"cold\"\n    },\n    {\n      \"censored\": 0,\n      \"confidence\": \"medium\",\n      \"evidence_id\": \"BM-B-WARM\",\n      \"exclusion_reason\": null,\n      \"median_ms\": 70,\n      \"proposal\": \"B\",\n      \"sample_count\": 3,\n      \"samples_ms\": [\n        70,\n        72,\n        68\n      ],\n      \"source\": \"evidence/benchmarks/raw.json#BM-B-WARM\",\n      \"unknown_boundary\": \"Three supplied warm samples only; no population, variance target, or future-window guarantee is supplied.\",\n      \"valid\": true,\n      \"workload\": \"warm\"\n    },\n    {\n      \"censored\": 0,\n      \"confidence\": \"medium\",\n      \"evidence_id\": \"BM-B-COLD\",\n      \"exclusion_reason\": null,\n      \"median_ms\": 95,\n      \"proposal\": \"B\",\n      \"sample_count\": 3,\n      \"samples_ms\": [\n        90,\n        95,\n        100\n      ],\n      \"source\": \"evidence/benchmarks/raw.json#BM-B-COLD\",\n      \"unknown_boundary\": \"Three supplied cold samples only; no population, variance target, or future-window guarantee is supplied.\",\n      \"valid\": true,\n      \"workload\": \"cold\"\n    },\n    {\n      \"censored\": 0,\n      \"confidence\": \"unknown\",\n      \"evidence_id\": \"BM-C-POOLED\",\n      \"exclusion_reason\": \"workload-mixed samples cannot support one throughput distribution\",\n      \"median_ms\": null,\n      \"proposal\": \"C\",\n      \"sample_count\": 4,\n      \"samples_ms\": [\n        30,\n        300,\n        32,\n        290\n      ],\n      \"source\": \"evidence/benchmarks/raw.json#BM-C-POOLED\",\n      \"unknown_boundary\": \"The mixed warm/cold series is invalid, records latency rather than a throughput unit, and supports neither a pooled median nor a universal comparison.\",\n      \"valid\": false,\n      \"workload\": \"pooled-warm-cold\"\n    },\n    {\n      \"censored\": 0,\n      \"confidence\": \"medium\",\n      \"evidence_id\": \"BM-D-WARM\",\n      \"exclusion_reason\": null,\n      \"median_ms\": 85,\n      \"proposal\": \"D\",\n      \"sample_count\": 3,\n      \"samples_ms\": [\n        85,\n        80,\n        90\n      ],\n      \"source\": \"evidence/benchmarks/raw.json#BM-D-WARM\",\n      \"unknown_boundary\": \"Three supplied warm samples only; no population, variance target, or future-window guarantee is supplied.\",\n      \"valid\": true,\n      \"workload\": \"warm\"\n    },\n    {\n      \"censored\": 0,\n      \"confidence\": \"medium\",\n      \"evidence_id\": \"BM-D-COLD\",\n      \"exclusion_reason\": null,\n      \"median_ms\": 125,\n      \"proposal\": \"D\",\n      \"sample_count\": 3,\n      \"samples_ms\": [\n        120,\n        125,\n        130\n      ],\n      \"source\": \"evidence/benchmarks/raw.json#BM-D-COLD\",\n      \"unknown_boundary\": \"Three supplied cold samples only; no population, variance target, or future-window guarantee is supplied.\",\n      \"valid\": true,\n      \"workload\": \"cold\"\n    }\n  ],\n  \"refresh_plan\": [\n    {\n      \"action\": \"Pause the affected phase, revalidate owner-token cleanup authorization, structured bind validation, B credential scope, and the named cleanup/recovery roster before resuming.\",\n      \"category\": \"identity\",\n      \"condition\": \"Any cleanup or recovery assignee, PID/name identity rule, mount identity, credential scope, or provider identity changes.\",\n      \"trigger_id\": \"REFRESH-IDENTITY\"\n    },\n    {\n      \"action\": \"Recompute separate warm and cold distributions with workload, samples, censoring, exclusions, and source IDs preserved; reevaluate phase gates and the optional A optimization.\",\n      \"category\": \"window\",\n      \"condition\": \"Before phase-2 cutover, after a workload or measurement-window change, after any censoring change, or when two consecutive bounded baseline windows disagree with the recorded medians.\",\n      \"trigger_id\": \"REFRESH-WINDOW\"\n    },\n    {\n      \"action\": \"Stop expansion, preserve or restore prior state as the applicable rollback trigger directs, record the new evidence, rerun recovery and security gates, and reassess the decision.\",\n      \"category\": \"incident\",\n      \"condition\": \"Any cleanup authorization failure, peer-resource removal, delayed recovery, non-workspace mount, unscoped credential, or failed rollback occurs.\",\n      \"trigger_id\": \"REFRESH-INCIDENT\"\n    }\n  ],\n  \"unknowns\": [\n    {\n      \"evidence\": [\n        \"INC-D-RECOVERY\",\n        \"CON-OWNER\"\n      ],\n      \"missing_evidence\": \"The supplied incident says the recovery owner was not assigned. A named primary and backup, acknowledged runbook, and successful recovery drill are missing and are required by GATE-D-OWNERS.\",\n      \"status\": \"unknown\",\n      \"unknown_id\": \"UNK-RECOVERY-OWNERSHIP\"\n    },\n    {\n      \"evidence\": [\n        \"SEC-B-ISOLATION\"\n      ],\n      \"missing_evidence\": \"The supplied B finding covers workspace-only mounts and scoped credentials but does not identify a provider or establish provider-specific mount, credential, failure, rollback, or recovery semantics.\",\n      \"status\": \"unknown\",\n      \"unknown_id\": \"UNK-PROVIDER-SEMANTICS\"\n    },\n    {\n      \"evidence\": [\n        \"BM-A-COLD\"\n      ],\n      \"missing_evidence\": \"The reason, bound, and outcome for the one censored cold observation and an approved cold acceptance threshold are missing.\",\n      \"status\": \"unknown\",\n      \"unknown_id\": \"UNK-A-COLD-CENSORING\"\n    }\n  ],\n  \"version\": 1\n}\n",
+        "git_status": "??",
+        "path": "decision-record.json"
+      }
+    ],
+    "manifest_digest": "sha256:98832c7b65ec7baeb59d9dc558d41bce8f6c85ea92a40f52f1eca5cdfa0ff241",
+    "policy": "synthetic-task-artifacts-v1",
+    "total_bytes": 28485,
+    "unexpected_change_summary": {
+      "deleted": 0,
+      "total": 0,
+      "tracked": 0,
+      "untracked": 0
+    },
+    "unexpected_changed_path_count": 0
+  },
+  "block_id": "wave8d-c0-sol-f12-r3-depth",
+  "case": {
+    "capsule_digest": "sha256:6f799280ed8c5f808a5ce016fc52c8c2c5cf104dd43a6bd5d03dd7510f3688f4",
+    "case_id": "F12-L-MDJSON-001",
+    "catalog_digest": "sha256:57955d2bc9471765fdc9338416b5acc5b02bb0302c208de95e474910994bd628",
+    "family": "evidence-synthesis",
+    "profile_id": "L-cross-evidence-decision-record",
+    "revision": 3,
+    "size": "L",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 370.06,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-2",
+          "duration_ms": 366.586,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-3",
+          "duration_ms": 366.176,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "synthesis-claim-provenance",
+          "duration_ms": 416.415,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "synthesis-metric-integrity",
+          "duration_ms": 466.598,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "synthesis-incident-security",
+          "duration_ms": 416.557,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "synthesis-migration-operations",
+          "duration_ms": 418.025,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "synthesis-decision-trace",
+          "duration_ms": 417.279,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "synthesis-alternative-rejection",
+          "duration_ms": 467.394,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "synthesis-unknown-honesty",
+          "duration_ms": 416.951,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "synthesis-refresh-plan",
+          "duration_ms": 367.141,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "synthesis-doc-json-sync",
+          "duration_ms": 416.257,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f12-l-fabric-decision-hidden-v3",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "isolation_profile": "network-disabled-read-only-container",
+      "score": {
+        "all_checks_required": true,
+        "failed_check_ids": [],
+        "hidden_passed": 9,
+        "hidden_total": 9,
+        "passed": 12,
+        "public_passed": 3,
+        "public_total": 3,
+        "ratio": 1.0,
+        "resolution": "criterion",
+        "total": 12
+      },
+      "status": "pass"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 14,
+          "name": "item.completed"
+        },
+        {
+          "count": 10,
+          "name": "item.started"
+        },
+        {
+          "count": 1,
+          "name": "item.updated"
+        },
+        {
+          "count": 1,
+          "name": "thread.started"
+        },
+        {
+          "count": 1,
+          "name": "turn.completed"
+        },
+        {
+          "count": 1,
+          "name": "turn.started"
+        }
+      ],
+      "event_failure_terms": [],
+      "exit_code": 0,
+      "failure_signals": [],
+      "failure_terms": [],
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [
+        {
+          "count": 4,
+          "name": "agent_message"
+        },
+        {
+          "count": 16,
+          "name": "command_execution"
+        },
+        {
+          "count": 2,
+          "name": "file_change"
+        },
+        {
+          "count": 3,
+          "name": "todo_list"
+        }
+      ],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 37970,
+      "output_cap_bytes": 8388608,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "result_is_error": false,
+      "sandbox_preflight": {
+        "assurance": "probed",
+        "command_network": "denied",
+        "generation_request_performed": false,
+        "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+        "profile_digest": "sha256:e3b76b6d4d473e01898811a3933665dff68aacd1101e1e438734bca310655724",
+        "status": "pass",
+        "unrelated_read": "denied",
+        "workspace_write": "observed"
+      },
+      "status": "success",
+      "stderr_bytes": 0,
+      "task_network": "denied-by-permission-profile",
+      "terminal_event": "turn.completed",
+      "terminal_wall_ms": 288442.618,
+      "thread_id_digest": "sha256:974493bb3f1994aa8ca6c87a175da6440ced3e3d7f028374bc16ce3e28a2b8ca",
+      "tool_error_count": 0,
+      "usage": {
+        "cached_input_tokens": 138240,
+        "input_tokens": 174430,
+        "output_tokens": 14865,
+        "reasoning_output_tokens": 5252
+      },
+      "workspace_changed_path_count": 2
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.01,
+    "online_validation": 4955.368,
+    "post_validation_tail": 0.043,
+    "provision": 3915.368,
+    "terminal_wall": 293479.958,
+    "user_result": 293479.949,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider",
+      "/artifact_snapshot"
+    ],
+    "unknown": [
+      "/participants/0/generation_settings/0/applied_value"
+    ]
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 148003006161782,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:52:34.246Z"
+    },
+    "P1": {
+      "monotonic_ns": 148006921529681,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:52:38.161Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 148006952599341,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:52:38.192Z"
+    },
+    "T1": {
+      "monotonic_ns": 148006952609688,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:52:38.192Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 148300432547951,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:57:51.128Z"
+    },
+    "TX": {
+      "monotonic_ns": 148300432556995,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:57:51.128Z"
+    },
+    "V0": {
+      "monotonic_ns": 148295477136372,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:57:46.173Z"
+    },
+    "V1": {
+      "monotonic_ns": 148300432504483,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:57:51.128Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 1200000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": null,
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "pass",
+    "quality_basis": "strong-online-oracle",
+    "quality_pass": true,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "key": "effort",
+          "namespace": "codex.reasoning",
+          "requested_value": "xhigh",
+          "status": "unknown"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "alias-only",
+        "requested_alias": "gpt-5.6-sol",
+        "requested_source": "flag"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+        "observed_at": "2026-08-27T18:52:38.161Z",
+        "permission_mode": "automatic",
+        "provider": "codex"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "run-003-54b64a03ec53aa9c",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "02991852a9b476f21911672436a8745dca84dad3",
+    "bundle_digest": "sha256:1e35eb75c529524160da7c7decce9e826369cf2ecb8b608288f95b847e29dd88",
+    "fixture_revision": "f12-l-fabric-decision-record-v3-r3",
+    "instruction_set_digest": "sha256:83239308c474dce5e9bcdcf98bf70cdd5631410b63e77e2e16ccceb3782fa700"
+  },
+  "study_id": "duration-atlas-wave8-identifiable",
+  "workers": []
+}

@@ -1,0 +1,446 @@
+{
+  "artifact_snapshot": {
+    "completeness": "complete",
+    "files": [
+      {
+        "byte_count": 140,
+        "content_digest": "sha256:4434e5f914bbf098b0edb7ff169e411025119bdc98fa9243445e07b3ac788d4a",
+        "content_status": "retained",
+        "content_utf8": "#!/usr/bin/env bash\nset -euo pipefail\n\nscript_dir=${BASH_SOURCE[0]%/*}\ncd \"$script_dir/..\"\nexec python3 -m unittest tests.test_lifecycle -v\n",
+        "git_status": " M",
+        "path": "tests/lifecycle.sh"
+      },
+      {
+        "byte_count": 11319,
+        "content_digest": "sha256:61f9ff0a9f18328522a5256da5bb6c343e27672d1c2f376b12f50b8c08e942a2",
+        "content_status": "retained",
+        "content_utf8": "from __future__ import annotations\n\nimport json\nimport selectors\nimport subprocess\nimport sys\nimport tempfile\nimport time\nimport unittest\nfrom pathlib import Path\n\n\nROOT = Path(__file__).resolve().parents[1]\nWORKER = ROOT / \"bin\" / \"lease-worker\"\nPROCESS_TIMEOUT = 5.0\n\n\nclass LifecycleTests(unittest.TestCase):\n    def setUp(self) -> None:\n        self._processes: list[subprocess.Popen[str]] = []\n\n    def tearDown(self) -> None:\n        # Every forced termination is limited to a Popen created by this test.\n        for process in self._processes:\n            if process.poll() is None:\n                process.kill()\n            try:\n                process.communicate(timeout=PROCESS_TIMEOUT)\n            except subprocess.TimeoutExpired:\n                self.fail(f\"owned subprocess {process.pid} did not terminate\")\n\n    def run_worker(self, *arguments: object) -> dict[str, object]:\n        command = [str(WORKER), *(str(argument) for argument in arguments)]\n        try:\n            completed = subprocess.run(\n                command,\n                cwd=ROOT,\n                text=True,\n                stdout=subprocess.PIPE,\n                stderr=subprocess.PIPE,\n                timeout=PROCESS_TIMEOUT,\n                check=False,\n            )\n        except subprocess.TimeoutExpired as error:\n            self.fail(f\"worker timed out: {command!r}; output={error.output!r}; stderr={error.stderr!r}\")\n        self.assertEqual(\n            completed.returncode,\n            0,\n            f\"worker failed: {command!r}\\nstdout={completed.stdout!r}\\nstderr={completed.stderr!r}\",\n        )\n        try:\n            value = json.loads(completed.stdout)\n        except json.JSONDecodeError as error:\n            self.fail(\n                f\"worker returned invalid JSON: {command!r}\\n\"\n                f\"stdout={completed.stdout!r}\\nstderr={completed.stderr!r}\\nerror={error}\"\n            )\n        self.assertIsInstance(value, dict, f\"worker result is not an object: {value!r}\")\n        return value\n\n    def start_waiter(\n        self,\n        store: Path,\n        control: Path,\n        resource: str,\n        owner: str,\n        now: int,\n        ttl: int,\n    ) -> tuple[subprocess.Popen[str], Path, Path]:\n        probe = control / f\"{owner}.probe\"\n        gate = control / f\"{owner}.gate\"\n        process = subprocess.Popen(\n            [\n                str(WORKER),\n                \"wait\",\n                str(store),\n                resource,\n                owner,\n                str(now),\n                str(ttl),\n                str(probe),\n                str(gate),\n                str(int(PROCESS_TIMEOUT)),\n            ],\n            cwd=ROOT,\n            text=True,\n            stdout=subprocess.PIPE,\n            stderr=subprocess.PIPE,\n        )\n        self._processes.append(process)\n        self.wait_for_probe(process, probe, store)\n        return process, probe, gate\n\n    def wait_for_probe(self, process: subprocess.Popen[str], probe: Path, store: Path) -> None:\n        deadline = time.monotonic() + PROCESS_TIMEOUT\n        while not probe.is_file():\n            status = process.poll()\n            if status is not None:\n                stdout, stderr = process.communicate()\n                self.fail(\n                    f\"waiter exited before probe (status {status}); \"\n                    f\"stdout={stdout!r}; stderr={stderr!r}; tree={self.tree(store)}\"\n                )\n            remaining = deadline - time.monotonic()\n            if remaining <= 0:\n                self.fail(\n                    f\"waiter {process.pid} did not publish probe {probe}; tree={self.tree(store)}\"\n                )\n            # Event-like filesystem state is the condition; this merely bounds polling.\n            try:\n                process.wait(timeout=min(0.02, remaining))\n            except subprocess.TimeoutExpired:\n                pass\n        self.assertEqual(probe.read_text(encoding=\"utf-8\"), \"ready\\n\")\n        self.assertIsNone(process.poll(), f\"waiter exited immediately after probe; tree={self.tree(store)}\")\n\n    def finish_waiter(self, process: subprocess.Popen[str], store: Path) -> dict[str, object]:\n        try:\n            stdout, stderr = process.communicate(timeout=PROCESS_TIMEOUT)\n        except subprocess.TimeoutExpired:\n            self.fail(f\"waiter {process.pid} did not cross its gate; tree={self.tree(store)}\")\n        self.assertEqual(\n            process.returncode,\n            0,\n            f\"waiter failed with {process.returncode}; stdout={stdout!r}; \"\n            f\"stderr={stderr!r}; tree={self.tree(store)}\",\n        )\n        try:\n            value = json.loads(stdout)\n        except json.JSONDecodeError as error:\n            self.fail(f\"waiter returned invalid JSON {stdout!r}: {error}; stderr={stderr!r}\")\n        self.assertIsInstance(value, dict)\n        return value\n\n    @staticmethod\n    def tree(root: Path) -> list[str]:\n        if not root.exists():\n            return []\n        entries: list[str] = []\n        for path in sorted(root.rglob(\"*\")):\n            relative = path.relative_to(root)\n            if path.is_file():\n                entries.append(f\"{relative}={path.read_text(encoding='utf-8')!r}\")\n            else:\n                entries.append(f\"{relative}/\")\n        return entries\n\n    def assert_owner(self, store: Path, resource: str, now: int, expected: str | None) -> None:\n        # Each observation is a new process, so no in-memory state can mask disk behavior.\n        result = self.run_worker(\"owner\", store, resource, now)\n        self.assertEqual(result, {\"owner\": expected}, f\"tree={self.tree(store)}\")\n\n    def assert_no_owned_residuals(self, store: Path, resource: str) -> None:\n        self.assertFalse((store / \"leases\" / f\"{resource}.json\").exists(), self.tree(store))\n        self.assertFalse((store / \"resources\" / resource).exists(), self.tree(store))\n\n    def test_gated_handoff_waits_for_the_incumbent(self) -> None:\n        with tempfile.TemporaryDirectory(prefix=\"lease-handoff-\") as raw:\n            base = Path(raw)\n            store, control = base / \"store\", base / \"control\"\n            control.mkdir()\n            resource = \"handoff\"\n\n            self.assertEqual(\n                self.run_worker(\"claim\", store, resource, \"owner-a\", 0, 20),\n                {\"acquired\": True, \"owner\": \"owner-a\"},\n            )\n            successor, _probe, gate = self.start_waiter(\n                store, control, resource, \"owner-b\", 5, 20\n            )\n\n            self.assert_owner(store, resource, 5, \"owner-a\")\n            self.assertIsNone(successor.poll(), \"successor crossed its explicit gate early\")\n            self.assertEqual(\n                self.run_worker(\"release\", store, resource, \"owner-a\"),\n                {\"released\": True},\n            )\n            gate.touch()\n            self.assertEqual(\n                self.finish_waiter(successor, store),\n                {\"acquired\": True, \"owner\": \"owner-b\"},\n            )\n            self.assert_owner(store, resource, 5, \"owner-b\")\n            self.assertEqual(\n                self.run_worker(\"release\", store, resource, \"owner-b\"),\n                {\"released\": True},\n            )\n            self.assert_no_owned_residuals(store, resource)\n\n    def test_probed_concurrent_contenders_have_one_live_owner(self) -> None:\n        with tempfile.TemporaryDirectory(prefix=\"lease-contenders-\") as raw:\n            base = Path(raw)\n            store, control = base / \"store\", base / \"control\"\n            control.mkdir()\n            resource = \"contended\"\n\n            first, _first_probe, first_gate = self.start_waiter(\n                store, control, resource, \"owner-a\", 10, 30\n            )\n            second, _second_probe, second_gate = self.start_waiter(\n                store, control, resource, \"owner-b\", 10, 30\n            )\n            # Both workers are registered and blocked before either is allowed to claim.\n            first_gate.touch()\n            second_gate.touch()\n            results = [self.finish_waiter(first, store), self.finish_waiter(second, store)]\n\n            winners = [result for result in results if result.get(\"acquired\") is True]\n            losers = [result for result in results if result.get(\"acquired\") is False]\n            self.assertEqual(len(winners), 1, f\"results={results!r}; tree={self.tree(store)}\")\n            self.assertEqual(len(losers), 1, f\"results={results!r}; tree={self.tree(store)}\")\n            winner = winners[0].get(\"owner\")\n            self.assertIn(winner, {\"owner-a\", \"owner-b\"})\n            self.assert_owner(store, resource, 10, winner)  # type: ignore[arg-type]\n\n            losing_owner = \"owner-b\" if winner == \"owner-a\" else \"owner-a\"\n            self.assertEqual(\n                self.run_worker(\"release\", store, resource, losing_owner),\n                {\"released\": False},\n            )\n            self.assert_owner(store, resource, 10, winner)  # type: ignore[arg-type]\n            self.assertEqual(\n                self.run_worker(\"release\", store, resource, winner),\n                {\"released\": True},\n            )\n            self.assert_no_owned_residuals(store, resource)\n\n    def test_crash_expiry_restart_and_exact_cleanup(self) -> None:\n        with tempfile.TemporaryDirectory(prefix=\"lease-crash-\") as raw:\n            base = Path(raw)\n            store, control = base / \"store\", base / \"control\"\n            control.mkdir()\n            resource = \"job\"\n            peer = store / \"resources\" / \"job-peer\"\n            peer.mkdir(parents=True)\n            sentinel = peer / \"sentinel\"\n            sentinel.write_text(\"preserve me\\n\", encoding=\"utf-8\")\n\n            self.assertEqual(\n                self.run_worker(\"claim\", store, resource, \"crashed-owner\", 100, 10),\n                {\"acquired\": True, \"owner\": \"crashed-owner\"},\n            )\n            crashed, _probe, _gate = self.start_waiter(\n                store, control, resource, \"restart-owner\", 105, 10\n            )\n            crashed.kill()\n            stdout, stderr = crashed.communicate(timeout=PROCESS_TIMEOUT)\n            self.assertNotEqual(\n                crashed.returncode,\n                0,\n                f\"forced-crash waiter unexpectedly succeeded; stdout={stdout!r}; stderr={stderr!r}\",\n            )\n\n            self.assert_owner(store, resource, 109, \"crashed-owner\")\n            self.assert_owner(store, resource, 110, None)\n            self.assertEqual(\n                self.run_worker(\"claim\", store, resource, \"restart-owner\", 110, 10),\n                {\"acquired\": True, \"owner\": \"restart-owner\"},\n            )\n            self.assert_owner(store, resource, 110, \"restart-owner\")\n\n            self.assertEqual(\n                self.run_worker(\"release\", store, resource, \"crashed-owner\"),\n                {\"released\": False},\n            )\n            self.assertTrue(sentinel.is_file(), self.tree(store))\n            self.assertEqual(sentinel.read_text(encoding=\"utf-8\"), \"preserve me\\n\")\n            self.assertEqual(\n                self.run_worker(\"release\", store, resource, \"restart-owner\"),\n                {\"released\": True},\n            )\n            self.assert_no_owned_residuals(store, resource)\n            self.assertEqual(sentinel.read_text(encoding=\"utf-8\"), \"preserve me\\n\")\n\n\nif __name__ == \"__main__\":\n    unittest.main()\n",
+        "git_status": " M",
+        "path": "tests/test_lifecycle.py"
+      }
+    ],
+    "manifest_digest": "sha256:81c1bd0b140294b5e2c23e1e9e962e4023f2fed3cacacefecd47365b4f457957",
+    "policy": "synthetic-task-artifacts-v1",
+    "total_bytes": 11459,
+    "unexpected_change_summary": {
+      "deleted": 0,
+      "total": 0,
+      "tracked": 0,
+      "untracked": 0
+    },
+    "unexpected_changed_path_count": 0
+  },
+  "block_id": "wave8d-c0-sol-f06-threshold",
+  "case": {
+    "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
+    "case_id": "F06-L-PYBASH-001",
+    "catalog_digest": "sha256:57955d2bc9471765fdc9338416b5acc5b02bb0302c208de95e474910994bd628",
+    "family": "test-design",
+    "profile_id": "L-cross-process-lifecycle-test-design",
+    "revision": 1,
+    "size": "L",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 416.436,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-2",
+          "duration_ms": 2475.499,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-3",
+          "duration_ms": 2123.955,
+          "exit_code": 1,
+          "scope": "public",
+          "status": "fail"
+        },
+        {
+          "check_id": "workspace-4",
+          "duration_ms": 467.492,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-kills-lost-wakeup",
+          "duration_ms": 2725.535,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-kills-stale-lease",
+          "duration_ms": 2778.428,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-kills-duplicate-owner",
+          "duration_ms": 2526.534,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-kills-broad-cleanup",
+          "duration_ms": 3039.664,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-repeatability",
+          "duration_ms": 10460.228,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-bounded-cleanup",
+          "duration_ms": 4732.731,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-production-untouched",
+          "duration_ms": 517.257,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f06-l-lease-lifecycle-mutation-v1",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "isolation_profile": "network-disabled-read-only-container",
+      "score": {
+        "all_checks_required": true,
+        "failed_check_ids": [
+          "workspace-3"
+        ],
+        "hidden_passed": 7,
+        "hidden_total": 7,
+        "passed": 10,
+        "public_passed": 3,
+        "public_total": 4,
+        "ratio": 0.909091,
+        "resolution": "criterion",
+        "total": 11
+      },
+      "status": "fail"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 23,
+          "name": "item.completed"
+        },
+        {
+          "count": 17,
+          "name": "item.started"
+        },
+        {
+          "count": 1,
+          "name": "thread.started"
+        },
+        {
+          "count": 1,
+          "name": "turn.completed"
+        },
+        {
+          "count": 1,
+          "name": "turn.started"
+        }
+      ],
+      "event_failure_terms": [],
+      "exit_code": 0,
+      "failure_signals": [],
+      "failure_terms": [
+        "bash",
+        "error",
+        "failed",
+        "permitted"
+      ],
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [
+        {
+          "count": 6,
+          "name": "agent_message"
+        },
+        {
+          "count": 32,
+          "name": "command_execution"
+        },
+        {
+          "count": 2,
+          "name": "file_change"
+        }
+      ],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 24434,
+      "output_cap_bytes": 8388608,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "result_is_error": false,
+      "sandbox_preflight": {
+        "assurance": "probed",
+        "command_network": "denied",
+        "generation_request_performed": false,
+        "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+        "profile_digest": "sha256:e3b76b6d4d473e01898811a3933665dff68aacd1101e1e438734bca310655724",
+        "status": "pass",
+        "unrelated_read": "denied",
+        "workspace_write": "observed"
+      },
+      "status": "success",
+      "stderr_bytes": 1829,
+      "task_network": "denied-by-permission-profile",
+      "terminal_event": "turn.completed",
+      "terminal_wall_ms": 187293.499,
+      "thread_id_digest": "sha256:f115d634e048b06a39fc99e76fddd7c77a2f81c195b666e187a0f6527b3d0e98",
+      "tool_error_count": 0,
+      "usage": {
+        "cached_input_tokens": 162560,
+        "input_tokens": 209633,
+        "output_tokens": 8558,
+        "reasoning_output_tokens": 3044
+      },
+      "workspace_changed_path_count": 2
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.013,
+    "online_validation": 32297.924,
+    "post_validation_tail": 0.03,
+    "provision": 6041.467,
+    "terminal_wall": 219663.071,
+    "user_result": 219663.064,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider",
+      "/artifact_snapshot"
+    ],
+    "unknown": [
+      "/participants/0/generation_settings/0/applied_value"
+    ]
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 145379834770329,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:05:55.289Z"
+    },
+    "P1": {
+      "monotonic_ns": 145385876237827,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:06:01.330Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 145385921946545,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:06:01.376Z"
+    },
+    "T1": {
+      "monotonic_ns": 145385921959264,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:06:01.376Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 145605585010525,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:09:55.846Z"
+    },
+    "TX": {
+      "monotonic_ns": 145605585017774,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:09:55.846Z"
+    },
+    "V0": {
+      "monotonic_ns": 145573287056524,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:09:21.296Z"
+    },
+    "V1": {
+      "monotonic_ns": 145605584980780,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:09:55.846Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 1200000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": "online-validation-failed",
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "fail",
+    "quality_basis": "online-fail",
+    "quality_pass": false,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "key": "effort",
+          "namespace": "codex.reasoning",
+          "requested_value": "medium",
+          "status": "unknown"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "alias-only",
+        "requested_alias": "gpt-5.6-sol",
+        "requested_source": "flag"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+        "observed_at": "2026-08-27T18:06:01.330Z",
+        "permission_mode": "automatic",
+        "provider": "codex"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "run-001-f56936341f7d4162",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "178b4d44cb937a1d7c10d938af214a7e8e275eb0",
+    "bundle_digest": "sha256:42b81fa1eca375a52f72bc824a06ee73add9b329b7c9c920485ea68221a9ab6b",
+    "fixture_revision": "f06-l-lease-lifecycle-tests-v1-r1",
+    "instruction_set_digest": "sha256:e95b2a3cd9c10ed97a6785a56b0e8e4ba88cc1271dc86d221b6d5576fec710c0"
+  },
+  "study_id": "duration-atlas-wave8-identifiable",
+  "workers": []
+}

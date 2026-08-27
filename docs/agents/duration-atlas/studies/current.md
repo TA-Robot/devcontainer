@@ -9,36 +9,37 @@ This is a deterministic observational report built from a validated aggregate at
 - One observation is shown only as one raw point. A range requires at least two points in the same case stratum.
 - Requested generation values remain distinct from applied values; an applied value appears only when the atlas records status `applied`.
 - Criterion scores and failed criterion IDs are emitted only from each sample's content-free quality evidence. Missing scores remain unavailable and are not inferred.
+- Retained artifact content and paths are omitted. When available, unexpected tracked, untracked, and deleted changes are shown only as counts.
 - Case-design and observation validity are reported separately. Comparison gates remain open until identity, applied setting, repeat/singleton conditions, and quality-measurement headroom are checked.
 - The report is descriptive only. It produces no provider/model ranking, automatic route, or preferred configuration.
 
 ## Observation window and provenance
 
 - First observed: <code>2026-08-26T11:34:19.672Z</code>
-- Last observed: <code>2026-08-27T06:07:15.461Z</code>
-- Source run-set digest: <code>sha256:402b7a5bb5efa351bd31f768a0058f296a2902a5586d327347bf8fac86244b3f</code>
+- Last observed: <code>2026-08-27T19:23:45.670Z</code>
+- Source run-set digest: <code>sha256:9c600a65732a674735bf17a4149713a1c4fdc4cb865df6ff61b679261046a9b6</code>
 - Source run schema: <code>2</code>
-- Source records: 108
-- Canonical source bytes: 808990
-- Atlas counts: series=104; case-strata=104; samples=108
-- Report resource caps: max-series=104; max-cases=104; max-output-bytes=33554432
+- Source records: 139
+- Canonical source bytes: 1415843
+- Atlas counts: series=113; case-strata=118; samples=139
+- Report resource caps: max-series=200; max-cases=200; max-output-bytes=4194304
 
 ## Effort-quality inference validity
 
-- Validity audit: <code>duration-effort-quality-audit-20260827</code>
+- Validity audit: <code>duration-effort-quality-audit-20260828</code>
 - Audit scope: <code>same-case-effort-quality-inference</code>
-- Audit catalog digest: <code>sha256:c3c386e697885b96ce20571628e1923b27498db720afd34605a4931c47a3ff59</code>
-- Observed case-stratum use counts: <code>{"conditional-only":53,"eligible-pending-comparison-gates":11,"excluded":17,"not-audited":23}</code>
+- Audit catalog digest: <code>sha256:d51bca6a32f5396dceae3b928de6d358ee70e7507a882f4cf9843833c44fcc2c</code>
+- Observed case-stratum use counts: <code>{"conditional-only":60,"eligible-pending-comparison-gates":16,"excluded":19,"not-audited":23}</code>
 - Pending comparison gates: <code>same-case-revision</code>, <code>same-fixture-identity</code>, <code>applied-setting-evidence</code>, <code>repeat-or-explicit-singleton-limit</code>, <code>no-infrastructure-failure-pooling</code>, <code>quality-measurement-headroom</code>
 - `eligible-pending-comparison-gates` is not a conclusion that effort caused quality; this report does not evaluate those comparison gates.
 - Revision-1 F10-S and F12-L are excluded. Missing/partial failed artifacts remain conditional, even when their terminal time is valid.
 
 ## Family and size coverage
 
-- Supplied catalog: <code>duration-atlas-calibration</code>, revision <code>4</code>
-- Supplied catalog digest: <code>sha256:c3c386e697885b96ce20571628e1923b27498db720afd34605a4931c47a3ff59</code>
-- Atlas case catalog digest(s): <code>sha256:5e1f6f6f3d29ab4e9d0e73bacb870d2bec32d05d6edabcebe784a15e445f6c79</code>, <code>sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0</code>, <code>sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d</code>
-- Digest compatibility: mismatch; the atlas digest set does not identify supplied catalog revision <code>4</code>. The earlier catalog revision number is not encoded in the atlas.
+- Supplied catalog: <code>duration-atlas-calibration</code>, revision <code>8</code>
+- Supplied catalog digest: <code>sha256:d51bca6a32f5396dceae3b928de6d358ee70e7507a882f4cf9843833c44fcc2c</code>
+- Atlas case catalog digest(s): <code>sha256:57955d2bc9471765fdc9338416b5acc5b02bb0302c208de95e474910994bd628</code>, <code>sha256:5bb6fff200412df126eb08fe0f7df63f71b8910085e62653aa3482d197b2cc8b</code>, <code>sha256:5e1f6f6f3d29ab4e9d0e73bacb870d2bec32d05d6edabcebe784a15e445f6c79</code>, <code>sha256:c3c386e697885b96ce20571628e1923b27498db720afd34605a4931c47a3ff59</code>, <code>sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0</code>, <code>sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d</code>, <code>sha256:e4615beeb71c3e5a03f5175f515cb83d5e56166c9f1240d3eadbb61c0bb9d2d3</code>
+- Digest compatibility: mismatch; the atlas digest set does not identify supplied catalog revision <code>8</code>. The earlier catalog revision number is not encoded in the atlas.
 - Observed supplied-catalog cells: 36 / 36
 - Unmeasured supplied-catalog cells: 0 / 36
 - Reference corpus check: 36 supplied cells; the checked-in target is 36.
@@ -50,13 +51,13 @@ This is a deterministic observational report built from a validated aggregate at
 | failing-test-diagnosis | F03-S-PY-001: observed (1 stratum, 1 run) | F03-M-PY-001: observed (1 stratum, 1 run) | F03-L-PYBASH-001: observed (7 strata, 7 runs) |
 | bounded-implementation | F04-S-PY-001: observed (13 strata, 17 runs) | F04-M-PY-001: observed (1 stratum, 1 run) | F04-L-PYBASH-001: observed (10 strata, 10 runs) |
 | refactor-migration | F05-S-PY-001: observed (1 stratum, 1 run) | F05-M-PY-001: observed (4 strata, 4 runs) | F05-L-PYBASH-001: observed (1 stratum, 1 run) |
-| test-design | F06-S-PY-001: observed (1 stratum, 1 run) | F06-M-PY-001: observed (1 stratum, 1 run) | F06-L-PYBASH-001: observed (4 strata, 4 runs) |
+| test-design | F06-S-PY-001: observed (1 stratum, 1 run) | F06-M-PY-001: observed (1 stratum, 1 run) | F06-L-PYBASH-001: observed (2 strata, 6 runs) |
 | documentation-runbook | F07-S-MD-001: observed (4 strata, 4 runs) | F07-M-MDBASH-001: observed (1 stratum, 1 run) | F07-L-MDPYBASH-001: observed (1 stratum, 1 run) |
 | architecture-design | F08-S-MDJSON-001: observed (1 stratum, 1 run) | F08-M-MDJSON-001: observed (4 strata, 4 runs) | F08-L-MDJSON-001: observed (4 strata, 4 runs) |
 | security-isolation | F09-S-PY-001: observed (2 strata, 2 runs) | F09-M-PYBASH-001: observed (1 stratum, 1 run) | F09-L-PYBASHDOCKER-001: observed (7 strata, 7 runs) |
-| performance-resource | F10-S-PY-001: observed (4 strata, 4 runs) | F10-M-PY-001: observed (1 stratum, 1 run) | F10-L-PYBASH-001: observed (1 stratum, 1 run) |
+| performance-resource | F10-S-PY-001: observed (13 strata, 19 runs) | F10-M-PY-001: observed (1 stratum, 1 run) | F10-L-PYBASH-001: observed (1 stratum, 1 run) |
 | devcontainer-operations | F11-S-BASH-001: observed (1 stratum, 1 run) | F11-M-BASH-001: observed (4 strata, 4 runs) | F11-L-BASHDOCKER-001: observed (1 stratum, 1 run) |
-| evidence-synthesis | F12-S-MDJSON-001: observed (1 stratum, 1 run) | F12-M-MDJSON-001: observed (1 stratum, 1 run) | F12-L-MDJSON-001: observed (8 strata, 8 runs) |
+| evidence-synthesis | F12-S-MDJSON-001: observed (1 stratum, 1 run) | F12-M-MDJSON-001: observed (1 stratum, 1 run) | F12-L-MDJSON-001: observed (15 strata, 22 runs) |
 
 Unmeasured catalog case IDs (0):
 - none
@@ -64,11 +65,11 @@ Unmeasured catalog case IDs (0):
 Atlas case IDs absent from supplied catalog (0):
 - none
 
-Case revision differences (2):
-- F10-S-PY-001: atlas=1 catalog=2; F12-L-MDJSON-001: atlas=1 catalog=2
+Case revision differences (3):
+- F06-L-PYBASH-001: atlas=1 catalog=2; F10-S-PY-001: atlas=1,2,3,4,5 catalog=5; F12-L-MDJSON-001: atlas=1,3 catalog=3
 
-Case identity/profile differences (12):
-- F10-S-PY-001/sha256:0362a20c3390e55dd3e203228ab79d73fd71000042ba93dec9bb97ab0ef4e5e9: capsule-digest; F10-S-PY-001/sha256:8fe4116d254b1de4a20b37e0059ecbf234e48cce1840be6d4d6bf60d4a78332e: capsule-digest; F10-S-PY-001/sha256:e74df3b0ef1ac97b552f0077e854c8d63402e3569509489cf6cc2e611a07074f: capsule-digest; F10-S-PY-001/sha256:296ed2a22b56ec9b3a5167f8d69c197b814b3d233132072891f740d9662dd412: capsule-digest; F12-L-MDJSON-001/sha256:411e61f1802c9123d6ea4d496f379da7d651c6161f536e972ace9aa3e0f284de: capsule-digest; F12-L-MDJSON-001/sha256:d1e3ce8659044143457e43370a1394f6ed71c15100dba2fb3817d8fc8a27810f: capsule-digest; F12-L-MDJSON-001/sha256:ec1b7c9d3bc70c817f1784ecc1ca9e548865826e5049fc725563725c9c817485: capsule-digest; F12-L-MDJSON-001/sha256:98f4b4834e2eb45c6b0ebd7c5651a1ed6bc19aae8c5e9089b5f565c472ec2ccf: capsule-digest; F12-L-MDJSON-001/sha256:7ba1c7e0fcc949e18c4e454d70b3f0f9f477b00f2db8fdfd652704282d2936b6: capsule-digest; F12-L-MDJSON-001/sha256:774574f9e776d973b58be7a4ba7ec057e24e91be85f69fb3cc38edfca6f5018c: capsule-digest; F12-L-MDJSON-001/sha256:96239078e7c76e3ed70e9e4ef7ce8a9278e317b113e6f090c968e570c4d798a2: capsule-digest; F12-L-MDJSON-001/sha256:b37d6ff5d2a8cfcd5d15e42a6810c3a74fe3b9d772e316bc94d5ab498db3eb8e: capsule-digest
+Case identity/profile differences (16):
+- F10-S-PY-001/sha256:0362a20c3390e55dd3e203228ab79d73fd71000042ba93dec9bb97ab0ef4e5e9: capsule-digest; F10-S-PY-001/sha256:dd79773645ec83284a595003d5aa8f1fde5a4aa6d7b84e6f9533af47109a1251: capsule-digest; F10-S-PY-001/sha256:b6d898ed1d0fecb786e74d4edf7f6fe0f97fc270e303fd0aff9f517716f32030: capsule-digest; F10-S-PY-001/sha256:8fe4116d254b1de4a20b37e0059ecbf234e48cce1840be6d4d6bf60d4a78332e: capsule-digest; F10-S-PY-001/sha256:e74df3b0ef1ac97b552f0077e854c8d63402e3569509489cf6cc2e611a07074f: capsule-digest; F10-S-PY-001/sha256:4989fa81dc3c24677b3a40b34b112e0a780633f850529970eff29c6192f19075: capsule-digest; F10-S-PY-001/sha256:f3e365afdb08434f43a70c07a3d3043804cc1155065aa6b5348507e360b3e435: capsule-digest; F10-S-PY-001/sha256:296ed2a22b56ec9b3a5167f8d69c197b814b3d233132072891f740d9662dd412: capsule-digest; F12-L-MDJSON-001/sha256:411e61f1802c9123d6ea4d496f379da7d651c6161f536e972ace9aa3e0f284de: capsule-digest; F12-L-MDJSON-001/sha256:d1e3ce8659044143457e43370a1394f6ed71c15100dba2fb3817d8fc8a27810f: capsule-digest; F12-L-MDJSON-001/sha256:ec1b7c9d3bc70c817f1784ecc1ca9e548865826e5049fc725563725c9c817485: capsule-digest; F12-L-MDJSON-001/sha256:98f4b4834e2eb45c6b0ebd7c5651a1ed6bc19aae8c5e9089b5f565c472ec2ccf: capsule-digest; F12-L-MDJSON-001/sha256:7ba1c7e0fcc949e18c4e454d70b3f0f9f477b00f2db8fdfd652704282d2936b6: capsule-digest; F12-L-MDJSON-001/sha256:774574f9e776d973b58be7a4ba7ec057e24e91be85f69fb3cc38edfca6f5018c: capsule-digest; F12-L-MDJSON-001/sha256:96239078e7c76e3ed70e9e4ef7ce8a9278e317b113e6f090c968e570c4d798a2: capsule-digest; F12-L-MDJSON-001/sha256:b37d6ff5d2a8cfcd5d15e42a6810c3a74fe3b9d772e316bc94d5ab498db3eb8e: capsule-digest
 
 ## Series 1
 
@@ -155,7 +156,7 @@ Case identity/profile differences (12):
 - Effort-quality use: <code>excluded</code>
 - Case design status: <code>ineligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -272,7 +273,7 @@ Case identity/profile differences (12):
 - Effort-quality use: <code>excluded</code>
 - Case design status: <code>ineligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -623,7 +624,7 @@ Case identity/profile differences (12):
 - Effort-quality use: <code>excluded</code>
 - Case design status: <code>ineligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>hidden-controlled-vocabulary</code>, <code>semantic-false-negative-risk</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
+- Validity reasons: <code>hidden-controlled-vocabulary</code>, <code>semantic-false-negative-risk</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -1214,7 +1215,7 @@ Case identity/profile differences (12):
 - Effort-quality use: <code>excluded</code>
 - Case design status: <code>ineligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -1718,6 +1719,126 @@ Case identity/profile differences (12):
 
 ## Series 15
 
+- Series ID: <code>sha256:188c5887f9422ba64fc34d0fbf4208b22572b62f6b099d7a0c94eb88d87d97f8</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T17:38:59.183Z</code> to <code>2026-08-27T17:55:42.020Z</code>
+- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
+- Execution surface(s): <code>isolated-provider-container</code>
+
+### Exact profile and configuration
+
+    {
+      "configuration": {
+        "configuration_id": "C0",
+        "independence_policy": "fresh-ephemeral-session",
+        "lane": "isolated",
+        "nested_delegation": "disabled",
+        "participant_plan": "primary-only",
+        "participants_actual": 1,
+        "peak_concurrent": 0,
+        "relation": "primary-only",
+        "workers_actual": 0
+      },
+      "profile": {
+        "family": "evidence-synthesis",
+        "profile_id": "L-cross-evidence-decision-record",
+        "size": "L",
+        "source_type": "fixture"
+      }
+    }
+
+### Exact environment
+
+    {
+      "compaction": "unknown",
+      "competing_load": "unknown",
+      "dependency_cache": "not-applicable",
+      "docker_cache": "warm",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "machine_class": "docker-limited-2cpu-2g",
+      "provider_prompt_cache": "unknown",
+      "repository_cache": "not-applicable",
+      "session_context": "fresh",
+      "timezone": "UTC"
+    }
+
+### Exact participant, model, requested/applied settings, and surface
+
+    [
+      {
+        "cli_name": "grok",
+        "cli_source": "host-sync",
+        "cli_version": "1.0.5",
+        "execution_surface": "isolated-provider-container",
+        "generation_settings": [
+          {
+            "applied_value": "high",
+            "key": "effort",
+            "namespace": "grok.reasoning",
+            "requested_value": "high",
+            "status": "applied"
+          }
+        ],
+        "model_identity": {
+          "identity_confidence": "exact",
+          "requested_alias": "grok-4.6",
+          "requested_source": "flag",
+          "resolved_id": "grok-4.6"
+        },
+        "permission_mode": "automatic",
+        "provider": "grok",
+        "role": "implementer",
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
+      }
+    ]
+
+### Case observations
+
+### Case 15: F12-L-MDJSON-001 revision 3
+
+- Stratum ID: <code>sha256:2bf5adf500639c64a4d3ff1e06da1365ab16990d4a46b7ed45ee9b64149addaf</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T17:38:59.183Z</code> to <code>2026-08-27T17:55:42.020Z</code>
+- Runs / observation blocks: 2 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-bounded-decision-space</code>, <code>public-artifact-templates</code>, <code>public-edit-surface</code>, <code>semantic-identifiers</code>, <code>plural-target-designs</code>, <code>revision-3-repair</code>, <code>task-artifact-missing</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:6f799280ed8c5f808a5ce016fc52c8c2c5cf104dd43a6bd5d03dd7510f3688f4",
+      "case_id": "F12-L-MDJSON-001",
+      "revision": 3,
+      "snapshot": {
+        "base_sha": "02991852a9b476f21911672436a8745dca84dad3",
+        "bundle_digest": "sha256:1e35eb75c529524160da7c7decce9e826369cf2ecb8b608288f95b847e29dd88",
+        "instruction_set_digest": "sha256:83239308c474dce5e9bcdcf98bf70cdd5631410b63e77e2e16ccceb3782fa700"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=0; fail=2; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-fail-terminal | 2 same-case observations; raw points | run-001-4c4bc45a6b467b27=197109.98 ms; run-006-3418c9f56ea9f5f3=176492.591 ms | 176492.591–197109.98 ms (observed min/max) |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-4c4bc45a6b467b27 | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=197109.98 ms; declared-cap=900000 ms | task-artifacts/complete; files=0; bytes=0; unexpected(total=0; tracked=0; untracked=0; deleted=0) | conditional; task-artifact-missing | fail | 12 | criterion; 0/12; ratio=0.0; public=0/3; hidden=0/9; all-checks-required=true | workspace-1, workspace-2, workspace-3, synthesis-claim-provenance, synthesis-metric-integrity, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan, synthesis-doc-json-sync |
+| run-006-3418c9f56ea9f5f3 | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=176492.591 ms; declared-cap=900000 ms | task-artifacts/complete; files=0; bytes=0; unexpected(total=0; tracked=0; untracked=0; deleted=0) | conditional; task-artifact-missing | fail | 12 | criterion; 0/12; ratio=0.0; public=0/3; hidden=0/9; all-checks-required=true | workspace-1, workspace-2, workspace-3, synthesis-claim-provenance, synthesis-metric-integrity, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan, synthesis-doc-json-sync |
+
+## Series 16
+
 - Series ID: <code>sha256:1c2de44e2a2520d54f9cafa12926926970b1625fa5bfa8752a56d1c70dccba19</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
 - Evidence state: <code>single-observation</code>
@@ -1794,7 +1915,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 15: F12-L-MDJSON-001 revision 1
+### Case 16: F12-L-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:98f4b4834e2eb45c6b0ebd7c5651a1ed6bc19aae8c5e9089b5f565c472ec2ccf</code>
 - Evidence state: <code>single-observation</code>
@@ -1803,7 +1924,7 @@ Case identity/profile differences (12):
 - Effort-quality use: <code>excluded</code>
 - Case design status: <code>ineligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -1835,7 +1956,126 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-008-13a21f3548bff40a | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=278896.326 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
 
-## Series 16
+## Series 17
+
+- Series ID: <code>sha256:1e548ee47fbb64896bd211e85c11cf67535117d323086b13baa38d0f98181cc1</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:10:02.019Z</code> to <code>2026-08-27T18:35:27.324Z</code>
+- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
+- Execution surface(s): <code>isolated-provider-container</code>
+
+### Exact profile and configuration
+
+    {
+      "configuration": {
+        "configuration_id": "C0",
+        "independence_policy": "fresh-ephemeral-session",
+        "lane": "isolated",
+        "nested_delegation": "disabled",
+        "participant_plan": "primary-only",
+        "participants_actual": 1,
+        "peak_concurrent": 0,
+        "relation": "primary-only",
+        "workers_actual": 0
+      },
+      "profile": {
+        "family": "test-design",
+        "profile_id": "L-cross-process-lifecycle-test-design",
+        "size": "L",
+        "source_type": "fixture"
+      }
+    }
+
+### Exact environment
+
+    {
+      "compaction": "unknown",
+      "competing_load": "unknown",
+      "dependency_cache": "not-applicable",
+      "docker_cache": "warm",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "machine_class": "docker-limited-2cpu-2g",
+      "provider_prompt_cache": "unknown",
+      "repository_cache": "not-applicable",
+      "session_context": "fresh",
+      "timezone": "UTC"
+    }
+
+### Exact participant, model, requested/applied settings, and surface
+
+    [
+      {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "generation_settings": [
+          {
+            "key": "effort",
+            "namespace": "codex.reasoning",
+            "requested_value": "high",
+            "status": "unknown"
+          }
+        ],
+        "model_identity": {
+          "identity_confidence": "alias-only",
+          "requested_alias": "gpt-5.6-sol",
+          "requested_source": "flag"
+        },
+        "permission_mode": "automatic",
+        "provider": "codex",
+        "role": "implementer",
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
+      }
+    ]
+
+### Case observations
+
+### Case 17: F06-L-PYBASH-001 revision 1
+
+- Stratum ID: <code>sha256:d0425d9f388d5bc31f1e2e18329c9344a28d69946d358ca9e1a27e5c7f4a45dc</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:10:02.019Z</code> to <code>2026-08-27T18:35:27.324Z</code>
+- Runs / observation blocks: 3 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>conditional</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-lifecycle-invariants</code>, <code>behavioral-oracle</code>, <code>nondeterministic-fixture-bundle</code>, <code>cross-identity-pooling-forbidden</code>, <code>superseded-by-revision-2</code>, <code>case-design-conditional</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
+      "case_id": "F06-L-PYBASH-001",
+      "revision": 1,
+      "snapshot": {
+        "base_sha": "178b4d44cb937a1d7c10d938af214a7e8e275eb0",
+        "bundle_digest": "sha256:42b81fa1eca375a52f72bc824a06ee73add9b329b7c9c920485ea68221a9ab6b",
+        "instruction_set_digest": "sha256:e95b2a3cd9c10ed97a6785a56b0e8e4ba88cc1271dc86d221b6d5576fec710c0"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=0; fail=3; unknown=0 |
+| Censoring | complete=3; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=3; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-fail-terminal | 3 same-case observations; raw points | run-002-69ca64834f6cd0eb=426861.522 ms; run-003-9205061ad9e30698=455170.542 ms; run-006-0fa4a544d72fc7b4=506099.506 ms | 426861.522–506099.506 ms (observed min/max) |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-69ca64834f6cd0eb | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=426861.522 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=13835; unexpected(total=0; tracked=0; untracked=0; deleted=0) | conditional; case-design-conditional | fail | 11 | criterion; 9/11; ratio=0.818182; public=2/4; hidden=7/7; all-checks-required=true | workspace-2, workspace-3 |
+| run-003-9205061ad9e30698 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=455170.542 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=13427; unexpected(total=0; tracked=0; untracked=0; deleted=0) | conditional; case-design-conditional | fail | 11 | criterion; 7/11; ratio=0.636364; public=2/4; hidden=5/7; all-checks-required=true | workspace-2, workspace-3, test-kills-duplicate-owner, test-repeatability |
+| run-006-0fa4a544d72fc7b4 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=506099.506 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=14980; unexpected(total=0; tracked=0; untracked=0; deleted=0) | conditional; case-design-conditional | fail | 11 | criterion; 9/11; ratio=0.818182; public=2/4; hidden=7/7; all-checks-required=true | workspace-2, workspace-3 |
+
+## Series 18
 
 - Series ID: <code>sha256:1ea4d57e641423811b6a424f3fd6c8ae3a33491216e498f9babdcea0f976ef03</code>
 - Study ID: <code>duration-atlas-wave2</code>
@@ -1911,7 +2151,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 16: F04-S-PY-001 revision 1
+### Case 18: F04-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:f4ab1e17626d1ae75af07994ab3b1a717260703acf927b262b8edeb0648e778b</code>
 - Evidence state: <code>single-observation</code>
@@ -1952,7 +2192,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | claude-f04-s-opus-medium-20260827-r04 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=sandbox | complete-terminal; observed-terminal=4024.107 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
 
-## Series 17
+## Series 19
 
 - Series ID: <code>sha256:20b03449302fa307a406736fe70c2ce48d63fbc69954995ecd97c339a13434c9</code>
 - Study ID: <code>duration-atlas-wave2</code>
@@ -2029,7 +2269,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 17: F04-S-PY-001 revision 1
+### Case 19: F04-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:97ae203f00ecd8e3090936ffb9afa62f5052bd5dd050e11e4b8785290f484182</code>
 - Evidence state: <code>same-case-repeat</code>
@@ -2072,7 +2312,125 @@ Case identity/profile differences (12):
 | claude-f04-s-opus-medium-20260827-r06 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=6389.315 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
 | claude-f04-s-opus-medium-20260827-r07 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=6384.674 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
 
-## Series 18
+## Series 20
+
+- Series ID: <code>sha256:278ea3cd03c4fa769c8f72d429f0508a551e9bc2e0d5577e0b669d904cd00b35</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:57:54.292Z</code> to <code>2026-08-27T19:15:46.519Z</code>
+- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
+- Execution surface(s): <code>isolated-provider-container</code>
+
+### Exact profile and configuration
+
+    {
+      "configuration": {
+        "configuration_id": "C0",
+        "independence_policy": "fresh-ephemeral-session",
+        "lane": "isolated",
+        "nested_delegation": "disabled",
+        "participant_plan": "primary-only",
+        "participants_actual": 1,
+        "peak_concurrent": 0,
+        "relation": "primary-only",
+        "workers_actual": 0
+      },
+      "profile": {
+        "family": "evidence-synthesis",
+        "profile_id": "L-cross-evidence-decision-record",
+        "size": "L",
+        "source_type": "fixture"
+      }
+    }
+
+### Exact environment
+
+    {
+      "compaction": "unknown",
+      "competing_load": "unknown",
+      "dependency_cache": "not-applicable",
+      "docker_cache": "warm",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "machine_class": "docker-limited-2cpu-2g",
+      "provider_prompt_cache": "unknown",
+      "repository_cache": "not-applicable",
+      "session_context": "fresh",
+      "timezone": "UTC"
+    }
+
+### Exact participant, model, requested/applied settings, and surface
+
+    [
+      {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "generation_settings": [
+          {
+            "key": "effort",
+            "namespace": "codex.reasoning",
+            "requested_value": "max",
+            "status": "unknown"
+          }
+        ],
+        "model_identity": {
+          "identity_confidence": "alias-only",
+          "requested_alias": "gpt-5.6-sol",
+          "requested_source": "flag"
+        },
+        "permission_mode": "automatic",
+        "provider": "codex",
+        "role": "implementer",
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
+      }
+    ]
+
+### Case observations
+
+### Case 20: F12-L-MDJSON-001 revision 3
+
+- Stratum ID: <code>sha256:13a244e3938ab45968c95217306760dd89909306581fc5eed90c9f15e324b553</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:57:54.292Z</code> to <code>2026-08-27T19:15:46.519Z</code>
+- Runs / observation blocks: 2 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-bounded-decision-space</code>, <code>public-artifact-templates</code>, <code>public-edit-surface</code>, <code>semantic-identifiers</code>, <code>plural-target-designs</code>, <code>revision-3-repair</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:6f799280ed8c5f808a5ce016fc52c8c2c5cf104dd43a6bd5d03dd7510f3688f4",
+      "case_id": "F12-L-MDJSON-001",
+      "revision": 3,
+      "snapshot": {
+        "base_sha": "02991852a9b476f21911672436a8745dca84dad3",
+        "bundle_digest": "sha256:1e35eb75c529524160da7c7decce9e826369cf2ecb8b608288f95b847e29dd88",
+        "instruction_set_digest": "sha256:83239308c474dce5e9bcdcf98bf70cdd5631410b63e77e2e16ccceb3782fa700"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=0; fail=2; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-fail-terminal | 2 same-case observations; raw points | run-004-d90656be6d218bf5=431833.786 ms; run-007-a8cda99d19237ee6=445544.772 ms | 431833.786–445544.772 ms (observed min/max) |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-004-d90656be6d218bf5 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=431833.786 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=36797; unexpected(total=0; tracked=0; untracked=0; deleted=0) | eligible; case-and-observation-gates-pass | fail | 12 | criterion; 11/12; ratio=0.916667; public=3/3; hidden=8/9; all-checks-required=true | synthesis-unknown-honesty |
+| run-007-a8cda99d19237ee6 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=445544.772 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=38012; unexpected(total=0; tracked=0; untracked=0; deleted=0) | eligible; case-and-observation-gates-pass | fail | 12 | criterion; 11/12; ratio=0.916667; public=3/3; hidden=8/9; all-checks-required=true | synthesis-unknown-honesty |
+
+## Series 21
 
 - Series ID: <code>sha256:2e8fd628e27afc97cb2eab7e9b630690afe4367f939807cfa2c9dd210d39bfa6</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -2150,7 +2508,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 18: F05-M-PY-001 revision 1
+### Case 21: F05-M-PY-001 revision 1
 
 - Stratum ID: <code>sha256:73ff9f68efb1016a1f7a1b75e274a507fc8da3a7fe6c49e8b95f9a82cb686b38</code>
 - Evidence state: <code>single-observation</code>
@@ -2191,7 +2549,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-007-5ef5a801077ce49c | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=57595.624 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | migration-all-callers, migration-policy-lifecycle, migration-compat-bytes, migration-warning-once, migration-api-surface |
 
-## Series 19
+## Series 22
 
 - Series ID: <code>sha256:3863f64410644d02ab5d10f4c67b3419b07f2d55489714e616ed25c762868814</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -2267,7 +2625,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 19: F09-L-PYBASHDOCKER-001 revision 1
+### Case 22: F09-L-PYBASHDOCKER-001 revision 1
 
 - Stratum ID: <code>sha256:f741ca3adc6f78773f35df20c53c9d539d96541d9bb20287a6a184ddf3f2c80d</code>
 - Evidence state: <code>single-observation</code>
@@ -2308,7 +2666,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-004-5f81d658366f99c7 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=657648.615 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; case-design-conditional | fail | 11 | criterion; 3/11; ratio=0.272727; public=3/3; hidden=0/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-bind-injection, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-control-counterexamples, threat-unknown-honesty |
 
-## Series 20
+## Series 23
 
 - Series ID: <code>sha256:3a58f50f97791b5b885e3ca7215dba382b583f48b3169b2daed4ef84f8a18ee0</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -2384,7 +2742,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 20: F03-L-PYBASH-001 revision 1
+### Case 23: F03-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:dabdc909274058e8b6a51cab79e36e24645d80a8bcb597173801e3ed9c52da2a</code>
 - Evidence state: <code>single-observation</code>
@@ -2425,7 +2783,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-001-183a3c863cef1999 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=140109.287 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 7/9; ratio=0.777778; public=3/3; hidden=4/6; all-checks-required=true | diagnosis-ordering-cause, diagnosis-cleanup-bounded |
 
-## Series 21
+## Series 24
 
 - Series ID: <code>sha256:3abff7201275379fede76d7a918a4771c09ed6925f8a06bfcb390ad97f47e391</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -2503,7 +2861,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 21: F08-M-MDJSON-001 revision 1
+### Case 24: F08-M-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:209e2e7353a421c6366ff663a89b5e6a2516421d2d92df3dfd6a07e8b7985890</code>
 - Evidence state: <code>single-observation</code>
@@ -2544,7 +2902,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-007-6ba767ed3c7f3033 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=128448.926 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | design-invariant-coverage, design-option-counterexamples, design-migration-observability, design-unknown-honesty |
 
-## Series 22
+## Series 25
 
 - Series ID: <code>sha256:3f9c182aa42361a8fa377c2c9b87995b6898c2c5faceac8cb89bfbb840f80f3a</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -2620,7 +2978,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 22: F09-S-PY-001 revision 1
+### Case 25: F09-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:5f2c5cadee481d33686313534fff35f9f3b4aa650ac7042b1b1f5a79b4e088a5</code>
 - Evidence state: <code>single-observation</code>
@@ -2661,7 +3019,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-010-ddfa3e87bf3ce516 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=14638.748 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | not-run | 0 | unavailable | unavailable |
 
-## Series 23
+## Series 26
 
 - Series ID: <code>sha256:42704be884542d6ea822d6741fb79290e9f4f97d8eef4eecb6f8c5b1a553d75d</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -2739,7 +3097,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 23: F09-L-PYBASHDOCKER-001 revision 1
+### Case 26: F09-L-PYBASHDOCKER-001 revision 1
 
 - Stratum ID: <code>sha256:d2a8953168182ddd4f7a362838128a7a6ac0bf925b1cfba777c43f6d1223fbfd</code>
 - Evidence state: <code>single-observation</code>
@@ -2780,7 +3138,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-002-e4d72e12f812a802 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=277973.04 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; case-design-conditional | fail | 11 | criterion; 5/11; ratio=0.454545; public=3/3; hidden=2/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-unknown-honesty |
 
-## Series 24
+## Series 27
 
 - Series ID: <code>sha256:45b877afa1138361394250f2dbe0a86b0d20333860b0a64639771e4477e56f75</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -2856,7 +3214,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 24: F11-M-BASH-001 revision 1
+### Case 27: F11-M-BASH-001 revision 1
 
 - Stratum ID: <code>sha256:fed8b272c68b90eb86f0ddc09aa7fb3ad58698072ee22a976adffd4fcb012061</code>
 - Evidence state: <code>single-observation</code>
@@ -2897,7 +3255,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-007-c3f8b69c171a79e5 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=200243.599 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | ops-ready-after-verify |
 
-## Series 25
+## Series 28
 
 - Series ID: <code>sha256:45be82ef143532655d6ab9fdb03ff4db52332f7ee5c30b30113b294863fabb17</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -2973,7 +3331,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 25: F02-L-PYBASHJS-001 revision 1
+### Case 28: F02-L-PYBASHJS-001 revision 1
 
 - Stratum ID: <code>sha256:1bd396160019f4e8fdb1165ee37fd5deedcee80ea8a1c5dc17316cf5d40cc7af</code>
 - Evidence state: <code>single-observation</code>
@@ -3014,12 +3372,12 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-027-c7b66ee0a4c79b37 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=134528.766 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 11 | criterion; 6/11; ratio=0.545455; public=4/4; hidden=2/7; all-checks-required=true | review-redaction-order, review-stale-restart, review-cleanup-owner, review-lifecycle-model, review-evidence-integrity |
 
-## Series 26
+## Series 29
 
-- Series ID: <code>sha256:4e27512934491c47347eeadd36de996176d674ba928973a8ebaeab109a588924</code>
-- Study ID: <code>duration-atlas-wave5-identity-recovery</code>
-- Evidence state: <code>single-observation</code>
-- Observation window: <code>2026-08-27T06:07:15.461Z</code> to <code>2026-08-27T06:07:15.461Z</code>
+- Series ID: <code>sha256:4752f39449a46e8d9e1e47d624ad8e7ad67aaa366a1090fc1b062182f9830514</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T17:46:15.791Z</code> to <code>2026-08-27T17:51:56.424Z</code>
 - Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
 - Execution surface(s): <code>isolated-provider-container</code>
 
@@ -3038,8 +3396,8 @@ Case identity/profile differences (12):
         "workers_actual": 0
       },
       "profile": {
-        "family": "test-design",
-        "profile_id": "L-cross-process-lifecycle-test-design",
+        "family": "evidence-synthesis",
+        "profile_id": "L-cross-evidence-decision-record",
         "size": "L",
         "source_type": "fixture"
       }
@@ -3052,7 +3410,7 @@ Case identity/profile differences (12):
       "competing_load": "unknown",
       "dependency_cache": "not-applicable",
       "docker_cache": "warm",
-      "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
       "machine_class": "docker-limited-2cpu-2g",
       "provider_prompt_cache": "unknown",
       "repository_cache": "not-applicable",
@@ -3064,74 +3422,77 @@ Case identity/profile differences (12):
 
     [
       {
-        "cli_name": "codex",
-        "cli_source": "container-image",
-        "cli_version": "0.146.0",
+        "cli_name": "grok",
+        "cli_source": "host-sync",
+        "cli_version": "1.0.5",
         "execution_surface": "isolated-provider-container",
         "generation_settings": [
           {
+            "applied_value": "medium",
             "key": "effort",
-            "namespace": "codex.reasoning",
+            "namespace": "grok.reasoning",
             "requested_value": "medium",
-            "status": "unknown"
+            "status": "applied"
           }
         ],
         "model_identity": {
-          "identity_confidence": "alias-only",
-          "requested_alias": "gpt-5.6-sol",
-          "requested_source": "flag"
+          "identity_confidence": "exact",
+          "requested_alias": "grok-4.6",
+          "requested_source": "flag",
+          "resolved_id": "grok-4.6"
         },
         "permission_mode": "automatic",
-        "provider": "codex",
+        "provider": "grok",
         "role": "implementer",
-        "runtime_image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb"
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
       }
     ]
 
 ### Case observations
 
-### Case 26: F06-L-PYBASH-001 revision 1
+### Case 29: F12-L-MDJSON-001 revision 3
 
-- Stratum ID: <code>sha256:181778215be4cf755832c783d5dae3f1be5e7b130808bbdc79de495af334abfd</code>
-- Evidence state: <code>single-observation</code>
-- Observation window: <code>2026-08-27T06:07:15.461Z</code> to <code>2026-08-27T06:07:15.461Z</code>
-- Runs / observation blocks: 1 / 1
+- Stratum ID: <code>sha256:1cc453df52395381b7d89247c3ae3619fa6dfd0dcf85363a042ff45ac4000d67</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T17:46:15.791Z</code> to <code>2026-08-27T17:51:56.424Z</code>
+- Runs / observation blocks: 2 / 1
 - Effort-quality use: <code>conditional-only</code>
 - Case design status: <code>eligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>visible-lifecycle-invariants</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
+- Validity reasons: <code>public-bounded-decision-space</code>, <code>public-artifact-templates</code>, <code>public-edit-surface</code>, <code>semantic-identifiers</code>, <code>plural-target-designs</code>, <code>revision-3-repair</code>, <code>task-artifact-missing</code>
 
 #### Exact case identity
 
     {
-      "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
-      "case_id": "F06-L-PYBASH-001",
-      "revision": 1,
+      "capsule_digest": "sha256:6f799280ed8c5f808a5ce016fc52c8c2c5cf104dd43a6bd5d03dd7510f3688f4",
+      "case_id": "F12-L-MDJSON-001",
+      "revision": 3,
       "snapshot": {
-        "base_sha": "a41685e60ec9e83713a0682e1209e09c7085e200",
-        "bundle_digest": "sha256:4663cb59494a727556365cfe615251121817906daa9b0f98de76e7ccc062caac",
-        "instruction_set_digest": "sha256:e95b2a3cd9c10ed97a6785a56b0e8e4ba88cc1271dc86d221b6d5576fec710c0"
+        "base_sha": "02991852a9b476f21911672436a8745dca84dad3",
+        "bundle_digest": "sha256:1e35eb75c529524160da7c7decce9e826369cf2ecb8b608288f95b847e29dd88",
+        "instruction_set_digest": "sha256:83239308c474dce5e9bcdcf98bf70cdd5631410b63e77e2e16ccceb3782fa700"
       },
       "strong_online_oracle": true
     }
 
 | Count group | Values |
 | --- | --- |
-| Quality | pass=0; fail=1; unknown=0 |
-| Censoring | complete=1; right=0; administrative=0 |
-| First artifact | progress=0; not-observed=1; not-applicable=0; unknown=0 |
+| Quality | pass=0; fail=2; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
 
 | Duration view | Evidence | Raw observed points | Observed range |
 | --- | --- | --- | --- |
-| quality-fail-terminal | single observation; raw point | run-001-758f6d400a39baad=678286.534 ms | not available |
+| quality-fail-terminal | 2 same-case observations; raw points | run-003-f83b27f18b944654=116744.077 ms; run-005-edc6e9187140ec77=208872.428 ms | 116744.077–208872.428 ms (observed min/max) |
 
 #### Content-free quality evidence
 
 | Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| run-001-758f6d400a39baad | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=678286.534 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 3/11; ratio=0.272727; public=2/4; hidden=1/7; all-checks-required=true | workspace-2, workspace-3, test-kills-lost-wakeup, test-kills-stale-lease, test-kills-duplicate-owner, test-kills-broad-cleanup, test-repeatability, test-bounded-cleanup |
+| run-003-f83b27f18b944654 | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=116744.077 ms; declared-cap=900000 ms | task-artifacts/complete; files=0; bytes=0; unexpected(total=0; tracked=0; untracked=0; deleted=0) | conditional; task-artifact-missing | fail | 12 | criterion; 0/12; ratio=0.0; public=0/3; hidden=0/9; all-checks-required=true | workspace-1, workspace-2, workspace-3, synthesis-claim-provenance, synthesis-metric-integrity, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan, synthesis-doc-json-sync |
+| run-005-edc6e9187140ec77 | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=208872.428 ms; declared-cap=900000 ms | task-artifacts/complete; files=0; bytes=0; unexpected(total=0; tracked=0; untracked=0; deleted=0) | conditional; task-artifact-missing | fail | 12 | criterion; 0/12; ratio=0.0; public=0/3; hidden=0/9; all-checks-required=true | workspace-1, workspace-2, workspace-3, synthesis-claim-provenance, synthesis-metric-integrity, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan, synthesis-doc-json-sync |
 
-## Series 27
+## Series 30
 
 - Series ID: <code>sha256:4f12faf2e8bc428718fe9256d68f3b4290940b4b59d63cd51d18488b9f1e1a78</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -3207,7 +3568,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 27: F08-M-MDJSON-001 revision 1
+### Case 30: F08-M-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:74ba4911c324880fa8d18ca71f4c09e7752988e47bff698f5d549ed067100b66</code>
 - Evidence state: <code>single-observation</code>
@@ -3248,7 +3609,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-023-40f2340957975477 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=116919.829 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | design-invariant-coverage, design-option-counterexamples, design-migration-observability, design-unknown-honesty |
 
-## Series 28
+## Series 31
 
 - Series ID: <code>sha256:5407e21a98f6fc33b0cce70b160cb7edc0df2e733634d1f770ee58d0fb4c8b1d</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -3324,7 +3685,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 28: F11-S-BASH-001 revision 1
+### Case 31: F11-S-BASH-001 revision 1
 
 - Stratum ID: <code>sha256:0b52fc5b9003cc231467ee722edbbefe22c58c0eabdba96bfc653e1603075d8d</code>
 - Evidence state: <code>single-observation</code>
@@ -3365,7 +3726,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-013-960048619f36327b | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=24325.887 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | pass | 5 | criterion; 5/5; ratio=1.0; public=2/2; hidden=3/3; all-checks-required=true | none |
 
-## Series 29
+## Series 32
 
 - Series ID: <code>sha256:5a40bba3e68e9004f60e06aed646d795bc4dc16109ff828c71de9539fdbc4f91</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -3443,7 +3804,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 29: F11-M-BASH-001 revision 1
+### Case 32: F11-M-BASH-001 revision 1
 
 - Stratum ID: <code>sha256:fa174cb40735a7e3bcbeeb472bc976c5c41224aeabb5d2bb998faacb7b372733</code>
 - Evidence state: <code>single-observation</code>
@@ -3484,7 +3845,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-010-b7f2aefde4b0d672 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=150938.446 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | ops-ready-after-verify |
 
-## Series 30
+## Series 33
 
 - Series ID: <code>sha256:5e233468a3d0ab7e7d66232fd18d4c78bf5a59823cb1b0ad9d7d90954f0e2eab</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -3560,7 +3921,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 30: F11-M-BASH-001 revision 1
+### Case 33: F11-M-BASH-001 revision 1
 
 - Stratum ID: <code>sha256:b93a3f82dfda88660fc3f8c2f1aa2e9af893ca5a6bbab3c5f376ceaa049e3176</code>
 - Evidence state: <code>single-observation</code>
@@ -3601,7 +3962,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-035-428b05a832bea50f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=136402.672 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | ops-ready-after-verify |
 
-## Series 31
+## Series 34
 
 - Series ID: <code>sha256:62a7228f012a732e62606fca9f4d395a2dbe6a5aa6a6800775a1f44334b1e587</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -3677,7 +4038,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 31: F12-L-MDJSON-001 revision 1
+### Case 34: F12-L-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:7ba1c7e0fcc949e18c4e454d70b3f0f9f477b00f2db8fdfd652704282d2936b6</code>
 - Evidence state: <code>single-observation</code>
@@ -3686,7 +4047,7 @@ Case identity/profile differences (12):
 - Effort-quality use: <code>excluded</code>
 - Case design status: <code>ineligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -3718,124 +4079,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-001-f2d7073edac558ff | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=722083.503 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
 
-## Series 32
-
-- Series ID: <code>sha256:641bea6ee085bf543d53f4041ad4b6e653542704505ce36112fee22386b7445a</code>
-- Study ID: <code>duration-atlas-wave5-depth</code>
-- Evidence state: <code>single-observation</code>
-- Observation window: <code>2026-08-27T03:31:31.232Z</code> to <code>2026-08-27T03:31:31.232Z</code>
-- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
-- Execution surface(s): <code>isolated-provider-container</code>
-
-### Exact profile and configuration
-
-    {
-      "configuration": {
-        "configuration_id": "C0",
-        "independence_policy": "fresh-ephemeral-session",
-        "lane": "isolated",
-        "nested_delegation": "disabled",
-        "participant_plan": "primary-only",
-        "participants_actual": 1,
-        "peak_concurrent": 0,
-        "relation": "primary-only",
-        "workers_actual": 0
-      },
-      "profile": {
-        "family": "test-design",
-        "profile_id": "L-cross-process-lifecycle-test-design",
-        "size": "L",
-        "source_type": "fixture"
-      }
-    }
-
-### Exact environment
-
-    {
-      "compaction": "unknown",
-      "competing_load": "unknown",
-      "dependency_cache": "not-applicable",
-      "docker_cache": "warm",
-      "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
-      "machine_class": "docker-limited-2cpu-2g",
-      "provider_prompt_cache": "unknown",
-      "repository_cache": "not-applicable",
-      "session_context": "fresh",
-      "timezone": "UTC"
-    }
-
-### Exact participant, model, requested/applied settings, and surface
-
-    [
-      {
-        "cli_name": "codex",
-        "cli_source": "container-image",
-        "cli_version": "0.146.0",
-        "execution_surface": "isolated-provider-container",
-        "generation_settings": [
-          {
-            "key": "effort",
-            "namespace": "codex.reasoning",
-            "requested_value": "high",
-            "status": "unknown"
-          }
-        ],
-        "model_identity": {
-          "identity_confidence": "alias-only",
-          "requested_alias": "gpt-5.6-sol",
-          "requested_source": "flag"
-        },
-        "permission_mode": "automatic",
-        "provider": "codex",
-        "role": "implementer",
-        "runtime_image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb"
-      }
-    ]
-
-### Case observations
-
-### Case 32: F06-L-PYBASH-001 revision 1
-
-- Stratum ID: <code>sha256:50eb807c61f1db4016ddec3bdcb0009d27e285bf9b95dadcadd588519c35b13b</code>
-- Evidence state: <code>single-observation</code>
-- Observation window: <code>2026-08-27T03:31:31.232Z</code> to <code>2026-08-27T03:31:31.232Z</code>
-- Runs / observation blocks: 1 / 1
-- Effort-quality use: <code>eligible-pending-comparison-gates</code>
-- Case design status: <code>eligible</code>
-- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>visible-lifecycle-invariants</code>, <code>behavioral-oracle</code>
-
-#### Exact case identity
-
-    {
-      "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
-      "case_id": "F06-L-PYBASH-001",
-      "revision": 1,
-      "snapshot": {
-        "base_sha": "a41685e60ec9e83713a0682e1209e09c7085e200",
-        "bundle_digest": "sha256:4663cb59494a727556365cfe615251121817906daa9b0f98de76e7ccc062caac",
-        "instruction_set_digest": "sha256:e95b2a3cd9c10ed97a6785a56b0e8e4ba88cc1271dc86d221b6d5576fec710c0"
-      },
-      "strong_online_oracle": true
-    }
-
-| Count group | Values |
-| --- | --- |
-| Quality | pass=1; fail=0; unknown=0 |
-| Censoring | complete=1; right=0; administrative=0 |
-| First artifact | progress=0; not-observed=1; not-applicable=0; unknown=0 |
-
-| Duration view | Evidence | Raw observed points | Observed range |
-| --- | --- | --- | --- |
-| quality-pass-user-result | single observation; raw point | run-005-8d34b88f024eda13=423969.817 ms | not available |
-
-#### Content-free quality evidence
-
-| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| run-005-8d34b88f024eda13 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=423969.821 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 11 | criterion; 11/11; ratio=1.0; public=4/4; hidden=7/7; all-checks-required=true | none |
-
-## Series 33
+## Series 35
 
 - Series ID: <code>sha256:657c1ded80f343e4e7fa87ba66d09101e72145f3d9dcee2b56897ab26110a7b6</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -3913,7 +4157,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 33: F03-L-PYBASH-001 revision 1
+### Case 35: F03-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:bc4a418b2fb3f6ecc57061cb7e6c6de21c63049b0415fc2acf1b34f12c043374</code>
 - Evidence state: <code>single-observation</code>
@@ -3954,7 +4198,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-011-16e30cd1a1c95aa0 | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=35550.239 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 0/9; ratio=0.0; public=0/3; hidden=0/6; all-checks-required=true | workspace-1, workspace-2, workspace-3, diagnosis-deterministic-barrier, diagnosis-ordering-cause, diagnosis-restart-state, diagnosis-regression-reliable, diagnosis-cleanup-bounded, diagnosis-semantics-honest |
 
-## Series 34
+## Series 36
 
 - Series ID: <code>sha256:669cb17be0388ff375d327633050a2cec03b323091070a849f61226b7cb39dcf</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -4030,7 +4274,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 34: F02-S-PY-001 revision 1
+### Case 36: F02-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:548ff6213ef501cbd532859f6502f58252de40caaaba5fd2744ef8a084d1bfc9</code>
 - Evidence state: <code>single-observation</code>
@@ -4071,7 +4315,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-022-f8fc43a390c18674 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=61555.492 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | review-evidence-line |
 
-## Series 35
+## Series 37
 
 - Series ID: <code>sha256:676d9695a738d3fc904a82c296d0df5640af451b2facaa1e1b6d3fe8ac931525</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -4147,7 +4391,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 35: F05-L-PYBASH-001 revision 1
+### Case 37: F05-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:176945cce636bf1c5153afa7cbc4d557fccc5fb1f721e9fef48ba4f13149c935</code>
 - Evidence state: <code>single-observation</code>
@@ -4188,7 +4432,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-030-8f31d4aa692ecffe | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=206795.196 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 10 | criterion; 4/10; ratio=0.4; public=4/4; hidden=0/6; all-checks-required=true | migration-v1-compat, migration-backend-boundary, migration-atomic-order, migration-resume, migration-rollback, migration-operations-doc |
 
-## Series 36
+## Series 38
 
 - Series ID: <code>sha256:67fc7abfea7b19eb9b56d2026f643917addad31b1dd98fb4f2cbda0972f95540</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -4264,7 +4508,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 36: F10-L-PYBASH-001 revision 1
+### Case 38: F10-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:ad14a3923360eb6275dba54a1b362c01d4a769b88daab3e9ceeb733cc381aaa0</code>
 - Evidence state: <code>single-observation</code>
@@ -4305,7 +4549,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-033-d81bf119d0024dba | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=237033.765 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 9 | criterion; 2/9; ratio=0.222222; public=2/2; hidden=0/7; all-checks-required=true | perf-stage-correlation, perf-time-accounting, perf-width-curve, perf-probe-lock-cause, perf-provider-distinction, perf-censoring-resource, perf-claim-bounded |
 
-## Series 37
+## Series 39
 
 - Series ID: <code>sha256:68b8df98c0386f1a2e3422fd96eb379ccca6d75cb28ce6d7f734da557bd5c7d7</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -4381,7 +4625,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 37: F09-M-PYBASH-001 revision 1
+### Case 39: F09-M-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:91373bb0d8ef934492225170bd05ad4011dbb61fdb8b2241a1d5b2587ce37784</code>
 - Evidence state: <code>single-observation</code>
@@ -4422,7 +4666,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-020-15fb2a0ebf188352 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=122555.296 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 10 | criterion; 5/10; ratio=0.5; public=4/4; hidden=1/6; all-checks-required=true | security-symlink-exploit, security-env-root-exploit, security-composition, security-negative-tests, security-no-false-positive |
 
-## Series 38
+## Series 40
 
 - Series ID: <code>sha256:6db2de59aaaf9a8f572c8608be02d62b04d33ff66d667fb968ef3cbdef2ed228</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -4498,7 +4742,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 38: F03-S-PY-001 revision 1
+### Case 40: F03-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:289231784105ae1d313eaf549f93406f0267fd5773750d3fb8a31652c2a114f2</code>
 - Evidence state: <code>single-observation</code>
@@ -4539,7 +4783,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-034-06f90eaba1a453af | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=52958.618 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 6 | criterion; 4/6; ratio=0.666667; public=2/2; hidden=2/4; all-checks-required=true | diagnosis-root-cause, diagnosis-regression |
 
-## Series 39
+## Series 41
 
 - Series ID: <code>sha256:6e964cf5aa1de44ac0ffc6c9fee97eaaf9640dba5f1d3e07041c87f631e4fce7</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -4615,7 +4859,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 39: F12-M-MDJSON-001 revision 1
+### Case 41: F12-M-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:9df2aa118da4ec34d2313b4a67bea26cb95d555382eab507e5413517d9cead01</code>
 - Evidence state: <code>single-observation</code>
@@ -4656,7 +4900,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-011-212fc62819d02ecc | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=130227.713 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 9 | criterion; 4/9; ratio=0.444444; public=2/2; hidden=2/7; all-checks-required=true | synthesis-provenance, synthesis-race-accepted, synthesis-fix-refuted, synthesis-platform-unknown, synthesis-severity-narrowed |
 
-## Series 40
+## Series 42
 
 - Series ID: <code>sha256:707973dcb46df0c2c43c7cf32936789093172605bcc33c1228cbd29649cbec70</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -4734,7 +4978,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 40: F03-L-PYBASH-001 revision 1
+### Case 42: F03-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:488a4095a6936fedcab1040ed4543452a68d09181f3270450c6dd553ee301954</code>
 - Evidence state: <code>single-observation</code>
@@ -4775,7 +5019,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-005-a16270dc591bde8a | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=65990.167 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 0/9; ratio=0.0; public=0/3; hidden=0/6; all-checks-required=true | workspace-1, workspace-2, workspace-3, diagnosis-deterministic-barrier, diagnosis-ordering-cause, diagnosis-restart-state, diagnosis-regression-reliable, diagnosis-cleanup-bounded, diagnosis-semantics-honest |
 
-## Series 41
+## Series 43
 
 - Series ID: <code>sha256:794504ad939b331229441ab72dec93ea2c76d3dd5aa069e27f485b21a69c2081</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -4851,7 +5095,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 41: F03-L-PYBASH-001 revision 1
+### Case 43: F03-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:957335541eba53c62ee76d3601a4dace7d9233ad590ccb65dd75cf453922c546</code>
 - Evidence state: <code>single-observation</code>
@@ -4892,7 +5136,251 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-008-41f6d565527a0a08 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=103239.161 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 5/9; ratio=0.555556; public=3/3; hidden=2/6; all-checks-required=true | diagnosis-ordering-cause, diagnosis-restart-state, diagnosis-cleanup-bounded, diagnosis-semantics-honest |
 
-## Series 42
+## Series 44
+
+- Series ID: <code>sha256:7b2bf33a770a2621ac770a00f33c18f64eebe8cdfc833bead4226d4d2b729a47</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>family-provisional</code>
+- Observation window: <code>2026-08-27T16:42:25.576Z</code> to <code>2026-08-27T17:33:44.370Z</code>
+- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
+- Execution surface(s): <code>isolated-provider-container</code>
+
+### Exact profile and configuration
+
+    {
+      "configuration": {
+        "configuration_id": "C0",
+        "independence_policy": "fresh-ephemeral-session",
+        "lane": "isolated",
+        "nested_delegation": "disabled",
+        "participant_plan": "primary-only",
+        "participants_actual": 1,
+        "peak_concurrent": 0,
+        "relation": "primary-only",
+        "workers_actual": 0
+      },
+      "profile": {
+        "family": "performance-resource",
+        "profile_id": "S-local-benchmark-diagnosis-python",
+        "size": "S",
+        "source_type": "fixture"
+      }
+    }
+
+### Exact environment
+
+    {
+      "compaction": "unknown",
+      "competing_load": "unknown",
+      "dependency_cache": "not-applicable",
+      "docker_cache": "warm",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "machine_class": "docker-limited-2cpu-2g",
+      "provider_prompt_cache": "unknown",
+      "repository_cache": "not-applicable",
+      "session_context": "fresh",
+      "timezone": "UTC"
+    }
+
+### Exact participant, model, requested/applied settings, and surface
+
+    [
+      {
+        "cli_name": "grok",
+        "cli_source": "host-sync",
+        "cli_version": "1.0.5",
+        "execution_surface": "isolated-provider-container",
+        "generation_settings": [
+          {
+            "applied_value": "medium",
+            "key": "effort",
+            "namespace": "grok.reasoning",
+            "requested_value": "medium",
+            "status": "applied"
+          }
+        ],
+        "model_identity": {
+          "identity_confidence": "exact",
+          "requested_alias": "grok-4.6",
+          "requested_source": "flag",
+          "resolved_id": "grok-4.6"
+        },
+        "permission_mode": "automatic",
+        "provider": "grok",
+        "role": "implementer",
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
+      }
+    ]
+
+### Case observations
+
+### Case 44: F10-S-PY-001 revision 2
+
+- Stratum ID: <code>sha256:dd79773645ec83284a595003d5aa8f1fde5a4aa6d7b84e6f9533af47109a1251</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T16:42:25.576Z</code> to <code>2026-08-27T16:46:44.388Z</code>
+- Runs / observation blocks: 2 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>incomplete-public-output-shape</code>, <code>incomplete-edit-surface</code>, <code>live-floor-observed</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:be344b012ae324fad601efc1874d7f0939dadfc75d98cb4be9659f03a11739a0",
+      "case_id": "F10-S-PY-001",
+      "revision": 2,
+      "snapshot": {
+        "base_sha": "896e8b0e3b723972111eb114016b093451315cd8",
+        "bundle_digest": "sha256:fea7cfc3b0529d37fd21ae8f3e2bdd650c94762d82e8dd9c64a4f9ea8e0fc56e",
+        "instruction_set_digest": "sha256:515e1f39556360f1ddfbd903ca45e438a5053cebd86306dc6ac82fae3d1d8fb2"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=0; fail=2; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-fail-terminal | 2 same-case observations; raw points | run-001-675b1c5c3145e7c2=84082.648 ms; run-004-9a48569cf6cd36c9=121863.896 ms | 84082.648–121863.896 ms (observed min/max) |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-675b1c5c3145e7c2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=84082.648 ms; declared-cap=600000 ms | task-artifacts/partial; files=1; bytes=3126 | excluded; case-design-ineligible | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
+| run-004-9a48569cf6cd36c9 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=121863.896 ms; declared-cap=600000 ms | task-artifacts/partial; files=1; bytes=3170 | excluded; case-design-ineligible | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
+
+### Case 45: F10-S-PY-001 revision 3
+
+- Stratum ID: <code>sha256:b6d898ed1d0fecb786e74d4edf7f6fe0f97fc270e303fd0aff9f517716f32030</code>
+- Evidence state: <code>single-observation</code>
+- Observation window: <code>2026-08-27T17:10:04.950Z</code> to <code>2026-08-27T17:10:04.950Z</code>
+- Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>conditional</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-controlled-vocabulary</code>, <code>public-artifact-template</code>, <code>scope-failure-replicated-across-semantic-criteria</code>, <code>live-floor-observed</code>, <code>superseded-by-revision-4</code>, <code>case-design-conditional</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:572c77cc834c9427afe16d1de83abec9507cb9ded80b784165e676404f099a19",
+      "case_id": "F10-S-PY-001",
+      "revision": 3,
+      "snapshot": {
+        "base_sha": "9e06587a7071bd4e28098e5f1949404b86717a0d",
+        "bundle_digest": "sha256:fbc3a44525eea4a2d7f0ba8b9dc3451e8a4283ead8f97f14720e6f3f1e579306",
+        "instruction_set_digest": "sha256:515e1f39556360f1ddfbd903ca45e438a5053cebd86306dc6ac82fae3d1d8fb2"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=0; fail=1; unknown=0 |
+| Censoring | complete=1; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=1; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-fail-terminal | single observation; raw point | run-001-e37e0b7d937329d2=49878.367 ms | not available |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-e37e0b7d937329d2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=49878.367 ms; declared-cap=600000 ms | task-artifacts/partial; files=1; bytes=2399; unexpected(total=2; tracked=0; untracked=2; deleted=0) | conditional; case-design-conditional | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
+
+### Case 46: F10-S-PY-001 revision 4
+
+- Stratum ID: <code>sha256:e624687bc44895dd7219a47f001d8e74622b846c3eb3b72274f4a72fa60d75e4</code>
+- Evidence state: <code>single-observation</code>
+- Observation window: <code>2026-08-27T17:22:09.934Z</code> to <code>2026-08-27T17:22:09.934Z</code>
+- Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>conditional</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-edit-surface-enforcement</code>, <code>scope-failure-still-replicated-in-hidden-setup</code>, <code>live-floor-observed</code>, <code>superseded-by-revision-5</code>, <code>case-design-conditional</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:d488ba8a084a3f8c25e608043670f419383052ab5f9fe923c08a09ccced94766",
+      "case_id": "F10-S-PY-001",
+      "revision": 4,
+      "snapshot": {
+        "base_sha": "ba18f532f1afc42e34dd3f78747204c7ea292410",
+        "bundle_digest": "sha256:a88782020deea0e44ac9f8de26a45064dad930058bd7d4694ca0bb0612310dde",
+        "instruction_set_digest": "sha256:515e1f39556360f1ddfbd903ca45e438a5053cebd86306dc6ac82fae3d1d8fb2"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=0; fail=1; unknown=0 |
+| Censoring | complete=1; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=1; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-fail-terminal | single observation; raw point | run-001-8acd5cb092ee5ff9=59297.965 ms | not available |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-8acd5cb092ee5ff9 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=59297.965 ms; declared-cap=600000 ms | task-artifacts/partial; files=1; bytes=2421; unexpected(total=2; tracked=0; untracked=2; deleted=0) | conditional; case-design-conditional | fail | 7 | criterion; 1/7; ratio=0.142857; public=1/2; hidden=0/5; all-checks-required=true | workspace-2, perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
+
+### Case 47: F10-S-PY-001 revision 5
+
+- Stratum ID: <code>sha256:0bc70216b18483096ed507a973624e1e5da94e7ffca0fb97e78a2814820338a1</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T17:30:07.438Z</code> to <code>2026-08-27T17:33:44.370Z</code>
+- Runs / observation blocks: 2 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-controlled-vocabulary</code>, <code>public-artifact-template</code>, <code>single-public-edit-surface-criterion</code>, <code>independent-semantic-criteria</code>, <code>counter-derived-answer</code>, <code>revision-5-repair</code>, <code>task-artifact-partial</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:d488ba8a084a3f8c25e608043670f419383052ab5f9fe923c08a09ccced94766",
+      "case_id": "F10-S-PY-001",
+      "revision": 5,
+      "snapshot": {
+        "base_sha": "ba18f532f1afc42e34dd3f78747204c7ea292410",
+        "bundle_digest": "sha256:a88782020deea0e44ac9f8de26a45064dad930058bd7d4694ca0bb0612310dde",
+        "instruction_set_digest": "sha256:515e1f39556360f1ddfbd903ca45e438a5053cebd86306dc6ac82fae3d1d8fb2"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=0; fail=2; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-fail-terminal | 2 same-case observations; raw points | run-001-5472b0e0b76704d9=49313.292 ms; run-004-a573e9efc0fa1db1=43920.852 ms | 43920.852–49313.292 ms (observed min/max) |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-5472b0e0b76704d9 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=49313.292 ms; declared-cap=600000 ms | task-artifacts/partial; files=1; bytes=2394; unexpected(total=2; tracked=0; untracked=2; deleted=0) | conditional; task-artifact-partial | fail | 7 | criterion; 6/7; ratio=0.857143; public=1/2; hidden=5/5; all-checks-required=true | workspace-2 |
+| run-004-a573e9efc0fa1db1 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=43920.852 ms; declared-cap=600000 ms | task-artifacts/partial; files=1; bytes=2394; unexpected(total=2; tracked=0; untracked=2; deleted=0) | conditional; task-artifact-partial | fail | 7 | criterion; 6/7; ratio=0.857143; public=1/2; hidden=5/5; all-checks-required=true | workspace-2 |
+
+## Series 45
 
 - Series ID: <code>sha256:7bdc45db083df2bc6df03e5da80f13ab27877c4b216327d7f23ef2eff1499b79</code>
 - Study ID: <code>duration-atlas-wave3</code>
@@ -4968,7 +5456,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 42: F04-L-PYBASH-001 revision 1
+### Case 48: F04-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:b00919f7be758a91fcda8f93673ec0dd8e2c655e23f11bded413c723598db0a4</code>
 - Evidence state: <code>single-observation</code>
@@ -5009,7 +5497,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | codex-f04-l-sol-medium-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=96938.053 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
-## Series 43
+## Series 46
 
 - Series ID: <code>sha256:7c7996c50183de9e19931d7fadcb8a59a0486f375bc9fb439776b5f5464e9823</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -5087,7 +5575,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 43: F10-S-PY-001 revision 1
+### Case 49: F10-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:8fe4116d254b1de4a20b37e0059ecbf234e48cce1840be6d4d6bf60d4a78332e</code>
 - Evidence state: <code>single-observation</code>
@@ -5096,7 +5584,7 @@ Case identity/profile differences (12):
 - Effort-quality use: <code>excluded</code>
 - Case design status: <code>ineligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>hidden-controlled-vocabulary</code>, <code>semantic-false-negative-risk</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
+- Validity reasons: <code>hidden-controlled-vocabulary</code>, <code>semantic-false-negative-risk</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -5128,7 +5616,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-009-2bb14915b664e5af | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=46691.145 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 7 | criterion; 1/7; ratio=0.142857; public=1/2; hidden=0/5; all-checks-required=true | workspace-2, perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
 
-## Series 44
+## Series 47
 
 - Series ID: <code>sha256:7e7e4a684929ee5dd70bb3c54211a29791fbc76790045d393610b4b79e795e5f</code>
 - Study ID: <code>duration-atlas-wave3</code>
@@ -5206,7 +5694,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 44: F04-L-PYBASH-001 revision 1
+### Case 50: F04-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:98742ec5cfd3854f4806664708423eb59b788445630f751b4b90fc2adbf70dd5</code>
 - Evidence state: <code>single-observation</code>
@@ -5247,7 +5735,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | grok-f04-l-46-high-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=100239.97 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
-## Series 45
+## Series 48
 
 - Series ID: <code>sha256:80287988b72a1970babcfe3cd0abd260edb71e0bd4e1547b98a567017b75c938</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -5323,7 +5811,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 45: F10-S-PY-001 revision 1
+### Case 51: F10-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:e74df3b0ef1ac97b552f0077e854c8d63402e3569509489cf6cc2e611a07074f</code>
 - Evidence state: <code>single-observation</code>
@@ -5332,7 +5820,7 @@ Case identity/profile differences (12):
 - Effort-quality use: <code>excluded</code>
 - Case design status: <code>ineligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>hidden-controlled-vocabulary</code>, <code>semantic-false-negative-risk</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
+- Validity reasons: <code>hidden-controlled-vocabulary</code>, <code>semantic-false-negative-risk</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -5364,7 +5852,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-004-771bcffe5e8c9972 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=103620.903 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
 
-## Series 46
+## Series 49
 
 - Series ID: <code>sha256:806841a7e6b67821a10a7c675348cd05bb741b239bfba2f4dc8d8bd2229bda5c</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -5442,7 +5930,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 46: F04-S-PY-001 revision 1
+### Case 52: F04-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:af3cf86eae25c7b61b2281176601ca87698f6071de049cb16544ecfd630d0f00</code>
 - Evidence state: <code>single-observation</code>
@@ -5483,7 +5971,210 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-012-06ed7485f4107e51 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=64269.798 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
 
-## Series 47
+## Series 50
+
+- Series ID: <code>sha256:85c2babc25c188ca37ae9815af8d5a8607e003785b9557fe1738367c8bb7f064</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>family-provisional</code>
+- Observation window: <code>2026-08-27T16:43:55.803Z</code> to <code>2026-08-27T17:32:04.792Z</code>
+- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
+- Execution surface(s): <code>isolated-provider-container</code>
+
+### Exact profile and configuration
+
+    {
+      "configuration": {
+        "configuration_id": "C0",
+        "independence_policy": "fresh-ephemeral-session",
+        "lane": "isolated",
+        "nested_delegation": "disabled",
+        "participant_plan": "primary-only",
+        "participants_actual": 1,
+        "peak_concurrent": 0,
+        "relation": "primary-only",
+        "workers_actual": 0
+      },
+      "profile": {
+        "family": "performance-resource",
+        "profile_id": "S-local-benchmark-diagnosis-python",
+        "size": "S",
+        "source_type": "fixture"
+      }
+    }
+
+### Exact environment
+
+    {
+      "compaction": "unknown",
+      "competing_load": "unknown",
+      "dependency_cache": "not-applicable",
+      "docker_cache": "warm",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "machine_class": "docker-limited-2cpu-2g",
+      "provider_prompt_cache": "unknown",
+      "repository_cache": "not-applicable",
+      "session_context": "fresh",
+      "timezone": "UTC"
+    }
+
+### Exact participant, model, requested/applied settings, and surface
+
+    [
+      {
+        "cli_name": "grok",
+        "cli_source": "host-sync",
+        "cli_version": "1.0.5",
+        "execution_surface": "isolated-provider-container",
+        "generation_settings": [
+          {
+            "applied_value": "high",
+            "key": "effort",
+            "namespace": "grok.reasoning",
+            "requested_value": "high",
+            "status": "applied"
+          }
+        ],
+        "model_identity": {
+          "identity_confidence": "exact",
+          "requested_alias": "grok-4.6",
+          "requested_source": "flag",
+          "resolved_id": "grok-4.6"
+        },
+        "permission_mode": "automatic",
+        "provider": "grok",
+        "role": "implementer",
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
+      }
+    ]
+
+### Case observations
+
+### Case 53: F10-S-PY-001 revision 2
+
+- Stratum ID: <code>sha256:4989fa81dc3c24677b3a40b34b112e0a780633f850529970eff29c6192f19075</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T16:43:55.803Z</code> to <code>2026-08-27T16:45:41.217Z</code>
+- Runs / observation blocks: 2 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>incomplete-public-output-shape</code>, <code>incomplete-edit-surface</code>, <code>live-floor-observed</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:be344b012ae324fad601efc1874d7f0939dadfc75d98cb4be9659f03a11739a0",
+      "case_id": "F10-S-PY-001",
+      "revision": 2,
+      "snapshot": {
+        "base_sha": "896e8b0e3b723972111eb114016b093451315cd8",
+        "bundle_digest": "sha256:fea7cfc3b0529d37fd21ae8f3e2bdd650c94762d82e8dd9c64a4f9ea8e0fc56e",
+        "instruction_set_digest": "sha256:515e1f39556360f1ddfbd903ca45e438a5053cebd86306dc6ac82fae3d1d8fb2"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=0; fail=2; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-fail-terminal | 2 same-case observations; raw points | run-002-981b2e57a2745c68=99037.121 ms; run-003-169fcd53847158b0=58409.387 ms | 58409.387–99037.121 ms (observed min/max) |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-981b2e57a2745c68 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=99037.121 ms; declared-cap=600000 ms | task-artifacts/partial; files=0; bytes=0 | excluded; case-design-ineligible | fail | 7 | criterion; 1/7; ratio=0.142857; public=1/2; hidden=0/5; all-checks-required=true | workspace-2, perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
+| run-003-169fcd53847158b0 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=58409.387 ms; declared-cap=600000 ms | task-artifacts/partial; files=0; bytes=0 | excluded; case-design-ineligible | fail | 7 | criterion; 1/7; ratio=0.142857; public=1/2; hidden=0/5; all-checks-required=true | workspace-2, perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
+
+### Case 54: F10-S-PY-001 revision 3
+
+- Stratum ID: <code>sha256:f3e365afdb08434f43a70c07a3d3043804cc1155065aa6b5348507e360b3e435</code>
+- Evidence state: <code>single-observation</code>
+- Observation window: <code>2026-08-27T17:11:01.757Z</code> to <code>2026-08-27T17:11:01.757Z</code>
+- Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>conditional</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-controlled-vocabulary</code>, <code>public-artifact-template</code>, <code>scope-failure-replicated-across-semantic-criteria</code>, <code>live-floor-observed</code>, <code>superseded-by-revision-4</code>, <code>case-design-conditional</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:572c77cc834c9427afe16d1de83abec9507cb9ded80b784165e676404f099a19",
+      "case_id": "F10-S-PY-001",
+      "revision": 3,
+      "snapshot": {
+        "base_sha": "9e06587a7071bd4e28098e5f1949404b86717a0d",
+        "bundle_digest": "sha256:fbc3a44525eea4a2d7f0ba8b9dc3451e8a4283ead8f97f14720e6f3f1e579306",
+        "instruction_set_digest": "sha256:515e1f39556360f1ddfbd903ca45e438a5053cebd86306dc6ac82fae3d1d8fb2"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=0; fail=1; unknown=0 |
+| Censoring | complete=1; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=1; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-fail-terminal | single observation; raw point | run-002-6f799c190cba53bb=43401.663 ms | not available |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-6f799c190cba53bb | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=43401.663 ms; declared-cap=600000 ms | task-artifacts/partial; files=0; bytes=0; unexpected(total=2; tracked=0; untracked=2; deleted=0) | conditional; case-design-conditional | fail | 7 | criterion; 1/7; ratio=0.142857; public=1/2; hidden=0/5; all-checks-required=true | workspace-2, perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
+
+### Case 55: F10-S-PY-001 revision 5
+
+- Stratum ID: <code>sha256:779af5473db289a9af6806a2aa962efe26432fd417bcd6955952ade49a6eda8e</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T17:31:00.937Z</code> to <code>2026-08-27T17:32:04.792Z</code>
+- Runs / observation blocks: 2 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-controlled-vocabulary</code>, <code>public-artifact-template</code>, <code>single-public-edit-surface-criterion</code>, <code>independent-semantic-criteria</code>, <code>counter-derived-answer</code>, <code>revision-5-repair</code>, <code>task-artifact-partial</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:d488ba8a084a3f8c25e608043670f419383052ab5f9fe923c08a09ccced94766",
+      "case_id": "F10-S-PY-001",
+      "revision": 5,
+      "snapshot": {
+        "base_sha": "ba18f532f1afc42e34dd3f78747204c7ea292410",
+        "bundle_digest": "sha256:a88782020deea0e44ac9f8de26a45064dad930058bd7d4694ca0bb0612310dde",
+        "instruction_set_digest": "sha256:515e1f39556360f1ddfbd903ca45e438a5053cebd86306dc6ac82fae3d1d8fb2"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=0; fail=2; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-fail-terminal | 2 same-case observations; raw points | run-002-eda1eebca3b8e737=57839.283 ms; run-003-ed352b2adf57e920=91883.209 ms | 57839.283–91883.209 ms (observed min/max) |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-eda1eebca3b8e737 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=57839.283 ms; declared-cap=600000 ms | task-artifacts/partial; files=1; bytes=2421; unexpected(total=2; tracked=0; untracked=2; deleted=0) | conditional; task-artifact-partial | fail | 7 | criterion; 6/7; ratio=0.857143; public=1/2; hidden=5/5; all-checks-required=true | workspace-2 |
+| run-003-ed352b2adf57e920 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=91883.209 ms; declared-cap=600000 ms | task-artifacts/partial; files=1; bytes=2359; unexpected(total=2; tracked=0; untracked=2; deleted=0) | conditional; task-artifact-partial | fail | 7 | criterion; 6/7; ratio=0.857143; public=1/2; hidden=5/5; all-checks-required=true | workspace-2 |
+
+## Series 51
 
 - Series ID: <code>sha256:861e92744ddb4e58517018ff20c909be716c95ace4f35cf89c30a7440642bec3</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -5559,7 +6250,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 47: F08-S-MDJSON-001 revision 1
+### Case 56: F08-S-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:027c26b1dc483b31f94fb0b2e6e28632a0cfb16ffb88b5eba02d9b5a8fe51d70</code>
 - Evidence state: <code>single-observation</code>
@@ -5600,7 +6291,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-001-8a98736041817333 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=110968.743 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | design-constraint-coverage, design-counterexamples, design-selected-contract, design-evidence-entailment, design-doc-json-sync |
 
-## Series 48
+## Series 52
 
 - Series ID: <code>sha256:8b5d7fb16c941688b70104f1ff1f9264396aeffbadf56a1855a3a7d805ae0b51</code>
 - Study ID: <code>duration-atlas-wave2</code>
@@ -5678,7 +6369,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 48: F04-S-PY-001 revision 1
+### Case 57: F04-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:9c7e33335d2cb1bab5fce967f64e154b0a498b5c5b61023c19d06c55b62521bc</code>
 - Evidence state: <code>single-observation</code>
@@ -5719,7 +6410,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | grok-f04-s-46-medium-20260827-r02 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=52670.704 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 5 | criterion; 5/5; ratio=1.0; public=1/1; hidden=4/4; all-checks-required=true | none |
 
-## Series 49
+## Series 53
 
 - Series ID: <code>sha256:8c57e59c5fd5190cb6a51f8234c6a854d7f756987b21f009ca806ed9fde163b7</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -5795,7 +6486,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 49: F12-S-MDJSON-001 revision 1
+### Case 58: F12-S-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:3c323c491b0c73d191b357f5ee97b9ce283868609adb2cc4d6a7c10855545102</code>
 - Evidence state: <code>single-observation</code>
@@ -5836,7 +6527,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-019-08b62149616e646f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=61960.683 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 6 | criterion; 3/6; ratio=0.5; public=1/1; hidden=2/5; all-checks-required=true | synthesis-claim-coverage, synthesis-conflict-adjudication, synthesis-unsupported |
 
-## Series 50
+## Series 54
 
 - Series ID: <code>sha256:8dd74aa192fadf7065ad3a12de258406b9f9146574599686970f8748ccf13fc6</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -5914,7 +6605,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 50: F10-S-PY-001 revision 1
+### Case 59: F10-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:296ed2a22b56ec9b3a5167f8d69c197b814b3d233132072891f740d9662dd412</code>
 - Evidence state: <code>single-observation</code>
@@ -5923,7 +6614,7 @@ Case identity/profile differences (12):
 - Effort-quality use: <code>excluded</code>
 - Case design status: <code>ineligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>hidden-controlled-vocabulary</code>, <code>semantic-false-negative-risk</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
+- Validity reasons: <code>hidden-controlled-vocabulary</code>, <code>semantic-false-negative-risk</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -5955,7 +6646,126 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-012-598bdb7aa67e5c56 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=56971.561 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 7 | criterion; 1/7; ratio=0.142857; public=1/2; hidden=0/5; all-checks-required=true | workspace-2, perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
 
-## Series 51
+## Series 55
+
+- Series ID: <code>sha256:9190c193cc4266e81e21c2eb06e9843abdd85b33d1e2968f6c39b303dce8f10f</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:06:01.376Z</code> to <code>2026-08-27T18:30:04.728Z</code>
+- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
+- Execution surface(s): <code>isolated-provider-container</code>
+
+### Exact profile and configuration
+
+    {
+      "configuration": {
+        "configuration_id": "C0",
+        "independence_policy": "fresh-ephemeral-session",
+        "lane": "isolated",
+        "nested_delegation": "disabled",
+        "participant_plan": "primary-only",
+        "participants_actual": 1,
+        "peak_concurrent": 0,
+        "relation": "primary-only",
+        "workers_actual": 0
+      },
+      "profile": {
+        "family": "test-design",
+        "profile_id": "L-cross-process-lifecycle-test-design",
+        "size": "L",
+        "source_type": "fixture"
+      }
+    }
+
+### Exact environment
+
+    {
+      "compaction": "unknown",
+      "competing_load": "unknown",
+      "dependency_cache": "not-applicable",
+      "docker_cache": "warm",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "machine_class": "docker-limited-2cpu-2g",
+      "provider_prompt_cache": "unknown",
+      "repository_cache": "not-applicable",
+      "session_context": "fresh",
+      "timezone": "UTC"
+    }
+
+### Exact participant, model, requested/applied settings, and surface
+
+    [
+      {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "generation_settings": [
+          {
+            "key": "effort",
+            "namespace": "codex.reasoning",
+            "requested_value": "medium",
+            "status": "unknown"
+          }
+        ],
+        "model_identity": {
+          "identity_confidence": "alias-only",
+          "requested_alias": "gpt-5.6-sol",
+          "requested_source": "flag"
+        },
+        "permission_mode": "automatic",
+        "provider": "codex",
+        "role": "implementer",
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
+      }
+    ]
+
+### Case observations
+
+### Case 60: F06-L-PYBASH-001 revision 1
+
+- Stratum ID: <code>sha256:8f0d26d108eecab455882bcb290efad7e4339705390d9abf8ca5853fdb93377f</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:06:01.376Z</code> to <code>2026-08-27T18:30:04.728Z</code>
+- Runs / observation blocks: 3 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>conditional</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-lifecycle-invariants</code>, <code>behavioral-oracle</code>, <code>nondeterministic-fixture-bundle</code>, <code>cross-identity-pooling-forbidden</code>, <code>superseded-by-revision-2</code>, <code>case-design-conditional</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
+      "case_id": "F06-L-PYBASH-001",
+      "revision": 1,
+      "snapshot": {
+        "base_sha": "178b4d44cb937a1d7c10d938af214a7e8e275eb0",
+        "bundle_digest": "sha256:42b81fa1eca375a52f72bc824a06ee73add9b329b7c9c920485ea68221a9ab6b",
+        "instruction_set_digest": "sha256:e95b2a3cd9c10ed97a6785a56b0e8e4ba88cc1271dc86d221b6d5576fec710c0"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=0; fail=3; unknown=0 |
+| Censoring | complete=3; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=3; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-fail-terminal | 3 same-case observations; raw points | run-001-f56936341f7d4162=219663.071 ms; run-004-ab539e60eaf636e8=227696.696 ms; run-005-99f4ead8246d40ea=295537.591 ms | 219663.071–295537.591 ms (observed min/max) |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-f56936341f7d4162 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=219663.071 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=11459; unexpected(total=0; tracked=0; untracked=0; deleted=0) | conditional; case-design-conditional | fail | 11 | criterion; 10/11; ratio=0.909091; public=3/4; hidden=7/7; all-checks-required=true | workspace-3 |
+| run-004-ab539e60eaf636e8 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=227696.696 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=11196; unexpected(total=0; tracked=0; untracked=0; deleted=0) | conditional; case-design-conditional | fail | 11 | criterion; 9/11; ratio=0.818182; public=2/4; hidden=7/7; all-checks-required=true | workspace-2, workspace-3 |
+| run-005-99f4ead8246d40ea | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=295537.591 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=11673; unexpected(total=0; tracked=0; untracked=0; deleted=0) | conditional; case-design-conditional | fail | 11 | criterion; 5/11; ratio=0.454545; public=4/4; hidden=1/7; all-checks-required=true | test-kills-lost-wakeup, test-kills-stale-lease, test-kills-duplicate-owner, test-kills-broad-cleanup, test-repeatability, test-bounded-cleanup |
+
+## Series 56
 
 - Series ID: <code>sha256:9648c8c96a8e6eca9a0ae550194b24304b9968d442fc1cc50f944bf62a8d214a</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -6031,7 +6841,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 51: F08-L-MDJSON-001 revision 1
+### Case 61: F08-L-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:9f5bf8f01d249f1a5029b6cde4347f4410c9276fd7d785d3ded8c8289016de64</code>
 - Evidence state: <code>single-observation</code>
@@ -6072,7 +6882,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-003-456211b1993ac2d2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=249148.556 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 9/11; ratio=0.818182; public=3/3; hidden=6/8; all-checks-required=true | design-security-boundaries, design-alternative-counterexamples |
 
-## Series 52
+## Series 57
 
 - Series ID: <code>sha256:973beb264df75368bc4aab9c2b50290e037f39d61b02f7a71141b833eec1bba5</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -6148,7 +6958,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 52: F03-M-PY-001 revision 1
+### Case 62: F03-M-PY-001 revision 1
 
 - Stratum ID: <code>sha256:f53142795552604e82d9d520fc7fb7cb82facc8508aeb78c3ee8773826c90da1</code>
 - Evidence state: <code>single-observation</code>
@@ -6189,7 +6999,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-017-999a8eedbe1d1e9f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=99825.095 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 7 | criterion; 3/7; ratio=0.428571; public=2/2; hidden=1/5; all-checks-required=true | diagnosis-reload-contrast, diagnosis-causal-chain, diagnosis-regression-layers, diagnosis-distractor-rejected |
 
-## Series 53
+## Series 58
 
 - Series ID: <code>sha256:9a470fd487f45e8e26869b5107acee0a9d700dee687668be118cbd4f4f0814dc</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -6265,7 +7075,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 53: F07-S-MD-001 revision 1
+### Case 63: F07-S-MD-001 revision 1
 
 - Stratum ID: <code>sha256:d8241ffc818a93c9cdc02dd433e9477631afbae0f6ddd94557204c2fae22184a</code>
 - Evidence state: <code>single-observation</code>
@@ -6306,7 +7116,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-025-b2840e4aeb68baa2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=37859.725 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 5/6; ratio=0.833333; public=2/2; hidden=3/4; all-checks-required=true | doc-constraint-accurate |
 
-## Series 54
+## Series 59
 
 - Series ID: <code>sha256:9c0f9430bb360056137f34a2c757c5b6b2f67f663929864d85e26ab2d7237228</code>
 - Study ID: <code>duration-atlas-wave3</code>
@@ -6383,7 +7193,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 54: F04-L-PYBASH-001 revision 1
+### Case 64: F04-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:b399074d362e7485383847c821ba2fa3b50e5c13163f0fba6949640433132f2a</code>
 - Evidence state: <code>single-observation</code>
@@ -6424,7 +7234,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | grok-f04-l-46-max-20260827-r03 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=generation-setting-rejected | complete-terminal; observed-terminal=2358.287 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
 
-## Series 55
+## Series 60
 
 - Series ID: <code>sha256:9e3cc23e90ce2f9f4172dc2b6f9ab1ad7ddd4b4dfb3a860cbee22505ed2d2d5c</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -6500,7 +7310,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 55: F09-L-PYBASHDOCKER-001 revision 1
+### Case 65: F09-L-PYBASHDOCKER-001 revision 1
 
 - Stratum ID: <code>sha256:253d5b2d5829895eb958316645ee719b1b195a5368c64b380f46e7ede0922126</code>
 - Evidence state: <code>single-observation</code>
@@ -6541,7 +7351,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-011-52a82583a7ab2da4 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=360122.581 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; case-design-conditional | fail | 11 | criterion; 3/11; ratio=0.272727; public=3/3; hidden=0/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-bind-injection, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-control-counterexamples, threat-unknown-honesty |
 
-## Series 56
+## Series 61
 
 - Series ID: <code>sha256:9f46ffaed764413de667479e983ad48b1edffd8731f21e8cacb0c295d1dd84c1</code>
 - Study ID: <code>duration-atlas-wave1</code>
@@ -6617,7 +7427,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 56: F04-S-PY-001 revision 1
+### Case 66: F04-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:377ecfc134e0ff7fba8b5129f2d506c27cfd4731168265d978298cc9162d89ea</code>
 - Evidence state: <code>single-observation</code>
@@ -6658,7 +7468,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | codex-f04-s-sol-low-20260826-r04 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=52766.608 ms; declared-cap=300000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 2 | aggregate-check; 1/2; ratio=0.5; public=0/0; hidden=0/0; all-checks-required=true | f04-s-python-hidden-v1 |
 
-## Series 57
+## Series 62
 
 - Series ID: <code>sha256:9f4973a9cbeac926bc1022e89d5943a4c97c6d78199d3fb7977131b1c92f6580</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -6736,7 +7546,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 57: F05-M-PY-001 revision 1
+### Case 67: F05-M-PY-001 revision 1
 
 - Stratum ID: <code>sha256:a983c5092148473f7c58bccf0c65d76ea8899e31bfb835bfe92ddaf7507b247e</code>
 - Evidence state: <code>single-observation</code>
@@ -6777,7 +7587,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-001-9c16b4749bbfca63 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=71657.485 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | migration-all-callers, migration-policy-lifecycle, migration-compat-bytes, migration-warning-once, migration-api-surface |
 
-## Series 58
+## Series 63
 
 - Series ID: <code>sha256:a2a81f1650e3931c74ced00b76fafcd1f321cd3502a355bd2ca20808b487d7c5</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -6855,7 +7665,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 58: F08-L-MDJSON-001 revision 1
+### Case 68: F08-L-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:56c76ed458e2b6eff4e696dd2db0b44edb4da9ab0e023310be9bf527d86846fa</code>
 - Evidence state: <code>single-observation</code>
@@ -6896,7 +7706,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-004-a96094fecd70da84 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=270403.618 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 7/11; ratio=0.636364; public=3/3; hidden=4/8; all-checks-required=true | design-requirement-coverage, design-security-boundaries, design-alternative-counterexamples, design-unknown-honesty |
 
-## Series 59
+## Series 64
 
 - Series ID: <code>sha256:a74bb43b8f0676d317e2dd5a7b050c1432847811b04e9f5dfb9c366618fa85cb</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -6974,7 +7784,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 59: F04-S-PY-001 revision 1
+### Case 69: F04-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:480746b4094fa174dd7f93ea844e1f8b0f2ee93f5552ba13c1d7f8c6039acf31</code>
 - Evidence state: <code>single-observation</code>
@@ -7015,7 +7825,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-003-01b8985244ba715d | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=87272.838 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
 
-## Series 60
+## Series 65
 
 - Series ID: <code>sha256:a8e586e26d25073f1a7aa889e664eb58bd448af544b6594bfe6b2f8db92c54e3</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -7091,7 +7901,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 60: F09-L-PYBASHDOCKER-001 revision 1
+### Case 70: F09-L-PYBASHDOCKER-001 revision 1
 
 - Stratum ID: <code>sha256:89614d074dfdbe91a1369055711292025da4a724bbbc43c84e223c8f0894c901</code>
 - Evidence state: <code>single-observation</code>
@@ -7132,7 +7942,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-015-a022a158880d7e0a | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=347100.663 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; case-design-conditional | fail | 11 | criterion; 3/11; ratio=0.272727; public=3/3; hidden=0/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-bind-injection, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-control-counterexamples, threat-unknown-honesty |
 
-## Series 61
+## Series 66
 
 - Series ID: <code>sha256:a95c02e13b4a2f5adb2847656dffd39f3c82d5318a4c16be4ae7fa200f3c8dd1</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -7208,7 +8018,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 61: F01-S-PY-001 revision 1
+### Case 71: F01-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:1d2d79ee41d79639f795b12b1003f3eedca6872b92c1b10712342292249ed040</code>
 - Evidence state: <code>single-observation</code>
@@ -7249,126 +8059,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-003-d15e57bcc079496a | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=107946.959 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 4/6; ratio=0.666667; public=2/2; hidden=2/4; all-checks-required=true | trace-required-nodes, trace-required-edges |
 
-## Series 62
-
-- Series ID: <code>sha256:aa23a70759b7189791fe804e2b39fcfa17314af697638ee5bb81241301f194c2</code>
-- Study ID: <code>duration-atlas-wave6-provider</code>
-- Evidence state: <code>single-observation</code>
-- Observation window: <code>2026-08-27T05:17:43.584Z</code> to <code>2026-08-27T05:17:43.584Z</code>
-- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
-- Execution surface(s): <code>isolated-provider-container</code>
-
-### Exact profile and configuration
-
-    {
-      "configuration": {
-        "configuration_id": "C0",
-        "independence_policy": "fresh-ephemeral-session",
-        "lane": "isolated",
-        "nested_delegation": "disabled",
-        "participant_plan": "primary-only",
-        "participants_actual": 1,
-        "peak_concurrent": 0,
-        "relation": "primary-only",
-        "workers_actual": 0
-      },
-      "profile": {
-        "family": "test-design",
-        "profile_id": "L-cross-process-lifecycle-test-design",
-        "size": "L",
-        "source_type": "fixture"
-      }
-    }
-
-### Exact environment
-
-    {
-      "compaction": "unknown",
-      "competing_load": "unknown",
-      "dependency_cache": "not-applicable",
-      "docker_cache": "warm",
-      "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
-      "machine_class": "docker-limited-2cpu-2g",
-      "provider_prompt_cache": "unknown",
-      "repository_cache": "not-applicable",
-      "session_context": "fresh",
-      "timezone": "UTC"
-    }
-
-### Exact participant, model, requested/applied settings, and surface
-
-    [
-      {
-        "cli_name": "grok",
-        "cli_source": "container-image",
-        "cli_version": "1.0.3",
-        "execution_surface": "isolated-provider-container",
-        "generation_settings": [
-          {
-            "applied_value": "high",
-            "key": "effort",
-            "namespace": "grok.reasoning",
-            "requested_value": "high",
-            "status": "applied"
-          }
-        ],
-        "model_identity": {
-          "identity_confidence": "exact",
-          "requested_alias": "grok-4.6",
-          "requested_source": "flag",
-          "resolved_id": "grok-4.6"
-        },
-        "permission_mode": "automatic",
-        "provider": "grok",
-        "role": "implementer",
-        "runtime_image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb"
-      }
-    ]
-
-### Case observations
-
-### Case 62: F06-L-PYBASH-001 revision 1
-
-- Stratum ID: <code>sha256:24608857e9734bb8846f206dc32fb3c587e2116768709b7ae2defa24e4bbe280</code>
-- Evidence state: <code>single-observation</code>
-- Observation window: <code>2026-08-27T05:17:43.584Z</code> to <code>2026-08-27T05:17:43.584Z</code>
-- Runs / observation blocks: 1 / 1
-- Effort-quality use: <code>conditional-only</code>
-- Case design status: <code>eligible</code>
-- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>visible-lifecycle-invariants</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
-
-#### Exact case identity
-
-    {
-      "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
-      "case_id": "F06-L-PYBASH-001",
-      "revision": 1,
-      "snapshot": {
-        "base_sha": "a41685e60ec9e83713a0682e1209e09c7085e200",
-        "bundle_digest": "sha256:4663cb59494a727556365cfe615251121817906daa9b0f98de76e7ccc062caac",
-        "instruction_set_digest": "sha256:e95b2a3cd9c10ed97a6785a56b0e8e4ba88cc1271dc86d221b6d5576fec710c0"
-      },
-      "strong_online_oracle": true
-    }
-
-| Count group | Values |
-| --- | --- |
-| Quality | pass=0; fail=1; unknown=0 |
-| Censoring | complete=1; right=0; administrative=0 |
-| First artifact | progress=0; not-observed=1; not-applicable=0; unknown=0 |
-
-| Duration view | Evidence | Raw observed points | Observed range |
-| --- | --- | --- | --- |
-| quality-fail-terminal | single observation; raw point | run-002-a5c7151046553dac=28870.428 ms | not available |
-
-#### Content-free quality evidence
-
-| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| run-002-a5c7151046553dac | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=28870.428 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 5/11; ratio=0.454545; public=4/4; hidden=1/7; all-checks-required=true | test-kills-lost-wakeup, test-kills-stale-lease, test-kills-duplicate-owner, test-kills-broad-cleanup, test-repeatability, test-bounded-cleanup |
-
-## Series 63
+## Series 67
 
 - Series ID: <code>sha256:aa99efb276f464fd88ab2118f151152489c7a7f07f6172bb069c2be40456c71d</code>
 - Study ID: <code>duration-atlas-wave2</code>
@@ -7444,7 +8135,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 63: F04-S-PY-001 revision 1
+### Case 72: F04-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:09011e8555a2050d8f28870fdbf28848ad7cbeda7dc8d79d34bebb06f1a14f4c</code>
 - Evidence state: <code>single-observation</code>
@@ -7485,7 +8176,126 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | codex-f04-s-sol-medium-20260827-r02 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=70678.478 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
 
-## Series 64
+## Series 68
+
+- Series ID: <code>sha256:aca8a138d69a79faad17b718fffcb0ab83983014a953bc0ec4468a958ff9e97f</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:44:46.267Z</code> to <code>2026-08-27T19:23:45.670Z</code>
+- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
+- Execution surface(s): <code>isolated-provider-container</code>
+
+### Exact profile and configuration
+
+    {
+      "configuration": {
+        "configuration_id": "C0",
+        "independence_policy": "fresh-ephemeral-session",
+        "lane": "isolated",
+        "nested_delegation": "disabled",
+        "participant_plan": "primary-only",
+        "participants_actual": 1,
+        "peak_concurrent": 0,
+        "relation": "primary-only",
+        "workers_actual": 0
+      },
+      "profile": {
+        "family": "evidence-synthesis",
+        "profile_id": "L-cross-evidence-decision-record",
+        "size": "L",
+        "source_type": "fixture"
+      }
+    }
+
+### Exact environment
+
+    {
+      "compaction": "unknown",
+      "competing_load": "unknown",
+      "dependency_cache": "not-applicable",
+      "docker_cache": "warm",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "machine_class": "docker-limited-2cpu-2g",
+      "provider_prompt_cache": "unknown",
+      "repository_cache": "not-applicable",
+      "session_context": "fresh",
+      "timezone": "UTC"
+    }
+
+### Exact participant, model, requested/applied settings, and surface
+
+    [
+      {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "generation_settings": [
+          {
+            "key": "effort",
+            "namespace": "codex.reasoning",
+            "requested_value": "medium",
+            "status": "unknown"
+          }
+        ],
+        "model_identity": {
+          "identity_confidence": "alias-only",
+          "requested_alias": "gpt-5.6-sol",
+          "requested_source": "flag"
+        },
+        "permission_mode": "automatic",
+        "provider": "codex",
+        "role": "implementer",
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
+      }
+    ]
+
+### Case observations
+
+### Case 73: F12-L-MDJSON-001 revision 3
+
+- Stratum ID: <code>sha256:672ca405aceb7bf5d3b33e07dad28bc7638aeb000c6d05e5581a2538cf7f1a41</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:44:46.267Z</code> to <code>2026-08-27T19:23:45.670Z</code>
+- Runs / observation blocks: 2 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-bounded-decision-space</code>, <code>public-artifact-templates</code>, <code>public-edit-surface</code>, <code>semantic-identifiers</code>, <code>plural-target-designs</code>, <code>revision-3-repair</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:6f799280ed8c5f808a5ce016fc52c8c2c5cf104dd43a6bd5d03dd7510f3688f4",
+      "case_id": "F12-L-MDJSON-001",
+      "revision": 3,
+      "snapshot": {
+        "base_sha": "02991852a9b476f21911672436a8745dca84dad3",
+        "bundle_digest": "sha256:1e35eb75c529524160da7c7decce9e826369cf2ecb8b608288f95b847e29dd88",
+        "instruction_set_digest": "sha256:83239308c474dce5e9bcdcf98bf70cdd5631410b63e77e2e16ccceb3782fa700"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=1; fail=1; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-pass-user-result | single observation; raw point | run-001-1b2394755cc404aa=157630.547 ms | not available |
+| quality-fail-terminal | single observation; raw point | run-008-d9b421c80f47c341=163644.821 ms | not available |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-1b2394755cc404aa | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=157630.55 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=17876; unexpected(total=0; tracked=0; untracked=0; deleted=0) | eligible; case-and-observation-gates-pass | pass | 12 | criterion; 12/12; ratio=1.0; public=3/3; hidden=9/9; all-checks-required=true | none |
+| run-008-d9b421c80f47c341 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=163644.821 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=19569; unexpected(total=0; tracked=0; untracked=0; deleted=0) | eligible; case-and-observation-gates-pass | fail | 12 | criterion; 11/12; ratio=0.916667; public=3/3; hidden=8/9; all-checks-required=true | synthesis-claim-provenance |
+
+## Series 69
 
 - Series ID: <code>sha256:ae5a1da7cbcdff2ccbcd3733b4dd1d778cc1ccaeff4d2e8b433cea22a802810f</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -7561,7 +8371,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 64: F03-L-PYBASH-001 revision 1
+### Case 74: F03-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:44a5d80bff7fb63a9b58de914f7a6c03288ad1fc9cb2014a5a98529085d0f01d</code>
 - Evidence state: <code>single-observation</code>
@@ -7602,7 +8412,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-024-87cd2afe0c349367 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=109957.872 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 7/9; ratio=0.777778; public=3/3; hidden=4/6; all-checks-required=true | diagnosis-ordering-cause, diagnosis-cleanup-bounded |
 
-## Series 65
+## Series 70
 
 - Series ID: <code>sha256:af8e7eccc85fb516fe0e8ae0f562ed81ea6b5b1077d7e4cdd07aa52a3d25cae6</code>
 - Study ID: <code>duration-atlas-wave3</code>
@@ -7678,7 +8488,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 65: F04-L-PYBASH-001 revision 1
+### Case 75: F04-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:a7d5d105ce7fb2dfed19069dd5463815c995ce9c8899d057ef096eec7d9d1af9</code>
 - Evidence state: <code>single-observation</code>
@@ -7719,7 +8529,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | codex-f04-l-sol-xhigh-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=136639.17 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
-## Series 66
+## Series 71
 
 - Series ID: <code>sha256:afaa58cf4233d4603bb49888f78c205ce425ce3ebb278f74abecd990c94c1130</code>
 - Study ID: <code>duration-atlas-wave3</code>
@@ -7795,7 +8605,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 66: F04-L-PYBASH-001 revision 1
+### Case 76: F04-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:741f0c421c00a7af371373e8f427250b716c0aebbaa2934ce0aa0b5b2ae99423</code>
 - Evidence state: <code>single-observation</code>
@@ -7836,7 +8646,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | codex-f04-l-sol-max-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=235214.495 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
-## Series 67
+## Series 72
 
 - Series ID: <code>sha256:b0587413e9abdf4efe3ef2632ed8dd5a2066e52cc70cbb45b25ed7c2e1d0c68c</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -7914,7 +8724,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 67: F09-L-PYBASHDOCKER-001 revision 1
+### Case 77: F09-L-PYBASHDOCKER-001 revision 1
 
 - Stratum ID: <code>sha256:e4bbd08e566fb661f0a17f4f3a01679112e6094bcb37dcc9de63c4bae028065a</code>
 - Evidence state: <code>single-observation</code>
@@ -7955,7 +8765,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-002-a43af54d4188cd09 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=219751.254 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; case-design-conditional | fail | 11 | criterion; 5/11; ratio=0.454545; public=3/3; hidden=2/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-unknown-honesty |
 
-## Series 68
+## Series 73
 
 - Series ID: <code>sha256:b5f807ea833780f33e6178e1ee7acf2704d25207b88a9fcab47272b45bceb6c6</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -8033,7 +8843,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 68: F11-M-BASH-001 revision 1
+### Case 78: F11-M-BASH-001 revision 1
 
 - Stratum ID: <code>sha256:150b999a7d5e1bd83f9e714d5e1c547147bcef5f0c2f3faf814eeb1d9d47720b</code>
 - Evidence state: <code>single-observation</code>
@@ -8074,7 +8884,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-001-553053b48f6fd867 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=146230.102 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | ops-ready-after-verify |
 
-## Series 69
+## Series 74
 
 - Series ID: <code>sha256:ba5d862eff748432c84e288b9992f41403ee7a5ad57dc6345cbb09d72ffecae5</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -8150,7 +8960,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 69: F05-M-PY-001 revision 1
+### Case 79: F05-M-PY-001 revision 1
 
 - Stratum ID: <code>sha256:40ecbf7fef16db7410c816fdb8df73c5a4b78c7f0728935efd4b9018930ae867</code>
 - Evidence state: <code>single-observation</code>
@@ -8191,7 +9001,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-010-5c5781cb4a3c9fc2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=111445.433 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 4/7; ratio=0.571429; public=2/2; hidden=2/5; all-checks-required=true | migration-all-callers, migration-warning-once, migration-api-surface |
 
-## Series 70
+## Series 75
 
 - Series ID: <code>sha256:be368bc7251067d04b8f2ef75ea77c9ea2d85c9ae86b63ae4738a0d4a8560ff1</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -8267,7 +9077,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 70: F05-S-PY-001 revision 1
+### Case 80: F05-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:9428be44d30cecc4e0f1b24826f645fddd39e8692ba1d948f11321dc74db8ef8</code>
 - Evidence state: <code>single-observation</code>
@@ -8308,7 +9118,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-007-f5a79e0d92fdb1db | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=52693.291 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | pass | 6 | criterion; 6/6; ratio=1.0; public=2/2; hidden=4/4; all-checks-required=true | none |
 
-## Series 71
+## Series 76
 
 - Series ID: <code>sha256:bfb61176024a6f420bbd97b34fef8964b562a64b8f20abeb36070ebb682f1def</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -8384,7 +9194,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 71: F06-M-PY-001 revision 1
+### Case 81: F06-M-PY-001 revision 1
 
 - Stratum ID: <code>sha256:089165535ad6554e5c581e679df9d09eb936ff3fee8f2edd332bf4ee7e017748</code>
 - Evidence state: <code>single-observation</code>
@@ -8425,7 +9235,126 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-008-79a7c1108ab317a7 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=79791.241 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | pass | 8 | criterion; 8/8; ratio=1.0; public=2/2; hidden=6/6; all-checks-required=true | none |
 
-## Series 72
+## Series 77
+
+- Series ID: <code>sha256:c1b53693ed3c1a612802118f37dd4499793f97f5b51be1a9185c53348e5502ef</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:52:38.192Z</code> to <code>2026-08-27T19:10:20.474Z</code>
+- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
+- Execution surface(s): <code>isolated-provider-container</code>
+
+### Exact profile and configuration
+
+    {
+      "configuration": {
+        "configuration_id": "C0",
+        "independence_policy": "fresh-ephemeral-session",
+        "lane": "isolated",
+        "nested_delegation": "disabled",
+        "participant_plan": "primary-only",
+        "participants_actual": 1,
+        "peak_concurrent": 0,
+        "relation": "primary-only",
+        "workers_actual": 0
+      },
+      "profile": {
+        "family": "evidence-synthesis",
+        "profile_id": "L-cross-evidence-decision-record",
+        "size": "L",
+        "source_type": "fixture"
+      }
+    }
+
+### Exact environment
+
+    {
+      "compaction": "unknown",
+      "competing_load": "unknown",
+      "dependency_cache": "not-applicable",
+      "docker_cache": "warm",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "machine_class": "docker-limited-2cpu-2g",
+      "provider_prompt_cache": "unknown",
+      "repository_cache": "not-applicable",
+      "session_context": "fresh",
+      "timezone": "UTC"
+    }
+
+### Exact participant, model, requested/applied settings, and surface
+
+    [
+      {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "generation_settings": [
+          {
+            "key": "effort",
+            "namespace": "codex.reasoning",
+            "requested_value": "xhigh",
+            "status": "unknown"
+          }
+        ],
+        "model_identity": {
+          "identity_confidence": "alias-only",
+          "requested_alias": "gpt-5.6-sol",
+          "requested_source": "flag"
+        },
+        "permission_mode": "automatic",
+        "provider": "codex",
+        "role": "implementer",
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
+      }
+    ]
+
+### Case observations
+
+### Case 82: F12-L-MDJSON-001 revision 3
+
+- Stratum ID: <code>sha256:9aea3caf838c1e64aa9f46e33f086b41dc09a25ca4cd55409d6fed9a4b9f4648</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:52:38.192Z</code> to <code>2026-08-27T19:10:20.474Z</code>
+- Runs / observation blocks: 2 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-bounded-decision-space</code>, <code>public-artifact-templates</code>, <code>public-edit-surface</code>, <code>semantic-identifiers</code>, <code>plural-target-designs</code>, <code>revision-3-repair</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:6f799280ed8c5f808a5ce016fc52c8c2c5cf104dd43a6bd5d03dd7510f3688f4",
+      "case_id": "F12-L-MDJSON-001",
+      "revision": 3,
+      "snapshot": {
+        "base_sha": "02991852a9b476f21911672436a8745dca84dad3",
+        "bundle_digest": "sha256:1e35eb75c529524160da7c7decce9e826369cf2ecb8b608288f95b847e29dd88",
+        "instruction_set_digest": "sha256:83239308c474dce5e9bcdcf98bf70cdd5631410b63e77e2e16ccceb3782fa700"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=1; fail=1; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-pass-user-result | single observation; raw point | run-003-54b64a03ec53aa9c=293479.949 ms | not available |
+| quality-fail-terminal | single observation; raw point | run-006-8f37246da9333eef=303713.698 ms | not available |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-003-54b64a03ec53aa9c | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=293479.958 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=28485; unexpected(total=0; tracked=0; untracked=0; deleted=0) | eligible; case-and-observation-gates-pass | pass | 12 | criterion; 12/12; ratio=1.0; public=3/3; hidden=9/9; all-checks-required=true | none |
+| run-006-8f37246da9333eef | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=303713.698 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=23446; unexpected(total=0; tracked=0; untracked=0; deleted=0) | eligible; case-and-observation-gates-pass | fail | 12 | criterion; 11/12; ratio=0.916667; public=3/3; hidden=8/9; all-checks-required=true | synthesis-unknown-honesty |
+
+## Series 78
 
 - Series ID: <code>sha256:c23da073d25f5e91e20b1b67eaf216ed02d8bfd1f064270afa71e8ffc798eb52</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -8501,7 +9430,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 72: F08-L-MDJSON-001 revision 1
+### Case 83: F08-L-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:8d4ece93dcede5d0e6b2afcf7998ddae367f7e6940b3fae593700754f4afc9a4</code>
 - Evidence state: <code>single-observation</code>
@@ -8542,7 +9471,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-003-49afd61bc454adc9 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=372593.588 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 8/11; ratio=0.727273; public=3/3; hidden=5/8; all-checks-required=true | design-security-boundaries, design-alternative-counterexamples, design-unknown-honesty |
 
-## Series 73
+## Series 79
 
 - Series ID: <code>sha256:c25fa54046d7e335935ac128b1d0b458e334776c45dc592e97288b7611fb83cf</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -8618,7 +9547,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 73: F07-S-MD-001 revision 1
+### Case 84: F07-S-MD-001 revision 1
 
 - Stratum ID: <code>sha256:7f47a85c4ca7a53bfd0055ac54a9c37b716b54fe2df9028a43a7c926beebed27</code>
 - Evidence state: <code>single-observation</code>
@@ -8659,7 +9588,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-012-ce6494b8f453a28e | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=49031.41 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 5/6; ratio=0.833333; public=2/2; hidden=3/4; all-checks-required=true | doc-constraint-accurate |
 
-## Series 74
+## Series 80
 
 - Series ID: <code>sha256:c281c16b7d891e84521165599310627341d1836389d27a62b79a293cdb18436e</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -8735,7 +9664,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 74: F04-S-PY-001 revision 1
+### Case 85: F04-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:1bea840af0572007492238de4a64703569f89cafdb405d2b80d5ca6a4bf9c2cb</code>
 - Evidence state: <code>single-observation</code>
@@ -8776,7 +9705,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-009-87ca73f14e652da7 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=66810.307 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
 
-## Series 75
+## Series 81
 
 - Series ID: <code>sha256:c7c62d7e7298e1fcdce0090baf18344d7a2d17282e1557d473086149ea3a4a43</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -8852,7 +9781,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 75: F02-M-PY-001 revision 1
+### Case 86: F02-M-PY-001 revision 1
 
 - Stratum ID: <code>sha256:916fda4b1c7585215771614a0ed05d3ed13d407ebf4f36daead40095e749af16</code>
 - Evidence state: <code>single-observation</code>
@@ -8893,7 +9822,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-004-f9ccfab8da105516 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=101718.315 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | review-symlink-recall, review-ownership-recall, review-interaction, review-evidence |
 
-## Series 76
+## Series 82
 
 - Series ID: <code>sha256:c887436052ae9370b7be01cba1e0f126667e9c29e126630d8393247fc9529c44</code>
 - Study ID: <code>duration-atlas-wave3</code>
@@ -8969,7 +9898,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 76: F04-L-PYBASH-001 revision 1
+### Case 87: F04-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:50cb0ad873794e478b4483393ad49e384645572f3acfbe2d23028477d06b199f</code>
 - Evidence state: <code>single-observation</code>
@@ -9010,7 +9939,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | codex-f04-l-sol-ultra-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=568271.833 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
-## Series 77
+## Series 83
 
 - Series ID: <code>sha256:c91080c1fc8c1968a06d24dc194bd7b95a7d62f8cde5d1aa772f3c28adf1a891</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -9086,7 +10015,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 77: F01-M-PYJS-001 revision 1
+### Case 88: F01-M-PYJS-001 revision 1
 
 - Stratum ID: <code>sha256:e1ca1ed992c5d6487387b1c27778a997ab3676525c2b9edb4bf37c2ac310adbb</code>
 - Evidence state: <code>single-observation</code>
@@ -9127,7 +10056,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-014-77425a633c6b3587 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=86416.812 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 8 | criterion; 5/8; ratio=0.625; public=3/3; hidden=2/5; all-checks-required=true | trace-success-chain, trace-fail-open-branches, trace-evidence-integrity |
 
-## Series 78
+## Series 84
 
 - Series ID: <code>sha256:cb54632c7e5ab3ad8a0947924c2861d9063069c0899dacfc8f59d3506a5bb0f3</code>
 - Study ID: <code>duration-atlas-wave4-recovery</code>
@@ -9203,7 +10132,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 78: F09-S-PY-001 revision 1
+### Case 89: F09-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:8cb91e355757194c4c8abfd9b07c9711024be2fd986a6d4404045d4a9c538d83</code>
 - Evidence state: <code>single-observation</code>
@@ -9244,7 +10173,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-001-40ab8393969ce705 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-result-error | complete-terminal; observed-terminal=13330.398 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | not-run | 0 | unavailable | unavailable |
 
-## Series 79
+## Series 85
 
 - Series ID: <code>sha256:cc1dab82249612b293d8d4d5fa10c940eb89485ac7e7bf822aeffe3d4c0c1572</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -9320,7 +10249,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 79: F12-L-MDJSON-001 revision 1
+### Case 90: F12-L-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:774574f9e776d973b58be7a4ba7ec057e24e91be85f69fb3cc38edfca6f5018c</code>
 - Evidence state: <code>single-observation</code>
@@ -9329,7 +10258,7 @@ Case identity/profile differences (12):
 - Effort-quality use: <code>excluded</code>
 - Case design status: <code>ineligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -9361,7 +10290,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-004-28eff8f860ac8e39 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=488483.356 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
 
-## Series 80
+## Series 86
 
 - Series ID: <code>sha256:cc5c90b91a4adeb862540a124ca21bd0e044922a6155bd78635ecd92b92ddac9</code>
 - Study ID: <code>duration-atlas-wave3</code>
@@ -9439,7 +10368,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 80: F04-L-PYBASH-001 revision 1
+### Case 91: F04-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:d5242436001479770908463fb14684d0268ad594b0bfd93fdcdb5c4600c4c6b1</code>
 - Evidence state: <code>single-observation</code>
@@ -9480,7 +10409,126 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | grok-f04-l-46-xhigh-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=181362.993 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
-## Series 81
+## Series 87
+
+- Series ID: <code>sha256:cffb25cc8093bba4b86510d73d3dc895d8c5c20bf68f7bb8f1c3815434b81cde</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:47:38.645Z</code> to <code>2026-08-27T19:05:37.638Z</code>
+- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
+- Execution surface(s): <code>isolated-provider-container</code>
+
+### Exact profile and configuration
+
+    {
+      "configuration": {
+        "configuration_id": "C0",
+        "independence_policy": "fresh-ephemeral-session",
+        "lane": "isolated",
+        "nested_delegation": "disabled",
+        "participant_plan": "primary-only",
+        "participants_actual": 1,
+        "peak_concurrent": 0,
+        "relation": "primary-only",
+        "workers_actual": 0
+      },
+      "profile": {
+        "family": "evidence-synthesis",
+        "profile_id": "L-cross-evidence-decision-record",
+        "size": "L",
+        "source_type": "fixture"
+      }
+    }
+
+### Exact environment
+
+    {
+      "compaction": "unknown",
+      "competing_load": "unknown",
+      "dependency_cache": "not-applicable",
+      "docker_cache": "warm",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "machine_class": "docker-limited-2cpu-2g",
+      "provider_prompt_cache": "unknown",
+      "repository_cache": "not-applicable",
+      "session_context": "fresh",
+      "timezone": "UTC"
+    }
+
+### Exact participant, model, requested/applied settings, and surface
+
+    [
+      {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "generation_settings": [
+          {
+            "key": "effort",
+            "namespace": "codex.reasoning",
+            "requested_value": "high",
+            "status": "unknown"
+          }
+        ],
+        "model_identity": {
+          "identity_confidence": "alias-only",
+          "requested_alias": "gpt-5.6-sol",
+          "requested_source": "flag"
+        },
+        "permission_mode": "automatic",
+        "provider": "codex",
+        "role": "implementer",
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
+      }
+    ]
+
+### Case observations
+
+### Case 92: F12-L-MDJSON-001 revision 3
+
+- Stratum ID: <code>sha256:480118def1d1fc9d6a2174474c3309002cc65ce89af5aaf3898bffbecfe8c708</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:47:38.645Z</code> to <code>2026-08-27T19:05:37.638Z</code>
+- Runs / observation blocks: 2 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-bounded-decision-space</code>, <code>public-artifact-templates</code>, <code>public-edit-surface</code>, <code>semantic-identifiers</code>, <code>plural-target-designs</code>, <code>revision-3-repair</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:6f799280ed8c5f808a5ce016fc52c8c2c5cf104dd43a6bd5d03dd7510f3688f4",
+      "case_id": "F12-L-MDJSON-001",
+      "revision": 3,
+      "snapshot": {
+        "base_sha": "02991852a9b476f21911672436a8745dca84dad3",
+        "bundle_digest": "sha256:1e35eb75c529524160da7c7decce9e826369cf2ecb8b608288f95b847e29dd88",
+        "instruction_set_digest": "sha256:83239308c474dce5e9bcdcf98bf70cdd5631410b63e77e2e16ccceb3782fa700"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=1; fail=1; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-pass-user-result | single observation; raw point | run-002-55df6b53dfbf6dfb=275976.469 ms | not available |
+| quality-fail-terminal | single observation; raw point | run-005-2a388542bff44f29=259158.466 ms | not available |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-55df6b53dfbf6dfb | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=275976.477 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=29354; unexpected(total=0; tracked=0; untracked=0; deleted=0) | eligible; case-and-observation-gates-pass | pass | 12 | criterion; 12/12; ratio=1.0; public=3/3; hidden=9/9; all-checks-required=true | none |
+| run-005-2a388542bff44f29 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=259158.466 ms; declared-cap=1200000 ms | task-artifacts/complete; files=2; bytes=22101; unexpected(total=0; tracked=0; untracked=0; deleted=0) | eligible; case-and-observation-gates-pass | fail | 12 | criterion; 11/12; ratio=0.916667; public=3/3; hidden=8/9; all-checks-required=true | synthesis-unknown-honesty |
+
+## Series 88
 
 - Series ID: <code>sha256:d0193c90ce4264ce303004ea00454c0d25710219181409dfe4bf298c27154791</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -9558,7 +10606,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 81: F01-S-PY-001 revision 1
+### Case 93: F01-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:c92702de2b12e778a09e97b40beb1bf912aee4eb27be8ddfc6c056f59495b099</code>
 - Evidence state: <code>single-observation</code>
@@ -9599,7 +10647,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-003-e4e5f8e76cc855cb | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=56650.022 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 2/6; ratio=0.333333; public=2/2; hidden=0/4; all-checks-required=true | trace-required-nodes, trace-required-edges, trace-evidence-exists, trace-no-distractor |
 
-## Series 82
+## Series 89
 
 - Series ID: <code>sha256:d1a117e3c8c6c634982f1c2675e19200ee270cf72e2f4dd6fdfe50a36d85af63</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -9675,7 +10723,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 82: F05-M-PY-001 revision 1
+### Case 94: F05-M-PY-001 revision 1
 
 - Stratum ID: <code>sha256:e3812079936cf07bbef0e206ae437bbf90072dfa3eb721bbf1177af235808b95</code>
 - Evidence state: <code>single-observation</code>
@@ -9716,7 +10764,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-005-f794c147fee31ef4 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=90255.067 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 5/7; ratio=0.714286; public=2/2; hidden=3/5; all-checks-required=true | migration-all-callers, migration-warning-once |
 
-## Series 83
+## Series 90
 
 - Series ID: <code>sha256:d289ef35be2d242a849a5be60ea0b9113534b725caa4f4a0c9185a8704730bf4</code>
 - Study ID: <code>duration-atlas-wave1</code>
@@ -9792,7 +10840,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 83: F04-S-PY-001 revision 1
+### Case 95: F04-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:ec4e5aab7b4781f6856920ccf45a47beaa067d72606cfa7b434da36149bae632</code>
 - Evidence state: <code>single-observation</code>
@@ -9833,126 +10881,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | codex-f04-s-terra-high-20260826-r03 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=35339.102 ms; declared-cap=300000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 2 | aggregate-check; 1/2; ratio=0.5; public=0/0; hidden=0/0; all-checks-required=true | f04-s-python-hidden-v1 |
 
-## Series 84
-
-- Series ID: <code>sha256:d2f6667e7f5b0de6eabec4c0080512cb240508e12159a29415ceb75169e429e8</code>
-- Study ID: <code>duration-atlas-wave6-provider</code>
-- Evidence state: <code>single-observation</code>
-- Observation window: <code>2026-08-27T05:11:06.702Z</code> to <code>2026-08-27T05:11:06.702Z</code>
-- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
-- Execution surface(s): <code>isolated-provider-container</code>
-
-### Exact profile and configuration
-
-    {
-      "configuration": {
-        "configuration_id": "C0",
-        "independence_policy": "fresh-ephemeral-session",
-        "lane": "isolated",
-        "nested_delegation": "disabled",
-        "participant_plan": "primary-only",
-        "participants_actual": 1,
-        "peak_concurrent": 0,
-        "relation": "primary-only",
-        "workers_actual": 0
-      },
-      "profile": {
-        "family": "test-design",
-        "profile_id": "L-cross-process-lifecycle-test-design",
-        "size": "L",
-        "source_type": "fixture"
-      }
-    }
-
-### Exact environment
-
-    {
-      "compaction": "unknown",
-      "competing_load": "unknown",
-      "dependency_cache": "not-applicable",
-      "docker_cache": "warm",
-      "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
-      "machine_class": "docker-limited-2cpu-2g",
-      "provider_prompt_cache": "unknown",
-      "repository_cache": "not-applicable",
-      "session_context": "fresh",
-      "timezone": "UTC"
-    }
-
-### Exact participant, model, requested/applied settings, and surface
-
-    [
-      {
-        "cli_name": "grok",
-        "cli_source": "container-image",
-        "cli_version": "1.0.3",
-        "execution_surface": "isolated-provider-container",
-        "generation_settings": [
-          {
-            "applied_value": "medium",
-            "key": "effort",
-            "namespace": "grok.reasoning",
-            "requested_value": "medium",
-            "status": "applied"
-          }
-        ],
-        "model_identity": {
-          "identity_confidence": "exact",
-          "requested_alias": "grok-4.6",
-          "requested_source": "flag",
-          "resolved_id": "grok-4.6"
-        },
-        "permission_mode": "automatic",
-        "provider": "grok",
-        "role": "implementer",
-        "runtime_image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb"
-      }
-    ]
-
-### Case observations
-
-### Case 84: F06-L-PYBASH-001 revision 1
-
-- Stratum ID: <code>sha256:ea88c8cdd7bc1b478f48897a319dac9dba996f9a7f78f2f2cbfffcc1be682247</code>
-- Evidence state: <code>single-observation</code>
-- Observation window: <code>2026-08-27T05:11:06.702Z</code> to <code>2026-08-27T05:11:06.702Z</code>
-- Runs / observation blocks: 1 / 1
-- Effort-quality use: <code>conditional-only</code>
-- Case design status: <code>eligible</code>
-- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>visible-lifecycle-invariants</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
-
-#### Exact case identity
-
-    {
-      "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
-      "case_id": "F06-L-PYBASH-001",
-      "revision": 1,
-      "snapshot": {
-        "base_sha": "a41685e60ec9e83713a0682e1209e09c7085e200",
-        "bundle_digest": "sha256:4663cb59494a727556365cfe615251121817906daa9b0f98de76e7ccc062caac",
-        "instruction_set_digest": "sha256:e95b2a3cd9c10ed97a6785a56b0e8e4ba88cc1271dc86d221b6d5576fec710c0"
-      },
-      "strong_online_oracle": true
-    }
-
-| Count group | Values |
-| --- | --- |
-| Quality | pass=0; fail=1; unknown=0 |
-| Censoring | complete=1; right=0; administrative=0 |
-| First artifact | progress=0; not-observed=1; not-applicable=0; unknown=0 |
-
-| Duration view | Evidence | Raw observed points | Observed range |
-| --- | --- | --- | --- |
-| quality-fail-terminal | single observation; raw point | run-008-9d2df08335c0b277=28368.778 ms | not available |
-
-#### Content-free quality evidence
-
-| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| run-008-9d2df08335c0b277 | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=28368.778 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 5/11; ratio=0.454545; public=4/4; hidden=1/7; all-checks-required=true | test-kills-lost-wakeup, test-kills-stale-lease, test-kills-duplicate-owner, test-kills-broad-cleanup, test-repeatability, test-bounded-cleanup |
-
-## Series 85
+## Series 91
 
 - Series ID: <code>sha256:d3d36b56dd108c42e149434c3ab643d399b4d21220b570c5b13c52faee8c9422</code>
 - Study ID: <code>duration-atlas-wave3</code>
@@ -10028,7 +10957,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 85: F04-L-PYBASH-001 revision 1
+### Case 96: F04-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:6babb0320fdb5c01490ae6f7c1b0c35fde9727ca5481e346bb3593a8bb2e10c6</code>
 - Evidence state: <code>single-observation</code>
@@ -10069,7 +10998,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | codex-f04-l-sol-high-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=134933.673 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
-## Series 86
+## Series 92
 
 - Series ID: <code>sha256:d5781820daf17c746f9ed9d0ad830a2a069d75d9d158b223740465f7670111bc</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -10147,7 +11076,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 86: F01-S-PY-001 revision 1
+### Case 97: F01-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:c88d90dfae3ada6785b811b8a6f05bc6579402a4558c6e86276e0e23018b0841</code>
 - Evidence state: <code>single-observation</code>
@@ -10188,7 +11117,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-009-c02f4a4c4f9d3ffe | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=181656.97 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 2/6; ratio=0.333333; public=2/2; hidden=0/4; all-checks-required=true | trace-required-nodes, trace-required-edges, trace-evidence-exists, trace-no-distractor |
 
-## Series 87
+## Series 93
 
 - Series ID: <code>sha256:d72f383eb3bbbdb082483f65f9b7890d56a430bb62da0ccfc60ab8ebb645ed2d</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -10264,7 +11193,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 87: F04-L-PYBASH-001 revision 1
+### Case 98: F04-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:d6c9750b2a8eb7ea40759e93babb787e120c9a06cfd63d802af95ca614eac161</code>
 - Evidence state: <code>single-observation</code>
@@ -10305,7 +11234,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-012-0da5e12408544291 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=112737.884 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
-## Series 88
+## Series 94
 
 - Series ID: <code>sha256:d90338a6438389e2cc5a6a081aa0759f73543b683168bec97b44870138de072a</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -10381,7 +11310,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 88: F01-S-PY-001 revision 1
+### Case 99: F01-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:0702ed8c3838df3f4f3d4a340539b8894bd1a90fa3c8f6d22e5ae0759a820800</code>
 - Evidence state: <code>single-observation</code>
@@ -10422,7 +11351,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-016-eb96bfd1078b0676 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=80652.138 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 4/6; ratio=0.666667; public=2/2; hidden=2/4; all-checks-required=true | trace-required-nodes, trace-required-edges |
 
-## Series 89
+## Series 95
 
 - Series ID: <code>sha256:d998ecbf03198e2193344deb6b813eaa0edcdf6fd250ec69abd0418166e5ce4e</code>
 - Study ID: <code>duration-atlas-wave2</code>
@@ -10498,7 +11427,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 89: F04-S-PY-001 revision 1
+### Case 100: F04-S-PY-001 revision 1
 
 - Stratum ID: <code>sha256:1f7bcc191a80b293965d707bc65d5d23289bcdb35e0773a0dbcad243661f7815</code>
 - Evidence state: <code>single-observation</code>
@@ -10539,7 +11468,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | grok-f04-s-46-medium-20260827-r01 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=1647.74 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
 
-## Series 90
+## Series 96
 
 - Series ID: <code>sha256:db8fb26bd67a933a8570302054adcf16f665293f74e844d0fbadb2cf3949c1d8</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -10615,7 +11544,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 90: F07-M-MDBASH-001 revision 1
+### Case 101: F07-M-MDBASH-001 revision 1
 
 - Stratum ID: <code>sha256:420a491e0956543d050dce405149da9112352f46b933bea03a5702c80a4ec23e</code>
 - Evidence state: <code>single-observation</code>
@@ -10656,7 +11585,243 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-002-995688fc397ebf01 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=118243.023 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 9 | criterion; 7/9; ratio=0.777778; public=3/3; hidden=4/6; all-checks-required=true | runbook-fact-accuracy, runbook-owned-restart |
 
-## Series 91
+## Series 97
+
+- Series ID: <code>sha256:dd64cea5090672f6050e53e30f61a6a7a352d4ca10fce597940956dcaf4e12c3</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:01:36.739Z</code> to <code>2026-08-27T18:03:01.593Z</code>
+- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
+- Execution surface(s): <code>isolated-provider-container</code>
+
+### Exact profile and configuration
+
+    {
+      "configuration": {
+        "configuration_id": "C0",
+        "independence_policy": "fresh-ephemeral-session",
+        "lane": "isolated",
+        "nested_delegation": "disabled",
+        "participant_plan": "primary-only",
+        "participants_actual": 1,
+        "peak_concurrent": 0,
+        "relation": "primary-only",
+        "workers_actual": 0
+      },
+      "profile": {
+        "family": "performance-resource",
+        "profile_id": "S-local-benchmark-diagnosis-python",
+        "size": "S",
+        "source_type": "fixture"
+      }
+    }
+
+### Exact environment
+
+    {
+      "compaction": "unknown",
+      "competing_load": "unknown",
+      "dependency_cache": "not-applicable",
+      "docker_cache": "warm",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "machine_class": "docker-limited-2cpu-2g",
+      "provider_prompt_cache": "unknown",
+      "repository_cache": "not-applicable",
+      "session_context": "fresh",
+      "timezone": "UTC"
+    }
+
+### Exact participant, model, requested/applied settings, and surface
+
+    [
+      {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "generation_settings": [
+          {
+            "key": "effort",
+            "namespace": "codex.reasoning",
+            "requested_value": "high",
+            "status": "unknown"
+          }
+        ],
+        "model_identity": {
+          "identity_confidence": "alias-only",
+          "requested_alias": "gpt-5.6-sol",
+          "requested_source": "flag"
+        },
+        "permission_mode": "automatic",
+        "provider": "codex",
+        "role": "implementer",
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
+      }
+    ]
+
+### Case observations
+
+### Case 102: F10-S-PY-001 revision 5
+
+- Stratum ID: <code>sha256:d5e4ec6f7580871ab407f86fea64bd8fc82240adb479ce5df56c6f06d511c8e3</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:01:36.739Z</code> to <code>2026-08-27T18:03:01.593Z</code>
+- Runs / observation blocks: 2 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-controlled-vocabulary</code>, <code>public-artifact-template</code>, <code>single-public-edit-surface-criterion</code>, <code>independent-semantic-criteria</code>, <code>counter-derived-answer</code>, <code>revision-5-repair</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:d488ba8a084a3f8c25e608043670f419383052ab5f9fe923c08a09ccced94766",
+      "case_id": "F10-S-PY-001",
+      "revision": 5,
+      "snapshot": {
+        "base_sha": "ba18f532f1afc42e34dd3f78747204c7ea292410",
+        "bundle_digest": "sha256:a88782020deea0e44ac9f8de26a45064dad930058bd7d4694ca0bb0612310dde",
+        "instruction_set_digest": "sha256:515e1f39556360f1ddfbd903ca45e438a5053cebd86306dc6ac82fae3d1d8fb2"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=2; fail=0; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-pass-user-result | 2 same-case observations; raw points | run-002-81378d7fb0032e09=77046.814 ms; run-003-b146aa769ae3bb84=73861.085 ms | 73861.085–77046.814 ms (observed min/max) |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-81378d7fb0032e09 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=77046.826 ms; declared-cap=600000 ms | task-artifacts/complete; files=1; bytes=2600; unexpected(total=0; tracked=0; untracked=0; deleted=0) | eligible; case-and-observation-gates-pass | pass | 7 | criterion; 7/7; ratio=1.0; public=2/2; hidden=5/5; all-checks-required=true | none |
+| run-003-b146aa769ae3bb84 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=73861.095 ms; declared-cap=600000 ms | task-artifacts/complete; files=1; bytes=2554; unexpected(total=0; tracked=0; untracked=0; deleted=0) | eligible; case-and-observation-gates-pass | pass | 7 | criterion; 7/7; ratio=1.0; public=2/2; hidden=5/5; all-checks-required=true | none |
+
+## Series 98
+
+- Series ID: <code>sha256:de990692acc78a20dd14d11e2e9d2a5c0aff0bc7499df3333dd7d28afaa5eef6</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:00:18.357Z</code> to <code>2026-08-27T18:04:25.273Z</code>
+- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
+- Execution surface(s): <code>isolated-provider-container</code>
+
+### Exact profile and configuration
+
+    {
+      "configuration": {
+        "configuration_id": "C0",
+        "independence_policy": "fresh-ephemeral-session",
+        "lane": "isolated",
+        "nested_delegation": "disabled",
+        "participant_plan": "primary-only",
+        "participants_actual": 1,
+        "peak_concurrent": 0,
+        "relation": "primary-only",
+        "workers_actual": 0
+      },
+      "profile": {
+        "family": "performance-resource",
+        "profile_id": "S-local-benchmark-diagnosis-python",
+        "size": "S",
+        "source_type": "fixture"
+      }
+    }
+
+### Exact environment
+
+    {
+      "compaction": "unknown",
+      "competing_load": "unknown",
+      "dependency_cache": "not-applicable",
+      "docker_cache": "warm",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "machine_class": "docker-limited-2cpu-2g",
+      "provider_prompt_cache": "unknown",
+      "repository_cache": "not-applicable",
+      "session_context": "fresh",
+      "timezone": "UTC"
+    }
+
+### Exact participant, model, requested/applied settings, and surface
+
+    [
+      {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "generation_settings": [
+          {
+            "key": "effort",
+            "namespace": "codex.reasoning",
+            "requested_value": "medium",
+            "status": "unknown"
+          }
+        ],
+        "model_identity": {
+          "identity_confidence": "alias-only",
+          "requested_alias": "gpt-5.6-sol",
+          "requested_source": "flag"
+        },
+        "permission_mode": "automatic",
+        "provider": "codex",
+        "role": "implementer",
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
+      }
+    ]
+
+### Case observations
+
+### Case 103: F10-S-PY-001 revision 5
+
+- Stratum ID: <code>sha256:120b888f611bdf9e62e2a96b06b04ed28061ba07ae3c165ccb3b4fffbc3435f5</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T18:00:18.357Z</code> to <code>2026-08-27T18:04:25.273Z</code>
+- Runs / observation blocks: 2 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-controlled-vocabulary</code>, <code>public-artifact-template</code>, <code>single-public-edit-surface-criterion</code>, <code>independent-semantic-criteria</code>, <code>counter-derived-answer</code>, <code>revision-5-repair</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:d488ba8a084a3f8c25e608043670f419383052ab5f9fe923c08a09ccced94766",
+      "case_id": "F10-S-PY-001",
+      "revision": 5,
+      "snapshot": {
+        "base_sha": "ba18f532f1afc42e34dd3f78747204c7ea292410",
+        "bundle_digest": "sha256:a88782020deea0e44ac9f8de26a45064dad930058bd7d4694ca0bb0612310dde",
+        "instruction_set_digest": "sha256:515e1f39556360f1ddfbd903ca45e438a5053cebd86306dc6ac82fae3d1d8fb2"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=2; fail=0; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-pass-user-result | 2 same-case observations; raw points | run-001-88332aa9cb235e64=67839.549 ms; run-004-58549d0099a21f9c=66084.055 ms | 66084.055–67839.549 ms (observed min/max) |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-88332aa9cb235e64 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=67839.556 ms; declared-cap=600000 ms | task-artifacts/complete; files=1; bytes=2500; unexpected(total=0; tracked=0; untracked=0; deleted=0) | eligible; case-and-observation-gates-pass | pass | 7 | criterion; 7/7; ratio=1.0; public=2/2; hidden=5/5; all-checks-required=true | none |
+| run-004-58549d0099a21f9c | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=66084.07 ms; declared-cap=600000 ms | task-artifacts/complete; files=1; bytes=2500; unexpected(total=0; tracked=0; untracked=0; deleted=0) | eligible; case-and-observation-gates-pass | pass | 7 | criterion; 7/7; ratio=1.0; public=2/2; hidden=5/5; all-checks-required=true | none |
+
+## Series 99
 
 - Series ID: <code>sha256:e091d24873fbf13546924eab88e840ef984215b9c555eb02731ec3c88bfb04cb</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -10733,7 +11898,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 91: F12-L-MDJSON-001 revision 1
+### Case 104: F12-L-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:96239078e7c76e3ed70e9e4ef7ce8a9278e317b113e6f090c968e570c4d798a2</code>
 - Evidence state: <code>single-observation</code>
@@ -10742,7 +11907,7 @@ Case identity/profile differences (12):
 - Effort-quality use: <code>excluded</code>
 - Case design status: <code>ineligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -10774,7 +11939,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-001-b555a63a5f2dc998 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=generation-setting-rejected | complete-terminal; observed-terminal=1572.332 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | not-run | 0 | unavailable | unavailable |
 
-## Series 92
+## Series 100
 
 - Series ID: <code>sha256:e18033e79ca6da88bed0a146c5bed9f6c6c9c5b4a5317d05264cd6c6407b8c5e</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -10852,7 +12017,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 92: F02-M-PY-001 revision 1
+### Case 105: F02-M-PY-001 revision 1
 
 - Stratum ID: <code>sha256:43e4949f0e490b1ba53407b954bb27f3fcf0135740c9d98f1486c53f5165cf9a</code>
 - Evidence state: <code>single-observation</code>
@@ -10893,7 +12058,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-004-6090cc0ecbc71b38 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=196820.85 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | review-symlink-recall, review-ownership-recall, review-interaction, review-evidence |
 
-## Series 93
+## Series 101
 
 - Series ID: <code>sha256:e357efc5acdb92e919f10b0c1993180509b75e95a9d010085c01b9d0f662843e</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -10971,7 +12136,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 93: F03-L-PYBASH-001 revision 1
+### Case 106: F03-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:f3abc7682abdc792baa756b61836275c575d62453bd88ef60a104004ee3916b3</code>
 - Evidence state: <code>single-observation</code>
@@ -11012,7 +12177,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-003-361a0549df85bf5f | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=48403.744 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 0/9; ratio=0.0; public=0/3; hidden=0/6; all-checks-required=true | workspace-1, workspace-2, workspace-3, diagnosis-deterministic-barrier, diagnosis-ordering-cause, diagnosis-restart-state, diagnosis-regression-reliable, diagnosis-cleanup-bounded, diagnosis-semantics-honest |
 
-## Series 94
+## Series 102
 
 - Series ID: <code>sha256:e5fc2d0eab090582305661e7ee0032eae576b439301e3ed1ac523438753f38b3</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -11090,7 +12255,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 94: F02-M-PY-001 revision 1
+### Case 107: F02-M-PY-001 revision 1
 
 - Stratum ID: <code>sha256:2d830ce489b91054b52efe6c32845b9d515df1069be59a4978c5e5fe014f24bf</code>
 - Evidence state: <code>single-observation</code>
@@ -11131,7 +12296,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-004-cb1f76abd54ed185 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=279038.423 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 2/8; ratio=0.25; public=2/2; hidden=0/6; all-checks-required=true | review-symlink-recall, review-ownership-recall, review-interaction, review-ranking, review-evidence, review-false-positive |
 
-## Series 95
+## Series 103
 
 - Series ID: <code>sha256:e69427aab764ef3e95f210fcc39a9a76a9672c6436d1118953c9c088c8681225</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -11209,7 +12374,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 95: F08-M-MDJSON-001 revision 1
+### Case 108: F08-M-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:c2247c7bed8231c49edb8acf78225aa7669dd0aa4c589043261e0279217bbe0a</code>
 - Evidence state: <code>single-observation</code>
@@ -11250,7 +12415,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-010-3339588d55d9be29 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=101045.282 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | design-invariant-coverage, design-option-counterexamples, design-migration-observability, design-unknown-honesty |
 
-## Series 96
+## Series 104
 
 - Series ID: <code>sha256:e8c1b948fa9099de6aa1e63f3513ce4fd4da4af9b721c2756dc67534716d1f3d</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -11326,7 +12491,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 96: F07-L-MDPYBASH-001 revision 1
+### Case 109: F07-L-MDPYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:4ba6c72433a9d4f871f2b45064d03caef36044fedf3ae17682fac392e4c6ff18</code>
 - Evidence state: <code>single-observation</code>
@@ -11367,7 +12532,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-036-ece6d80c5700ed21 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=189818.452 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 10 | criterion; 6/10; ratio=0.6; public=3/3; hidden=3/7; all-checks-required=true | docs-current-target-facts, docs-migration-order, docs-ownership-consistency, docs-no-early-removal |
 
-## Series 97
+## Series 105
 
 - Series ID: <code>sha256:ebe3750d4505e98b8b112d63efa54958a3cc643599be85874f9e73d6d406fc8a</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -11445,7 +12610,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 97: F07-S-MD-001 revision 1
+### Case 110: F07-S-MD-001 revision 1
 
 - Stratum ID: <code>sha256:ad01902081ec03cae02d4e5052fe6447b65ad903b130b08861577c2ae0e469dc</code>
 - Evidence state: <code>single-observation</code>
@@ -11486,7 +12651,127 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-006-b36e517437e66ec9 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=37095.261 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 2/6; ratio=0.333333; public=2/2; hidden=0/4; all-checks-required=true | doc-command-replay, doc-constraint-accurate, doc-invalid-form-removed, doc-link-integrity |
 
-## Series 98
+## Series 106
+
+- Series ID: <code>sha256:ec33cbeaaa40ff6e6fa87c4228909f4ebc39e3c37ac2be01418d8e53433bfc4a</code>
+- Study ID: <code>duration-atlas-wave8-identifiable</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T17:42:30.680Z</code> to <code>2026-08-27T17:48:24.356Z</code>
+- Characterization: <code>not-assessed</code>; <code>study-specific-precision-and-coverage-criteria-unavailable</code>
+- Execution surface(s): <code>isolated-provider-container</code>
+
+### Exact profile and configuration
+
+    {
+      "configuration": {
+        "configuration_id": "C0",
+        "independence_policy": "fresh-ephemeral-session",
+        "lane": "isolated",
+        "nested_delegation": "disabled",
+        "participant_plan": "primary-only",
+        "participants_actual": 1,
+        "peak_concurrent": 0,
+        "relation": "primary-only",
+        "workers_actual": 0
+      },
+      "profile": {
+        "family": "evidence-synthesis",
+        "profile_id": "L-cross-evidence-decision-record",
+        "size": "L",
+        "source_type": "fixture"
+      }
+    }
+
+### Exact environment
+
+    {
+      "compaction": "unknown",
+      "competing_load": "unknown",
+      "dependency_cache": "not-applicable",
+      "docker_cache": "warm",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "machine_class": "docker-limited-2cpu-2g",
+      "provider_prompt_cache": "unknown",
+      "repository_cache": "not-applicable",
+      "session_context": "fresh",
+      "timezone": "UTC"
+    }
+
+### Exact participant, model, requested/applied settings, and surface
+
+    [
+      {
+        "cli_name": "grok",
+        "cli_source": "host-sync",
+        "cli_version": "1.0.5",
+        "execution_surface": "isolated-provider-container",
+        "generation_settings": [
+          {
+            "applied_value": "xhigh",
+            "key": "effort",
+            "namespace": "grok.reasoning",
+            "requested_value": "xhigh",
+            "status": "applied"
+          }
+        ],
+        "model_identity": {
+          "identity_confidence": "exact",
+          "requested_alias": "grok-4.6",
+          "requested_source": "flag",
+          "resolved_id": "grok-4.6"
+        },
+        "permission_mode": "automatic",
+        "provider": "grok",
+        "role": "implementer",
+        "runtime_image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4"
+      }
+    ]
+
+### Case observations
+
+### Case 111: F12-L-MDJSON-001 revision 3
+
+- Stratum ID: <code>sha256:b88509d1be2aa62c03b84ae34660e2517c1c989eca1f38a7079448feaa0dbe04</code>
+- Evidence state: <code>same-case-repeat</code>
+- Observation window: <code>2026-08-27T17:42:30.680Z</code> to <code>2026-08-27T17:48:24.356Z</code>
+- Runs / observation blocks: 2 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>public-bounded-decision-space</code>, <code>public-artifact-templates</code>, <code>public-edit-surface</code>, <code>semantic-identifiers</code>, <code>plural-target-designs</code>, <code>revision-3-repair</code>, <code>task-artifact-missing</code>
+
+#### Exact case identity
+
+    {
+      "capsule_digest": "sha256:6f799280ed8c5f808a5ce016fc52c8c2c5cf104dd43a6bd5d03dd7510f3688f4",
+      "case_id": "F12-L-MDJSON-001",
+      "revision": 3,
+      "snapshot": {
+        "base_sha": "02991852a9b476f21911672436a8745dca84dad3",
+        "bundle_digest": "sha256:1e35eb75c529524160da7c7decce9e826369cf2ecb8b608288f95b847e29dd88",
+        "instruction_set_digest": "sha256:83239308c474dce5e9bcdcf98bf70cdd5631410b63e77e2e16ccceb3782fa700"
+      },
+      "strong_online_oracle": true
+    }
+
+| Count group | Values |
+| --- | --- |
+| Quality | pass=0; fail=2; unknown=0 |
+| Censoring | complete=2; right=0; administrative=0 |
+| First artifact | progress=0; not-observed=2; not-applicable=0; unknown=0 |
+
+| Duration view | Evidence | Raw observed points | Observed range |
+| --- | --- | --- | --- |
+| quality-fail-terminal | 2 same-case observations; raw points | run-002-b151499f8b68fec9=205376.136 ms; run-004-00a80849e870702a=194706.308 ms | 194706.308–205376.136 ms (observed min/max) |
+
+#### Content-free quality evidence
+
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-b151499f8b68fec9 | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=205376.136 ms; declared-cap=900000 ms | task-artifacts/complete; files=0; bytes=0; unexpected(total=0; tracked=0; untracked=0; deleted=0) | conditional; task-artifact-missing | fail | 12 | criterion; 0/12; ratio=0.0; public=0/3; hidden=0/9; all-checks-required=true | workspace-1, workspace-2, workspace-3, synthesis-claim-provenance, synthesis-metric-integrity, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan, synthesis-doc-json-sync |
+| run-004-00a80849e870702a | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=194706.308 ms; declared-cap=900000 ms | task-artifacts/complete; files=0; bytes=0; unexpected(total=0; tracked=0; untracked=0; deleted=0) | conditional; task-artifact-missing | fail | 12 | criterion; 0/12; ratio=0.0; public=0/3; hidden=0/9; all-checks-required=true | workspace-1, workspace-2, workspace-3, synthesis-claim-provenance, synthesis-metric-integrity, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan, synthesis-doc-json-sync |
+
+## Series 107
 
 - Series ID: <code>sha256:ed3a4bbe6e9ae37aa40a6036c680df305e19ccd14fd4aa0129c07a167518ffec</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -11564,7 +12849,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 98: F12-L-MDJSON-001 revision 1
+### Case 112: F12-L-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:b37d6ff5d2a8cfcd5d15e42a6810c3a74fe3b9d772e316bc94d5ab498db3eb8e</code>
 - Evidence state: <code>single-observation</code>
@@ -11573,7 +12858,7 @@ Case identity/profile differences (12):
 - Effort-quality use: <code>excluded</code>
 - Case design status: <code>ineligible</code>
 - Comparison gates: <code>not-evaluated</code>; not evaluated by this report
-- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-3</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -11605,7 +12890,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-001-9b3208f07e508e3a | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=387475.599 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
 
-## Series 99
+## Series 108
 
 - Series ID: <code>sha256:f0b5b1d768ddb3639553a568d690b3e3057cd6979e04d17bf65df164aff5e94c</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -11681,7 +12966,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 99: F11-L-BASHDOCKER-001 revision 1
+### Case 113: F11-L-BASHDOCKER-001 revision 1
 
 - Stratum ID: <code>sha256:0a5fb3ea0406c05f80c71de0f8109f61dfee4c02a702daa6532fc37b691cd678</code>
 - Evidence state: <code>single-observation</code>
@@ -11722,7 +13007,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-009-52e8d594af96b186 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=262673.3 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 11 | criterion; 6/11; ratio=0.545455; public=4/4; hidden=2/7; all-checks-required=true | ops-lifecycle-ownership, ops-migration-fault-cuts, ops-reopen-resume, ops-marker-verification, ops-recovery-doc |
 
-## Series 100
+## Series 109
 
 - Series ID: <code>sha256:f1b8f2174b17805a4f1ac0ad9ab3c66207315709e613371ec1febc15fd337863</code>
 - Study ID: <code>duration-atlas-wave6-provider</code>
@@ -11800,7 +13085,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 100: F07-S-MD-001 revision 1
+### Case 114: F07-S-MD-001 revision 1
 
 - Stratum ID: <code>sha256:f576c02b1b1625414179f124f56114ab859c0c6fbe20270e2e588d31c69cb376</code>
 - Evidence state: <code>single-observation</code>
@@ -11841,7 +13126,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-006-6029cdb4396a27bf | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=48167.606 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 2/6; ratio=0.333333; public=2/2; hidden=0/4; all-checks-required=true | doc-command-replay, doc-constraint-accurate, doc-invalid-form-removed, doc-link-integrity |
 
-## Series 101
+## Series 110
 
 - Series ID: <code>sha256:f7befba023af9936322d7fd0a5e3ed00565e160cf5622075643938b6e9d30d8c</code>
 - Study ID: <code>duration-atlas-wave4-corpus</code>
@@ -11917,7 +13202,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 101: F02-M-PY-001 revision 1
+### Case 115: F02-M-PY-001 revision 1
 
 - Stratum ID: <code>sha256:a23076b8686adc580a533b334dca66c7db2515c020a060b62f8424ee81ae91a8</code>
 - Evidence state: <code>single-observation</code>
@@ -11958,7 +13243,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-032-4a12a4754b552ed6 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=93656.282 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | review-symlink-recall, review-ownership-recall, review-interaction, review-evidence |
 
-## Series 102
+## Series 111
 
 - Series ID: <code>sha256:f86d03a8b11b15ea26c4b6b88e9a820c472850ac9b22eb5ee9133686fd8005de</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -12034,7 +13319,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 102: F08-L-MDJSON-001 revision 1
+### Case 116: F08-L-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:a39182e803f87dc2add778ea82375d23043057d97d77b6a4ed8485d23ac0b665</code>
 - Evidence state: <code>single-observation</code>
@@ -12075,7 +13360,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-003-3dab55ace564cde8 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=342032.799 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 8/11; ratio=0.727273; public=3/3; hidden=5/8; all-checks-required=true | design-security-boundaries, design-alternative-counterexamples, design-unknown-honesty |
 
-## Series 103
+## Series 112
 
 - Series ID: <code>sha256:f9389a11a477be16d74cf0a2c9579cc1984b16425bf5493ba8c9a4bbf65a77f8</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -12151,7 +13436,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 103: F08-M-MDJSON-001 revision 1
+### Case 117: F08-M-MDJSON-001 revision 1
 
 - Stratum ID: <code>sha256:67bd0e5dc9e2e1aec3607ad63f1f27ca2fd7a0c46e13aee5f4ce36b87e31e1d3</code>
 - Evidence state: <code>single-observation</code>
@@ -12192,7 +13477,7 @@ Case identity/profile differences (12):
 | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | run-001-d017aba0f530eb2c | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=148137.452 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | design-invariant-coverage, design-option-counterexamples, design-migration-observability, design-unknown-honesty |
 
-## Series 104
+## Series 113
 
 - Series ID: <code>sha256:fe4c8eaec3584d934aaea49887d2488801f99fb0cb58e8c383419e66bda8310e</code>
 - Study ID: <code>duration-atlas-wave5-depth</code>
@@ -12268,7 +13553,7 @@ Case identity/profile differences (12):
 
 ### Case observations
 
-### Case 104: F03-L-PYBASH-001 revision 1
+### Case 118: F03-L-PYBASH-001 revision 1
 
 - Stratum ID: <code>sha256:36348d0d67a61247dd0b1b8f53549bcaed8a87410b07308bf23b02148ead04e5</code>
 - Evidence state: <code>single-observation</code>

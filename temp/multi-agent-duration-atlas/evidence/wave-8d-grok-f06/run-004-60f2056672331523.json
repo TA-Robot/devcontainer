@@ -1,0 +1,424 @@
+{
+  "artifact_snapshot": {
+    "completeness": "partial",
+    "files": [],
+    "manifest_digest": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+    "policy": "synthetic-task-artifacts-v1",
+    "total_bytes": 0,
+    "unexpected_change_summary": {
+      "deleted": 0,
+      "total": 3,
+      "tracked": 0,
+      "untracked": 3
+    },
+    "unexpected_changed_path_count": 3
+  },
+  "block_id": "wave8d-c0-grok-f06-threshold",
+  "case": {
+    "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
+    "case_id": "F06-L-PYBASH-001",
+    "catalog_digest": "sha256:57955d2bc9471765fdc9338416b5acc5b02bb0302c208de95e474910994bd628",
+    "family": "test-design",
+    "profile_id": "L-cross-process-lifecycle-test-design",
+    "revision": 1,
+    "size": "L",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 467.661,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-2",
+          "duration_ms": 520.423,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-3",
+          "duration_ms": 871.448,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-4",
+          "duration_ms": 468.601,
+          "exit_code": 1,
+          "scope": "public",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-kills-lost-wakeup",
+          "duration_ms": 569.633,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-kills-stale-lease",
+          "duration_ms": 620.309,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-kills-duplicate-owner",
+          "duration_ms": 569.927,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-kills-broad-cleanup",
+          "duration_ms": 569.905,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-repeatability",
+          "duration_ms": 569.864,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-bounded-cleanup",
+          "duration_ms": 620.331,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-production-untouched",
+          "duration_ms": 870.21,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f06-l-lease-lifecycle-mutation-v1",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "isolation_profile": "network-disabled-read-only-container",
+      "score": {
+        "all_checks_required": true,
+        "failed_check_ids": [
+          "workspace-4",
+          "test-kills-lost-wakeup",
+          "test-kills-stale-lease",
+          "test-kills-duplicate-owner",
+          "test-kills-broad-cleanup",
+          "test-repeatability",
+          "test-bounded-cleanup",
+          "test-production-untouched"
+        ],
+        "hidden_passed": 0,
+        "hidden_total": 7,
+        "passed": 3,
+        "public_passed": 3,
+        "public_total": 4,
+        "ratio": 0.272727,
+        "resolution": "criterion",
+        "total": 11
+      },
+      "status": "fail"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 7,
+          "name": "available_commands"
+        },
+        {
+          "count": 1,
+          "name": "end"
+        },
+        {
+          "count": 72,
+          "name": "text"
+        },
+        {
+          "count": 178,
+          "name": "thought"
+        },
+        {
+          "count": 11,
+          "name": "tool_call"
+        },
+        {
+          "count": 29,
+          "name": "tool_call_update"
+        },
+        {
+          "count": 5,
+          "name": "usage"
+        }
+      ],
+      "event_failure_terms": [],
+      "exit_code": 0,
+      "failure_signals": [],
+      "failure_terms": [],
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 81917,
+      "output_cap_bytes": 8388608,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "result_is_error": false,
+      "sandbox_preflight": {
+        "assurance": "configured",
+        "command_network": "configured",
+        "generation_request_performed": false,
+        "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+        "profile_digest": "sha256:ebdde48d42688e4ba31d9566d616d4d978ea6d00724d3956feb1be240e16cb35",
+        "status": "pass",
+        "unrelated_read": "configured",
+        "workspace_write": "configured"
+      },
+      "status": "success",
+      "stderr_bytes": 0,
+      "task_network": "denied-by-provider-sandbox",
+      "terminal_wall_ms": 27328.473,
+      "thread_id_digest": "sha256:f27a8a3da587a4832caab5a62ce05c95bf9d9caddc7bbba093405d9e29f7c9ca",
+      "tool_error_count": 0,
+      "usage": {
+        "cached_input_tokens": 21632,
+        "input_tokens": 7060,
+        "output_tokens": 1380
+      },
+      "workspace_changed_path_count": 1
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.011,
+    "online_validation": 6748.674,
+    "post_validation_tail": 0.022,
+    "provision": 5323.782,
+    "terminal_wall": 34174.656,
+    "user_result": 34174.651,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider",
+      "/artifact_snapshot"
+    ],
+    "unknown": []
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 143738813310973,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T17:36:48.727Z"
+    },
+    "P1": {
+      "monotonic_ns": 143744137093056,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T17:36:55.973Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 143744170926515,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T17:36:56.006Z"
+    },
+    "T1": {
+      "monotonic_ns": 143744170937694,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T17:36:56.006Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 143778345577364,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T17:37:32.109Z"
+    },
+    "TX": {
+      "monotonic_ns": 143778345582640,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T17:37:32.109Z"
+    },
+    "V0": {
+      "monotonic_ns": 143771596881139,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T17:37:23.432Z"
+    },
+    "V1": {
+      "monotonic_ns": 143778345555167,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T17:37:32.109Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 600000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": "online-validation-failed",
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "fail",
+    "quality_basis": "online-fail",
+    "quality_pass": false,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "applied_value": "medium",
+          "key": "effort",
+          "namespace": "grok.reasoning",
+          "requested_value": "medium",
+          "status": "applied"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "exact",
+        "requested_alias": "grok-4.6",
+        "requested_source": "flag",
+        "resolved_id": "grok-4.6"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "grok",
+        "cli_source": "host-sync",
+        "cli_version": "1.0.5",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+        "observed_at": "2026-08-27T17:36:55.973Z",
+        "permission_mode": "automatic",
+        "provider": "grok"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "run-004-60f2056672331523",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "a41685e60ec9e83713a0682e1209e09c7085e200",
+    "bundle_digest": "sha256:4663cb59494a727556365cfe615251121817906daa9b0f98de76e7ccc062caac",
+    "fixture_revision": "f06-l-lease-lifecycle-tests-v1-r1",
+    "instruction_set_digest": "sha256:e95b2a3cd9c10ed97a6785a56b0e8e4ba88cc1271dc86d221b6d5576fec710c0"
+  },
+  "study_id": "duration-atlas-wave8-identifiable",
+  "workers": []
+}

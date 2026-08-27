@@ -1,0 +1,449 @@
+{
+  "artifact_snapshot": {
+    "completeness": "complete",
+    "files": [
+      {
+        "byte_count": 253,
+        "content_digest": "sha256:d1731b37467c1f97fd8171cea93bbe685f8b929f69baea262f929675362765af",
+        "content_status": "retained",
+        "content_utf8": "#!/usr/bin/env bash\nset -euo pipefail\n\nscript_dir=\"$(cd -- \"$(dirname -- \"${BASH_SOURCE[0]}\")\" && pwd)\"\nrepository=\"$(cd -- \"$script_dir/..\" && pwd)\"\ncd -- \"$repository\"\n\nexport PYTHONDONTWRITEBYTECODE=1\nexec python3 -m unittest tests.test_lifecycle -v\n",
+        "git_status": " M",
+        "path": "tests/lifecycle.sh"
+      },
+      {
+        "byte_count": 13174,
+        "content_digest": "sha256:bf45625c36b6da8113b08b213108517d570bb658315bbbdf0935908da7fbb8e4",
+        "content_status": "retained",
+        "content_utf8": "from __future__ import annotations\n\nimport json\nimport select\nimport selectors\nimport subprocess\nimport tempfile\nimport time\nimport unittest\nfrom pathlib import Path\nfrom typing import Any\n\n\nREPOSITORY = Path(__file__).resolve().parents[1]\nWORKER = REPOSITORY / \"bin\" / \"lease-worker\"\nCOMMAND_TIMEOUT = 4.0\nPROBE_TIMEOUT = 4.0\nPOLL_INTERVAL = 0.02\n\n\ndef _decode_json(stdout: str, *, command: list[str], stderr: str) -> dict[str, Any]:\n    try:\n        value = json.loads(stdout)\n    except json.JSONDecodeError as error:\n        raise AssertionError(\n            f\"worker returned invalid JSON for {command!r}: {stdout!r}; \"\n            f\"stderr={stderr!r}\"\n        ) from error\n    if not isinstance(value, dict):\n        raise AssertionError(\n            f\"worker returned non-object JSON for {command!r}: {value!r}\"\n        )\n    return value\n\n\ndef _run_worker(*arguments: object) -> dict[str, Any]:\n    command = [str(WORKER), *(str(argument) for argument in arguments)]\n    try:\n        completed = subprocess.run(\n            command,\n            cwd=REPOSITORY,\n            text=True,\n            stdout=subprocess.PIPE,\n            stderr=subprocess.PIPE,\n            timeout=COMMAND_TIMEOUT,\n            check=False,\n        )\n    except subprocess.TimeoutExpired as error:\n        raise AssertionError(\n            f\"worker exceeded {COMMAND_TIMEOUT:.1f}s for {command!r}; \"\n            f\"stdout={error.stdout!r}; stderr={error.stderr!r}\"\n        ) from error\n    if completed.returncode != 0:\n        raise AssertionError(\n            f\"worker exited {completed.returncode} for {command!r}; \"\n            f\"stdout={completed.stdout!r}; stderr={completed.stderr!r}\"\n        )\n    return _decode_json(\n        completed.stdout,\n        command=command,\n        stderr=completed.stderr,\n    )\n\n\ndef _state_tree(root: Path) -> str:\n    if not root.exists():\n        return \"<root missing>\"\n    entries = []\n    for path in sorted(root.rglob(\"*\"), key=lambda item: str(item.relative_to(root))):\n        kind = \"dir\" if path.is_dir() else \"file\"\n        entries.append(f\"{path.relative_to(root)} ({kind})\")\n    return \"\\n\".join(entries) if entries else \"<empty>\"\n\n\nclass LifecycleTests(unittest.TestCase):\n    def setUp(self) -> None:\n        self._temporary = tempfile.TemporaryDirectory(\n            prefix=\".lifecycle-test-\",\n            dir=REPOSITORY,\n        )\n        self.addCleanup(self._temporary.cleanup)\n        self.root = Path(self._temporary.name)\n\n    def _start_worker(self, *arguments: object) -> subprocess.Popen[str]:\n        command = [str(WORKER), *(str(argument) for argument in arguments)]\n        process = subprocess.Popen(\n            command,\n            cwd=REPOSITORY,\n            text=True,\n            stdout=subprocess.PIPE,\n            stderr=subprocess.PIPE,\n        )\n        self.addCleanup(self._stop_started_process, process)\n        return process\n\n    def _stop_started_process(self, process: subprocess.Popen[str]) -> None:\n        if process.poll() is None:\n            process.kill()\n        try:\n            process.communicate(timeout=COMMAND_TIMEOUT)\n        except subprocess.TimeoutExpired as error:\n            self.fail(\n                f\"started subprocess pid={process.pid} did not stop after kill; \"\n                f\"stdout={error.stdout!r}; stderr={error.stderr!r}\"\n            )\n\n    def _wait_for_probe(\n        self,\n        probe: Path,\n        process: subprocess.Popen[str],\n        *,\n        label: str,\n    ) -> None:\n        deadline = time.monotonic() + PROBE_TIMEOUT\n        while not probe.exists():\n            if process.poll() is not None:\n                stdout, stderr = process.communicate()\n                self.fail(\n                    f\"{label} exited before creating probe {probe.name!r}; \"\n                    f\"returncode={process.returncode}; stdout={stdout!r}; \"\n                    f\"stderr={stderr!r}; state:\\n{_state_tree(self.root)}\"\n                )\n            remaining = deadline - time.monotonic()\n            if remaining <= 0:\n                process.kill()\n                stdout, stderr = process.communicate(timeout=COMMAND_TIMEOUT)\n                self.fail(\n                    f\"timed out after {PROBE_TIMEOUT:.1f}s waiting for {label} \"\n                    f\"probe {probe.name!r}; stdout={stdout!r}; stderr={stderr!r}; \"\n                    f\"state:\\n{_state_tree(self.root)}\"\n                )\n            select.select([], [], [], min(POLL_INTERVAL, remaining))\n\n    def _finish_worker(\n        self,\n        process: subprocess.Popen[str],\n        *,\n        label: str,\n    ) -> dict[str, Any]:\n        try:\n            stdout, stderr = process.communicate(timeout=COMMAND_TIMEOUT)\n        except subprocess.TimeoutExpired as error:\n            process.kill()\n            final_stdout, final_stderr = process.communicate(timeout=COMMAND_TIMEOUT)\n            self.fail(\n                f\"{label} exceeded {COMMAND_TIMEOUT:.1f}s after its gate opened; \"\n                f\"stdout={error.stdout or final_stdout!r}; \"\n                f\"stderr={error.stderr or final_stderr!r}; \"\n                f\"state:\\n{_state_tree(self.root)}\"\n            )\n        self.assertEqual(\n            process.returncode,\n            0,\n            msg=(\n                f\"{label} exited {process.returncode}; stdout={stdout!r}; \"\n                f\"stderr={stderr!r}; state:\\n{_state_tree(self.root)}\"\n            ),\n        )\n        return _decode_json(stdout, command=[label], stderr=stderr)\n\n    def _make_peer_sentinel(self, resource: str) -> Path:\n        sentinel = self.root / \"resources\" / f\"{resource}-peer\" / \"sentinel\"\n        sentinel.parent.mkdir(parents=True, exist_ok=True)\n        sentinel.write_text(\"preserve-peer\\n\", encoding=\"utf-8\")\n        return sentinel\n\n    def _assert_exact_owner_cleanup(self, resource: str, sentinel: Path) -> None:\n        self.assertFalse(\n            (self.root / \"leases\" / f\"{resource}.json\").exists(),\n            msg=f\"lease remained after release; state:\\n{_state_tree(self.root)}\",\n        )\n        self.assertFalse(\n            (self.root / \"resources\" / resource).exists(),\n            msg=f\"owned resource remained after release; state:\\n{_state_tree(self.root)}\",\n        )\n        self.assertEqual(\n            sentinel.read_text(encoding=\"utf-8\"),\n            \"preserve-peer\\n\",\n            msg=f\"peer-prefix sentinel was changed; state:\\n{_state_tree(self.root)}\",\n        )\n\n    def test_two_worker_handoff_has_one_live_owner_and_exact_cleanup(self) -> None:\n        resource = \"handoff-job\"\n        first_owner = \"worker-a\"\n        next_owner = \"worker-b\"\n        now = 10_000\n        ttl = 60\n        sentinel = self._make_peer_sentinel(resource)\n\n        self.assertEqual(\n            _run_worker(\"hold\", self.root, resource, first_owner, now, ttl),\n            {\"acquired\": True, \"owner\": first_owner},\n        )\n\n        probe = self.root / \"worker-b.probe\"\n        gate = self.root / \"worker-b.gate\"\n        waiter = self._start_worker(\n            \"wait\",\n            self.root,\n            resource,\n            next_owner,\n            now + 1,\n            ttl,\n            probe,\n            gate,\n            int(PROBE_TIMEOUT),\n        )\n        self._wait_for_probe(probe, waiter, label=next_owner)\n\n        self.assertIsNone(\n            waiter.poll(),\n            msg=\"contending worker did not remain blocked behind its unopened gate\",\n        )\n        self.assertFalse(gate.exists(), \"handoff gate opened before the test released it\")\n        self.assertEqual(\n            _run_worker(\"owner\", self.root, resource, now + 1),\n            {\"owner\": first_owner},\n            msg=\"overlapping workers exposed more than the original live owner\",\n        )\n        self.assertEqual(\n            _run_worker(\"release\", self.root, resource, next_owner),\n            {\"released\": False},\n            msg=\"a non-owner released the live owner's lease\",\n        )\n        self.assertEqual(\n            _run_worker(\"owner\", self.root, resource, now + 1),\n            {\"owner\": first_owner},\n        )\n\n        self.assertEqual(\n            _run_worker(\"release\", self.root, resource, first_owner),\n            {\"released\": True},\n        )\n        self.assertFalse(\n            (self.root / \"resources\" / resource).exists(),\n            msg=f\"first owner's resource survived release; state:\\n{_state_tree(self.root)}\",\n        )\n        self.assertEqual(sentinel.read_text(encoding=\"utf-8\"), \"preserve-peer\\n\")\n\n        gate.write_text(\"continue\\n\", encoding=\"utf-8\")\n        self.assertEqual(\n            self._finish_worker(waiter, label=next_owner),\n            {\"acquired\": True, \"owner\": next_owner},\n        )\n        self.assertEqual(\n            _run_worker(\"owner\", self.root, resource, now + 1),\n            {\"owner\": next_owner},\n        )\n        waiters = self.root / \"waiters\"\n        waiter_entries = list(waiters.iterdir()) if waiters.exists() else []\n        self.assertEqual(\n            waiter_entries,\n            [],\n            msg=f\"waiter registration was not cleaned; state:\\n{_state_tree(self.root)}\",\n        )\n\n        self.assertEqual(\n            _run_worker(\"release\", self.root, resource, next_owner),\n            {\"released\": True},\n        )\n        self._assert_exact_owner_cleanup(resource, sentinel)\n\n    def test_crash_expires_then_fresh_worker_restarts_and_cleans(self) -> None:\n        resource = \"crash-job\"\n        crashed_owner = \"crashed-worker\"\n        restarted_owner = \"restarted-worker\"\n        now = 20_000\n        ttl = 20\n        sentinel = self._make_peer_sentinel(resource)\n\n        process = subprocess.Popen(\n            [\n                str(WORKER),\n                \"hold\",\n                str(self.root),\n                resource,\n                crashed_owner,\n                str(now),\n                str(ttl),\n            ],\n            cwd=REPOSITORY,\n            stdin=subprocess.PIPE,\n            stdout=subprocess.PIPE,\n            stderr=subprocess.PIPE,\n            text=True,\n        )\n        self.addCleanup(self._stop_started_process, process)\n\n        assert process.stdout is not None\n        selector = selectors.DefaultSelector()\n        self.addCleanup(selector.close)\n        selector.register(process.stdout, selectors.EVENT_READ)\n        events = selector.select(PROBE_TIMEOUT)\n        if not events:\n            process.kill()\n            stdout, stderr = process.communicate(timeout=COMMAND_TIMEOUT)\n            self.fail(\n                f\"crash owner did not announce readiness within {PROBE_TIMEOUT:.1f}s; \"\n                f\"stdout={stdout!r}; stderr={stderr!r}; \"\n                f\"state:\\n{_state_tree(self.root)}\"\n            )\n        ready_line = process.stdout.readline()\n        if not ready_line:\n            stdout, stderr = process.communicate(timeout=COMMAND_TIMEOUT)\n            self.fail(\n                f\"crash owner exited before readiness; returncode={process.returncode}; \"\n                f\"stdout={stdout!r}; stderr={stderr!r}; \"\n                f\"state:\\n{_state_tree(self.root)}\"\n            )\n        self.assertEqual(\n            _decode_json(\n                ready_line,\n                command=[str(WORKER), \"hold\"],\n                stderr=\"\",\n            ),\n            {\"acquired\": True, \"owner\": crashed_owner},\n        )\n        self.assertIsNone(process.poll(), \"owner process exited before the simulated crash\")\n        self.assertEqual(\n            _run_worker(\"owner\", self.root, resource, now + 1),\n            {\"owner\": crashed_owner},\n        )\n\n        # Kill exactly the subprocess object created above; no process-name or\n        # system-wide cleanup is involved.\n        process.kill()\n        process.communicate(timeout=COMMAND_TIMEOUT)\n        self.assertLess(process.returncode, 0, \"owner was not force-crashed by a signal\")\n\n        self.assertEqual(\n            _run_worker(\"owner\", self.root, resource, now + ttl - 1),\n            {\"owner\": crashed_owner},\n            msg=\"a crash released a lease before its TTL elapsed\",\n        )\n        self.assertEqual(\n            _run_worker(\"owner\", self.root, resource, now + ttl),\n            {\"owner\": None},\n            msg=\"a fresh process still observed ownership at the expiry boundary\",\n        )\n        self.assertEqual(\n            _run_worker(\"hold\", self.root, resource, restarted_owner, now + ttl, ttl),\n            {\"acquired\": True, \"owner\": restarted_owner},\n        )\n        self.assertEqual(\n            _run_worker(\"owner\", self.root, resource, now + ttl),\n            {\"owner\": restarted_owner},\n        )\n        self.assertEqual(\n            _run_worker(\"release\", self.root, resource, crashed_owner),\n            {\"released\": False},\n            msg=\"stale crashed owner released the restarted owner's lease\",\n        )\n        self.assertEqual(\n            _run_worker(\"owner\", self.root, resource, now + ttl),\n            {\"owner\": restarted_owner},\n        )\n        self.assertEqual(\n            _run_worker(\"release\", self.root, resource, restarted_owner),\n            {\"released\": True},\n        )\n        self._assert_exact_owner_cleanup(resource, sentinel)\n\n\nif __name__ == \"__main__\":\n    unittest.main()\n",
+        "git_status": " M",
+        "path": "tests/test_lifecycle.py"
+      }
+    ],
+    "manifest_digest": "sha256:b31faf35f4d170030041987617567070f2e17d852daec427d50f26ef98710220",
+    "policy": "synthetic-task-artifacts-v1",
+    "total_bytes": 13427,
+    "unexpected_change_summary": {
+      "deleted": 0,
+      "total": 0,
+      "tracked": 0,
+      "untracked": 0
+    },
+    "unexpected_changed_path_count": 0
+  },
+  "block_id": "wave8d-c0-sol-f06-threshold",
+  "case": {
+    "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
+    "case_id": "F06-L-PYBASH-001",
+    "catalog_digest": "sha256:57955d2bc9471765fdc9338416b5acc5b02bb0302c208de95e474910994bd628",
+    "family": "test-design",
+    "profile_id": "L-cross-process-lifecycle-test-design",
+    "revision": 1,
+    "size": "L",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 416.037,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-2",
+          "duration_ms": 568.093,
+          "exit_code": 1,
+          "scope": "public",
+          "status": "fail"
+        },
+        {
+          "check_id": "workspace-3",
+          "duration_ms": 568.026,
+          "exit_code": 1,
+          "scope": "public",
+          "status": "fail"
+        },
+        {
+          "check_id": "workspace-4",
+          "duration_ms": 517.619,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-kills-lost-wakeup",
+          "duration_ms": 2679.26,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-kills-stale-lease",
+          "duration_ms": 2426.104,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-kills-duplicate-owner",
+          "duration_ms": 2676.635,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-kills-broad-cleanup",
+          "duration_ms": 2524.837,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-repeatability",
+          "duration_ms": 10005.614,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "test-bounded-cleanup",
+          "duration_ms": 4434.527,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "test-production-untouched",
+          "duration_ms": 568.413,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f06-l-lease-lifecycle-mutation-v1",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "isolation_profile": "network-disabled-read-only-container",
+      "score": {
+        "all_checks_required": true,
+        "failed_check_ids": [
+          "workspace-2",
+          "workspace-3",
+          "test-kills-duplicate-owner",
+          "test-repeatability"
+        ],
+        "hidden_passed": 5,
+        "hidden_total": 7,
+        "passed": 7,
+        "public_passed": 2,
+        "public_total": 4,
+        "ratio": 0.636364,
+        "resolution": "criterion",
+        "total": 11
+      },
+      "status": "fail"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 33,
+          "name": "item.completed"
+        },
+        {
+          "count": 26,
+          "name": "item.started"
+        },
+        {
+          "count": 1,
+          "name": "thread.started"
+        },
+        {
+          "count": 1,
+          "name": "turn.completed"
+        },
+        {
+          "count": 1,
+          "name": "turn.started"
+        }
+      ],
+      "event_failure_terms": [],
+      "exit_code": 0,
+      "failure_signals": [],
+      "failure_terms": [
+        "bash",
+        "error",
+        "failed",
+        "permitted"
+      ],
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [
+        {
+          "count": 7,
+          "name": "agent_message"
+        },
+        {
+          "count": 46,
+          "name": "command_execution"
+        },
+        {
+          "count": 6,
+          "name": "file_change"
+        }
+      ],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 50473,
+      "output_cap_bytes": 8388608,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "result_is_error": false,
+      "sandbox_preflight": {
+        "assurance": "probed",
+        "command_network": "denied",
+        "generation_request_performed": false,
+        "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+        "profile_digest": "sha256:e3b76b6d4d473e01898811a3933665dff68aacd1101e1e438734bca310655724",
+        "status": "pass",
+        "unrelated_read": "denied",
+        "workspace_write": "observed"
+      },
+      "status": "success",
+      "stderr_bytes": 2034,
+      "task_network": "denied-by-permission-profile",
+      "terminal_event": "turn.completed",
+      "terminal_wall_ms": 427671.509,
+      "thread_id_digest": "sha256:09feb990b380dbda14de599832419c826330a01fb34633b7542558fe5e44eab2",
+      "tool_error_count": 0,
+      "usage": {
+        "cached_input_tokens": 425472,
+        "input_tokens": 486148,
+        "output_tokens": 16984,
+        "reasoning_output_tokens": 8524
+      },
+      "workspace_changed_path_count": 2
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.013,
+    "online_validation": 27429.221,
+    "post_validation_tail": 0.024,
+    "provision": 6444.562,
+    "terminal_wall": 455170.542,
+    "user_result": 455170.538,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider",
+      "/artifact_snapshot"
+    ],
+    "unknown": [
+      "/participants/0/generation_settings/0/applied_value"
+    ]
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 146038657944086,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:17:38.097Z"
+    },
+    "P1": {
+      "monotonic_ns": 146045102505719,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:17:44.542Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 146045152841468,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:17:44.592Z"
+    },
+    "T1": {
+      "monotonic_ns": 146045152854858,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:17:44.592Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 146500323379484,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:25:49.784Z"
+    },
+    "TX": {
+      "monotonic_ns": 146500323383855,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:25:49.784Z"
+    },
+    "V0": {
+      "monotonic_ns": 146472894135401,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:25:20.205Z"
+    },
+    "V1": {
+      "monotonic_ns": 146500323355927,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:25:49.784Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 1200000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": "online-validation-failed",
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "fail",
+    "quality_basis": "online-fail",
+    "quality_pass": false,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "key": "effort",
+          "namespace": "codex.reasoning",
+          "requested_value": "high",
+          "status": "unknown"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "alias-only",
+        "requested_alias": "gpt-5.6-sol",
+        "requested_source": "flag"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+        "observed_at": "2026-08-27T18:17:44.542Z",
+        "permission_mode": "automatic",
+        "provider": "codex"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "run-003-9205061ad9e30698",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "178b4d44cb937a1d7c10d938af214a7e8e275eb0",
+    "bundle_digest": "sha256:42b81fa1eca375a52f72bc824a06ee73add9b329b7c9c920485ea68221a9ab6b",
+    "fixture_revision": "f06-l-lease-lifecycle-tests-v1-r1",
+    "instruction_set_digest": "sha256:e95b2a3cd9c10ed97a6785a56b0e8e4ba88cc1271dc86d221b6d5576fec710c0"
+  },
+  "study_id": "duration-atlas-wave8-identifiable",
+  "workers": []
+}
