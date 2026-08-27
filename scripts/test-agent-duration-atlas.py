@@ -224,6 +224,12 @@ class AgentDurationAtlasTests(unittest.TestCase):
         timeout_sample = next(sample for sample in samples if sample["run_id"] == "quality-unknown-timeout")
         self.assertEqual(timeout_sample["censoring"]["status"], "right-censored")
         self.assertIn("safety_cap_ms", timeout_sample["censoring"])
+        failed_sample = next(sample for sample in samples if sample["run_id"] == "quality-fail")
+        self.assertEqual(failed_sample["quality_evidence"]["evaluator_status"], "fail")
+        self.assertEqual(
+            failed_sample["quality_evidence"]["score"]["failed_check_ids"],
+            ["fixture-online-v1"],
+        )
 
     def test_source_digests_and_bytes_are_reproducible_for_input_order(self) -> None:
         one = clone_run(self.base, "repeat-one")

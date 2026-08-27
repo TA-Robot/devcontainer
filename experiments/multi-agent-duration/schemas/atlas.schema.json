@@ -433,6 +433,53 @@
         "failure_class": {"type": ["string", "null"], "maxLength": 128}
       }
     },
+    "evaluator_score": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "resolution",
+        "passed",
+        "total",
+        "ratio",
+        "public_passed",
+        "public_total",
+        "hidden_passed",
+        "hidden_total",
+        "failed_check_ids",
+        "all_checks_required"
+      ],
+      "properties": {
+        "resolution": {"enum": ["criterion", "aggregate-check"]},
+        "passed": {"type": "integer", "minimum": 0},
+        "total": {"type": "integer", "minimum": 1},
+        "ratio": {"type": "number", "minimum": 0, "maximum": 1},
+        "public_passed": {"type": "integer", "minimum": 0},
+        "public_total": {"type": "integer", "minimum": 0},
+        "hidden_passed": {"type": "integer", "minimum": 0},
+        "hidden_total": {"type": "integer", "minimum": 0},
+        "failed_check_ids": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {"$ref": "#/$defs/schema_id"}
+        },
+        "all_checks_required": {"const": true}
+      }
+    },
+    "quality_evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["evaluator_status", "check_count", "score"],
+      "properties": {
+        "evaluator_status": {"enum": ["pass", "fail", "not-run", "infrastructure-failure"]},
+        "check_count": {"type": "integer", "minimum": 0},
+        "score": {
+          "oneOf": [
+            {"$ref": "#/$defs/evaluator_score"},
+            {"type": "null"}
+          ]
+        }
+      }
+    },
     "covariates": {
       "type": "object",
       "additionalProperties": false,
@@ -472,6 +519,7 @@
         "first_artifact",
         "durations_ms",
         "outcome",
+        "quality_evidence",
         "covariates"
       ],
       "properties": {
@@ -484,6 +532,7 @@
         "first_artifact": {"$ref": "#/$defs/first_artifact"},
         "durations_ms": {"$ref": "#/$defs/durations"},
         "outcome": {"$ref": "#/$defs/outcome"},
+        "quality_evidence": {"$ref": "#/$defs/quality_evidence"},
         "covariates": {"$ref": "#/$defs/covariates"}
       }
     },

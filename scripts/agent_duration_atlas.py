@@ -304,8 +304,34 @@ def _first_artifact(record: Mapping[str, Any]) -> dict[str, Any]:
     return result
 
 
+def _evaluator_score(record: Mapping[str, Any]) -> dict[str, Any] | None:
+    evaluator = record["diagnostics"]["evaluator"]
+    declared = evaluator.get("score")
+    if isinstance(declared, dict):
+        return copy.deepcopy(declared)
+    checks = evaluator["checks"]
+    if not checks:
+        return None
+    passed = sum(item["status"] == "pass" for item in checks)
+    return {
+        "resolution": "aggregate-check",
+        "passed": passed,
+        "total": len(checks),
+        "ratio": round(passed / len(checks), 6),
+        "public_passed": 0,
+        "public_total": 0,
+        "hidden_passed": 0,
+        "hidden_total": 0,
+        "failed_check_ids": [
+            item["check_id"] for item in checks if item["status"] == "fail"
+        ],
+        "all_checks_required": True,
+    }
+
+
 def _sample(record: Mapping[str, Any], run_digest: str) -> dict[str, Any]:
     environment = record["environment"]
+    evaluator = record["diagnostics"]["evaluator"]
     return {
         "run_id": record["run_id"],
         "run_digest": run_digest,
@@ -329,6 +355,11 @@ def _sample(record: Mapping[str, Any], run_digest: str) -> dict[str, Any]:
                 "quality_basis",
                 "failure_class",
             )
+        },
+        "quality_evidence": {
+            "evaluator_status": evaluator["status"],
+            "check_count": len(evaluator["checks"]),
+            "score": _evaluator_score(record),
         },
         "covariates": {
             key: environment[key]
@@ -744,6 +775,22 @@ def validate_atlas(atlas: Mapping[str, Any]) -> None:
                         raise AtlasError("observed first artifact has no duration")
                 elif "milliseconds" in first_artifact:
                     raise AtlasError("missing first artifact contains an inferred duration")
+                evidence = sample["quality_evidence"]
+                score = evidence["score"]
+                if score is None:
+                    if evidence["check_count"] != 0:
+                        raise AtlasError("quality checks are present without a content-free score")
+                else:
+                    if score["total"] != evidence["check_count"]:
+                        raise AtlasError("quality score total disagrees with check count")
+                    if score["passed"] > score["total"]:
+                        raise AtlasError("quality score passed count exceeds total")
+                    if score["ratio"] != round(score["passed"] / score["total"], 6):
+                        raise AtlasError("quality score ratio is not canonical")
+                    if evidence["evaluator_status"] == "pass" and score["ratio"] != 1:
+                        raise AtlasError("passing evaluator has a partial quality score")
+                    if evidence["evaluator_status"] == "fail" and not score["failed_check_ids"]:
+                        raise AtlasError("failing evaluator has no failed criterion IDs")
                 for participant in case["primary_stratum"]["participants"]:
                     for setting in participant["generation_settings"]:
                         if setting["status"] != "applied" and "applied_value" in setting:
