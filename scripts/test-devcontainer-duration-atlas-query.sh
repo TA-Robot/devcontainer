@@ -40,6 +40,8 @@ if pending:
     raise AssertionError("Dockerfile ends in an unterminated continuation")
 
 runtime_root = "/usr/local/lib/mira-duration-atlas-runtime"
+snapshot_source = "generated/duration-atlas/current.json"
+snapshot_target = "/usr/local/share/mira-duration-atlas/current.json"
 shim_copy = (
     "COPY scripts/devcontainer-query-agent-duration-atlas "
     "/usr/local/bin/query-agent-duration-atlas"
@@ -92,10 +94,30 @@ schema_copy = next(
 if schema_copy is None or any(source not in schema_copy.split() for source in schema_sources):
     raise AssertionError("Dockerfile runtime schema COPY surface is incomplete")
 
-copy_position = dockerfile.read_text(encoding="utf-8").index(shim_copy)
-user_position = dockerfile.read_text(encoding="utf-8").index("USER $USERNAME")
-if copy_position > user_position:
+snapshot_copy = (
+    f"COPY --chown=root:root {snapshot_source} {snapshot_target}"
+)
+if snapshot_copy not in logical:
+    raise AssertionError("Dockerfile does not install the root-owned duration-atlas snapshot")
+snapshot_permissions = next(
+    (
+        line
+        for line in logical
+        if line.startswith("RUN ")
+        and "chmod 0444 " in line
+        and snapshot_target in line
+    ),
+    None,
+)
+if snapshot_permissions is None:
+    raise AssertionError("Dockerfile does not make the duration-atlas snapshot read-only")
+
+dockerfile_text = dockerfile.read_text(encoding="utf-8")
+user_position = dockerfile_text.index("USER $USERNAME")
+if dockerfile_text.index(shim_copy) > user_position:
     raise AssertionError("root-owned runtime must be installed before switching users")
+if dockerfile_text.index("COPY --chown=root:root generated/duration-atlas/current.json") > user_position:
+    raise AssertionError("root-owned snapshot must be installed before switching users")
 
 shim_text = shim.read_text(encoding="utf-8")
 required_shim_lines = (
@@ -110,7 +132,7 @@ if "${PYTHONPATH" in shim_text:
     raise AssertionError("duration-atlas query shim must not inherit caller PYTHONPATH")
 PY
 
-echo "ok - duration atlas query Dockerfile COPY surface and shim"
+echo "ok - duration atlas query and snapshot Dockerfile COPY surface"
 
 image_was_explicit=0
 if [[ $# -gt 1 ]]; then
@@ -173,6 +195,7 @@ docker run --rm \
   --entrypoint /bin/bash \
   "$image" -ceu '
 runtime=/usr/local/lib/mira-duration-atlas-runtime
+snapshot=/usr/local/share/mira-duration-atlas/current.json
 test -x /usr/local/bin/query-agent-duration-atlas
 for module in agent_contracts.py agent_duration_study.py agent_duration_atlas.py query_agent_duration_atlas.py; do
   test -r "$runtime/scripts/$module"
@@ -184,7 +207,53 @@ for schema in study case case-catalog capability fixture run batch atlas; do
 done
 observed_root="$(PYTHONPATH="$runtime/scripts" /usr/bin/python3 -c "import agent_duration_study; print(agent_duration_study.ROOT)")"
 test "$observed_root" = "$runtime"
+test -f "$snapshot"
+test -r "$snapshot"
+test ! -w "$snapshot"
+test "$(stat -c %a "$snapshot")" = 444
+test "$(stat -c %u:%g "$snapshot")" = 0:0
+if (exec 2>/dev/null; printf x >>"$snapshot"); then
+  echo "duration-atlas snapshot unexpectedly accepted a write" >&2
+  exit 1
+fi
+PYTHONDONTWRITEBYTECODE=1 PYTHONPATH="$runtime/scripts" \
+  /usr/bin/python3 - "$snapshot" <<PY
+from pathlib import Path
+import json
+import sys
+
+from agent_duration_atlas import validate_atlas
+
+
+with Path(sys.argv[1]).open(encoding="utf-8") as handle:
+    atlas = json.load(handle)
+validate_atlas(atlas)
+PY
 '
+
+echo "ok - bundled duration atlas is root-owned, read-only, and schema-valid"
+
+docker run --rm \
+  --entrypoint /usr/local/bin/query-agent-duration-atlas \
+  "$image" \
+  /usr/local/share/mira-duration-atlas/current.json \
+  --mode coverage \
+  --format json \
+  --max-rows 1 \
+  --max-output-bytes 32768 \
+  >"$tmp/bundled-result.json"
+
+jq -e '
+  .query_kind == "bounded-duration-atlas-query"
+  and .status == "measured"
+  and .match.case_strata > 0
+  and .match.displayed_rows == 1
+  and (.rows | length) == 1
+  and ([.. | objects | has("samples")] | any | not)
+' "$tmp/bundled-result.json" >/dev/null \
+  || fail "bundled duration-atlas query returned an invalid or sample-bearing result"
+
+echo "ok - bundled duration atlas query is bounded and does not expose sample bodies"
 
 docker run --rm \
   --workdir /tmp \
