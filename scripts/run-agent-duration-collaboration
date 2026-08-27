@@ -1,0 +1,8 @@
+#!/usr/bin/env python3
+"""CLI shim for the finite collaboration duration-study control-plane."""
+
+from agent_duration_collaboration import main
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
