@@ -1,0 +1,251 @@
+{
+  "schema_version": 1,
+  "catalog_id": "duration-atlas-f03",
+  "revision": 1,
+  "published_at": "2026-08-27T00:00:00.000Z",
+  "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F03-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:d6960fbd299e59fd843012592313d3356cbcd728673d965430eb8c2aa0acc01a",
+        "source_type": "fixture",
+        "family": "failing-test-diagnosis",
+        "size": "S",
+        "profile_id": "S-local-deterministic-diagnosis-python",
+        "variant_group_id": "F03-S-PY",
+        "descriptors": {
+          "context_surface": "one-python-module-and-one-failing-test",
+          "artifact_surface": "structured-diagnosis",
+          "coupling": "local-expression",
+          "validation_depth": ["failing-test", "gold-root-cause"],
+          "environment_setup": "none",
+          "failure_distance": "direct",
+          "statefulness": "stateless",
+          "language_toolchain": ["python", "json"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "answer",
+        "risk": "low",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "causal-misattribution",
+          "incomplete-reproducer",
+          "one-sided-regression"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F03-S-PY-001",
+        "recipe_id": "f03-s-python-zero-diagnosis-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f03-s-python-zero-diagnosis.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "tools/confirm_seeded_failure.py",
+            "--test",
+            "tests.test_limits",
+            "--signature",
+            "explicit-zero"
+          ],
+          ["python3", "tools/validate_diagnosis.py", "diagnosis.json"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "diagnosis-root-cause",
+            "test_target": "HiddenZeroDiagnosisTests.test_root_cause"
+          },
+          {
+            "check_id": "diagnosis-reproducer",
+            "test_target": "HiddenZeroDiagnosisTests.test_reproducer"
+          },
+          {
+            "check_id": "diagnosis-regression",
+            "test_target": "HiddenZeroDiagnosisTests.test_regression"
+          },
+          {
+            "check_id": "diagnosis-no-false-cause",
+            "test_target": "HiddenZeroDiagnosisTests.test_no_false_cause"
+          }
+        ],
+        "online_evaluator_id": "f03-s-python-diagnosis-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F03-M-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:e4cb286f996bb727f022a2984b67f654b36923d89ca64b51b0387f747e03d56f",
+        "source_type": "fixture",
+        "family": "failing-test-diagnosis",
+        "size": "M",
+        "profile_id": "M-coupled-deterministic-diagnosis-python",
+        "variant_group_id": "F03-M-PY",
+        "descriptors": {
+          "context_surface": "scheduler-serializer-store-and-integration-test",
+          "artifact_surface": "root-cause-chain-and-regression-design",
+          "coupling": "cross-module-data-contract",
+          "validation_depth": ["unit", "integration", "reload"],
+          "environment_setup": "temporary-filesystem",
+          "failure_distance": "cross-module-reload",
+          "statefulness": "serialized-job-state",
+          "language_toolchain": ["python", "json"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "answer",
+        "risk": "medium",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "failure-distance",
+          "causal-chain-gap",
+          "distractor-fix",
+          "single-layer-regression"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F03-M-PY-001",
+        "recipe_id": "f03-m-python-reload-diagnosis-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f03-m-python-reload-diagnosis.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "tools/confirm_seeded_failure.py",
+            "--test",
+            "tests.test_expiry",
+            "--signature",
+            "reload-retained"
+          ],
+          ["python3", "tools/validate_diagnosis.py", "diagnosis.json"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "diagnosis-reload-contrast",
+            "test_target": "HiddenReloadDiagnosisTests.test_reload_contrast"
+          },
+          {
+            "check_id": "diagnosis-timezone-cause",
+            "test_target": "HiddenReloadDiagnosisTests.test_timezone_cause"
+          },
+          {
+            "check_id": "diagnosis-causal-chain",
+            "test_target": "HiddenReloadDiagnosisTests.test_causal_chain"
+          },
+          {
+            "check_id": "diagnosis-regression-layers",
+            "test_target": "HiddenReloadDiagnosisTests.test_regression_layers"
+          },
+          {
+            "check_id": "diagnosis-distractor-rejected",
+            "test_target": "HiddenReloadDiagnosisTests.test_distractor_rejected"
+          }
+        ],
+        "online_evaluator_id": "f03-m-python-reload-diagnosis-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F03-L-PYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:9ff03488e8d8404e8fbe4d2e214b108e61e6db0bef35d75bab5ca2e288ed4115",
+        "source_type": "fixture",
+        "family": "failing-test-diagnosis",
+        "size": "L",
+        "profile_id": "L-cross-process-restart-diagnosis",
+        "variant_group_id": "F03-L-PYBASH",
+        "descriptors": {
+          "context_surface": "python-worker-journal-and-bash-crash-restart-harness",
+          "artifact_surface": "diagnosis-deterministic-reproducer-and-regression-harness",
+          "coupling": "cross-process-journal-ordering",
+          "validation_depth": ["unit", "integration", "crash", "restart", "repeat"],
+          "environment_setup": "fresh-subprocess-lifecycle",
+          "failure_distance": "restart-delayed",
+          "statefulness": "persistent-acknowledgement-journal",
+          "language_toolchain": ["python", "bash", "json"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "tests",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "timing-flake",
+          "ordering-misattribution",
+          "restart-state-gap",
+          "unsafe-cleanup",
+          "unsupported-semantics"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F03-L-PYBASH-001",
+        "recipe_id": "f03-l-python-bash-crash-diagnosis-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f03-l-crash-restart-diagnosis.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["bash", "-n", "regression.sh"],
+          ["python3", "tools/validate_diagnosis.py", "diagnosis.json"],
+          ["bash", "tools/check-regression.sh", "regression.sh"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "diagnosis-deterministic-barrier",
+            "test_target": "HiddenCrashRestartDiagnosisTests.test_deterministic_barrier"
+          },
+          {
+            "check_id": "diagnosis-ordering-cause",
+            "test_target": "HiddenCrashRestartDiagnosisTests.test_ordering_cause"
+          },
+          {
+            "check_id": "diagnosis-restart-state",
+            "test_target": "HiddenCrashRestartDiagnosisTests.test_restart_state"
+          },
+          {
+            "check_id": "diagnosis-regression-reliable",
+            "test_target": "HiddenCrashRestartDiagnosisTests.test_regression_reliable"
+          },
+          {
+            "check_id": "diagnosis-cleanup-bounded",
+            "test_target": "HiddenCrashRestartDiagnosisTests.test_cleanup_bounded"
+          },
+          {
+            "check_id": "diagnosis-semantics-honest",
+            "test_target": "HiddenCrashRestartDiagnosisTests.test_semantics_honest"
+          }
+        ],
+        "online_evaluator_id": "f03-l-crash-restart-diagnosis-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    }
+  ]
+}
