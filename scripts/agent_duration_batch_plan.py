@@ -175,6 +175,7 @@ def plan_batch(
     timeout_seconds: float,
     evaluator_timeout_seconds: float,
     output_bytes_cap: int,
+    artifact_retention: str = "task-artifacts",
     created_at: str | None = None,
 ) -> dict[str, Any]:
     """Return one validated batch manifest without contacting a provider."""
@@ -219,6 +220,8 @@ def plan_batch(
         or not 1024 <= output_bytes_cap <= 67108864
     ):
         raise DurationStudyError("output_bytes_cap must be between 1024 and 67108864")
+    if artifact_retention not in {"content-free-only", "task-artifacts"}:
+        raise DurationStudyError("artifact_retention must be content-free-only or task-artifacts")
 
     explicit_series = _validated_series(series)
     selected = _selected_cases(
@@ -289,6 +292,7 @@ def plan_batch(
             "concurrency": 1,
             "automatic_retry": False,
             "continue_after_quality_fail": True,
+            "artifact_retention": artifact_retention,
         },
         "entries": entries,
     }

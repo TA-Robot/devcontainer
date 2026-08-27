@@ -27,6 +27,7 @@ SCHEMA_PATHS = {
     "fixture": SCHEMA_DIR / "fixture.schema.json",
     "run": SCHEMA_DIR / "run.schema.json",
     "batch": SCHEMA_DIR / "batch.schema.json",
+    "validity": SCHEMA_DIR / "validity.schema.json",
 }
 LANDMARK_NAMES = (
     "P0",
@@ -44,6 +45,8 @@ LANDMARK_NAMES = (
     "TX",
 )
 MISSING_EVENT_STATUSES = {"not-applicable", "not-observed", "unknown"}
+ARTIFACT_SNAPSHOT_FILE_BYTES_CAP = 256 * 1024
+ARTIFACT_SNAPSHOT_TOTAL_BYTES_CAP = 1024 * 1024
 
 
 class DurationStudyError(ValueError):
@@ -416,6 +419,60 @@ def _validate_provenance(record: dict[str, Any]) -> None:
             owners[pointer] = category
 
 
+def _validate_artifact_snapshot(record: dict[str, Any]) -> None:
+    snapshot = record.get("artifact_snapshot")
+    if snapshot is None:
+        return
+    files = snapshot["files"]
+    paths = [item["path"] for item in files]
+    if paths != sorted(paths) or len(paths) != len(set(paths)):
+        raise DurationStudyError("artifact snapshot paths must be sorted and unique")
+    retained_bytes = 0
+    partial = snapshot["unexpected_changed_path_count"] > 0
+    manifest: list[dict[str, Any]] = []
+    for item in files:
+        path = Path(item["path"])
+        if path.is_absolute() or ".." in path.parts or "." in path.parts:
+            raise DurationStudyError("artifact snapshot contains an unsafe path")
+        content_status = item["content_status"]
+        content = item.get("content_utf8")
+        digest = item.get("content_digest")
+        if content_status == "retained":
+            if not isinstance(content, str) or not isinstance(digest, str):
+                raise DurationStudyError("retained artifact requires content and digest")
+            encoded = content.encode("utf-8")
+            if len(encoded) != item["byte_count"] or content_digest(encoded) != digest:
+                raise DurationStudyError("retained artifact content does not match metadata")
+            if len(encoded) > ARTIFACT_SNAPSHOT_FILE_BYTES_CAP:
+                raise DurationStudyError("retained artifact exceeds the per-file content cap")
+            if retained_bytes + len(encoded) > ARTIFACT_SNAPSHOT_TOTAL_BYTES_CAP:
+                raise DurationStudyError("retained artifacts exceed the total content cap")
+            retained_bytes += len(encoded)
+        elif content_status == "deleted":
+            if item["byte_count"] != 0 or content is not None or digest is not None:
+                raise DurationStudyError("deleted artifact cannot retain content metadata")
+        else:
+            partial = True
+            if content is not None:
+                raise DurationStudyError("redacted artifact cannot retain content")
+            if digest is None and content_status not in {"non-regular", "size-cap"}:
+                raise DurationStudyError("omitted regular artifact requires a content digest")
+            if content_status == "size-cap" and (
+                item["byte_count"] <= ARTIFACT_SNAPSHOT_FILE_BYTES_CAP
+                and retained_bytes + item["byte_count"]
+                <= ARTIFACT_SNAPSHOT_TOTAL_BYTES_CAP
+            ):
+                raise DurationStudyError("size-capped artifact does not exceed a content cap")
+        manifest.append({key: value for key, value in item.items() if key != "content_utf8"})
+    if snapshot["total_bytes"] != retained_bytes:
+        raise DurationStudyError("artifact snapshot total_bytes does not match retained content")
+    if snapshot["manifest_digest"] != canonical_json_digest(manifest):
+        raise DurationStudyError("artifact snapshot manifest digest does not match files")
+    expected_completeness = "partial" if partial else "complete"
+    if snapshot["completeness"] != expected_completeness:
+        raise DurationStudyError("artifact snapshot completeness disagrees with omissions")
+
+
 def _validate_model_and_settings(
     model_identity: dict[str, Any],
     settings: list[dict[str, Any]],
@@ -533,6 +590,7 @@ def validate_run_record(record: dict[str, Any]) -> None:
     validate(record, load_schema("run"))
     _validate_utc_timestamps(record)
     _validate_provenance(record)
+    _validate_artifact_snapshot(record)
 
     expected_durations = derive_durations(record)
     if record["durations_ms"] != expected_durations:
@@ -927,6 +985,7 @@ class RunRecorder:
         quality: dict[str, Any],
         diagnostics: dict[str, Any],
         nested_worker_detected: bool = False,
+        artifact_snapshot: dict[str, Any] | None = None,
     ) -> dict[str, Any]:
         record = copy.deepcopy(self.record)
         intervals = _worker_intervals(record)
@@ -946,6 +1005,8 @@ class RunRecorder:
         record["outcome"] = outcome
         record["quality"] = copy.deepcopy(quality)
         record["diagnostics"] = copy.deepcopy(diagnostics)
+        if artifact_snapshot is not None:
+            record["artifact_snapshot"] = copy.deepcopy(artifact_snapshot)
 
         t2_status = record["landmarks"].get("T2", {"status": "not-observed"})["status"]
         t4_status = record["landmarks"].get("T4", {"status": "not-observed"})["status"]
@@ -988,13 +1049,16 @@ class RunRecorder:
             evaluated_paths.extend(["/diagnostics/evaluator", "/outcome/online_acceptance"])
         if outcome["offline_score"] not in {"not-run", "unavailable"}:
             evaluated_paths.extend(["/outcome/offline_score", "/quality"])
+        observed_paths = [
+            "/landmarks",
+            "/workers",
+            "/dialogue_exchanges",
+            "/diagnostics/provider",
+        ]
+        if artifact_snapshot is not None:
+            observed_paths.append("/artifact_snapshot")
         record["field_provenance"] = {
-            "observed": [
-                "/landmarks",
-                "/workers",
-                "/dialogue_exchanges",
-                "/diagnostics/provider",
-            ],
+            "observed": observed_paths,
             "declared_by_harness": [
                 "/case",
                 "/snapshot",
@@ -1446,6 +1510,11 @@ def build_parser() -> argparse.ArgumentParser:
     codex_study.add_argument("--evaluator-timeout-seconds", type=float, default=30)
     codex_study.add_argument("--output-bytes-cap", type=int, default=8 * 1024 * 1024)
     codex_study.add_argument(
+        "--artifact-retention",
+        choices=("content-free-only", "task-artifacts"),
+        default="task-artifacts",
+    )
+    codex_study.add_argument(
         "--confirm-live-provider",
         action="store_true",
         help="explicitly authorize exactly one provider generation request",
@@ -1485,6 +1554,11 @@ def build_parser() -> argparse.ArgumentParser:
     provider_study.add_argument("--timeout-seconds", type=float, default=900)
     provider_study.add_argument("--evaluator-timeout-seconds", type=float, default=30)
     provider_study.add_argument("--output-bytes-cap", type=int, default=8 * 1024 * 1024)
+    provider_study.add_argument(
+        "--artifact-retention",
+        choices=("content-free-only", "task-artifacts"),
+        default="task-artifacts",
+    )
     provider_study.add_argument(
         "--confirm-live-provider",
         action="store_true",
@@ -1665,6 +1739,7 @@ def main(argv: list[str] | None = None) -> int:
                 timeout_seconds=args.timeout_seconds,
                 evaluator_timeout_seconds=args.evaluator_timeout_seconds,
                 output_bytes_cap=args.output_bytes_cap,
+                artifact_retention=args.artifact_retention,
             )
             print(
                 json.dumps(
@@ -1714,6 +1789,7 @@ def main(argv: list[str] | None = None) -> int:
                 evaluator_timeout_seconds=args.evaluator_timeout_seconds,
                 output_bytes_cap=args.output_bytes_cap,
                 provider_binary=provider_binary,
+                artifact_retention=args.artifact_retention,
             )
             print(
                 json.dumps(

@@ -156,6 +156,7 @@ class AgentDurationBatchTests(unittest.TestCase):
 
             def fake_run_once(provider, case_id, output_dir, **kwargs):
                 calls.append(kwargs["run_id"])
+                self.assertEqual(kwargs["artifact_retention"], "content-free-only")
                 quality = len(calls) > 1
                 return (
                     {
@@ -275,6 +276,19 @@ class AgentDurationBatchTests(unittest.TestCase):
                             live_generation_authorized=False,
                             execute=False,
                         )
+
+            retained_batch = copy.deepcopy(batch)
+            retained_batch["safety"]["artifact_retention"] = "task-artifacts"
+            path.write_text(json.dumps(record), encoding="utf-8")
+            with self.assertRaisesRegex(DurationStudyError, "artifact retention"):
+                execute_batch(
+                    retained_batch,
+                    output_dir=output,
+                    image="fixture-image",
+                    auth_files={},
+                    live_generation_authorized=False,
+                    execute=False,
+                )
 
 
 if __name__ == "__main__":

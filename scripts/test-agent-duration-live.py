@@ -16,12 +16,17 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from agent_duration_fixtures import build_fixture  # noqa: E402
+from agent_contracts import load_json  # noqa: E402
+from agent_duration_fixtures import (  # noqa: E402
+    _install_known_good_for_test,
+    build_fixture,
+)
 from agent_duration_live import (  # noqa: E402
     CODEX_SANDBOX_PROBE_SCRIPT,
     CODEX_PROFILE,
     PROVIDER_EFFORTS,
     _classify_codex_failure,
+    _capture_task_artifacts,
     _parse_codex_events,
     _refine_codex_event_failure,
     _validate_auth_file,
@@ -169,6 +174,40 @@ raise SystemExit(125)
         path.write_text(json.dumps(value) + "\n", encoding="utf-8")
         path.chmod(0o600)
         return path
+
+    def test_task_artifact_capture_is_allowlisted_bounded_and_credential_redacted(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="duration-live-artifact-") as raw_temp:
+            root = Path(raw_temp)
+            fixture_dir = self.build_s_fixture(root)
+            workspace = fixture_dir / "workspace"
+            auth = self.write_provider_auth(root, "codex")
+            manifest = load_json(fixture_dir / "fixture.json")
+            _install_known_good_for_test("F04-S-PY-001", workspace)
+
+            snapshot = _capture_task_artifacts(fixture_dir, manifest, auth)
+            self.assertEqual(snapshot["completeness"], "complete")
+            self.assertEqual(snapshot["unexpected_changed_path_count"], 0)
+            self.assertEqual([item["path"] for item in snapshot["files"]], ["tag_normalizer.py"])
+            self.assertEqual(snapshot["files"][0]["content_status"], "retained")
+            self.assertIn("def normalize_tag", snapshot["files"][0]["content_utf8"])
+
+            artifact = workspace / "tag_normalizer.py"
+            artifact.write_text(
+                artifact.read_text(encoding="utf-8") + "\n# private-refresh\n",
+                encoding="utf-8",
+            )
+            redacted = _capture_task_artifacts(fixture_dir, manifest, auth)
+            self.assertEqual(redacted["completeness"], "partial")
+            self.assertEqual(redacted["files"][0]["content_status"], "redacted-credential")
+            self.assertNotIn("content_utf8", redacted["files"][0])
+
+            artifact.write_bytes(b"x" * (256 * 1024 + 1))
+            capped = _capture_task_artifacts(fixture_dir, manifest, auth)
+            self.assertEqual(capped["completeness"], "partial")
+            self.assertEqual(capped["files"][0]["content_status"], "size-cap")
+            self.assertEqual(capped["files"][0]["byte_count"], 256 * 1024 + 1)
+            self.assertNotIn("content_utf8", capped["files"][0])
+            self.assertNotIn("content_digest", capped["files"][0])
 
     def test_codex_profile_is_primary_only_workspace_only_and_offline_for_commands(self) -> None:
         compile(CODEX_SANDBOX_PROBE_SCRIPT, "<sandbox-probe>", "exec")
@@ -661,6 +700,7 @@ raise SystemExit(125)
                 timeout_seconds=2,
                 evaluator_timeout_seconds=2,
                 output_bytes_cap=16 * 1024,
+                artifact_retention="task-artifacts",
             )
             validate_run_record(record)
             self.assertEqual(record_path, output_dir / "claude-fixture-xhigh-pass.json")
@@ -681,6 +721,8 @@ raise SystemExit(125)
                 record["diagnostics"]["provider"]["task_network"],
                 "denied-by-provider-sandbox",
             )
+            self.assertEqual(record["artifact_snapshot"]["completeness"], "partial")
+            self.assertEqual(record["artifact_snapshot"]["unexpected_changed_path_count"], 1)
             serialized = json.dumps(record, sort_keys=True)
             self.assertNotIn("private-", serialized)
             self.assertNotIn(str(auth), serialized)

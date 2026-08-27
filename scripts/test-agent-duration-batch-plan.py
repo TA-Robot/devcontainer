@@ -101,6 +101,7 @@ class AgentDurationBatchPlanTests(unittest.TestCase):
         self.assertIn("repeat=1", manifest["purpose"])
         self.assertIn("rotation-seed=0", manifest["purpose"])
         self.assertIn("no routing recommendation or default winner", manifest["purpose"])
+        self.assertEqual(manifest["safety"]["artifact_retention"], "task-artifacts")
         with tempfile.TemporaryDirectory(prefix="duration-plan-contract-") as raw:
             path = Path(raw) / "batch.json"
             path.write_text(json.dumps(manifest), encoding="utf-8")

@@ -19,7 +19,12 @@ from typing import Any, Mapping
 from datetime import datetime, timezone
 
 from agent_contracts import load_json
-from agent_duration_fixtures import DEFAULT_CATALOG, build_fixture, evaluate_fixture_isolated
+from agent_duration_fixtures import (
+    DEFAULT_CATALOG,
+    build_fixture,
+    evaluate_fixture_isolated,
+    task_artifact_paths,
+)
 from agent_duration_study import (
     DurationStudyError,
     EventClock,
@@ -46,6 +51,9 @@ SHA256 = re.compile(r"^sha256:[0-9a-f]{64}$")
 MODEL_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 EFFORTS = {"low", "medium", "high", "xhigh", "max", "ultra"}
 PROVIDERS = {"codex", "claude", "grok"}
+ARTIFACT_RETENTIONS = {"content-free-only", "task-artifacts"}
+ARTIFACT_FILE_BYTES_CAP = 256 * 1024
+ARTIFACT_TOTAL_BYTES_CAP = 1024 * 1024
 PROVIDER_EFFORTS = {
     "codex": {"low", "medium", "high", "xhigh", "max", "ultra"},
     "claude": {"low", "medium", "high", "xhigh", "max"},
@@ -777,6 +785,161 @@ def _validate_clean_fixture(fixture_dir: Path, manifest: dict[str, Any]) -> Path
     if head.returncode != 0 or head.stdout.strip() != manifest["snapshot"]["base_sha"]:
         raise DurationStudyError("fixture base SHA does not match its manifest")
     return workspace
+
+
+def _credential_literals(auth_file: Path) -> tuple[bytes, ...]:
+    """Extract credential values used only to prevent accidental persistence."""
+
+    try:
+        raw = auth_file.read_bytes()
+        value = json.loads(raw)
+    except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise DurationStudyError("cannot scan provider credential for artifact redaction") from exc
+    literals: set[bytes] = set()
+
+    def visit(item: Any) -> None:
+        if isinstance(item, dict):
+            for child in item.values():
+                visit(child)
+        elif isinstance(item, list):
+            for child in item:
+                visit(child)
+        elif isinstance(item, str) and len(item.encode("utf-8")) >= 8:
+            literals.add(item.encode("utf-8"))
+
+    visit(value)
+    return tuple(sorted(literals))
+
+
+def _git_status_for_path(workspace: Path, raw_path: str) -> tuple[str, str] | None:
+    completed = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all", "--", raw_path],
+        cwd=workspace,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=10,
+        check=False,
+    )
+    if completed.returncode != 0:
+        raise DurationStudyError("cannot inspect task artifact Git status")
+    lines = completed.stdout.splitlines()
+    if not lines:
+        return None
+    if len(lines) != 1 or len(lines[0]) < 3:
+        raise DurationStudyError("task artifact Git status is ambiguous")
+    return lines[0][:2], lines[0]
+
+
+def _capture_task_artifacts(
+    fixture_dir: Path,
+    manifest: Mapping[str, Any],
+    auth_file: Path,
+) -> dict[str, Any]:
+    """Capture only allowlisted synthetic task outputs under hard content caps."""
+
+    workspace = (fixture_dir.resolve() / manifest["paths"]["workspace"]).resolve()
+    allowed = task_artifact_paths(
+        manifest["case"]["case_id"],
+        manifest["case"]["recipe_id"],
+    )
+    if len(allowed) > 16:
+        raise DurationStudyError("task artifact allowlist exceeds the hard file cap")
+    all_status = subprocess.run(
+        ["git", "status", "--porcelain=v1", "--untracked-files=all"],
+        cwd=workspace,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        timeout=10,
+        check=False,
+    )
+    if all_status.returncode != 0:
+        raise DurationStudyError("cannot inspect workspace for artifact retention")
+    all_changed_lines = set(all_status.stdout.splitlines())
+    credential_literals = _credential_literals(auth_file)
+    files: list[dict[str, Any]] = []
+    retained_bytes = 0
+    allowed_changed_lines: set[str] = set()
+    for raw_path in allowed:
+        git_entry = _git_status_for_path(workspace, raw_path)
+        if git_entry is None:
+            continue
+        git_status, status_line = git_entry
+        allowed_changed_lines.add(status_line)
+        path = workspace / raw_path
+        if not path.exists() and not path.is_symlink():
+            files.append(
+                {
+                    "path": raw_path,
+                    "git_status": git_status,
+                    "content_status": "deleted",
+                    "byte_count": 0,
+                }
+            )
+            continue
+        try:
+            mode = path.lstat().st_mode
+        except OSError as exc:
+            raise DurationStudyError("cannot stat retained task artifact") from exc
+        if not stat.S_ISREG(mode):
+            files.append(
+                {
+                    "path": raw_path,
+                    "git_status": git_status,
+                    "content_status": "non-regular",
+                    "byte_count": 0,
+                }
+            )
+            continue
+        byte_count = path.stat().st_size
+        item: dict[str, Any] = {
+            "path": raw_path,
+            "git_status": git_status,
+            "byte_count": byte_count,
+        }
+        if (
+            byte_count > ARTIFACT_FILE_BYTES_CAP
+            or retained_bytes + byte_count > ARTIFACT_TOTAL_BYTES_CAP
+        ):
+            item["content_status"] = "size-cap"
+        else:
+            try:
+                content = path.read_bytes()
+            except OSError as exc:
+                raise DurationStudyError("cannot read retained task artifact") from exc
+            if len(content) != byte_count:
+                raise DurationStudyError("task artifact changed while being retained")
+            item["content_digest"] = content_digest(content)
+            if any(literal in content for literal in credential_literals):
+                item["content_status"] = "redacted-credential"
+                files.append(item)
+                continue
+            try:
+                decoded = content.decode("utf-8")
+            except UnicodeDecodeError:
+                item["content_status"] = "non-utf8"
+            else:
+                item["content_status"] = "retained"
+                item["content_utf8"] = decoded
+                retained_bytes += len(content)
+        files.append(item)
+    unexpected = len(all_changed_lines - allowed_changed_lines)
+    manifest_files = [
+        {key: value for key, value in item.items() if key != "content_utf8"}
+        for item in files
+    ]
+    partial = unexpected > 0 or any(
+        item["content_status"] not in {"retained", "deleted"} for item in files
+    )
+    return {
+        "policy": "synthetic-task-artifacts-v1",
+        "completeness": "partial" if partial else "complete",
+        "unexpected_changed_path_count": unexpected,
+        "total_bytes": retained_bytes,
+        "manifest_digest": canonical_json_digest(manifest_files),
+        "files": files,
+    }
 
 
 def probe_codex_agent_sandbox(
@@ -2106,6 +2269,7 @@ def run_provider_study_once(
     output_bytes_cap: int = 8 * 1024 * 1024,
     provider_binary: Path | None = None,
     clock: EventClock | None = None,
+    artifact_retention: str = "content-free-only",
 ) -> tuple[dict[str, Any], Path]:
     """Run one finite provider sample and atomically join timing with evaluation."""
 
@@ -2115,6 +2279,8 @@ def run_provider_study_once(
         raise DurationStudyError(f"unsupported live study provider: {provider}")
     if provider != "grok" and provider_binary is not None:
         raise DurationStudyError("a host-synced provider binary is only supported for Grok")
+    if artifact_retention not in ARTIFACT_RETENTIONS:
+        raise DurationStudyError("unknown live task artifact retention policy")
     chosen_block_id = block_id or f"{provider}-primary-calibration"
     chosen_run_id = run_id or _default_run_id(provider, case_id)
     for label, value in (
@@ -2324,6 +2490,11 @@ def run_provider_study_once(
         recorder.mark_landmark("TX")
         recorder.mark_landmark("S0", status="not-applicable")
         recorder.mark_landmark("S1", status="not-applicable")
+        artifact_snapshot = (
+            _capture_task_artifacts(fixture_dir, manifest, auth_file)
+            if artifact_retention == "task-artifacts"
+            else None
+        )
         record = recorder.finalize(
             outcome=outcome,
             quality={"evaluator_id": None, "metrics": []},
@@ -2331,6 +2502,7 @@ def run_provider_study_once(
                 "provider": provider_diagnostics,
                 "evaluator": evaluator_diagnostics,
             },
+            artifact_snapshot=artifact_snapshot,
         )
         atomic_write_json(record_path, record)
     return record, record_path
@@ -2353,6 +2525,7 @@ def run_codex_study_once(
     evaluator_timeout_seconds: float = 30,
     output_bytes_cap: int = 8 * 1024 * 1024,
     clock: EventClock | None = None,
+    artifact_retention: str = "content-free-only",
 ) -> tuple[dict[str, Any], Path]:
     """Compatibility entrypoint for the original Codex-only live command."""
 
@@ -2373,4 +2546,5 @@ def run_codex_study_once(
         evaluator_timeout_seconds=evaluator_timeout_seconds,
         output_bytes_cap=output_bytes_cap,
         clock=clock,
+        artifact_retention=artifact_retention,
     )

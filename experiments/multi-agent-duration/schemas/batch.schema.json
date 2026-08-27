@@ -37,7 +37,10 @@
         "deadline_seconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 604800},
         "concurrency": {"const": 1},
         "automatic_retry": {"const": false},
-        "continue_after_quality_fail": {"const": true}
+        "continue_after_quality_fail": {"const": true},
+        "artifact_retention": {
+          "enum": ["content-free-only", "task-artifacts"]
+        }
       }
     },
     "entries": {

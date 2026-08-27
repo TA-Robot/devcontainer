@@ -49,6 +49,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--evaluator-timeout-seconds", type=float, required=True)
     parser.add_argument("--output-bytes-cap", type=int, required=True)
     parser.add_argument(
+        "--artifact-retention",
+        choices=("content-free-only", "task-artifacts"),
+        default="task-artifacts",
+        help="retain only bounded allowlisted synthetic task artifacts by default",
+    )
+    parser.add_argument(
         "--created-at",
         help="UTC batch timestamp; defaults deterministically to the catalog publication timestamp",
     )
@@ -84,6 +90,7 @@ def main() -> int:
             timeout_seconds=args.timeout_seconds,
             evaluator_timeout_seconds=args.evaluator_timeout_seconds,
             output_bytes_cap=args.output_bytes_cap,
+            artifact_retention=args.artifact_retention,
             created_at=args.created_at,
         )
         output = args.output.resolve()

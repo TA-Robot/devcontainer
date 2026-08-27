@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://devcontainer.local/schemas/agent-duration-run-v2.schema.json",
   "title": "Agent Duration Run v2",
-  "description": "Content-free timing, identity, outcome, diagnostics, and coverage record for one study attempt.",
+  "description": "Timing, identity, outcome, diagnostics, and coverage for one study attempt, with an optional bounded synthetic task-artifact snapshot.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -94,6 +94,9 @@
     },
     "coverage": {
       "$ref": "#/$defs/coverage"
+    },
+    "artifact_snapshot": {
+      "$ref": "#/$defs/artifact_snapshot"
     },
     "field_provenance": {
       "$ref": "#/$defs/field_provenance"
@@ -1184,6 +1187,83 @@
         },
         "nested_worker_detected": {
           "type": "boolean"
+        }
+      }
+    },
+    "artifact_snapshot_file": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "git_status", "content_status", "byte_count"],
+      "properties": {
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 512
+        },
+        "git_status": {
+          "type": "string",
+          "minLength": 2,
+          "maxLength": 2
+        },
+        "content_status": {
+          "enum": [
+            "retained",
+            "deleted",
+            "redacted-credential",
+            "non-regular",
+            "non-utf8",
+            "size-cap"
+          ]
+        },
+        "byte_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "content_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "content_utf8": {
+          "type": "string",
+          "maxLength": 262144
+        }
+      }
+    },
+    "artifact_snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "policy",
+        "completeness",
+        "unexpected_changed_path_count",
+        "total_bytes",
+        "manifest_digest",
+        "files"
+      ],
+      "properties": {
+        "policy": {
+          "const": "synthetic-task-artifacts-v1"
+        },
+        "completeness": {
+          "enum": ["complete", "partial"]
+        },
+        "unexpected_changed_path_count": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "total_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "manifest_digest": {
+          "$ref": "#/$defs/sha256"
+        },
+        "files": {
+          "type": "array",
+          "maxItems": 16,
+          "items": {
+            "$ref": "#/$defs/artifact_snapshot_file"
+          }
         }
       }
     },

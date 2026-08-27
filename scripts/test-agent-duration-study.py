@@ -24,7 +24,9 @@ from agent_duration_study import (  # noqa: E402
     DurationStudyError,
     atomic_write_json,
     build_fake_run,
+    canonical_json_digest,
     canonical_quality_pass,
+    content_digest,
     derive_durations,
     interval_union_ms,
     load_schema,
@@ -240,7 +242,7 @@ else:
         }
 
     def test_all_checked_in_schemas_are_valid_json_objects(self) -> None:
-        for kind in ("study", "case", "case-catalog", "capability", "fixture", "run"):
+        for kind in ("study", "case", "case-catalog", "capability", "fixture", "run", "validity"):
             with self.subTest(kind=kind):
                 schema = load_schema(kind)
                 self.assertEqual(schema["type"], "object")
@@ -519,6 +521,69 @@ else:
         contradictory_evaluator["outcome"]["quality_basis"] = "online-fail"
         with self.assertRaises(DurationStudyError):
             validate_run_record(contradictory_evaluator)
+
+    def test_optional_task_artifact_snapshot_is_integrity_checked(self) -> None:
+        record = build_fake_run("solo-complete")
+        content = "synthetic artifact\n"
+        item = {
+            "path": "result.txt",
+            "git_status": "??",
+            "content_status": "retained",
+            "byte_count": len(content.encode("utf-8")),
+            "content_digest": content_digest(content.encode("utf-8")),
+            "content_utf8": content,
+        }
+        manifest_item = {key: value for key, value in item.items() if key != "content_utf8"}
+        record["artifact_snapshot"] = {
+            "policy": "synthetic-task-artifacts-v1",
+            "completeness": "complete",
+            "unexpected_changed_path_count": 0,
+            "total_bytes": len(content.encode("utf-8")),
+            "manifest_digest": canonical_json_digest([manifest_item]),
+            "files": [item],
+        }
+        record["field_provenance"]["observed"].append("/artifact_snapshot")
+        validate_run_record(record)
+
+        tampered = copy.deepcopy(record)
+        tampered["artifact_snapshot"]["files"][0]["content_utf8"] = "changed\n"
+        with self.assertRaises(DurationStudyError):
+            validate_run_record(tampered)
+
+        oversized = copy.deepcopy(record)
+        oversized_content = "😀" * 70_000
+        oversized_bytes = oversized_content.encode("utf-8")
+        oversized_item = {
+            "path": "result.txt",
+            "git_status": "??",
+            "content_status": "retained",
+            "byte_count": len(oversized_bytes),
+            "content_digest": content_digest(oversized_bytes),
+            "content_utf8": oversized_content,
+        }
+        oversized["artifact_snapshot"]["files"] = [oversized_item]
+        oversized["artifact_snapshot"]["total_bytes"] = len(oversized_bytes)
+        oversized["artifact_snapshot"]["manifest_digest"] = canonical_json_digest(
+            [{key: value for key, value in oversized_item.items() if key != "content_utf8"}]
+        )
+        with self.assertRaises(DurationStudyError):
+            validate_run_record(oversized)
+
+        unjustified_cap = copy.deepcopy(record)
+        capped_item = {
+            "path": "result.txt",
+            "git_status": "??",
+            "content_status": "size-cap",
+            "byte_count": len(content.encode("utf-8")),
+        }
+        unjustified_cap["artifact_snapshot"]["completeness"] = "partial"
+        unjustified_cap["artifact_snapshot"]["files"] = [capped_item]
+        unjustified_cap["artifact_snapshot"]["total_bytes"] = 0
+        unjustified_cap["artifact_snapshot"]["manifest_digest"] = canonical_json_digest(
+            [capped_item]
+        )
+        with self.assertRaises(DurationStudyError):
+            validate_run_record(unjustified_cap)
 
     def test_atomic_run_record_is_private_and_immutable(self) -> None:
         record = build_fake_run("solo-complete")

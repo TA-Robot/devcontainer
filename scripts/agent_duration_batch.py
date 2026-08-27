@@ -66,6 +66,7 @@ def _validate_existing_run(
     *,
     study_id: str,
     catalog_digest: str,
+    artifact_retention: str,
 ) -> dict[str, Any]:
     value = load_json(path)
     if not isinstance(value, dict):
@@ -93,6 +94,11 @@ def _validate_existing_run(
     }
     if entry["effort"] not in requested_settings:
         raise DurationStudyError(f"existing duration run effort does not match batch entry: {path}")
+    retained = "artifact_snapshot" in value
+    if retained != (artifact_retention == "task-artifacts"):
+        raise DurationStudyError(
+            f"existing duration run artifact retention does not match batch entry: {path}"
+        )
     return value
 
 
@@ -130,6 +136,9 @@ def execute_batch(
                 entry,
                 study_id=batch["study_id"],
                 catalog_digest=batch["catalog_digest"],
+                artifact_retention=batch["safety"].get(
+                    "artifact_retention", "content-free-only"
+                ),
             )
             observations.append(
                 {
@@ -169,6 +178,9 @@ def execute_batch(
             evaluator_timeout_seconds=entry["evaluator_timeout_seconds"],
             output_bytes_cap=entry["output_bytes_cap"],
             provider_binary=grok_binary if provider == "grok" else None,
+            artifact_retention=batch["safety"].get(
+                "artifact_retention", "content-free-only"
+            ),
         )
         if path.resolve() != record_path.resolve():
             raise DurationStudyError("live duration runner returned an unexpected record path")
