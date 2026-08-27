@@ -89,6 +89,23 @@ class DurationSkillDiscoveryTests(unittest.TestCase):
 
 
 class DurationSkillCliTests(unittest.TestCase):
+    def test_help_explains_that_atlas_positional_is_injected(self) -> None:
+        environment = {
+            **os.environ,
+            "AGENT_DURATION_QUERY_COMMAND": str(ROOT / "scripts/query-agent-duration-atlas"),
+        }
+        completed = subprocess.run(
+            [sys.executable, str(WRAPPER), "--help"],
+            env=environment,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=False,
+        )
+        self.assertEqual(0, completed.returncode, completed.stderr)
+        self.assertIn("Discovers and injects the atlas positional argument", completed.stdout)
+        self.assertIn("--setting-requested-value", completed.stdout)
+
     def test_wrapper_forwards_selected_atlas_and_query_arguments(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             directory = Path(raw)

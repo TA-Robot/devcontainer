@@ -79,10 +79,25 @@ def discover_query_command() -> Path:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("-h", "--help", action="store_true")
     parser.add_argument("--atlas", type=Path)
     parser.add_argument("--print-atlas-path", action="store_true")
     args, forwarded = parser.parse_known_args(argv)
     try:
+        if args.help:
+            print(
+                "usage: query_atlas.py [--atlas PATH] [--print-atlas-path] "
+                "QUERY_OPTIONS...\n\n"
+                "Discovers and injects the atlas positional argument; do not pass it "
+                "again in QUERY_OPTIONS. Query options from the bounded CLI follow:\n",
+                flush=True,
+            )
+            try:
+                command = discover_query_command()
+            except ValueError as exc:
+                print(f"query CLI help unavailable: {exc}", file=sys.stderr)
+                return 0
+            return subprocess.run([str(command), "--help"], check=False).returncode
         atlas = discover_atlas(args.atlas)
         if args.print_atlas_path:
             print(atlas)

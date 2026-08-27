@@ -840,12 +840,9 @@ def _participant_label(participants: Sequence[Mapping[str, Any]]) -> str:
         identity = participant["model_identity"]
         model = identity.get("resolved_id") or identity.get("requested_alias") or "unspecified"
         settings = ",".join(
-            f"{item['key']}="
-            + (
-                str(item["applied_value"])
-                if "applied_value" in item
-                else f"requested:{item['requested_value']}/{item['status']}"
-            )
+            f"{item['key']}=requested:{item['requested_value']}"
+            f"/status:{item['status']}"
+            f"/applied:{item.get('applied_value', '-')}"
             for item in participant["generation_settings"]
         ) or "no-setting"
         labels.append(

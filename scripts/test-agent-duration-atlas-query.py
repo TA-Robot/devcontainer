@@ -296,7 +296,17 @@ class AgentDurationAtlasQueryTests(unittest.TestCase):
         self.assertEqual(first_markdown, render_markdown(second))
         self.assertLessEqual(len(first_markdown.encode("utf-8")), 16 * 1024)
         self.assertIn("raw point", first_markdown)
+        self.assertIn("/status:applied/applied:", first_markdown)
         self.assertNotIn("recommended configuration", first_markdown)
+
+        requested_only = copy.deepcopy(self.base)
+        setting = requested_only["participants"][0]["generation_settings"][0]
+        setting["status"] = "unknown"
+        setting.pop("applied_value")
+        markdown = render_markdown(
+            self.query(atlas_from([requested_only]), output_format="markdown")
+        )
+        self.assertIn("/status:unknown/applied:-", markdown)
 
     def test_coverage_is_identifier_only_and_preserves_missingness_counts(self) -> None:
         records = [self.base, build_fake_run("missing-progress"), build_fake_run("timeout")]
