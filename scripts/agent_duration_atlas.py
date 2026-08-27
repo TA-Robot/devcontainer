@@ -255,13 +255,11 @@ def _case_identity(record: Mapping[str, Any]) -> dict[str, Any]:
     return {
         "case_id": case["case_id"],
         "revision": case["revision"],
-        "catalog_digest": case["catalog_digest"],
         "capsule_digest": case["capsule_digest"],
         "strong_online_oracle": case["strong_online_oracle"],
         "snapshot": {
             "base_sha": snapshot["base_sha"],
             "bundle_digest": snapshot["bundle_digest"],
-            "fixture_revision": snapshot["fixture_revision"],
             "instruction_set_digest": snapshot["instruction_set_digest"],
         },
     }
@@ -335,6 +333,12 @@ def _sample(record: Mapping[str, Any], run_digest: str) -> dict[str, Any]:
     return {
         "run_id": record["run_id"],
         "run_digest": run_digest,
+        # The aggregate catalog digest is run provenance, not case identity.
+        # Adding an unrelated family changes it without changing this case.
+        "catalog_digest": record["case"]["catalog_digest"],
+        # Recipe/harness metadata may advance while the visible immutable
+        # bundle, base commit, instructions, capsule, and case revision do not.
+        "fixture_revision": record["snapshot"]["fixture_revision"],
         "block_id": record["block_id"],
         "observed_at": record["landmarks"]["T0"]["wall_time"],
         "quality_population": _quality_population(record),

@@ -11,8 +11,8 @@ from pathlib import Path
 import tempfile
 from typing import Any, Callable, Mapping, Sequence
 
-from agent_contracts import ContractValidationError, load_json
-from agent_duration_atlas import AtlasError, validate_atlas
+from agent_contracts import load_json
+from agent_duration_atlas import validate_atlas
 from agent_duration_study import (
     DurationStudyError,
     ROOT,
@@ -167,8 +167,9 @@ def _render_catalog_coverage(
         catalog_cells[case["family"]][case["size"]].append(case["case_id"])
     atlas_digests = sorted(
         {
-            case["primary_stratum"]["case"]["catalog_digest"]
+            sample["catalog_digest"]
             for _series, case in case_rows
+            for sample in case["samples"]
         }
     )
     digest_match = atlas_digests == [catalog_digest]

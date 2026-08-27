@@ -188,6 +188,27 @@ class AgentDurationAtlasTests(unittest.TestCase):
         self.assertEqual(series["case_aware_summary_status"], "insufficient-repeat-structure")
         self.assertEqual(series["case_aware_summaries"], [])
 
+    def test_catalog_growth_is_sample_provenance_not_case_identity(self) -> None:
+        earlier = clone_run(self.base, "catalog-earlier")
+        current = clone_run(self.base, "catalog-current")
+        earlier["case"]["catalog_digest"] = f"sha256:{'1' * 64}"  # type: ignore[index]
+        current["case"]["catalog_digest"] = f"sha256:{'2' * 64}"  # type: ignore[index]
+        earlier["snapshot"]["fixture_revision"] = "recipe-v1"  # type: ignore[index]
+        current["snapshot"]["fixture_revision"] = "recipe-v2"  # type: ignore[index]
+
+        atlas = self.build([earlier, current])
+        self.assertEqual(1, atlas["counts"]["case_strata"])
+        case = atlas["series"][0]["cases"][0]
+        self.assertNotIn("catalog_digest", case["primary_stratum"]["case"])
+        self.assertEqual(
+            {f"sha256:{'1' * 64}", f"sha256:{'2' * 64}"},
+            {sample["catalog_digest"] for sample in case["samples"]},
+        )
+        self.assertEqual(
+            {"recipe-v1", "recipe-v2"},
+            {sample["fixture_revision"] for sample in case["samples"]},
+        )
+
     def test_single_observation_is_raw_point_and_missing_progress_is_not_imputed(self) -> None:
         single = self.build([self.base])
         case = single["series"][0]["cases"][0]  # type: ignore[index]

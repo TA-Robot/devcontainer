@@ -298,22 +298,20 @@
     "snapshot": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["base_sha", "bundle_digest", "fixture_revision", "instruction_set_digest"],
+      "required": ["base_sha", "bundle_digest", "instruction_set_digest"],
       "properties": {
         "base_sha": {"$ref": "#/$defs/git_sha"},
         "bundle_digest": {"$ref": "#/$defs/sha256"},
-        "fixture_revision": {"$ref": "#/$defs/schema_id"},
         "instruction_set_digest": {"$ref": "#/$defs/sha256"}
       }
     },
     "case_identity": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["case_id", "revision", "catalog_digest", "capsule_digest", "strong_online_oracle", "snapshot"],
+      "required": ["case_id", "revision", "capsule_digest", "strong_online_oracle", "snapshot"],
       "properties": {
         "case_id": {"$ref": "#/$defs/schema_id"},
         "revision": {"type": "integer", "minimum": 1},
-        "catalog_digest": {"$ref": "#/$defs/sha256"},
         "capsule_digest": {"$ref": "#/$defs/sha256"},
         "strong_online_oracle": {"type": "boolean"},
         "snapshot": {"$ref": "#/$defs/snapshot"}
@@ -512,6 +510,8 @@
       "required": [
         "run_id",
         "run_digest",
+        "catalog_digest",
+        "fixture_revision",
         "block_id",
         "observed_at",
         "quality_population",
@@ -525,6 +525,8 @@
       "properties": {
         "run_id": {"$ref": "#/$defs/schema_id"},
         "run_digest": {"$ref": "#/$defs/sha256"},
+        "catalog_digest": {"$ref": "#/$defs/sha256"},
+        "fixture_revision": {"$ref": "#/$defs/schema_id"},
         "block_id": {"$ref": "#/$defs/schema_id"},
         "observed_at": {"$ref": "#/$defs/utc_timestamp"},
         "quality_population": {"enum": ["quality-pass", "quality-fail", "quality-unknown"]},
