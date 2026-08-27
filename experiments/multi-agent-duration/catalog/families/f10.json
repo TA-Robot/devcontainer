@@ -1,0 +1,179 @@
+{
+  "schema_version": 1,
+  "catalog_id": "duration-atlas-f10",
+  "revision": 1,
+  "published_at": "2026-08-27T00:00:00.000Z",
+  "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F10-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:c0efce6cb9cc78eda89064eb70cc2c2634495c331e19263b4fa38d57b25d3242",
+        "source_type": "fixture",
+        "family": "performance-resource",
+        "size": "S",
+        "profile_id": "S-local-benchmark-diagnosis-python",
+        "variant_group_id": "F10-S-PY",
+        "descriptors": {
+          "context_surface": "one-python-hot-path-and-benchmark",
+          "artifact_surface": "diagnosis-plus-measurement-json",
+          "coupling": "local-repeated-work",
+          "validation_depth": ["unit", "counter", "benchmark"],
+          "environment_setup": "none",
+          "failure_distance": "direct",
+          "statefulness": "stateless",
+          "language_toolchain": ["python", "json"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "synthesis",
+        "risk": "low",
+        "task_lane": "isolated",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["single-snapshot", "counter-omission", "wrong-hot-path", "unbounded-claim", "scope-tamper"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F10-S-PY-001",
+        "recipe_id": "f10-s-python-canonical-json-perf-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f10-s-python-canonical-json-perf.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["bash", "-c", "observed=$(mktemp); trap 'rm -f -- \"$observed\"' EXIT; python3 bench.py --json >\"$observed\"; python3 tools/validate_performance.py performance.json \"$observed\""]
+        ],
+        "hidden_validation_targets": [
+          {"check_id": "perf-repro-command", "test_target": "HiddenSmallPerformanceTests.test_repro_command"},
+          {"check_id": "perf-scaling-evidence", "test_target": "HiddenSmallPerformanceTests.test_scaling_evidence"},
+          {"check_id": "perf-root-cause", "test_target": "HiddenSmallPerformanceTests.test_root_cause"},
+          {"check_id": "perf-distractor-rejected", "test_target": "HiddenSmallPerformanceTests.test_distractor_rejected"},
+          {"check_id": "perf-claim-bounded", "test_target": "HiddenSmallPerformanceTests.test_claim_bounded"}
+        ],
+        "online_evaluator_id": "f10-s-canonical-json-performance-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F10-M-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:f26bdbacdde56e7c93df771a0c93cf78d7b37da75be33618272bc54b2be4432a",
+        "source_type": "fixture",
+        "family": "performance-resource",
+        "size": "M",
+        "profile_id": "M-coupled-instrumented-performance-python",
+        "variant_group_id": "F10-M-PY",
+        "descriptors": {
+          "context_surface": "reader-decoder-cache-benchmark-report",
+          "artifact_surface": "instrumentation-and-experiment-report",
+          "coupling": "io-cache-serialization-interaction",
+          "validation_depth": ["unit", "instrumentation", "benchmark-distribution"],
+          "environment_setup": "temporary-ledger-files",
+          "failure_distance": "cross-module",
+          "statefulness": "file-cache-state",
+          "language_toolchain": ["python", "json"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "synthesis",
+        "risk": "medium",
+        "task_lane": "isolated",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["counter-omission", "strata-pooling", "cache-misdiagnosis", "output-change", "scope-tamper"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F10-M-PY-001",
+        "recipe_id": "f10-m-event-cache-performance-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f10-m-event-cache-performance.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["bash", "-c", "observed=$(mktemp); trap 'rm -f -- \"$observed\"' EXIT; python3 bench.py --instrument instrumentation.py --output \"$observed\"; python3 tools/validate_performance.py performance.json \"$observed\""]
+        ],
+        "hidden_validation_targets": [
+          {"check_id": "perf-instrumentation-consistency", "test_target": "HiddenMediumPerformanceTests.test_instrumentation_consistency"},
+          {"check_id": "perf-cold-warm-separation", "test_target": "HiddenMediumPerformanceTests.test_cold_warm_separation"},
+          {"check_id": "perf-cache-diagnosis", "test_target": "HiddenMediumPerformanceTests.test_cache_diagnosis"},
+          {"check_id": "perf-secondary-costs", "test_target": "HiddenMediumPerformanceTests.test_secondary_costs"},
+          {"check_id": "perf-distribution", "test_target": "HiddenMediumPerformanceTests.test_distribution"},
+          {"check_id": "perf-output-equivalence", "test_target": "HiddenMediumPerformanceTests.test_output_equivalence"}
+        ],
+        "online_evaluator_id": "f10-m-event-cache-performance-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F10-L-PYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:c2b4b9bef2505669cb3a278fc24662d989839645cf07048ca0bf674162137fed",
+        "source_type": "fixture",
+        "family": "performance-resource",
+        "size": "L",
+        "profile_id": "L-multistage-resource-diagnosis",
+        "variant_group_id": "F10-L-PYBASH",
+        "descriptors": {
+          "context_surface": "python-queue-worker-simulator-bash-ledger",
+          "artifact_surface": "instrumentation-bottleneck-model-experiment-report",
+          "coupling": "queue-concurrency-container-provider-stages",
+          "validation_depth": ["unit", "multi-stage-instrumentation", "concurrency", "distribution"],
+          "environment_setup": "multi-process-simulator",
+          "failure_distance": "queue-tail-delayed",
+          "statefulness": "job-lock-stage-event-state",
+          "language_toolchain": ["python", "bash", "json", "docker"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "independent",
+        "artifact_type": "synthesis",
+        "risk": "medium",
+        "task_lane": "isolated",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["correlation-loss", "time-conflation", "width-pooling", "causal-misattribution", "censoring", "scope-tamper"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F10-L-PYBASH-001",
+        "recipe_id": "f10-l-job-fabric-performance-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f10-l-job-fabric-performance.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["bash", "-c", "observed=$(mktemp -d); trap 'rm -rf -- \"$observed\"' EXIT; bash bin/run-batch --matrix visible --output \"$observed\"; python3 tools/validate_performance.py performance.json \"$observed\""]
+        ],
+        "hidden_validation_targets": [
+          {"check_id": "perf-stage-correlation", "test_target": "HiddenLargePerformanceTests.test_stage_correlation"},
+          {"check_id": "perf-time-accounting", "test_target": "HiddenLargePerformanceTests.test_time_accounting"},
+          {"check_id": "perf-width-curve", "test_target": "HiddenLargePerformanceTests.test_width_curve"},
+          {"check_id": "perf-probe-lock-cause", "test_target": "HiddenLargePerformanceTests.test_probe_lock_cause"},
+          {"check_id": "perf-provider-distinction", "test_target": "HiddenLargePerformanceTests.test_provider_distinction"},
+          {"check_id": "perf-censoring-resource", "test_target": "HiddenLargePerformanceTests.test_censoring_resource"},
+          {"check_id": "perf-claim-bounded", "test_target": "HiddenLargePerformanceTests.test_claim_bounded"}
+        ],
+        "online_evaluator_id": "f10-l-job-fabric-performance-v1",
+        "gold_visibility": "harness-only"
+      }
+    }
+  ]
+}
