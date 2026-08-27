@@ -29,7 +29,7 @@ from agent_duration_study import (
 )
 
 
-ATLAS_SCHEMA_VERSION = 1
+ATLAS_SCHEMA_VERSION = 2
 RUN_SCHEMA_VERSION = 2
 ATLAS_SCHEMA = (
     ROOT / "experiments" / "multi-agent-duration" / "schemas" / "atlas.schema.json"
@@ -660,7 +660,7 @@ def build_atlas(
     atlas = {
         "schema_version": ATLAS_SCHEMA_VERSION,
         "aggregate_kind": "deterministic-duration-atlas",
-        "aggregation_method": "case-nested-observed-v1",
+        "aggregation_method": "case-nested-observed-v2",
         "source": {
             "run_schema_version": RUN_SCHEMA_VERSION,
             "record_count": len(records),
@@ -700,7 +700,10 @@ def _load_atlas_schema() -> dict[str, Any]:
 def validate_atlas(atlas: Mapping[str, Any]) -> None:
     if atlas.get("schema_version") != ATLAS_SCHEMA_VERSION:
         raise AtlasError("unknown atlas schema version")
-    validate(atlas, _load_atlas_schema())
+    try:
+        validate(atlas, _load_atlas_schema())
+    except ContractValidationError as exc:
+        raise AtlasError("atlas schema validation failed") from exc
     counts = atlas["counts"]
     series_items = atlas["series"]
     case_items = [case for series in series_items for case in series["cases"]]

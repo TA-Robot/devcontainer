@@ -96,7 +96,7 @@ Provider-free calibrationがtaskとoracleを検証し、その後にだけ明示
 | `experiments/multi-agent-duration/` | versioned catalog、capsule、schema | source reviewとcalibrationを通して更新 |
 | `temp/multi-agent-duration-atlas/` | 設計、実験計画、review、implementation provenance | operator commandや現在値のruntime sourceにはしない |
 | `<private-run-dir>/<study-id>/*.json` | live runのimmutable raw evidence | private directoryへatomic create。credentialは含めない。既存run IDを上書きしない |
-| `generated/duration-atlas/current.json` | query/skillが読むmachine aggregate | validated raw run setからprovider-freeで再生成し、derived fileとしてatomic replace |
+| `generated/duration-atlas/current.json` | query/skillが読むmachine aggregate（atlas schema v2） | validated raw run setからprovider-freeで再生成し、derived fileとしてatomic replace |
 | `docs/agents/duration-atlas/studies/<study-id>.md` | 人間がauditするcontent-free study report | run-set digestを固定。releaseを残す場合はstudyごとに一意なpathを使う |
 | `docs/agents/duration-atlas/README.md` | operator contract | この文書 |
 | `project/.codex/skills/lookup-agent-duration/` | target projectへ配るbounded lookup skill | project templateからcopyし、詳細datasetをskill本文へ埋め込まない |
