@@ -2,7 +2,9 @@
 
 実施日: 2026-08-27
 
-Status: **current study release complete**。12 family × S/M/Lの全36 caseを各6文書で設計し、fixture/evaluatorを実装・校正したうえで、有限live batchを安全境界まで実行した。108件のimmutable terminal recordをatlas schema v2へ集約し、人間向けreport、bounded query skill、Dev Container同梱snapshotまで同一run-setから生成した。
+Status: **2026-08-27 base study release complete; superseded as current by Wave 8**。12 family × S/M/Lの全36 caseを各6文書で設計し、fixture/evaluatorを実装・校正したうえで、有限live batchを安全境界まで実行した。108件のimmutable terminal recordをatlas schema v2へ集約し、人間向けreport、bounded query skill、Dev Container同梱snapshotまで同一run-setから生成した。
+
+> Current releaseは`26-wave8-identifiable-remeasurement.md`と`wave8-release-disposition.json`を参照。この文書の108件、digest、file hashはbase releaseを再現するためhistorical valueのまま保持する。
 
 > 2026-08-27 interpretation amendment: effort-quality inferenceのsolvability / artifact auditability再監査は`25-effort-inference-validity-review.md`を正本とする。旧108 recordsのterminal timeは維持するが、F10-S r1 / F12-L r1はquality推論から除外し、artifact未保持のquality failはconditionalとする。
 

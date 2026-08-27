@@ -18,10 +18,10 @@
 
 | Status | Case revisions | Interpretation |
 | --- | --- | --- |
-| eligible | F01-S, F02-M, F03-L, F04-S, F04-L, F05-M, F06-L, F07-S, F08-M, F08-L, F11-M | visible contractとoracleは整合。ただし個々の旧fail observationはartifact未保持のためconditional |
-| conditional | F09-L r1 | 攻撃種別は公開されるが、一部がlexical proxyでsemantic false negativeをartifactなしに判定できない |
-| ineligible | F10-S r1 | hidden evaluatorが未公開のcandidate / relation / strategy文字列を要求 |
-| ineligible | F12-L r1 | hidden evaluatorがD→B、exact alternative IDs、control ID、refresh categoryなど一つの設計を要求 |
+| eligible | F01-S r1, F02-M r1, F03-L r1, F04-S r1, F04-L r1, F05-M r1, F06-L r2, F07-S r1, F08-M r1, F08-L r1, F10-S r5, F11-M r1, F12-L r3 | visible contractとoracleは整合。ただし個々の旧fail observationはartifact未保持ならconditional |
+| conditional | F06-L r1, F09-L r1, F10-S r3/r4 | fixture identityの非決定性、lexical proxy、またはscope failureの重複採点があり、causal effort比較へ直接使わない |
+| ineligible | F10-S r1/r2 | hidden controlled vocabulary、または不完全な公開output contractでagent能力とcase constructionを識別できない |
+| ineligible | F12-L r1/r2 | preferred architecture、invented identifier、または不完全な公開artifact shapeを要求 |
 
 `known-good pass + mutants reject`は、少なくとも一つの受理artifactと既知の誤りを識別することだけを示す。初見agentが公開情報から正解を構成できること、複数の意味的に妥当な正解を受理することは示さない。
 
@@ -76,18 +76,19 @@ Current run-level classification:
 
 ## Implemented repair
 
-### F10-S revision 2
+### F10-S revisions 2–4 audit and revision 5 repair
 
-- `performance-contract.json`でcandidate、relation、counter、strategy、preservation vocabularyを公開した。
-- 公開validatorも同じcontractを検査する。
-- 正解語彙は公開されるが、どのcandidateがprimaryかはcounterとsourceから導出させる。
+- Revision 2はcandidate、relation、counter、strategy、preservation vocabularyを公開したが、完全なoutput shapeとsole editable pathを公開し切れていなかった。
+- Grok medium/high各2回のlive floorで、全4回がinfrastructure success / quality failになった。medium 2回はsemantic root causeへ到達したがcontractと異なるnesting/field shapeで、high 2回は許可対象外pathを編集して`performance.json`を残さなかった。これはeffort差ではなくcase construction failureとして除外する。
+- Revision 3はtemplateとmappingを公開したが、sole editable pathをpublic validatorで検査せず、hidden 5 criteriaそれぞれのsetupでscope違反を再検査していた。最初のlive 2件ではmedium artifactが全semantic obligationsを満たした一方、2つの契約外scratch pathだけでhidden 5/5がまとめてfailしたため、scoreをeffort evidenceに使えない。
+- Revision 4はpublic edit-surface checkを追加したが、hidden setupの旧scope checkを除去し忘れ、最初のlive medium 1件で同じ5重計上が残っていることを確認した。
+- Revision 5はbenchmark出力をpipeで渡し、public validatorだけが`git status`とcontractのeditable pathsを照合する。hidden criteriaはprotected input integrityと個別semantic obligationだけを検査する。どのcandidateがprimaryかだけはcounterとsourceから導出させる。
 
-### F12-L revision 2
+### F12-L revision 2 audit and revision 3 repair
 
-- `decision-contract.json`でclaim / option / constraint / refresh vocabularyとbounded decision spaceを公開した。
-- hidden evaluatorからexact control ID、unknown ID、trigger IDの要求を除いた。
-- D migration bridge後のtargetとして、evidence/controlを満たすAまたはBを受理する。
-- D→B known-goodに加え、異なるcontrol IDsとD→A targetを使う独立valid alternativeをfull-pass校正する。
+- Revision 2はclaim / option / constraint / refresh vocabularyとbounded decision spaceを公開したが、全entity field、required dependency、editable surfaceのshapeを公開し切れていなかったためlive比較前にineligibleへ戻した。
+- Revision 3は`decision-record.template.json`と`DECISION-RECORD.template.md`を追加し、required control evidence、decision dependencies、phase/gate/rollback/unknown/refresh shapesを公開する。
+- D migration bridge後のtargetとして、evidence/controlを満たすAまたはBを受理する。D→B known-goodに加え、異なるcontrol IDsとD→A targetを使う独立valid alternativeをfull-pass校正する。
 
 ### Future observation retention
 
@@ -95,6 +96,7 @@ Current run-level classification:
 - 保存対象はfixture recipeが宣言したtask outputだけで、最大16 files、1 file 256 KiB、合計1 MiB、UTF-8に限定する。
 - provider credentialの実値を検出したartifactは本文を保存せずdigestだけ残し、snapshotを`partial`にする。
 - unexpected path、non-UTF-8、non-regular、size capも`partial`として推論gateを通さない。
+- unexpected pathは内容やpathを保存せず、tracked / untracked / deletedの件数だけを残して、自動failure adjudicationの材料にする。
 - raw provider transcript、prompt、private reasoning、stderrは引き続き保存しない。
 - Snapshot処理がcompleteでもallowlisted task artifactが実在しなければ、quality failは`task-artifact-missing`としてconditionalにする。
 
@@ -107,11 +109,11 @@ Current run-level classification:
 - Skill companion: `project/.codex/skills/lookup-agent-duration/assets/current-validity.json`
 - Dev Container companion: `/usr/local/share/mira-duration-atlas/current-validity.json`
 
-Atlas queryとhuman reportはvalidity companionを結合し、case design、observation artifact auditability、未評価のcomparison gatesを別々に出す。旧recordは変更せず、F10-S r1 / F12-L r1の時間観測も保持する。
+Atlas queryとhuman reportはvalidity companionを結合し、case design、observation artifact auditability、未評価のcomparison gatesを別々に出す。旧raw recordは変更せず、current Atlasへの採否はrelease dispositionで明示する。F10-S r1 / F12-L r1の時間観測も保持する。
 
-## Finite remeasurement requirement
+## Finite remeasurement design（subsequently executed）
 
-次のlive remeasurementはrevision 2 caseに対して、少なくとも次を固定してから行う。
+次のlive remeasurementはF10 revision 5 / F12 revision 3 caseに対して、少なくとも次を固定してから行う。
 
 1. 同一fixture identity。
 2. task-artifact snapshot `complete`。
@@ -121,3 +123,19 @@ Atlas queryとhuman reportはvalidity companionを結合し、case design、obse
 6. 全cellが満点ならceiling-limitedと明示し、effort効果なしではなく、より識別力のあるcase revisionへ送る。
 
 この再測定が終わるまで、もっとも強い安全な結論は「旧データでは問題飽和とeffort効果なしを識別できない」である。
+
+## 2026-08-28 remeasurement amendment
+
+34-run finite waveの結果は`26-wave8-identifiable-remeasurement.md`へ固定した。結論は単一の
+`medium sufficient`や`higher effort useless`ではなく、case/providerごとに異なる。
+
+- F10-S r5はSol requested medium/highとも4/4 total full-pass、Grok applied medium/highも
+  semantic criterion 20/20 passで、測定上限に達した。
+- F12-L r3 Solはmedium/high/xhighの各1件がfull-passした一方、各2件目とmax 2件は一つの
+  bounded-evidence criterionを落とした。単調なdepth curveではない。
+- F06-L r1はrepeat内varianceが大きく、さらにhash-seed由来のfixture identity分岐が判明した。
+  Revision 2へ修復するまでr1をcausal effort evidenceへ使わない。
+- Grok F06/F12はrequired artifact missingが支配し、problem saturationではなくtask-entry floor。
+
+したがって、現時点で提供できるのはexact conditionの時間・criterion・artifact auditabilityで
+あり、project-independentなmodel/effort選定規則ではない。

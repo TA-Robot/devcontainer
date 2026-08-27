@@ -8,14 +8,16 @@
 
 ## Current release
 
-2026-08-27 current releaseは、108件のcanonical terminal recordからatlas schema v2を生成し、全36 case IDを一度以上観測しています。内訳はquality-pass 15、quality-fail 81、infrastructure failure / quality-unknown 12で、全件complete terminalです。Solはmedium/high/xhigh/max、Grokはmedium/high/xhighをcase scopeを変えて観測しました。Grok maxはprovider rejection、Claude current blockはcredential freshness不明のため、未測定cellを値で埋めずmachine dispositionへ残しています。
+2026-08-28 current releaseは、139件のcanonical terminal recordからatlas schema v2を生成し、全36 case IDを一度以上観測しています。内訳はquality-pass 21、quality-fail 106、infrastructure failure / quality-unknown 12で、全件complete terminalです。旧record 104件はcontent-free、再測定35件はtask artifact付きで、24件がcomplete、11件がunexpected changeを含むpartialです。
 
-同日のsolvability再監査により、旧flat scoreからproblem saturationや`mediumで十分`とは判断できないことを明示しました。F10-S r1 / F12-L r1はeffort-quality inferenceから除外し、artifact未保持のquality failはconditionalです。詳細は`25-effort-inference-validity-review.md`、machine contractは`../../experiments/multi-agent-duration/validity/effort-quality.json`を参照してください。
+Wave 8ではF10-Sをrevision 5、F12-Lをrevision 3まで修復し、Grok 16件とCodex Sol 18件の有限matrixを完走しました。F10は測定上限、F06はfixture identity不良と大きなrun variance、F12は非単調なcriterion差、Grok F06/F12はrequired artifactへ到達しないtask-entry floorとして分離しています。どれもproject-independentな`mediumで十分`、`高effortは無意味`、またはmodel reasoningの飽和を示しません。詳細は`25-effort-inference-validity-review.md`と`26-wave8-identifiable-remeasurement.md`、machine contractは`../../experiments/multi-agent-duration/validity/effort-quality.json`を参照してください。
 
 正本は次です。
 
-- release closure: `24-complete-corpus-atlas-release.md`
-- canonical/excluded/unmeasured disposition: `final-release-disposition.json`
+- base release closure: `24-complete-corpus-atlas-release.md`
+- current remeasurement closure: `26-wave8-identifiable-remeasurement.md`
+- current canonical/excluded/unmeasured disposition: `wave8-release-disposition.json`
+- base release disposition: `final-release-disposition.json`
 - machine atlas: `../../generated/duration-atlas/current.json`
 - human report: `../../docs/agents/duration-atlas/studies/current.md`
 - bounded lookup skill: `../../project/.codex/skills/lookup-agent-duration/`
@@ -80,7 +82,9 @@ evidence grade:              single-observation
 - `23-first-l-depth-coverage.md`: L caseでのGrok applied curve、Sol requested curve、max rejection、rubric飽和
 - `24-complete-corpus-atlas-release.md`: 36 case closure、108 record release、欠測・除外・skill/container配布の最終判断
 - `25-effort-inference-validity-review.md`: problem identifiability、oracle alignment、artifact auditability、comparison gateの再監査とrevision 2 repair
-- `final-release-disposition.json`: final canonical input grouping、除外record、calibration-only、未測定block
+- `26-wave8-identifiable-remeasurement.md`: F10/F12 repair、34-run finite matrix、F06 identity defect、139 record current release
+- `wave8-release-disposition.json`: current canonical input grouping、identity-conflict除外、未測定block、配布artifact digest
+- `final-release-disposition.json`: 2026-08-27 base releaseのhistorical disposition
 - `case-designs/`: 全36 candidateのprofile、fixture、task、rubric、execution、implementation handoff（各6文書）
 
 ## 正本との関係
