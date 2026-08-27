@@ -1,9 +1,1065 @@
 {
   "schema_version": 1,
   "catalog_id": "duration-atlas-calibration",
-  "revision": 2,
-  "published_at": "2026-08-27T00:00:00.000Z",
+  "revision": 3,
+  "published_at": "2026-08-27T12:00:00.000Z",
   "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F01-L-PYBASHJS-001",
+        "revision": 1,
+        "capsule_digest": "sha256:1559861896e50ee5d7bb4c485f167cfa7bf21b0ead29c5b017d736b0c9815081",
+        "source_type": "fixture",
+        "family": "repository-trace",
+        "size": "L",
+        "profile_id": "L-cross-boundary-structured-trace-devcontainer",
+        "variant_group_id": "F01-L-PYBASHJS",
+        "descriptors": {
+          "context_surface": "devcontainer-bash-python-and-js-lifecycle",
+          "artifact_surface": "multi-boundary-graph-plus-recovery-paths",
+          "coupling": "lifecycle-and-trust-boundary-coupling",
+          "validation_depth": [
+            "schema",
+            "structured-trace",
+            "lifecycle",
+            "recovery"
+          ],
+          "environment_setup": "simulated-host-container-lifecycle",
+          "failure_distance": "restart-delayed-and-boundary-crossing",
+          "statefulness": "persistent-volume-plus-extension-state",
+          "language_toolchain": [
+            "docker",
+            "bash",
+            "python",
+            "javascript",
+            "json"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "structured",
+        "decomposability": "partial",
+        "artifact_type": "answer",
+        "risk": "medium",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "missing-artifact",
+          "lifecycle-omission",
+          "boundary-misownership",
+          "legacy-detour",
+          "recovery-omission"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F01-L-PYBASHJS-001",
+        "recipe_id": "f01-l-devcontainer-companion-trace-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f01-l-devcontainer-companion-trace.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "bash",
+            "tests/lifecycle-smoke.sh"
+          ],
+          [
+            "node",
+            "--test",
+            "extension/test/world.test.js"
+          ],
+          [
+            "python3",
+            "tools/validate_trace.py",
+            "trace.json"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "trace-lifecycle-nodes",
+            "test_target": "HiddenLargeTraceTests.test_lifecycle_nodes"
+          },
+          {
+            "check_id": "trace-boundary-artifacts",
+            "test_target": "HiddenLargeTraceTests.test_boundary_artifacts"
+          },
+          {
+            "check_id": "trace-runtime-chain",
+            "test_target": "HiddenLargeTraceTests.test_runtime_chain"
+          },
+          {
+            "check_id": "trace-recovery-ownership",
+            "test_target": "HiddenLargeTraceTests.test_recovery_ownership"
+          },
+          {
+            "check_id": "trace-no-legacy-path",
+            "test_target": "HiddenLargeTraceTests.test_no_legacy_path"
+          },
+          {
+            "check_id": "trace-evidence-integrity",
+            "test_target": "HiddenLargeTraceTests.test_evidence_integrity"
+          }
+        ],
+        "online_evaluator_id": "f01-l-devcontainer-companion-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F01-M-PYJS-001",
+        "revision": 1,
+        "capsule_digest": "sha256:a8490b3cf30e52857c5edc7871d6cf181bfb2af5ba501c263f3ece99a8b9ef55",
+        "source_type": "fixture",
+        "family": "repository-trace",
+        "size": "M",
+        "profile_id": "M-coupled-gold-trace-python-js",
+        "variant_group_id": "F01-M-PYJS",
+        "descriptors": {
+          "context_surface": "four-python-modules-state-schema-and-two-js-modules",
+          "artifact_surface": "trace-graph-with-success-and-fail-open-branches",
+          "coupling": "cross-module-producer-consumer-contract",
+          "validation_depth": [
+            "schema",
+            "gold-trace",
+            "branch-coverage"
+          ],
+          "environment_setup": "local-subprocess",
+          "failure_distance": "cross-language",
+          "statefulness": "atomic-json-state",
+          "language_toolchain": [
+            "python",
+            "javascript",
+            "json"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "answer",
+        "risk": "low",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "missing-artifact",
+          "cross-language-truncation",
+          "branch-conflation",
+          "telemetry-detour"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F01-M-PYJS-001",
+        "recipe_id": "f01-m-hook-state-render-trace-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f01-m-hook-state-render-trace.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "node",
+            "--test",
+            "media/test/world.test.js"
+          ],
+          [
+            "python3",
+            "tools/validate_trace.py",
+            "trace.json"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "trace-success-chain",
+            "test_target": "HiddenMediumTraceTests.test_success_chain"
+          },
+          {
+            "check_id": "trace-schema-boundary",
+            "test_target": "HiddenMediumTraceTests.test_schema_boundary"
+          },
+          {
+            "check_id": "trace-fail-open-branches",
+            "test_target": "HiddenMediumTraceTests.test_fail_open_branches"
+          },
+          {
+            "check_id": "trace-no-telemetry-detour",
+            "test_target": "HiddenMediumTraceTests.test_no_telemetry_detour"
+          },
+          {
+            "check_id": "trace-evidence-integrity",
+            "test_target": "HiddenMediumTraceTests.test_evidence_integrity"
+          }
+        ],
+        "online_evaluator_id": "f01-m-hook-state-render-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F01-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:6bb5179f7978f93e1d019d44d35e29a52b004bf7a9d801e8448cbd05bc449841",
+        "source_type": "fixture",
+        "family": "repository-trace",
+        "size": "S",
+        "profile_id": "S-local-gold-trace-python",
+        "variant_group_id": "F01-S-PY",
+        "descriptors": {
+          "context_surface": "two-python-modules-and-one-test",
+          "artifact_surface": "one-structured-trace-plus-evidence",
+          "coupling": "local-call-chain",
+          "validation_depth": [
+            "schema",
+            "gold-trace"
+          ],
+          "environment_setup": "none",
+          "failure_distance": "direct",
+          "statefulness": "read-only-filesystem-semantics",
+          "language_toolchain": [
+            "python",
+            "json"
+          ]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "answer",
+        "risk": "low",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "missing-artifact",
+          "causal-omission",
+          "distractor-hop"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F01-S-PY-001",
+        "recipe_id": "f01-s-python-flag-trace-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f01-s-python-flag-trace.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "python3",
+            "tools/validate_trace.py",
+            "trace.json"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "trace-required-nodes",
+            "test_target": "HiddenSmallTraceTests.test_required_nodes"
+          },
+          {
+            "check_id": "trace-required-edges",
+            "test_target": "HiddenSmallTraceTests.test_required_edges"
+          },
+          {
+            "check_id": "trace-evidence-exists",
+            "test_target": "HiddenSmallTraceTests.test_evidence_exists"
+          },
+          {
+            "check_id": "trace-no-distractor",
+            "test_target": "HiddenSmallTraceTests.test_no_distractor"
+          }
+        ],
+        "online_evaluator_id": "f01-s-python-trace-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F02-L-PYBASHJS-001",
+        "revision": 1,
+        "capsule_digest": "sha256:cfae31a9caae417953e194a3ed0ec282ba6d3846ce6b829e79b42f4ac0f2325e",
+        "source_type": "fixture",
+        "family": "code-review",
+        "size": "L",
+        "profile_id": "L-cross-boundary-lifecycle-review",
+        "variant_group_id": "F02-L-PYBASHJS",
+        "descriptors": {
+          "context_surface": "bash-python-javascript-container-lifecycle-diff",
+          "artifact_surface": "ranked-findings-with-lifecycle-evidence",
+          "coupling": "cross-language-lifecycle-and-cleanup",
+          "validation_depth": [
+            "schema",
+            "seeded-defect",
+            "lifecycle-replay",
+            "restart"
+          ],
+          "environment_setup": "simulated-container-lifecycle",
+          "failure_distance": "restart-delayed",
+          "statefulness": "persistent-state-and-cleanup-ownership",
+          "language_toolchain": [
+            "bash",
+            "python",
+            "javascript",
+            "docker",
+            "json"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "structured",
+        "decomposability": "independent",
+        "artifact_type": "findings",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "boundary-omission",
+          "restart-omission",
+          "ownership-omission",
+          "false-positive"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F02-L-PYBASHJS-001",
+        "recipe_id": "f02-l-hook-lifecycle-review-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f02-l-hook-lifecycle-review.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "bash",
+            "tests/replay-review-surface.sh"
+          ],
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "bash",
+            "-c",
+            "node --test extension/test/*.test.js"
+          ],
+          [
+            "python3",
+            "tools/validate_review.py",
+            "review.json"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "review-redaction-order",
+            "test_target": "HiddenLargeReviewTests.test_redaction_order"
+          },
+          {
+            "check_id": "review-stale-restart",
+            "test_target": "HiddenLargeReviewTests.test_stale_restart"
+          },
+          {
+            "check_id": "review-cleanup-owner",
+            "test_target": "HiddenLargeReviewTests.test_cleanup_owner"
+          },
+          {
+            "check_id": "review-lifecycle-model",
+            "test_target": "HiddenLargeReviewTests.test_lifecycle_model"
+          },
+          {
+            "check_id": "review-ranking-impact",
+            "test_target": "HiddenLargeReviewTests.test_ranking_impact"
+          },
+          {
+            "check_id": "review-evidence-integrity",
+            "test_target": "HiddenLargeReviewTests.test_evidence_integrity"
+          },
+          {
+            "check_id": "review-false-positive",
+            "test_target": "HiddenLargeReviewTests.test_false_positive"
+          }
+        ],
+        "online_evaluator_id": "f02-l-hook-lifecycle-review-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F02-M-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:2458ec755c5c1198f87643a08a0c1829e4870448bddf2099fc419fb49af00dcd",
+        "source_type": "fixture",
+        "family": "code-review",
+        "size": "M",
+        "profile_id": "M-coupled-seeded-review-python",
+        "variant_group_id": "F02-M-PY",
+        "descriptors": {
+          "context_surface": "four-python-modules-and-multi-file-diff",
+          "artifact_surface": "ranked-multi-finding-review",
+          "coupling": "filesystem-and-cleanup-contract",
+          "validation_depth": [
+            "schema",
+            "seeded-defect",
+            "exploit-replay"
+          ],
+          "environment_setup": "temporary-filesystem",
+          "failure_distance": "cross-module",
+          "statefulness": "filesystem-ownership-state",
+          "language_toolchain": [
+            "python",
+            "json"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "findings",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "partial-recall",
+          "interaction-omission",
+          "false-positive"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F02-M-PY-001",
+        "recipe_id": "f02-m-python-isolation-review-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f02-m-python-isolation-review.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "python3",
+            "tools/validate_review.py",
+            "review.json"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "review-symlink-recall",
+            "test_target": "HiddenMediumReviewTests.test_symlink_recall"
+          },
+          {
+            "check_id": "review-ownership-recall",
+            "test_target": "HiddenMediumReviewTests.test_ownership_recall"
+          },
+          {
+            "check_id": "review-interaction",
+            "test_target": "HiddenMediumReviewTests.test_interaction"
+          },
+          {
+            "check_id": "review-ranking",
+            "test_target": "HiddenMediumReviewTests.test_ranking"
+          },
+          {
+            "check_id": "review-evidence",
+            "test_target": "HiddenMediumReviewTests.test_evidence"
+          },
+          {
+            "check_id": "review-false-positive",
+            "test_target": "HiddenMediumReviewTests.test_false_positive"
+          }
+        ],
+        "online_evaluator_id": "f02-m-python-review-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F02-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:0ebfeeeed554ebb24e5292b30fd1183f4a2938de83ad9697288aa94eae5b382d",
+        "source_type": "fixture",
+        "family": "code-review",
+        "size": "S",
+        "profile_id": "S-local-seeded-review-python",
+        "variant_group_id": "F02-S-PY",
+        "descriptors": {
+          "context_surface": "one-python-diff-and-helper",
+          "artifact_surface": "structured-review-finding",
+          "coupling": "local-validation",
+          "validation_depth": [
+            "schema",
+            "seeded-defect"
+          ],
+          "environment_setup": "none",
+          "failure_distance": "direct-exploit",
+          "statefulness": "stateless",
+          "language_toolchain": [
+            "python",
+            "json"
+          ]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "answer",
+        "risk": "low",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "seeded-recall",
+          "invalid-trigger",
+          "false-positive"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F02-S-PY-001",
+        "recipe_id": "f02-s-python-path-review-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f02-s-python-path-review.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "python3",
+            "tools/validate_review.py",
+            "review.json"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "review-seeded-recall",
+            "test_target": "HiddenSmallReviewTests.test_seeded_recall"
+          },
+          {
+            "check_id": "review-trigger-valid",
+            "test_target": "HiddenSmallReviewTests.test_trigger_valid"
+          },
+          {
+            "check_id": "review-impact-severity",
+            "test_target": "HiddenSmallReviewTests.test_impact_severity"
+          },
+          {
+            "check_id": "review-evidence-line",
+            "test_target": "HiddenSmallReviewTests.test_evidence_line"
+          },
+          {
+            "check_id": "review-false-positive",
+            "test_target": "HiddenSmallReviewTests.test_false_positive"
+          }
+        ],
+        "online_evaluator_id": "f02-s-python-review-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F03-L-PYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:9ff03488e8d8404e8fbe4d2e214b108e61e6db0bef35d75bab5ca2e288ed4115",
+        "source_type": "fixture",
+        "family": "failing-test-diagnosis",
+        "size": "L",
+        "profile_id": "L-cross-process-restart-diagnosis",
+        "variant_group_id": "F03-L-PYBASH",
+        "descriptors": {
+          "context_surface": "python-worker-journal-and-bash-crash-restart-harness",
+          "artifact_surface": "diagnosis-deterministic-reproducer-and-regression-harness",
+          "coupling": "cross-process-journal-ordering",
+          "validation_depth": [
+            "unit",
+            "integration",
+            "crash",
+            "restart",
+            "repeat"
+          ],
+          "environment_setup": "fresh-subprocess-lifecycle",
+          "failure_distance": "restart-delayed",
+          "statefulness": "persistent-acknowledgement-journal",
+          "language_toolchain": [
+            "python",
+            "bash",
+            "json"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "tests",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "timing-flake",
+          "ordering-misattribution",
+          "restart-state-gap",
+          "unsafe-cleanup",
+          "unsupported-semantics"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F03-L-PYBASH-001",
+        "recipe_id": "f03-l-python-bash-crash-diagnosis-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f03-l-crash-restart-diagnosis.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "bash",
+            "-n",
+            "regression.sh"
+          ],
+          [
+            "python3",
+            "tools/validate_diagnosis.py",
+            "diagnosis.json"
+          ],
+          [
+            "bash",
+            "tools/check-regression.sh",
+            "regression.sh"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "diagnosis-deterministic-barrier",
+            "test_target": "HiddenCrashRestartDiagnosisTests.test_deterministic_barrier"
+          },
+          {
+            "check_id": "diagnosis-ordering-cause",
+            "test_target": "HiddenCrashRestartDiagnosisTests.test_ordering_cause"
+          },
+          {
+            "check_id": "diagnosis-restart-state",
+            "test_target": "HiddenCrashRestartDiagnosisTests.test_restart_state"
+          },
+          {
+            "check_id": "diagnosis-regression-reliable",
+            "test_target": "HiddenCrashRestartDiagnosisTests.test_regression_reliable"
+          },
+          {
+            "check_id": "diagnosis-cleanup-bounded",
+            "test_target": "HiddenCrashRestartDiagnosisTests.test_cleanup_bounded"
+          },
+          {
+            "check_id": "diagnosis-semantics-honest",
+            "test_target": "HiddenCrashRestartDiagnosisTests.test_semantics_honest"
+          }
+        ],
+        "online_evaluator_id": "f03-l-crash-restart-diagnosis-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F03-M-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:e4cb286f996bb727f022a2984b67f654b36923d89ca64b51b0387f747e03d56f",
+        "source_type": "fixture",
+        "family": "failing-test-diagnosis",
+        "size": "M",
+        "profile_id": "M-coupled-deterministic-diagnosis-python",
+        "variant_group_id": "F03-M-PY",
+        "descriptors": {
+          "context_surface": "scheduler-serializer-store-and-integration-test",
+          "artifact_surface": "root-cause-chain-and-regression-design",
+          "coupling": "cross-module-data-contract",
+          "validation_depth": [
+            "unit",
+            "integration",
+            "reload"
+          ],
+          "environment_setup": "temporary-filesystem",
+          "failure_distance": "cross-module-reload",
+          "statefulness": "serialized-job-state",
+          "language_toolchain": [
+            "python",
+            "json"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "answer",
+        "risk": "medium",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "failure-distance",
+          "causal-chain-gap",
+          "distractor-fix",
+          "single-layer-regression"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F03-M-PY-001",
+        "recipe_id": "f03-m-python-reload-diagnosis-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f03-m-python-reload-diagnosis.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "tools/confirm_seeded_failure.py",
+            "--test",
+            "tests.test_expiry",
+            "--signature",
+            "reload-retained"
+          ],
+          [
+            "python3",
+            "tools/validate_diagnosis.py",
+            "diagnosis.json"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "diagnosis-reload-contrast",
+            "test_target": "HiddenReloadDiagnosisTests.test_reload_contrast"
+          },
+          {
+            "check_id": "diagnosis-timezone-cause",
+            "test_target": "HiddenReloadDiagnosisTests.test_timezone_cause"
+          },
+          {
+            "check_id": "diagnosis-causal-chain",
+            "test_target": "HiddenReloadDiagnosisTests.test_causal_chain"
+          },
+          {
+            "check_id": "diagnosis-regression-layers",
+            "test_target": "HiddenReloadDiagnosisTests.test_regression_layers"
+          },
+          {
+            "check_id": "diagnosis-distractor-rejected",
+            "test_target": "HiddenReloadDiagnosisTests.test_distractor_rejected"
+          }
+        ],
+        "online_evaluator_id": "f03-m-python-reload-diagnosis-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F03-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:d6960fbd299e59fd843012592313d3356cbcd728673d965430eb8c2aa0acc01a",
+        "source_type": "fixture",
+        "family": "failing-test-diagnosis",
+        "size": "S",
+        "profile_id": "S-local-deterministic-diagnosis-python",
+        "variant_group_id": "F03-S-PY",
+        "descriptors": {
+          "context_surface": "one-python-module-and-one-failing-test",
+          "artifact_surface": "structured-diagnosis",
+          "coupling": "local-expression",
+          "validation_depth": [
+            "failing-test",
+            "gold-root-cause"
+          ],
+          "environment_setup": "none",
+          "failure_distance": "direct",
+          "statefulness": "stateless",
+          "language_toolchain": [
+            "python",
+            "json"
+          ]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "answer",
+        "risk": "low",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "causal-misattribution",
+          "incomplete-reproducer",
+          "one-sided-regression"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F03-S-PY-001",
+        "recipe_id": "f03-s-python-zero-diagnosis-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f03-s-python-zero-diagnosis.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "tools/confirm_seeded_failure.py",
+            "--test",
+            "tests.test_limits",
+            "--signature",
+            "explicit-zero"
+          ],
+          [
+            "python3",
+            "tools/validate_diagnosis.py",
+            "diagnosis.json"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "diagnosis-root-cause",
+            "test_target": "HiddenZeroDiagnosisTests.test_root_cause"
+          },
+          {
+            "check_id": "diagnosis-reproducer",
+            "test_target": "HiddenZeroDiagnosisTests.test_reproducer"
+          },
+          {
+            "check_id": "diagnosis-regression",
+            "test_target": "HiddenZeroDiagnosisTests.test_regression"
+          },
+          {
+            "check_id": "diagnosis-no-false-cause",
+            "test_target": "HiddenZeroDiagnosisTests.test_no_false_cause"
+          }
+        ],
+        "online_evaluator_id": "f03-s-python-diagnosis-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F04-L-PYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:668f0779c196cedddd95c7d4dd14ee43881febb56235ea3b7fea621ac5ff5889",
+        "source_type": "fixture",
+        "family": "bounded-implementation",
+        "size": "L",
+        "profile_id": "L-cross-boundary-deterministic-python-bash",
+        "variant_group_id": "F04-L-PYBASH",
+        "descriptors": {
+          "context_surface": "python-storage-cli-and-bash-process-boundary",
+          "artifact_surface": "storage-cli-shell-tests-and-format-contract",
+          "coupling": "cross-process-persistent-contract",
+          "validation_depth": [
+            "unit",
+            "integration",
+            "restart"
+          ],
+          "environment_setup": "fresh-process-lifecycle",
+          "failure_distance": "restart-delayed",
+          "statefulness": "persistent-filesystem",
+          "language_toolchain": [
+            "python",
+            "bash"
+          ]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "patch",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "behavioral",
+          "persistence",
+          "atomicity",
+          "cross-process",
+          "restart"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F04-L-PYBASH-001",
+        "recipe_id": "f04-l-python-bash-restart-v2",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f04-l-python-bash-restart.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "bash",
+            "-n",
+            "bin/queuectl"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "hidden-restart-idempotence",
+            "test_target": "HiddenQueueLifecycleTests.test_fresh_process_restart_and_idempotent_ack"
+          },
+          {
+            "check_id": "hidden-invalid-state-integrity",
+            "test_target": "HiddenQueueLifecycleTests.test_unknown_and_malformed_state_are_not_modified"
+          }
+        ],
+        "online_evaluator_id": "f04-l-python-bash-hidden-v2",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F04-M-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:c1ed30e6ed80274aa12edf5a8609591b58a3a60ad083984a1b4c74c219263c23",
+        "source_type": "fixture",
+        "family": "bounded-implementation",
+        "size": "M",
+        "profile_id": "M-coupled-deterministic-python",
+        "variant_group_id": "F04-M-PY",
+        "descriptors": {
+          "context_surface": "multi-module-cli-and-storage",
+          "artifact_surface": "storage-cli-tests-and-usage",
+          "coupling": "cross-module-contract",
+          "validation_depth": [
+            "unit",
+            "contract"
+          ],
+          "environment_setup": "temporary-filesystem",
+          "failure_distance": "cross-module",
+          "statefulness": "filesystem-state",
+          "language_toolchain": [
+            "python"
+          ]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "patch",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "behavioral",
+          "persistence",
+          "atomicity",
+          "exit-contract"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F04-M-PY-001",
+        "recipe_id": "f04-m-python-state-cli-v2",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f04-m-python-state-cli.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "hidden-round-trip-storage",
+            "test_target": "HiddenKvToolTests.test_cli_round_trip_and_sorted_storage"
+          },
+          {
+            "check_id": "hidden-error-state-integrity",
+            "test_target": "HiddenKvToolTests.test_error_codes_do_not_corrupt_state"
+          }
+        ],
+        "online_evaluator_id": "f04-m-python-hidden-v2",
+        "gold_visibility": "harness-only"
+      }
+    },
     {
       "case": {
         "schema_version": 2,
@@ -19,11 +1075,15 @@
           "context_surface": "single-module",
           "artifact_surface": "one-function-and-unit-tests",
           "coupling": "local",
-          "validation_depth": ["unit"],
+          "validation_depth": [
+            "unit"
+          ],
           "environment_setup": "none",
           "failure_distance": "local",
           "statefulness": "stateless",
-          "language_toolchain": ["python"]
+          "language_toolchain": [
+            "python"
+          ]
         },
         "ambiguity": "exact",
         "oracle_strength": "deterministic",
@@ -33,7 +1093,10 @@
         "task_lane": "write",
         "environment_dependence": "local-tool",
         "knowledge_locality": "repository-contained",
-        "expected_failure_modes": ["behavioral", "edge-case"],
+        "expected_failure_modes": [
+          "behavioral",
+          "edge-case"
+        ],
         "strong_online_oracle": true
       },
       "fixture": {
@@ -46,7 +1109,15 @@
         "isolation_required": "workspace-only-container-mount",
         "evaluator_isolation_required": "network-disabled-read-only-container",
         "workspace_validation_commands": [
-          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"]
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ]
         ],
         "hidden_validation_targets": [
           {
@@ -73,117 +1144,2483 @@
     {
       "case": {
         "schema_version": 2,
-        "case_id": "F04-M-PY-001",
+        "case_id": "F05-L-PYBASH-001",
         "revision": 1,
-        "capsule_digest": "sha256:c1ed30e6ed80274aa12edf5a8609591b58a3a60ad083984a1b4c74c219263c23",
+        "capsule_digest": "sha256:4e1314a06bb7893b13a14c39e85c1f6c0c98512a23eff242cc36a0a3d1636db6",
         "source_type": "fixture",
-        "family": "bounded-implementation",
-        "size": "M",
-        "profile_id": "M-coupled-deterministic-python",
-        "variant_group_id": "F04-M-PY",
+        "family": "refactor-migration",
+        "size": "L",
+        "profile_id": "L-cross-boundary-backend-schema-migration",
+        "variant_group_id": "F05-L-PYBASH",
         "descriptors": {
-          "context_surface": "multi-module-cli-and-storage",
-          "artifact_surface": "storage-cli-tests-and-usage",
-          "coupling": "cross-module-contract",
-          "validation_depth": ["unit", "contract"],
-          "environment_setup": "temporary-filesystem",
-          "failure_distance": "cross-module",
-          "statefulness": "filesystem-state",
-          "language_toolchain": ["python"]
+          "context_surface": "backend-file-migrator-cli-and-bash-wrapper",
+          "artifact_surface": "migration-set-plus-rollback-and-recovery",
+          "coupling": "backend-and-schema-compatibility",
+          "validation_depth": [
+            "unit",
+            "contract",
+            "migration",
+            "rollback",
+            "restart"
+          ],
+          "environment_setup": "fresh-process-lifecycle",
+          "failure_distance": "migration-and-restart-delayed",
+          "statefulness": "persistent-versioned-state",
+          "language_toolchain": [
+            "python",
+            "bash",
+            "json",
+            "markdown"
+          ]
         },
-        "ambiguity": "exact",
+        "ambiguity": "bounded-open",
         "oracle_strength": "deterministic",
         "decomposability": "partial",
         "artifact_type": "patch",
-        "risk": "low",
+        "risk": "high",
         "task_lane": "write",
         "environment_dependence": "local-tool",
         "knowledge_locality": "repository-contained",
-        "expected_failure_modes": ["behavioral", "persistence", "atomicity", "exit-contract"],
+        "expected_failure_modes": [
+          "v1-incompatibility",
+          "backend-leak",
+          "non-atomic-commit",
+          "resume-duplication",
+          "destructive-rollback",
+          "wrapper-selection"
+        ],
         "strong_online_oracle": true
       },
       "fixture": {
-        "case_id": "F04-M-PY-001",
-        "recipe_id": "f04-m-python-state-cli-v2",
+        "case_id": "F05-L-PYBASH-001",
+        "recipe_id": "f05-l-backend-schema-migration-v1",
         "recipe_revision": 1,
-        "capsule_path": "experiments/multi-agent-duration/capsules/f04-m-python-state-cli.md",
+        "capsule_path": "experiments/multi-agent-duration/capsules/f05-l-backend-schema-migration.md",
         "lane": "isolated",
         "task_network_policy": "disabled",
         "isolation_required": "workspace-only-container-mount",
         "evaluator_isolation_required": "network-disabled-read-only-container",
         "workspace_validation_commands": [
-          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"]
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "bash",
+            "-n",
+            "bin/jobctl"
+          ],
+          [
+            "bash",
+            "tests/migration-lifecycle.sh"
+          ],
+          [
+            "python3",
+            "tools/check_docs.py",
+            "MIGRATION.md"
+          ]
         ],
         "hidden_validation_targets": [
           {
-            "check_id": "hidden-round-trip-storage",
-            "test_target": "HiddenKvToolTests.test_cli_round_trip_and_sorted_storage"
+            "check_id": "migration-v1-compat",
+            "test_target": "HiddenLargeMigrationTests.test_v1_compat"
           },
           {
-            "check_id": "hidden-error-state-integrity",
-            "test_target": "HiddenKvToolTests.test_error_codes_do_not_corrupt_state"
+            "check_id": "migration-backend-boundary",
+            "test_target": "HiddenLargeMigrationTests.test_backend_boundary"
+          },
+          {
+            "check_id": "migration-atomic-order",
+            "test_target": "HiddenLargeMigrationTests.test_atomic_order"
+          },
+          {
+            "check_id": "migration-resume",
+            "test_target": "HiddenLargeMigrationTests.test_resume"
+          },
+          {
+            "check_id": "migration-rollback",
+            "test_target": "HiddenLargeMigrationTests.test_rollback"
+          },
+          {
+            "check_id": "migration-operations-doc",
+            "test_target": "HiddenLargeMigrationTests.test_operations_doc"
           }
         ],
-        "online_evaluator_id": "f04-m-python-hidden-v2",
+        "online_evaluator_id": "f05-l-backend-schema-hidden-v1",
         "gold_visibility": "harness-only"
       }
     },
     {
       "case": {
         "schema_version": 2,
-        "case_id": "F04-L-PYBASH-001",
+        "case_id": "F05-M-PY-001",
         "revision": 1,
-        "capsule_digest": "sha256:668f0779c196cedddd95c7d4dd14ee43881febb56235ea3b7fea621ac5ff5889",
+        "capsule_digest": "sha256:4e93974668ce5719b2b52f07d19b5be28cd26be01add5b7ab05763e7c313e9d7",
         "source_type": "fixture",
-        "family": "bounded-implementation",
-        "size": "L",
-        "profile_id": "L-cross-boundary-deterministic-python-bash",
-        "variant_group_id": "F04-L-PYBASH",
+        "family": "refactor-migration",
+        "size": "M",
+        "profile_id": "M-coupled-interface-migration-python",
+        "variant_group_id": "F05-M-PY",
         "descriptors": {
-          "context_surface": "python-storage-cli-and-bash-process-boundary",
-          "artifact_surface": "storage-cli-shell-tests-and-format-contract",
-          "coupling": "cross-process-persistent-contract",
-          "validation_depth": ["unit", "integration", "restart"],
-          "environment_setup": "fresh-process-lifecycle",
-          "failure_distance": "restart-delayed",
-          "statefulness": "persistent-filesystem",
-          "language_toolchain": ["python", "bash"]
+          "context_surface": "codec-three-callers-compatibility-and-tests",
+          "artifact_surface": "interface-migration-patch",
+          "coupling": "caller-and-compatibility-contract",
+          "validation_depth": [
+            "unit",
+            "caller",
+            "compatibility"
+          ],
+          "environment_setup": "none",
+          "failure_distance": "cross-module",
+          "statefulness": "configuration-object-state",
+          "language_toolchain": [
+            "python"
+          ]
         },
         "ambiguity": "exact",
         "oracle_strength": "deterministic",
         "decomposability": "partial",
         "artifact_type": "patch",
-        "risk": "low",
+        "risk": "medium",
         "task_lane": "write",
         "environment_dependence": "local-tool",
         "knowledge_locality": "repository-contained",
-        "expected_failure_modes": ["behavioral", "persistence", "atomicity", "cross-process", "restart"],
+        "expected_failure_modes": [
+          "missed-caller",
+          "policy-lifecycle",
+          "compatibility-bytes",
+          "warning-count",
+          "api-drift"
+        ],
         "strong_online_oracle": true
       },
       "fixture": {
-        "case_id": "F04-L-PYBASH-001",
-        "recipe_id": "f04-l-python-bash-restart-v2",
+        "case_id": "F05-M-PY-001",
+        "recipe_id": "f05-m-python-codec-migration-v1",
         "recipe_revision": 1,
-        "capsule_path": "experiments/multi-agent-duration/capsules/f04-l-python-bash-restart.md",
+        "capsule_path": "experiments/multi-agent-duration/capsules/f05-m-python-codec-migration.md",
         "lane": "isolated",
         "task_network_policy": "disabled",
         "isolation_required": "workspace-only-container-mount",
         "evaluator_isolation_required": "network-disabled-read-only-container",
         "workspace_validation_commands": [
-          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
-          ["bash", "-n", "bin/queuectl"]
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "python3",
+            "tools/check_callers.py"
+          ]
         ],
         "hidden_validation_targets": [
           {
-            "check_id": "hidden-restart-idempotence",
-            "test_target": "HiddenQueueLifecycleTests.test_fresh_process_restart_and_idempotent_ack"
+            "check_id": "migration-all-callers",
+            "test_target": "HiddenMediumMigrationTests.test_all_callers"
           },
           {
-            "check_id": "hidden-invalid-state-integrity",
-            "test_target": "HiddenQueueLifecycleTests.test_unknown_and_malformed_state_are_not_modified"
+            "check_id": "migration-policy-lifecycle",
+            "test_target": "HiddenMediumMigrationTests.test_policy_lifecycle"
+          },
+          {
+            "check_id": "migration-compat-bytes",
+            "test_target": "HiddenMediumMigrationTests.test_compat_bytes"
+          },
+          {
+            "check_id": "migration-warning-once",
+            "test_target": "HiddenMediumMigrationTests.test_warning_once"
+          },
+          {
+            "check_id": "migration-api-surface",
+            "test_target": "HiddenMediumMigrationTests.test_api_surface"
           }
         ],
-        "online_evaluator_id": "f04-l-python-bash-hidden-v2",
+        "online_evaluator_id": "f05-m-python-codec-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F05-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:276166b476d504579bf8749edfa209116362792d82b00016be7e214bdeed5e29",
+        "source_type": "fixture",
+        "family": "refactor-migration",
+        "size": "S",
+        "profile_id": "S-local-equivalence-refactor-python",
+        "variant_group_id": "F05-S-PY",
+        "descriptors": {
+          "context_surface": "one-python-module-and-tests",
+          "artifact_surface": "local-refactor-patch",
+          "coupling": "shared-private-logic",
+          "validation_depth": [
+            "unit",
+            "behavior-equivalence"
+          ],
+          "environment_setup": "none",
+          "failure_distance": "direct",
+          "statefulness": "stateless",
+          "language_toolchain": [
+            "python"
+          ]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "patch",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "behavioral",
+          "validation-order",
+          "duplicate-helper",
+          "api-drift"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F05-S-PY-001",
+        "recipe_id": "f05-s-python-helper-refactor-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f05-s-python-helper-refactor.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "python3",
+            "tools/compare_behavior.py"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "refactor-equivalence-output",
+            "test_target": "HiddenSmallRefactorTests.test_equivalence_output"
+          },
+          {
+            "check_id": "refactor-equivalence-errors",
+            "test_target": "HiddenSmallRefactorTests.test_equivalence_errors"
+          },
+          {
+            "check_id": "refactor-helper-shared",
+            "test_target": "HiddenSmallRefactorTests.test_helper_shared"
+          },
+          {
+            "check_id": "refactor-api-stable",
+            "test_target": "HiddenSmallRefactorTests.test_api_stable"
+          }
+        ],
+        "online_evaluator_id": "f05-s-python-equivalence-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F06-L-PYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
+        "source_type": "fixture",
+        "family": "test-design",
+        "size": "L",
+        "profile_id": "L-cross-process-lifecycle-test-design",
+        "variant_group_id": "F06-L-PYBASH",
+        "descriptors": {
+          "context_surface": "python-worker-lease-store-and-bash-harness",
+          "artifact_surface": "lifecycle-integration-suite",
+          "coupling": "concurrency-and-restart-ownership",
+          "validation_depth": [
+            "unit",
+            "integration",
+            "concurrency",
+            "crash",
+            "restart",
+            "mutation"
+          ],
+          "environment_setup": "multiple-fresh-subprocesses",
+          "failure_distance": "race-restart-delayed",
+          "statefulness": "lease-and-process-state",
+          "language_toolchain": [
+            "python",
+            "bash",
+            "json"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "independent",
+        "artifact_type": "tests",
+        "risk": "high",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "lost-wakeup",
+          "stale-lease",
+          "duplicate-owner",
+          "broad-cleanup",
+          "flake",
+          "production-edit"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F06-L-PYBASH-001",
+        "recipe_id": "f06-l-lease-lifecycle-tests-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f06-l-lease-lifecycle-tests.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "bash",
+            "-n",
+            "tests/lifecycle.sh"
+          ],
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "bash",
+            "tools/run-lifecycle-repeat.sh",
+            "5"
+          ],
+          [
+            "python3",
+            "tools/check_test_only.py"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "test-kills-lost-wakeup",
+            "test_target": "HiddenLargeTestDesignTests.test_kills_lost_wakeup"
+          },
+          {
+            "check_id": "test-kills-stale-lease",
+            "test_target": "HiddenLargeTestDesignTests.test_kills_stale_lease"
+          },
+          {
+            "check_id": "test-kills-duplicate-owner",
+            "test_target": "HiddenLargeTestDesignTests.test_kills_duplicate_owner"
+          },
+          {
+            "check_id": "test-kills-broad-cleanup",
+            "test_target": "HiddenLargeTestDesignTests.test_kills_broad_cleanup"
+          },
+          {
+            "check_id": "test-repeatability",
+            "test_target": "HiddenLargeTestDesignTests.test_repeatability"
+          },
+          {
+            "check_id": "test-bounded-cleanup",
+            "test_target": "HiddenLargeTestDesignTests.test_bounded_cleanup"
+          },
+          {
+            "check_id": "test-production-untouched",
+            "test_target": "HiddenLargeTestDesignTests.test_production_untouched"
+          }
+        ],
+        "online_evaluator_id": "f06-l-lease-lifecycle-mutation-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F06-M-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:382c08a96029e368b0c18a95a706cb1e1ded3dd09ebdd037263fcbe7c1c4b2c4",
+        "source_type": "fixture",
+        "family": "test-design",
+        "size": "M",
+        "profile_id": "M-coupled-mutation-test-python",
+        "variant_group_id": "F06-M-PY",
+        "descriptors": {
+          "context_surface": "policy-clock-and-test-harness",
+          "artifact_surface": "table-property-test-suite",
+          "coupling": "four-axis-decision-contract",
+          "validation_depth": [
+            "unit",
+            "table",
+            "mutation"
+          ],
+          "environment_setup": "fake-clock",
+          "failure_distance": "interaction-only",
+          "statefulness": "attempt-counter-state",
+          "language_toolchain": [
+            "python"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "tests",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "axis-omission",
+          "interaction-omission",
+          "wall-clock-flake",
+          "production-edit"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F06-M-PY-001",
+        "recipe_id": "f06-m-python-retry-tests-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f06-m-python-retry-tests.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "python3",
+            "tools/check_test_only.py"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "test-kills-status-mutant",
+            "test_target": "HiddenMediumTestDesignTests.test_kills_status_mutant"
+          },
+          {
+            "check_id": "test-kills-method-mutant",
+            "test_target": "HiddenMediumTestDesignTests.test_kills_method_mutant"
+          },
+          {
+            "check_id": "test-kills-attempt-mutant",
+            "test_target": "HiddenMediumTestDesignTests.test_kills_attempt_mutant"
+          },
+          {
+            "check_id": "test-kills-delay-mutant",
+            "test_target": "HiddenMediumTestDesignTests.test_kills_delay_mutant"
+          },
+          {
+            "check_id": "test-kills-interaction-mutant",
+            "test_target": "HiddenMediumTestDesignTests.test_kills_interaction_mutant"
+          },
+          {
+            "check_id": "test-production-untouched",
+            "test_target": "HiddenMediumTestDesignTests.test_production_untouched"
+          }
+        ],
+        "online_evaluator_id": "f06-m-python-retry-mutation-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F06-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:83f6dabffa995d10d05d2531e0689686bc80428b1a0e723944903d28db183a69",
+        "source_type": "fixture",
+        "family": "test-design",
+        "size": "S",
+        "profile_id": "S-local-mutation-test-python",
+        "variant_group_id": "F06-S-PY",
+        "descriptors": {
+          "context_surface": "one-python-function-and-test-module",
+          "artifact_surface": "unit-tests-only",
+          "coupling": "local-behavior-matrix",
+          "validation_depth": [
+            "unit",
+            "mutation"
+          ],
+          "environment_setup": "none",
+          "failure_distance": "direct",
+          "statefulness": "stateless",
+          "language_toolchain": [
+            "python"
+          ]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "tests",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "boundary-omission",
+          "type-partition-omission",
+          "production-edit"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F06-S-PY-001",
+        "recipe_id": "f06-s-python-port-tests-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f06-s-python-port-tests.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "git",
+            "diff",
+            "--exit-code",
+            "--",
+            "ports.py"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "test-kills-upper-bound",
+            "test_target": "HiddenSmallTestDesignTests.test_kills_upper_bound"
+          },
+          {
+            "check_id": "test-kills-bool",
+            "test_target": "HiddenSmallTestDesignTests.test_kills_bool"
+          },
+          {
+            "check_id": "test-kills-whitespace",
+            "test_target": "HiddenSmallTestDesignTests.test_kills_whitespace"
+          },
+          {
+            "check_id": "test-kills-float",
+            "test_target": "HiddenSmallTestDesignTests.test_kills_float"
+          },
+          {
+            "check_id": "test-production-untouched",
+            "test_target": "HiddenSmallTestDesignTests.test_production_untouched"
+          }
+        ],
+        "online_evaluator_id": "f06-s-python-port-mutation-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F07-L-MDPYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:6bbae94196fc484316bf77595f39c1b76f7fed5e0a85a1550b415248b2bf07c1",
+        "source_type": "fixture",
+        "family": "documentation-runbook",
+        "size": "L",
+        "profile_id": "L-cross-document-migration-runbook",
+        "variant_group_id": "F07-L-MDPYBASH",
+        "descriptors": {
+          "context_surface": "implementation-sources-three-document-targets-and-command-tooling",
+          "artifact_surface": "multi-document-set-and-index-manifest",
+          "coupling": "cross-document-lifecycle-consistency",
+          "validation_depth": [
+            "fact-check",
+            "link",
+            "command-replay",
+            "migration",
+            "rollback"
+          ],
+          "environment_setup": "simulated-migration-sandbox",
+          "failure_distance": "rollback-restart-delayed",
+          "statefulness": "versioned-persistent-state",
+          "language_toolchain": [
+            "markdown",
+            "python",
+            "bash",
+            "json"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "structured",
+        "decomposability": "partial",
+        "artifact_type": "runbook",
+        "risk": "high",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "cross-document-contradiction",
+          "unsafe-migration-order",
+          "destructive-rollback",
+          "ownership-drift",
+          "broken-index-link",
+          "early-compat-removal"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F07-L-MDPYBASH-001",
+        "recipe_id": "f07-l-backend-migration-docs-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f07-l-backend-migration-docs.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "tools/check_docs_index.py",
+            "docs-index.json"
+          ],
+          [
+            "python3",
+            "tools/check_links.py",
+            "docs"
+          ],
+          [
+            "bash",
+            "tools/replay_migration_docs.sh",
+            "docs-index.json"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "docs-current-target-facts",
+            "test_target": "HiddenMigrationDocsTests.test_current_target_facts"
+          },
+          {
+            "check_id": "docs-migration-order",
+            "test_target": "HiddenMigrationDocsTests.test_migration_order"
+          },
+          {
+            "check_id": "docs-rollback-nondestructive",
+            "test_target": "HiddenMigrationDocsTests.test_rollback_nondestructive"
+          },
+          {
+            "check_id": "docs-ownership-consistency",
+            "test_target": "HiddenMigrationDocsTests.test_ownership_consistency"
+          },
+          {
+            "check_id": "docs-command-replay",
+            "test_target": "HiddenMigrationDocsTests.test_command_replay"
+          },
+          {
+            "check_id": "docs-links-index",
+            "test_target": "HiddenMigrationDocsTests.test_links_index"
+          },
+          {
+            "check_id": "docs-no-early-removal",
+            "test_target": "HiddenMigrationDocsTests.test_no_early_removal"
+          }
+        ],
+        "online_evaluator_id": "f07-l-backend-migration-docs-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F07-M-MDBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:50c00b817db762f4cda0202deb1d9fe791cbf365b15993779b2299ac140c2c58",
+        "source_type": "fixture",
+        "family": "documentation-runbook",
+        "size": "M",
+        "profile_id": "M-coupled-replayable-runbook",
+        "variant_group_id": "F07-M-MDBASH",
+        "descriptors": {
+          "context_surface": "state-validator-backup-recovery-service-wrapper-and-state-doc",
+          "artifact_surface": "runbook-and-structured-command-manifest",
+          "coupling": "diagnosis-and-recovery-ordering",
+          "validation_depth": [
+            "fact-check",
+            "command-replay",
+            "failure-replay",
+            "recovery"
+          ],
+          "environment_setup": "temporary-service-sandbox",
+          "failure_distance": "multi-step-failure-path",
+          "statefulness": "persistent-state-and-backup",
+          "language_toolchain": [
+            "markdown",
+            "bash",
+            "python",
+            "json"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "runbook",
+        "risk": "medium",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "unsafe-order",
+          "evidence-loss",
+          "invalid-backup-mutation",
+          "broad-restart",
+          "doc-manifest-drift",
+          "missing-postcondition"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F07-M-MDBASH-001",
+        "recipe_id": "f07-m-state-recovery-runbook-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f07-m-state-recovery-runbook.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "tools/check_runbook.py",
+            "RUNBOOK.md",
+            "runbook.json"
+          ],
+          [
+            "bash",
+            "tools/replay_runbook.sh",
+            "runbook.json",
+            "healthy"
+          ],
+          [
+            "bash",
+            "tools/replay_runbook.sh",
+            "runbook.json",
+            "corrupt"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "runbook-fact-accuracy",
+            "test_target": "HiddenStateRunbookTests.test_fact_accuracy"
+          },
+          {
+            "check_id": "runbook-order-safety",
+            "test_target": "HiddenStateRunbookTests.test_order_safety"
+          },
+          {
+            "check_id": "runbook-corrupt-recovery",
+            "test_target": "HiddenStateRunbookTests.test_corrupt_recovery"
+          },
+          {
+            "check_id": "runbook-invalid-backup",
+            "test_target": "HiddenStateRunbookTests.test_invalid_backup"
+          },
+          {
+            "check_id": "runbook-owned-restart",
+            "test_target": "HiddenStateRunbookTests.test_owned_restart"
+          },
+          {
+            "check_id": "runbook-doc-manifest-sync",
+            "test_target": "HiddenStateRunbookTests.test_doc_manifest_sync"
+          }
+        ],
+        "online_evaluator_id": "f07-m-state-recovery-runbook-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F07-S-MD-001",
+        "revision": 1,
+        "capsule_digest": "sha256:7bfe047d68fdc6cb4ec29f3102757ae92bfcd3d29a524290249e0fb1781d52e0",
+        "source_type": "fixture",
+        "family": "documentation-runbook",
+        "size": "S",
+        "profile_id": "S-local-executable-doc-markdown",
+        "variant_group_id": "F07-S-MD",
+        "descriptors": {
+          "context_surface": "one-cli-parser-readme-section-and-smoke-helper",
+          "artifact_surface": "one-documentation-section",
+          "coupling": "local-command-contract",
+          "validation_depth": [
+            "link",
+            "command-replay",
+            "fact-check"
+          ],
+          "environment_setup": "none",
+          "failure_distance": "direct",
+          "statefulness": "stateless",
+          "language_toolchain": [
+            "markdown",
+            "python"
+          ]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "runbook",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "obsolete-command",
+          "nonreplayable-example",
+          "unsupported-constraint",
+          "broken-link"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F07-S-MD-001",
+        "recipe_id": "f07-s-agentctl-doctor-doc-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f07-s-agentctl-doctor-doc.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "tests.test_cli",
+            "-v"
+          ],
+          [
+            "python3",
+            "tools/check_docs.py",
+            "README.md"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "doc-command-replay",
+            "test_target": "HiddenDoctorDocTests.test_command_replay"
+          },
+          {
+            "check_id": "doc-constraint-accurate",
+            "test_target": "HiddenDoctorDocTests.test_constraint_accurate"
+          },
+          {
+            "check_id": "doc-invalid-form-removed",
+            "test_target": "HiddenDoctorDocTests.test_invalid_form_removed"
+          },
+          {
+            "check_id": "doc-link-integrity",
+            "test_target": "HiddenDoctorDocTests.test_link_integrity"
+          }
+        ],
+        "online_evaluator_id": "f07-s-agentctl-doctor-doc-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F08-L-MDJSON-001",
+        "revision": 1,
+        "capsule_digest": "sha256:82ba9e0a704fcb780f381744bd03d9739324d0f4e2d42b5dba1ca16631f878e8",
+        "source_type": "fixture",
+        "family": "architecture-design",
+        "size": "L",
+        "profile_id": "L-cross-boundary-calibrated-execution-design",
+        "variant_group_id": "F08-L-MDJSON",
+        "descriptors": {
+          "context_surface": "execution-persistence-provider-isolation-ui-and-operations-evidence",
+          "artifact_surface": "multi-section-design-record-and-machine-model",
+          "coupling": "security-migration-and-operations-coupling",
+          "validation_depth": [
+            "schema",
+            "constraint",
+            "threat",
+            "failure-simulation",
+            "migration",
+            "operations"
+          ],
+          "environment_setup": "deterministic-topology-lifecycle-simulator",
+          "failure_distance": "multi-stage-restart-and-migration",
+          "statefulness": "durable-jobs-leases-and-event-ledger",
+          "language_toolchain": [
+            "markdown",
+            "json",
+            "python",
+            "bash",
+            "docker"
+          ]
+        },
+        "ambiguity": "open",
+        "oracle_strength": "calibrated",
+        "decomposability": "independent",
+        "artifact_type": "design",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "requirement-omission",
+          "ownership-conflict",
+          "unbounded-recovery",
+          "destructive-migration",
+          "trust-boundary-gap",
+          "unsupported-claim"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F08-L-MDJSON-001",
+        "recipe_id": "f08-l-execution-fabric-design-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f08-l-execution-fabric-design.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "tools/validate_design.py",
+            "design.json",
+            "DESIGN.md"
+          ],
+          [
+            "python3",
+            "simulator.py",
+            "--design",
+            "design.json",
+            "--scenario-set",
+            "visible"
+          ],
+          [
+            "bash",
+            "tools/replay_migration.sh",
+            "design.json",
+            "visible"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "design-requirement-coverage",
+            "test_target": "HiddenLargeArchitectureTests.test_requirement_coverage"
+          },
+          {
+            "check_id": "design-topology-ownership",
+            "test_target": "HiddenLargeArchitectureTests.test_topology_ownership"
+          },
+          {
+            "check_id": "design-failure-recovery",
+            "test_target": "HiddenLargeArchitectureTests.test_failure_recovery"
+          },
+          {
+            "check_id": "design-migration-rollback",
+            "test_target": "HiddenLargeArchitectureTests.test_migration_rollback"
+          },
+          {
+            "check_id": "design-security-boundaries",
+            "test_target": "HiddenLargeArchitectureTests.test_security_boundaries"
+          },
+          {
+            "check_id": "design-observability",
+            "test_target": "HiddenLargeArchitectureTests.test_observability"
+          },
+          {
+            "check_id": "design-alternative-counterexamples",
+            "test_target": "HiddenLargeArchitectureTests.test_alternative_counterexamples"
+          },
+          {
+            "check_id": "design-unknown-honesty",
+            "test_target": "HiddenLargeArchitectureTests.test_unknown_honesty"
+          }
+        ],
+        "online_evaluator_id": "f08-l-execution-design-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F08-M-MDJSON-001",
+        "revision": 1,
+        "capsule_digest": "sha256:b387c811c5371e97f84eba0e6793e2ad86f743c6eb3e3f45109f1b66092d2c62",
+        "source_type": "fixture",
+        "family": "architecture-design",
+        "size": "M",
+        "profile_id": "M-coupled-calibrated-architecture",
+        "variant_group_id": "F08-M-MDJSON",
+        "descriptors": {
+          "context_surface": "three-components-options-failure-traces-and-invariants",
+          "artifact_surface": "architecture-proposal-and-responsibility-matrix",
+          "coupling": "component-ownership-and-failure-transitions",
+          "validation_depth": [
+            "schema",
+            "constraint",
+            "failure-simulation",
+            "counterexample"
+          ],
+          "environment_setup": "deterministic-event-simulator",
+          "failure_distance": "cross-component-restart",
+          "statefulness": "durable-job-state",
+          "language_toolchain": [
+            "markdown",
+            "json",
+            "python"
+          ]
+        },
+        "ambiguity": "open",
+        "oracle_strength": "calibrated",
+        "decomposability": "independent",
+        "artifact_type": "design",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "invariant-omission",
+          "ownership-conflict",
+          "transition-gap",
+          "preference-only-rejection",
+          "unsupported-guarantee"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F08-M-MDJSON-001",
+        "recipe_id": "f08-m-job-responsibility-design-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f08-m-job-responsibility-design.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "tools/validate_proposal.py",
+            "proposal.json",
+            "PROPOSAL.md"
+          ],
+          [
+            "python3",
+            "simulator.py",
+            "--proposal",
+            "proposal.json",
+            "--all-scenarios"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "design-invariant-coverage",
+            "test_target": "HiddenMediumArchitectureTests.test_invariant_coverage"
+          },
+          {
+            "check_id": "design-state-ownership",
+            "test_target": "HiddenMediumArchitectureTests.test_state_ownership"
+          },
+          {
+            "check_id": "design-failure-transitions",
+            "test_target": "HiddenMediumArchitectureTests.test_failure_transitions"
+          },
+          {
+            "check_id": "design-option-counterexamples",
+            "test_target": "HiddenMediumArchitectureTests.test_option_counterexamples"
+          },
+          {
+            "check_id": "design-migration-observability",
+            "test_target": "HiddenMediumArchitectureTests.test_migration_observability"
+          },
+          {
+            "check_id": "design-unknown-honesty",
+            "test_target": "HiddenMediumArchitectureTests.test_unknown_honesty"
+          }
+        ],
+        "online_evaluator_id": "f08-m-job-design-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F08-S-MDJSON-001",
+        "revision": 1,
+        "capsule_digest": "sha256:f39b06eabb05f2e1da3125ac55dc8267ed387d5fe7002a97a70256d67ffee2cc",
+        "source_type": "fixture",
+        "family": "architecture-design",
+        "size": "S",
+        "profile_id": "S-local-constraint-design",
+        "variant_group_id": "F08-S-MDJSON",
+        "descriptors": {
+          "context_surface": "two-api-sketches-callers-and-five-constraints",
+          "artifact_surface": "decision-note-and-structured-rationale",
+          "coupling": "local-api-constraint-fit",
+          "validation_depth": [
+            "schema",
+            "constraint",
+            "counterexample"
+          ],
+          "environment_setup": "none",
+          "failure_distance": "design-time",
+          "statefulness": "configuration-layering",
+          "language_toolchain": [
+            "markdown",
+            "json",
+            "python"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "structured",
+        "decomposability": "serial",
+        "artifact_type": "design",
+        "risk": "low",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "constraint-omission",
+          "missing-counterexample",
+          "unsupported-claim",
+          "document-drift"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F08-S-MDJSON-001",
+        "recipe_id": "f08-s-config-api-design-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f08-s-config-api-design.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "tools/validate_decision.py",
+            "decision.json",
+            "DECISION.md"
+          ],
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "design-constraint-coverage",
+            "test_target": "HiddenSmallArchitectureTests.test_constraint_coverage"
+          },
+          {
+            "check_id": "design-counterexamples",
+            "test_target": "HiddenSmallArchitectureTests.test_counterexamples"
+          },
+          {
+            "check_id": "design-selected-contract",
+            "test_target": "HiddenSmallArchitectureTests.test_selected_contract"
+          },
+          {
+            "check_id": "design-evidence-entailment",
+            "test_target": "HiddenSmallArchitectureTests.test_evidence_entailment"
+          },
+          {
+            "check_id": "design-doc-json-sync",
+            "test_target": "HiddenSmallArchitectureTests.test_doc_json_sync"
+          }
+        ],
+        "online_evaluator_id": "f08-s-config-design-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F09-L-PYBASHDOCKER-001",
+        "revision": 1,
+        "capsule_digest": "sha256:d8649db2998c9bbb3dfebd54e88d5709133b4732d8b3414bc4ca1faa60d97d89",
+        "source_type": "fixture",
+        "family": "security-isolation",
+        "size": "L",
+        "profile_id": "L-cross-boundary-threat-model",
+        "variant_group_id": "F09-L-PYBASHDOCKER",
+        "descriptors": {
+          "context_surface": "git-worktree-docker-launcher-credential-adapter-and-cleanup-supervisor",
+          "artifact_surface": "threat-model-attack-trees-and-negative-test-plan",
+          "coupling": "multi-boundary-trust-and-lifecycle-ownership",
+          "validation_depth": [
+            "schema",
+            "seeded-exploit",
+            "negative-test",
+            "threat",
+            "cleanup",
+            "recovery"
+          ],
+          "environment_setup": "simulated-docker-git-process-environment",
+          "failure_distance": "cross-boundary-and-cleanup-delayed",
+          "statefulness": "worktrees-containers-credentials-and-pids",
+          "language_toolchain": [
+            "python",
+            "bash",
+            "docker",
+            "git",
+            "json",
+            "markdown"
+          ]
+        },
+        "ambiguity": "open",
+        "oracle_strength": "calibrated",
+        "decomposability": "independent",
+        "artifact_type": "design",
+        "risk": "high",
+        "task_lane": "isolated",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "topology-gap",
+          "missed-seeded-attack",
+          "single-control-bypass",
+          "cleanup-owner-confusion",
+          "missing-detection-recovery",
+          "unsupported-isolation-guarantee"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F09-L-PYBASHDOCKER-001",
+        "recipe_id": "f09-l-worktree-container-threat-model-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f09-l-worktree-container-threat-model.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "tools/validate_threat_model.py",
+            "threat-model.json",
+            "THREAT-MODEL.md"
+          ],
+          [
+            "bash",
+            "scenarios/run-visible-attacks.sh",
+            "threat-model.json"
+          ],
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "threat-assets-boundaries",
+            "test_target": "HiddenThreatModelTests.test_assets_boundaries"
+          },
+          {
+            "check_id": "threat-worktree-race",
+            "test_target": "HiddenThreatModelTests.test_worktree_race"
+          },
+          {
+            "check_id": "threat-bind-injection",
+            "test_target": "HiddenThreatModelTests.test_bind_injection"
+          },
+          {
+            "check_id": "threat-credential-scope",
+            "test_target": "HiddenThreatModelTests.test_credential_scope"
+          },
+          {
+            "check_id": "threat-cleanup-ownership",
+            "test_target": "HiddenThreatModelTests.test_cleanup_ownership"
+          },
+          {
+            "check_id": "threat-detection-recovery",
+            "test_target": "HiddenThreatModelTests.test_detection_recovery"
+          },
+          {
+            "check_id": "threat-control-counterexamples",
+            "test_target": "HiddenThreatModelTests.test_control_counterexamples"
+          },
+          {
+            "check_id": "threat-unknown-honesty",
+            "test_target": "HiddenThreatModelTests.test_unknown_honesty"
+          }
+        ],
+        "online_evaluator_id": "f09-l-threat-model-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F09-M-PYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:5c5fef60596257729f21756fb720f8f13b9b31bae9d612ac1af143d6a48a507a",
+        "source_type": "fixture",
+        "family": "security-isolation",
+        "size": "M",
+        "profile_id": "M-coupled-seeded-isolation-review",
+        "variant_group_id": "F09-M-PYBASH",
+        "descriptors": {
+          "context_surface": "python-resolver-bash-launcher-and-filesystem-fixtures",
+          "artifact_surface": "review-and-exploit-tests",
+          "coupling": "symlink-environment-containment-composition",
+          "validation_depth": [
+            "unit",
+            "integration",
+            "seeded-exploit",
+            "negative-test"
+          ],
+          "environment_setup": "temporary-filesystem-and-subprocess",
+          "failure_distance": "cross-boundary",
+          "statefulness": "filesystem-and-environment-state",
+          "language_toolchain": [
+            "python",
+            "bash"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "findings",
+        "risk": "high",
+        "task_lane": "isolated",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "single-layer-review",
+          "trusted-root-loss",
+          "post-resolution-escape",
+          "overrestrictive-control",
+          "privileged-reproducer"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F09-M-PYBASH-001",
+        "recipe_id": "f09-m-workspace-isolation-review-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f09-m-workspace-isolation-review.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "bash",
+            "-n",
+            "bin/run-task"
+          ],
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "python3",
+            "tools/check_security_regression.py",
+            "security_regression.py",
+            "--expected",
+            "symlink,env-root"
+          ],
+          [
+            "python3",
+            "tools/validate_security_review.py",
+            "security-review.json"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "security-symlink-exploit",
+            "test_target": "HiddenWorkspaceIsolationTests.test_symlink_exploit"
+          },
+          {
+            "check_id": "security-env-root-exploit",
+            "test_target": "HiddenWorkspaceIsolationTests.test_env_root_exploit"
+          },
+          {
+            "check_id": "security-composition",
+            "test_target": "HiddenWorkspaceIsolationTests.test_composition"
+          },
+          {
+            "check_id": "security-negative-tests",
+            "test_target": "HiddenWorkspaceIsolationTests.test_negative_tests"
+          },
+          {
+            "check_id": "security-mitigation-invariants",
+            "test_target": "HiddenWorkspaceIsolationTests.test_mitigation_invariants"
+          },
+          {
+            "check_id": "security-no-false-positive",
+            "test_target": "HiddenWorkspaceIsolationTests.test_no_false_positive"
+          }
+        ],
+        "online_evaluator_id": "f09-m-workspace-isolation-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F09-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:d5f69e1314f77f79cf86fd20623aa7170e6a9b4e688534c5e74481b0ea99139a",
+        "source_type": "fixture",
+        "family": "security-isolation",
+        "size": "S",
+        "profile_id": "S-local-seeded-bypass-python",
+        "variant_group_id": "F09-S-PY",
+        "descriptors": {
+          "context_surface": "one-validator-one-decoder-caller-and-tests",
+          "artifact_surface": "finding-and-negative-test",
+          "coupling": "validation-normalization-order",
+          "validation_depth": [
+            "unit",
+            "seeded-exploit"
+          ],
+          "environment_setup": "temporary-filesystem",
+          "failure_distance": "direct-bypass",
+          "statefulness": "path-state",
+          "language_toolchain": [
+            "python"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "findings",
+        "risk": "high",
+        "task_lane": "isolated",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "missed-encoding-bypass",
+          "validator-only-test",
+          "unbounded-impact-claim",
+          "unreachable-double-decode"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F09-S-PY-001",
+        "recipe_id": "f09-s-python-name-bypass-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f09-s-python-name-bypass.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "python3",
+            "tools/check_security_regression.py",
+            "security_regression.py",
+            "--expected",
+            "encoded-separator-escape"
+          ],
+          [
+            "python3",
+            "tools/validate_finding.py",
+            "finding.json"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "security-bypass-recall",
+            "test_target": "HiddenNameBypassTests.test_bypass_recall"
+          },
+          {
+            "check_id": "security-negative-test",
+            "test_target": "HiddenNameBypassTests.test_negative_test"
+          },
+          {
+            "check_id": "security-root-order",
+            "test_target": "HiddenNameBypassTests.test_root_order"
+          },
+          {
+            "check_id": "security-impact-scope",
+            "test_target": "HiddenNameBypassTests.test_impact_scope"
+          },
+          {
+            "check_id": "security-no-double-decode",
+            "test_target": "HiddenNameBypassTests.test_no_double_decode"
+          }
+        ],
+        "online_evaluator_id": "f09-s-name-bypass-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F10-L-PYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:c2b4b9bef2505669cb3a278fc24662d989839645cf07048ca0bf674162137fed",
+        "source_type": "fixture",
+        "family": "performance-resource",
+        "size": "L",
+        "profile_id": "L-multistage-resource-diagnosis",
+        "variant_group_id": "F10-L-PYBASH",
+        "descriptors": {
+          "context_surface": "python-queue-worker-simulator-bash-ledger",
+          "artifact_surface": "instrumentation-bottleneck-model-experiment-report",
+          "coupling": "queue-concurrency-container-provider-stages",
+          "validation_depth": [
+            "unit",
+            "multi-stage-instrumentation",
+            "concurrency",
+            "distribution"
+          ],
+          "environment_setup": "multi-process-simulator",
+          "failure_distance": "queue-tail-delayed",
+          "statefulness": "job-lock-stage-event-state",
+          "language_toolchain": [
+            "python",
+            "bash",
+            "json",
+            "docker"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "independent",
+        "artifact_type": "synthesis",
+        "risk": "medium",
+        "task_lane": "isolated",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "correlation-loss",
+          "time-conflation",
+          "width-pooling",
+          "causal-misattribution",
+          "censoring",
+          "scope-tamper"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F10-L-PYBASH-001",
+        "recipe_id": "f10-l-job-fabric-performance-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f10-l-job-fabric-performance.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "bash",
+            "-c",
+            "observed=$(mktemp -d); trap 'rm -rf -- \"$observed\"' EXIT; bash bin/run-batch --matrix visible --output \"$observed\"; python3 tools/validate_performance.py performance.json \"$observed\""
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "perf-stage-correlation",
+            "test_target": "HiddenLargePerformanceTests.test_stage_correlation"
+          },
+          {
+            "check_id": "perf-time-accounting",
+            "test_target": "HiddenLargePerformanceTests.test_time_accounting"
+          },
+          {
+            "check_id": "perf-width-curve",
+            "test_target": "HiddenLargePerformanceTests.test_width_curve"
+          },
+          {
+            "check_id": "perf-probe-lock-cause",
+            "test_target": "HiddenLargePerformanceTests.test_probe_lock_cause"
+          },
+          {
+            "check_id": "perf-provider-distinction",
+            "test_target": "HiddenLargePerformanceTests.test_provider_distinction"
+          },
+          {
+            "check_id": "perf-censoring-resource",
+            "test_target": "HiddenLargePerformanceTests.test_censoring_resource"
+          },
+          {
+            "check_id": "perf-claim-bounded",
+            "test_target": "HiddenLargePerformanceTests.test_claim_bounded"
+          }
+        ],
+        "online_evaluator_id": "f10-l-job-fabric-performance-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F10-M-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:f26bdbacdde56e7c93df771a0c93cf78d7b37da75be33618272bc54b2be4432a",
+        "source_type": "fixture",
+        "family": "performance-resource",
+        "size": "M",
+        "profile_id": "M-coupled-instrumented-performance-python",
+        "variant_group_id": "F10-M-PY",
+        "descriptors": {
+          "context_surface": "reader-decoder-cache-benchmark-report",
+          "artifact_surface": "instrumentation-and-experiment-report",
+          "coupling": "io-cache-serialization-interaction",
+          "validation_depth": [
+            "unit",
+            "instrumentation",
+            "benchmark-distribution"
+          ],
+          "environment_setup": "temporary-ledger-files",
+          "failure_distance": "cross-module",
+          "statefulness": "file-cache-state",
+          "language_toolchain": [
+            "python",
+            "json"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "synthesis",
+        "risk": "medium",
+        "task_lane": "isolated",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "counter-omission",
+          "strata-pooling",
+          "cache-misdiagnosis",
+          "output-change",
+          "scope-tamper"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F10-M-PY-001",
+        "recipe_id": "f10-m-event-cache-performance-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f10-m-event-cache-performance.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "bash",
+            "-c",
+            "observed=$(mktemp); trap 'rm -f -- \"$observed\"' EXIT; python3 bench.py --instrument instrumentation.py --output \"$observed\"; python3 tools/validate_performance.py performance.json \"$observed\""
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "perf-instrumentation-consistency",
+            "test_target": "HiddenMediumPerformanceTests.test_instrumentation_consistency"
+          },
+          {
+            "check_id": "perf-cold-warm-separation",
+            "test_target": "HiddenMediumPerformanceTests.test_cold_warm_separation"
+          },
+          {
+            "check_id": "perf-cache-diagnosis",
+            "test_target": "HiddenMediumPerformanceTests.test_cache_diagnosis"
+          },
+          {
+            "check_id": "perf-secondary-costs",
+            "test_target": "HiddenMediumPerformanceTests.test_secondary_costs"
+          },
+          {
+            "check_id": "perf-distribution",
+            "test_target": "HiddenMediumPerformanceTests.test_distribution"
+          },
+          {
+            "check_id": "perf-output-equivalence",
+            "test_target": "HiddenMediumPerformanceTests.test_output_equivalence"
+          }
+        ],
+        "online_evaluator_id": "f10-m-event-cache-performance-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F10-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:c0efce6cb9cc78eda89064eb70cc2c2634495c331e19263b4fa38d57b25d3242",
+        "source_type": "fixture",
+        "family": "performance-resource",
+        "size": "S",
+        "profile_id": "S-local-benchmark-diagnosis-python",
+        "variant_group_id": "F10-S-PY",
+        "descriptors": {
+          "context_surface": "one-python-hot-path-and-benchmark",
+          "artifact_surface": "diagnosis-plus-measurement-json",
+          "coupling": "local-repeated-work",
+          "validation_depth": [
+            "unit",
+            "counter",
+            "benchmark"
+          ],
+          "environment_setup": "none",
+          "failure_distance": "direct",
+          "statefulness": "stateless",
+          "language_toolchain": [
+            "python",
+            "json"
+          ]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "synthesis",
+        "risk": "low",
+        "task_lane": "isolated",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "single-snapshot",
+          "counter-omission",
+          "wrong-hot-path",
+          "unbounded-claim",
+          "scope-tamper"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F10-S-PY-001",
+        "recipe_id": "f10-s-python-canonical-json-perf-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f10-s-python-canonical-json-perf.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "bash",
+            "-c",
+            "observed=$(mktemp); trap 'rm -f -- \"$observed\"' EXIT; python3 bench.py --json >\"$observed\"; python3 tools/validate_performance.py performance.json \"$observed\""
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "perf-repro-command",
+            "test_target": "HiddenSmallPerformanceTests.test_repro_command"
+          },
+          {
+            "check_id": "perf-scaling-evidence",
+            "test_target": "HiddenSmallPerformanceTests.test_scaling_evidence"
+          },
+          {
+            "check_id": "perf-root-cause",
+            "test_target": "HiddenSmallPerformanceTests.test_root_cause"
+          },
+          {
+            "check_id": "perf-distractor-rejected",
+            "test_target": "HiddenSmallPerformanceTests.test_distractor_rejected"
+          },
+          {
+            "check_id": "perf-claim-bounded",
+            "test_target": "HiddenSmallPerformanceTests.test_claim_bounded"
+          }
+        ],
+        "online_evaluator_id": "f10-s-canonical-json-performance-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F11-L-BASHDOCKER-001",
+        "revision": 1,
+        "capsule_digest": "sha256:51ab723de0f8cb7ac6970963b1482015e9563e2738e07c4c55ba7608606ee364",
+        "source_type": "fixture",
+        "family": "devcontainer-operations",
+        "size": "L",
+        "profile_id": "L-cross-boundary-rebuild-recovery",
+        "variant_group_id": "F11-L-BASHDOCKER",
+        "descriptors": {
+          "context_surface": "devcontainer-bash-python-persistence-and-extension-marker",
+          "artifact_surface": "cross-boundary-patch-and-recovery-runbook",
+          "coupling": "rebuild-persistence-and-host-extension-ownership",
+          "validation_depth": [
+            "static",
+            "unit",
+            "rebuild",
+            "migration",
+            "restart",
+            "residual-inventory"
+          ],
+          "environment_setup": "simulated-rebuild-reopen-with-persistent-volume",
+          "failure_distance": "rebuild-and-restart-delayed",
+          "statefulness": "persistent-volume-and-host-container-markers",
+          "language_toolchain": [
+            "bash",
+            "python",
+            "docker",
+            "json",
+            "markdown"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "independent",
+        "artifact_type": "patch",
+        "risk": "high",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "destructive-migration",
+          "stale-marker",
+          "false-ready",
+          "restart-loss",
+          "destructive-rollback",
+          "residual-resource"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F11-L-BASHDOCKER-001",
+        "recipe_id": "f11-l-devcontainer-rebuild-recovery-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f11-l-devcontainer-rebuild-recovery.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "bash",
+            "-n",
+            "initialize-host.sh",
+            "post-create.sh",
+            "post-start.sh",
+            "tests/rebuild.sh"
+          ],
+          [
+            "python3",
+            "-m",
+            "unittest",
+            "discover",
+            "-s",
+            "tests",
+            "-v"
+          ],
+          [
+            "bash",
+            "tests/rebuild.sh",
+            "--scenario",
+            "visible-all"
+          ],
+          [
+            "python3",
+            "tools/check_recovery_docs.py",
+            "RECOVERY.md"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "ops-lifecycle-ownership",
+            "test_target": "HiddenLargeOperationsTests.test_lifecycle_ownership"
+          },
+          {
+            "check_id": "ops-migration-fault-cuts",
+            "test_target": "HiddenLargeOperationsTests.test_migration_fault_cuts"
+          },
+          {
+            "check_id": "ops-reopen-resume",
+            "test_target": "HiddenLargeOperationsTests.test_reopen_resume"
+          },
+          {
+            "check_id": "ops-marker-verification",
+            "test_target": "HiddenLargeOperationsTests.test_marker_verification"
+          },
+          {
+            "check_id": "ops-rollback-export",
+            "test_target": "HiddenLargeOperationsTests.test_rollback_export"
+          },
+          {
+            "check_id": "ops-recovery-doc",
+            "test_target": "HiddenLargeOperationsTests.test_recovery_doc"
+          },
+          {
+            "check_id": "ops-residual-inventory",
+            "test_target": "HiddenLargeOperationsTests.test_residual_inventory"
+          }
+        ],
+        "online_evaluator_id": "f11-l-rebuild-recovery-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F11-M-BASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:380c36ba746ff4efaa2256f421f797f1aed7afeb9bd0aff7919d21662bf94ca4",
+        "source_type": "fixture",
+        "family": "devcontainer-operations",
+        "size": "M",
+        "profile_id": "M-coupled-lifecycle-operations-bash",
+        "variant_group_id": "F11-M-BASH",
+        "descriptors": {
+          "context_surface": "initialize-metadata-post-start-installer-and-lifecycle-tests",
+          "artifact_surface": "bash-patch-plus-recovery-evidence",
+          "coupling": "host-container-version-and-ready-marker-contract",
+          "validation_depth": [
+            "static",
+            "unit",
+            "restart",
+            "lifecycle-smoke"
+          ],
+          "environment_setup": "fresh-subprocess-lifecycle",
+          "failure_distance": "post-start-and-restart",
+          "statefulness": "persistent-version-and-ready-markers",
+          "language_toolchain": [
+            "bash",
+            "json"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "patch",
+        "risk": "medium",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "normalization",
+          "false-ready",
+          "reinstall-loop",
+          "restart",
+          "overbroad-cleanup"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F11-M-BASH-001",
+        "recipe_id": "f11-m-post-start-version-recovery-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f11-m-post-start-version-recovery.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "bash",
+            "-n",
+            "initialize-host.sh",
+            "post-start.sh",
+            "install-cli",
+            "tests/lifecycle.sh"
+          ],
+          [
+            "bash",
+            "tests/lifecycle.sh"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "ops-version-normalization",
+            "test_target": "HiddenMediumOperationsTests.test_version_normalization"
+          },
+          {
+            "check_id": "ops-idempotent-install",
+            "test_target": "HiddenMediumOperationsTests.test_idempotent_install"
+          },
+          {
+            "check_id": "ops-ready-after-verify",
+            "test_target": "HiddenMediumOperationsTests.test_ready_after_verify"
+          },
+          {
+            "check_id": "ops-restart-recovery",
+            "test_target": "HiddenMediumOperationsTests.test_restart_recovery"
+          },
+          {
+            "check_id": "ops-state-cleanup",
+            "test_target": "HiddenMediumOperationsTests.test_state_cleanup"
+          }
+        ],
+        "online_evaluator_id": "f11-m-bash-lifecycle-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F11-S-BASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:bd8f792101fe4771222d69f3ab8a95929831a4ccc127964bdd616a8e8f345247",
+        "source_type": "fixture",
+        "family": "devcontainer-operations",
+        "size": "S",
+        "profile_id": "S-local-static-operations-bash",
+        "variant_group_id": "F11-S-BASH",
+        "descriptors": {
+          "context_surface": "one-bash-script-and-smoke-test",
+          "artifact_surface": "minimal-patch",
+          "coupling": "local-syntax",
+          "validation_depth": [
+            "bash-static",
+            "smoke"
+          ],
+          "environment_setup": "none",
+          "failure_distance": "parse-time",
+          "statefulness": "stateless",
+          "language_toolchain": [
+            "bash"
+          ]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "patch",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "syntax",
+          "behavioral",
+          "over-edit"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F11-S-BASH-001",
+        "recipe_id": "f11-s-bash-case-syntax-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f11-s-bash-case-syntax.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "bash",
+            "-n",
+            "sync-version.sh"
+          ],
+          [
+            "bash",
+            "tests/smoke.sh"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "ops-static-pass",
+            "test_target": "HiddenSmallOperationsTests.test_static_pass"
+          },
+          {
+            "check_id": "ops-behavior-matrix",
+            "test_target": "HiddenSmallOperationsTests.test_behavior_matrix"
+          },
+          {
+            "check_id": "ops-minimal-diff",
+            "test_target": "HiddenSmallOperationsTests.test_minimal_diff"
+          }
+        ],
+        "online_evaluator_id": "f11-s-bash-operations-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F12-L-MDJSON-001",
+        "revision": 1,
+        "capsule_digest": "sha256:362480840d6a640750f7e1e17edc73e1f883086d77a57cd32f56955d85b3908e",
+        "source_type": "fixture",
+        "family": "evidence-synthesis",
+        "size": "L",
+        "profile_id": "L-cross-evidence-decision-record",
+        "variant_group_id": "F12-L-MDJSON",
+        "descriptors": {
+          "context_surface": "four-proposals-metrics-incidents-security-and-migration-evidence",
+          "artifact_surface": "decision-record-and-claim-evidence-graph",
+          "coupling": "multi-source-tradeoff-and-conflict-resolution",
+          "validation_depth": [
+            "schema",
+            "entailment",
+            "distribution",
+            "incident",
+            "security",
+            "migration",
+            "counterfactual"
+          ],
+          "environment_setup": "deterministic-evidence-query-tools",
+          "failure_distance": "cross-source-and-incident-delayed",
+          "statefulness": "versioned-proposal-evidence-ledger",
+          "language_toolchain": [
+            "markdown",
+            "json",
+            "python"
+          ]
+        },
+        "ambiguity": "open",
+        "oracle_strength": "calibrated",
+        "decomposability": "independent",
+        "artifact_type": "synthesis",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "provenance-gap",
+          "metric-pooling",
+          "incident-appendix",
+          "constraint-omission",
+          "untraced-decision",
+          "assumed-unknown",
+          "stale-evidence"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F12-L-MDJSON-001",
+        "recipe_id": "f12-l-fabric-decision-record-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f12-l-fabric-decision-record.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "tools/validate_decision_record.py",
+            "decision-record.json",
+            "DECISION-RECORD.md"
+          ],
+          [
+            "python3",
+            "tools/recompute_metrics.py",
+            "evidence/benchmarks",
+            "decision-record.json"
+          ],
+          [
+            "python3",
+            "tools/check_entailment.py",
+            "decision-record.json"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "synthesis-claim-provenance",
+            "test_target": "HiddenFabricDecisionTests.test_claim_provenance"
+          },
+          {
+            "check_id": "synthesis-metric-integrity",
+            "test_target": "HiddenFabricDecisionTests.test_metric_integrity"
+          },
+          {
+            "check_id": "synthesis-incident-security",
+            "test_target": "HiddenFabricDecisionTests.test_incident_security"
+          },
+          {
+            "check_id": "synthesis-migration-operations",
+            "test_target": "HiddenFabricDecisionTests.test_migration_operations"
+          },
+          {
+            "check_id": "synthesis-decision-trace",
+            "test_target": "HiddenFabricDecisionTests.test_decision_trace"
+          },
+          {
+            "check_id": "synthesis-alternative-rejection",
+            "test_target": "HiddenFabricDecisionTests.test_alternative_rejection"
+          },
+          {
+            "check_id": "synthesis-unknown-honesty",
+            "test_target": "HiddenFabricDecisionTests.test_unknown_honesty"
+          },
+          {
+            "check_id": "synthesis-refresh-plan",
+            "test_target": "HiddenFabricDecisionTests.test_refresh_plan"
+          },
+          {
+            "check_id": "synthesis-doc-json-sync",
+            "test_target": "HiddenFabricDecisionTests.test_doc_json_sync"
+          }
+        ],
+        "online_evaluator_id": "f12-l-fabric-decision-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F12-M-MDJSON-001",
+        "revision": 1,
+        "capsule_digest": "sha256:b2222b9213e00dd05d237423dc41a730bcaec60619f4ce8e5106ba2b8860fc23",
+        "source_type": "fixture",
+        "family": "evidence-synthesis",
+        "size": "M",
+        "profile_id": "M-coupled-calibrated-adjudication",
+        "variant_group_id": "F12-M-MDJSON",
+        "descriptors": {
+          "context_surface": "three-reviews-source-diff-test-and-exploit-evidence",
+          "artifact_surface": "adjudication-record",
+          "coupling": "conflicting-claims-and-evidence-strength",
+          "validation_depth": [
+            "schema",
+            "entailment",
+            "test-replay",
+            "conflict"
+          ],
+          "environment_setup": "temporary-filesystem-replay",
+          "failure_distance": "cross-source",
+          "statefulness": "filesystem-semantics",
+          "language_toolchain": [
+            "markdown",
+            "json",
+            "python",
+            "bash"
+          ]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "calibrated",
+        "decomposability": "independent",
+        "artifact_type": "synthesis",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "majority-bias",
+          "lost-provenance",
+          "unreplayed-claim",
+          "platform-overclaim",
+          "severity-overstatement"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F12-M-MDJSON-001",
+        "recipe_id": "f12-m-review-adjudication-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f12-m-review-adjudication.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "bash",
+            "evidence/exploit.sh"
+          ],
+          [
+            "python3",
+            "tools/validate_adjudication.py",
+            "adjudication.json",
+            "ADJUDICATION.md"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "synthesis-provenance",
+            "test_target": "HiddenAdjudicationTests.test_provenance"
+          },
+          {
+            "check_id": "synthesis-race-accepted",
+            "test_target": "HiddenAdjudicationTests.test_race_accepted"
+          },
+          {
+            "check_id": "synthesis-fix-refuted",
+            "test_target": "HiddenAdjudicationTests.test_fix_refuted"
+          },
+          {
+            "check_id": "synthesis-platform-unknown",
+            "test_target": "HiddenAdjudicationTests.test_platform_unknown"
+          },
+          {
+            "check_id": "synthesis-severity-narrowed",
+            "test_target": "HiddenAdjudicationTests.test_severity_narrowed"
+          },
+          {
+            "check_id": "synthesis-entailment",
+            "test_target": "HiddenAdjudicationTests.test_entailment"
+          },
+          {
+            "check_id": "synthesis-doc-json-sync",
+            "test_target": "HiddenAdjudicationTests.test_doc_json_sync"
+          }
+        ],
+        "online_evaluator_id": "f12-m-review-adjudication-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F12-S-MDJSON-001",
+        "revision": 1,
+        "capsule_digest": "sha256:7f3e2e268961220560f91821b6a3de34ebc26591f124dbd297273aeffd0d45b2",
+        "source_type": "fixture",
+        "family": "evidence-synthesis",
+        "size": "S",
+        "profile_id": "S-local-entailment-synthesis",
+        "variant_group_id": "F12-S-MDJSON",
+        "descriptors": {
+          "context_surface": "two-analyses-and-three-source-snippets",
+          "artifact_surface": "structured-synthesis-and-short-note",
+          "coupling": "claim-evidence-reconciliation",
+          "validation_depth": [
+            "schema",
+            "entailment",
+            "conflict"
+          ],
+          "environment_setup": "none",
+          "failure_distance": "direct-evidence",
+          "statefulness": "stateless",
+          "language_toolchain": [
+            "markdown",
+            "json",
+            "bash"
+          ]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "synthesis",
+        "risk": "low",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "claim-omission",
+          "authority-bias",
+          "vague-conflict",
+          "unsupported-fact",
+          "doc-ledger-drift"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F12-S-MDJSON-001",
+        "recipe_id": "f12-s-wrapper-evidence-synthesis-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f12-s-wrapper-evidence-synthesis.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          [
+            "python3",
+            "tools/validate_synthesis.py",
+            "synthesis.json",
+            "SYNTHESIS.md"
+          ]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "synthesis-claim-coverage",
+            "test_target": "HiddenWrapperSynthesisTests.test_claim_coverage"
+          },
+          {
+            "check_id": "synthesis-agreement",
+            "test_target": "HiddenWrapperSynthesisTests.test_agreement"
+          },
+          {
+            "check_id": "synthesis-conflict-adjudication",
+            "test_target": "HiddenWrapperSynthesisTests.test_conflict_adjudication"
+          },
+          {
+            "check_id": "synthesis-unsupported",
+            "test_target": "HiddenWrapperSynthesisTests.test_unsupported"
+          },
+          {
+            "check_id": "synthesis-doc-json-sync",
+            "test_target": "HiddenWrapperSynthesisTests.test_doc_json_sync"
+          }
+        ],
+        "online_evaluator_id": "f12-s-wrapper-synthesis-hidden-v1",
         "gold_visibility": "harness-only"
       }
     }

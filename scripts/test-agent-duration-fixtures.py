@@ -76,10 +76,18 @@ else:
         catalog = self.catalog()
         validate_case_catalog_record(catalog)
         entries = catalog["entries"]  # type: ignore[index]
-        self.assertEqual([entry["case"]["size"] for entry in entries], ["S", "M", "L"])
+        self.assertEqual(len(entries), 36)
+        sizes_by_family: dict[str, set[str]] = {}
+        for entry in entries:
+            case = entry["case"]
+            sizes_by_family.setdefault(case["family"], set()).add(case["size"])
+        self.assertTrue(
+            all(sizes == {"S", "M", "L"} for sizes in sizes_by_family.values())
+        )
+        self.assertEqual(len(sizes_by_family), 12)
         self.assertEqual(
-            {entry["case"]["family"] for entry in entries},
-            {"bounded-implementation"},
+            {entry["case"]["case_id"][:3] for entry in entries},
+            {f"F{index:02d}" for index in range(1, 13)},
         )
         self.assertEqual(
             {entry["fixture"]["isolation_required"] for entry in entries},

@@ -21,7 +21,12 @@ from agent_duration_study import DurationStudyError  # noqa: E402
 class AgentDurationCatalogTests(unittest.TestCase):
     def make_fragment(self, directory: Path, filename: str = "f04.json") -> Path:
         catalog = load_json(
-            ROOT / "experiments" / "multi-agent-duration" / "catalog" / "cases.json"
+            ROOT
+            / "experiments"
+            / "multi-agent-duration"
+            / "catalog"
+            / "families"
+            / "f04.json"
         )
         catalog["catalog_id"] = "duration-atlas-f04"
         path = directory / filename
