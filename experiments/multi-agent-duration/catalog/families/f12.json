@@ -1,0 +1,182 @@
+{
+  "schema_version": 1,
+  "catalog_id": "duration-atlas-f12",
+  "revision": 1,
+  "published_at": "2026-08-27T00:00:00.000Z",
+  "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F12-S-MDJSON-001",
+        "revision": 1,
+        "capsule_digest": "sha256:ad14cfddb4eb714396d31d2532cc69b417a366adc191b76aae776b250d46e851",
+        "source_type": "fixture",
+        "family": "evidence-synthesis",
+        "size": "S",
+        "profile_id": "S-local-entailment-synthesis",
+        "variant_group_id": "F12-S-MDJSON",
+        "descriptors": {
+          "context_surface": "two-analyses-and-three-source-snippets",
+          "artifact_surface": "structured-synthesis-and-short-note",
+          "coupling": "claim-evidence-reconciliation",
+          "validation_depth": ["schema", "entailment", "conflict"],
+          "environment_setup": "none",
+          "failure_distance": "direct-evidence",
+          "statefulness": "stateless",
+          "language_toolchain": ["markdown", "json", "bash"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "synthesis",
+        "risk": "low",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["claim-omission", "authority-bias", "vague-conflict", "unsupported-fact", "doc-ledger-drift"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F12-S-MDJSON-001",
+        "recipe_id": "f12-s-wrapper-evidence-synthesis-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f12-s-wrapper-evidence-synthesis.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "tools/validate_synthesis.py", "synthesis.json", "SYNTHESIS.md"]
+        ],
+        "hidden_validation_targets": [
+          {"check_id": "synthesis-claim-coverage", "test_target": "HiddenWrapperSynthesisTests.test_claim_coverage"},
+          {"check_id": "synthesis-agreement", "test_target": "HiddenWrapperSynthesisTests.test_agreement"},
+          {"check_id": "synthesis-conflict-adjudication", "test_target": "HiddenWrapperSynthesisTests.test_conflict_adjudication"},
+          {"check_id": "synthesis-unsupported", "test_target": "HiddenWrapperSynthesisTests.test_unsupported"},
+          {"check_id": "synthesis-doc-json-sync", "test_target": "HiddenWrapperSynthesisTests.test_doc_json_sync"}
+        ],
+        "online_evaluator_id": "f12-s-wrapper-synthesis-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F12-M-MDJSON-001",
+        "revision": 1,
+        "capsule_digest": "sha256:8223cc433319ff1a3f23e4b4222018745aba2240fbccdfed7a2da64bf9854400",
+        "source_type": "fixture",
+        "family": "evidence-synthesis",
+        "size": "M",
+        "profile_id": "M-coupled-calibrated-adjudication",
+        "variant_group_id": "F12-M-MDJSON",
+        "descriptors": {
+          "context_surface": "three-reviews-source-diff-test-and-exploit-evidence",
+          "artifact_surface": "adjudication-record",
+          "coupling": "conflicting-claims-and-evidence-strength",
+          "validation_depth": ["schema", "entailment", "test-replay", "conflict"],
+          "environment_setup": "temporary-filesystem-replay",
+          "failure_distance": "cross-source",
+          "statefulness": "filesystem-semantics",
+          "language_toolchain": ["markdown", "json", "python", "bash"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "calibrated",
+        "decomposability": "independent",
+        "artifact_type": "synthesis",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["majority-bias", "lost-provenance", "unreplayed-claim", "platform-overclaim", "severity-overstatement"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F12-M-MDJSON-001",
+        "recipe_id": "f12-m-review-adjudication-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f12-m-review-adjudication.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["bash", "evidence/exploit.sh"],
+          ["python3", "tools/validate_adjudication.py", "adjudication.json", "ADJUDICATION.md"]
+        ],
+        "hidden_validation_targets": [
+          {"check_id": "synthesis-provenance", "test_target": "HiddenAdjudicationTests.test_provenance"},
+          {"check_id": "synthesis-race-accepted", "test_target": "HiddenAdjudicationTests.test_race_accepted"},
+          {"check_id": "synthesis-fix-refuted", "test_target": "HiddenAdjudicationTests.test_fix_refuted"},
+          {"check_id": "synthesis-platform-unknown", "test_target": "HiddenAdjudicationTests.test_platform_unknown"},
+          {"check_id": "synthesis-severity-narrowed", "test_target": "HiddenAdjudicationTests.test_severity_narrowed"},
+          {"check_id": "synthesis-entailment", "test_target": "HiddenAdjudicationTests.test_entailment"},
+          {"check_id": "synthesis-doc-json-sync", "test_target": "HiddenAdjudicationTests.test_doc_json_sync"}
+        ],
+        "online_evaluator_id": "f12-m-review-adjudication-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F12-L-MDJSON-001",
+        "revision": 1,
+        "capsule_digest": "sha256:b2363c63a2cf0b5cc09c33e2fa747b8e5443e913584ca7b27326b0cae2289633",
+        "source_type": "fixture",
+        "family": "evidence-synthesis",
+        "size": "L",
+        "profile_id": "L-cross-evidence-decision-record",
+        "variant_group_id": "F12-L-MDJSON",
+        "descriptors": {
+          "context_surface": "four-proposals-metrics-incidents-security-and-migration-evidence",
+          "artifact_surface": "decision-record-and-claim-evidence-graph",
+          "coupling": "multi-source-tradeoff-and-conflict-resolution",
+          "validation_depth": ["schema", "entailment", "distribution", "incident", "security", "migration", "counterfactual"],
+          "environment_setup": "deterministic-evidence-query-tools",
+          "failure_distance": "cross-source-and-incident-delayed",
+          "statefulness": "versioned-proposal-evidence-ledger",
+          "language_toolchain": ["markdown", "json", "python"]
+        },
+        "ambiguity": "open",
+        "oracle_strength": "calibrated",
+        "decomposability": "independent",
+        "artifact_type": "synthesis",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["provenance-gap", "metric-pooling", "incident-appendix", "constraint-omission", "untraced-decision", "assumed-unknown", "stale-evidence"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F12-L-MDJSON-001",
+        "recipe_id": "f12-l-fabric-decision-record-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f12-l-fabric-decision-record.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "tools/validate_decision_record.py", "decision-record.json", "DECISION-RECORD.md"],
+          ["python3", "tools/recompute_metrics.py", "evidence/benchmarks", "decision-record.json"],
+          ["python3", "tools/check_entailment.py", "decision-record.json"]
+        ],
+        "hidden_validation_targets": [
+          {"check_id": "synthesis-claim-provenance", "test_target": "HiddenFabricDecisionTests.test_claim_provenance"},
+          {"check_id": "synthesis-metric-integrity", "test_target": "HiddenFabricDecisionTests.test_metric_integrity"},
+          {"check_id": "synthesis-incident-security", "test_target": "HiddenFabricDecisionTests.test_incident_security"},
+          {"check_id": "synthesis-migration-operations", "test_target": "HiddenFabricDecisionTests.test_migration_operations"},
+          {"check_id": "synthesis-decision-trace", "test_target": "HiddenFabricDecisionTests.test_decision_trace"},
+          {"check_id": "synthesis-alternative-rejection", "test_target": "HiddenFabricDecisionTests.test_alternative_rejection"},
+          {"check_id": "synthesis-unknown-honesty", "test_target": "HiddenFabricDecisionTests.test_unknown_honesty"},
+          {"check_id": "synthesis-refresh-plan", "test_target": "HiddenFabricDecisionTests.test_refresh_plan"},
+          {"check_id": "synthesis-doc-json-sync", "test_target": "HiddenFabricDecisionTests.test_doc_json_sync"}
+        ],
+        "online_evaluator_id": "f12-l-fabric-decision-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    }
+  ]
+}
