@@ -1,0 +1,668 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devcontainer.local/schemas/agent-duration-atlas-v1.schema.json",
+  "title": "Deterministic Agent Duration Atlas v1",
+  "description": "Content-free, case-nested observational aggregate of validated duration run records.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "aggregate_kind",
+    "aggregation_method",
+    "source",
+    "safety_caps",
+    "counts",
+    "series"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "aggregate_kind": {"const": "deterministic-duration-atlas"},
+    "aggregation_method": {"const": "case-nested-observed-v1"},
+    "source": {"$ref": "#/$defs/source"},
+    "safety_caps": {"$ref": "#/$defs/safety_caps"},
+    "counts": {"$ref": "#/$defs/aggregate_counts"},
+    "series": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 5000,
+      "items": {"$ref": "#/$defs/series"}
+    }
+  },
+  "$defs": {
+    "id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 256
+    },
+    "schema_id": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]*$"
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "git_sha": {
+      "type": "string",
+      "pattern": "^(?:[0-9a-f]{40}|[0-9a-f]{64})$"
+    },
+    "utc_timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(?:\\.[0-9]+)?Z$"
+    },
+    "milliseconds": {
+      "type": "number",
+      "minimum": 0
+    },
+    "scalar": {
+      "type": ["string", "number", "boolean"]
+    },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["first_observed_at", "last_observed_at"],
+      "properties": {
+        "first_observed_at": {"$ref": "#/$defs/utc_timestamp"},
+        "last_observed_at": {"$ref": "#/$defs/utc_timestamp"}
+      }
+    },
+    "source_run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "run_digest"],
+      "properties": {
+        "run_id": {"$ref": "#/$defs/schema_id"},
+        "run_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_schema_version",
+        "record_count",
+        "canonical_record_bytes",
+        "run_set_digest",
+        "runs",
+        "observation_window"
+      ],
+      "properties": {
+        "run_schema_version": {"const": 2},
+        "record_count": {"type": "integer", "minimum": 1, "maximum": 5000},
+        "canonical_record_bytes": {"type": "integer", "minimum": 1, "maximum": 536870912},
+        "run_set_digest": {"$ref": "#/$defs/sha256"},
+        "runs": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5000,
+          "items": {"$ref": "#/$defs/source_run"}
+        },
+        "observation_window": {"$ref": "#/$defs/window"}
+      }
+    },
+    "safety_caps": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "max_records",
+        "max_input_bytes",
+        "max_output_bytes",
+        "max_output_entities"
+      ],
+      "properties": {
+        "role": {"const": "hard-resource-cap"},
+        "max_records": {"type": "integer", "minimum": 1, "maximum": 5000},
+        "max_input_bytes": {"type": "integer", "minimum": 1, "maximum": 536870912},
+        "max_output_bytes": {"type": "integer", "minimum": 1, "maximum": 536870912},
+        "max_output_entities": {"type": "integer", "minimum": 3, "maximum": 15000}
+      }
+    },
+    "aggregate_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["series", "case_strata", "samples", "output_entities"],
+      "properties": {
+        "series": {"type": "integer", "minimum": 1, "maximum": 5000},
+        "case_strata": {"type": "integer", "minimum": 1, "maximum": 5000},
+        "samples": {"type": "integer", "minimum": 1, "maximum": 5000},
+        "output_entities": {"type": "integer", "minimum": 3, "maximum": 15000}
+      }
+    },
+    "profile": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source_type", "family", "size", "profile_id"],
+      "properties": {
+        "source_type": {"enum": ["fixture", "historical-replay", "natural-live"]},
+        "family": {
+          "enum": [
+            "repository-trace",
+            "code-review",
+            "failing-test-diagnosis",
+            "bounded-implementation",
+            "refactor-migration",
+            "test-design",
+            "documentation-runbook",
+            "architecture-design",
+            "security-isolation",
+            "performance-resource",
+            "devcontainer-operations",
+            "evidence-synthesis"
+          ]
+        },
+        "size": {"enum": ["S", "M", "L"]},
+        "profile_id": {"$ref": "#/$defs/schema_id"}
+      }
+    },
+    "configuration": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "configuration_id",
+        "relation",
+        "participant_plan",
+        "participants_actual",
+        "workers_actual",
+        "peak_concurrent",
+        "nested_delegation",
+        "independence_policy",
+        "lane"
+      ],
+      "properties": {
+        "configuration_id": {"$ref": "#/$defs/schema_id"},
+        "relation": {
+          "enum": [
+            "primary-only",
+            "bounded-delegation",
+            "parallel-shards",
+            "independent-candidates",
+            "maker-verifier",
+            "evidence-dialogue",
+            "staged-pipeline"
+          ]
+        },
+        "participant_plan": {"$ref": "#/$defs/schema_id"},
+        "participants_actual": {"type": "integer", "minimum": 1},
+        "workers_actual": {"type": "integer", "minimum": 0},
+        "peak_concurrent": {"type": "integer", "minimum": 0},
+        "nested_delegation": {"enum": ["disabled", "allowed-tracked", "detected-untracked"]},
+        "independence_policy": {"$ref": "#/$defs/schema_id"},
+        "lane": {"enum": ["read", "write", "isolated"]}
+      }
+    },
+    "model_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["identity_confidence", "requested_source"],
+      "properties": {
+        "identity_confidence": {"enum": ["exact", "alias-only", "default-unspecified", "unknown"]},
+        "requested_source": {"enum": ["flag", "config-file", "runtime-default", "unknown"]},
+        "resolved_id": {"$ref": "#/$defs/id"},
+        "requested_alias": {"type": "string", "minLength": 1, "maxLength": 128},
+        "snapshot_hint": {"$ref": "#/$defs/id"}
+      }
+    },
+    "generation_setting": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["namespace", "key", "requested_value", "status"],
+      "properties": {
+        "namespace": {"$ref": "#/$defs/schema_id"},
+        "key": {"$ref": "#/$defs/schema_id"},
+        "requested_value": {"$ref": "#/$defs/scalar"},
+        "status": {"enum": ["applied", "rejected", "not-advertised", "unknown"]},
+        "applied_value": {"$ref": "#/$defs/scalar"}
+      }
+    },
+    "participant": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "role",
+        "provider",
+        "model_identity",
+        "generation_settings",
+        "cli_name",
+        "cli_version",
+        "cli_source",
+        "execution_surface",
+        "permission_mode"
+      ],
+      "properties": {
+        "role": {"$ref": "#/$defs/schema_id"},
+        "provider": {"enum": ["codex", "claude", "grok", "fixture"]},
+        "model_identity": {"$ref": "#/$defs/model_identity"},
+        "generation_settings": {
+          "type": "array",
+          "maxItems": 64,
+          "items": {"$ref": "#/$defs/generation_setting"}
+        },
+        "cli_name": {"type": "string", "minLength": 1, "maxLength": 128},
+        "cli_version": {"$ref": "#/$defs/id"},
+        "cli_source": {"enum": ["container-image", "host-sync", "fixture", "unknown"]},
+        "execution_surface": {
+          "enum": ["direct-provider", "isolated-provider-container", "agentctl-job", "legacy-comparator", "fixture"]
+        },
+        "permission_mode": {"enum": ["automatic", "approval-gated", "unknown"]},
+        "runtime_image_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "environment_stratum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "image_digest",
+        "machine_class",
+        "session_context",
+        "repository_cache",
+        "dependency_cache",
+        "docker_cache",
+        "provider_prompt_cache",
+        "compaction",
+        "competing_load",
+        "timezone"
+      ],
+      "properties": {
+        "image_digest": {"$ref": "#/$defs/sha256"},
+        "machine_class": {"$ref": "#/$defs/schema_id"},
+        "session_context": {"enum": ["fresh", "warm-task", "warm-repository", "unknown"]},
+        "repository_cache": {"enum": ["cold", "warm", "unknown", "not-applicable"]},
+        "dependency_cache": {"enum": ["cold", "warm", "unknown", "not-applicable"]},
+        "docker_cache": {"enum": ["cold", "warm", "unknown", "not-applicable"]},
+        "provider_prompt_cache": {"enum": ["hit", "miss", "unknown", "not-applicable"]},
+        "compaction": {"enum": ["observed", "not-observed", "unknown", "not-applicable"]},
+        "competing_load": {"enum": ["none-observed", "measured", "unknown"]},
+        "timezone": {"type": "string", "minLength": 1, "maxLength": 128}
+      }
+    },
+    "series_stratum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["study_id", "profile", "configuration", "participants", "environment"],
+      "properties": {
+        "study_id": {"$ref": "#/$defs/schema_id"},
+        "profile": {"$ref": "#/$defs/profile"},
+        "configuration": {"$ref": "#/$defs/configuration"},
+        "participants": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/participant"}
+        },
+        "environment": {"$ref": "#/$defs/environment_stratum"}
+      }
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["base_sha", "bundle_digest", "fixture_revision", "instruction_set_digest"],
+      "properties": {
+        "base_sha": {"$ref": "#/$defs/git_sha"},
+        "bundle_digest": {"$ref": "#/$defs/sha256"},
+        "fixture_revision": {"$ref": "#/$defs/schema_id"},
+        "instruction_set_digest": {"$ref": "#/$defs/sha256"}
+      }
+    },
+    "case_identity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "revision", "catalog_digest", "capsule_digest", "strong_online_oracle", "snapshot"],
+      "properties": {
+        "case_id": {"$ref": "#/$defs/schema_id"},
+        "revision": {"type": "integer", "minimum": 1},
+        "catalog_digest": {"$ref": "#/$defs/sha256"},
+        "capsule_digest": {"$ref": "#/$defs/sha256"},
+        "strong_online_oracle": {"type": "boolean"},
+        "snapshot": {"$ref": "#/$defs/snapshot"}
+      }
+    },
+    "primary_stratum": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["study_id", "profile", "configuration", "participants", "environment", "case"],
+      "properties": {
+        "study_id": {"$ref": "#/$defs/schema_id"},
+        "profile": {"$ref": "#/$defs/profile"},
+        "configuration": {"$ref": "#/$defs/configuration"},
+        "participants": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 128,
+          "items": {"$ref": "#/$defs/participant"}
+        },
+        "environment": {"$ref": "#/$defs/environment_stratum"},
+        "case": {"$ref": "#/$defs/case_identity"}
+      }
+    },
+    "population_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["quality-pass", "quality-fail", "quality-unknown"],
+      "properties": {
+        "quality-pass": {"type": "integer", "minimum": 0},
+        "quality-fail": {"type": "integer", "minimum": 0},
+        "quality-unknown": {"type": "integer", "minimum": 0}
+      }
+    },
+    "censoring_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["complete-terminal", "right-censored", "administratively-censored"],
+      "properties": {
+        "complete-terminal": {"type": "integer", "minimum": 0},
+        "right-censored": {"type": "integer", "minimum": 0},
+        "administratively-censored": {"type": "integer", "minimum": 0}
+      }
+    },
+    "artifact_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["progress-envelope", "not-observed", "not-applicable", "unknown"],
+      "properties": {
+        "progress-envelope": {"type": "integer", "minimum": 0},
+        "not-observed": {"type": "integer", "minimum": 0},
+        "not-applicable": {"type": "integer", "minimum": 0},
+        "unknown": {"type": "integer", "minimum": 0}
+      }
+    },
+    "sample_counts": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runs", "observation_blocks", "quality_population", "censoring", "first_artifact_resolution"],
+      "properties": {
+        "runs": {"type": "integer", "minimum": 1, "maximum": 5000},
+        "observation_blocks": {"type": "integer", "minimum": 1, "maximum": 5000},
+        "quality_population": {"$ref": "#/$defs/population_counts"},
+        "censoring": {"$ref": "#/$defs/censoring_counts"},
+        "first_artifact_resolution": {"$ref": "#/$defs/artifact_counts"},
+        "case_strata": {"type": "integer", "minimum": 1, "maximum": 5000}
+      }
+    },
+    "censoring": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "safety_cap_ms", "observed_terminal_ms"],
+      "properties": {
+        "status": {"enum": ["complete-terminal", "right-censored", "administratively-censored"]},
+        "safety_cap_ms": {"type": "integer", "minimum": 1},
+        "observed_terminal_ms": {"$ref": "#/$defs/milliseconds"}
+      }
+    },
+    "first_artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["resolution"],
+      "properties": {
+        "resolution": {"enum": ["progress-envelope", "not-observed", "not-applicable", "unknown"]},
+        "milliseconds": {"$ref": "#/$defs/milliseconds"}
+      }
+    },
+    "durations": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["terminal_wall"],
+      "properties": {
+        "provision": {"$ref": "#/$defs/milliseconds"},
+        "dispatch_delay": {"$ref": "#/$defs/milliseconds"},
+        "first_artifact_latency": {"$ref": "#/$defs/milliseconds"},
+        "required_workers_ready": {"$ref": "#/$defs/milliseconds"},
+        "worker_terminal_span": {"$ref": "#/$defs/milliseconds"},
+        "synthesis_tail": {"$ref": "#/$defs/milliseconds"},
+        "online_validation": {"$ref": "#/$defs/milliseconds"},
+        "post_validation_tail": {"$ref": "#/$defs/milliseconds"},
+        "user_result": {"$ref": "#/$defs/milliseconds"},
+        "terminal_wall": {"$ref": "#/$defs/milliseconds"},
+        "aggregate_worker": {"$ref": "#/$defs/milliseconds"},
+        "worker_active_union": {"$ref": "#/$defs/milliseconds"},
+        "offline_scoring": {"$ref": "#/$defs/milliseconds"}
+      }
+    },
+    "outcome": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["infrastructure", "artifact", "online_acceptance", "offline_score", "quality_basis", "failure_class"],
+      "properties": {
+        "infrastructure": {"enum": ["success", "failure", "timeout", "cancelled", "invalid"]},
+        "artifact": {"enum": ["valid", "invalid", "missing", "not-applicable"]},
+        "online_acceptance": {"enum": ["pass", "fail", "partial", "unavailable"]},
+        "offline_score": {"enum": ["pass", "fail", "partial", "unavailable", "not-run"]},
+        "quality_basis": {"enum": ["offline-score", "strong-online-oracle", "online-fail", "unavailable"]},
+        "failure_class": {"type": ["string", "null"], "maxLength": 128}
+      }
+    },
+    "covariates": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "machine_class",
+        "session_context",
+        "repository_cache",
+        "dependency_cache",
+        "docker_cache",
+        "provider_prompt_cache",
+        "compaction",
+        "competing_load",
+        "timezone"
+      ],
+      "properties": {
+        "machine_class": {"$ref": "#/$defs/schema_id"},
+        "session_context": {"enum": ["fresh", "warm-task", "warm-repository", "unknown"]},
+        "repository_cache": {"enum": ["cold", "warm", "unknown", "not-applicable"]},
+        "dependency_cache": {"enum": ["cold", "warm", "unknown", "not-applicable"]},
+        "docker_cache": {"enum": ["cold", "warm", "unknown", "not-applicable"]},
+        "provider_prompt_cache": {"enum": ["hit", "miss", "unknown", "not-applicable"]},
+        "compaction": {"enum": ["observed", "not-observed", "unknown", "not-applicable"]},
+        "competing_load": {"enum": ["none-observed", "measured", "unknown"]},
+        "timezone": {"type": "string", "minLength": 1, "maxLength": 128}
+      }
+    },
+    "sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "run_digest",
+        "block_id",
+        "observed_at",
+        "quality_population",
+        "censoring",
+        "first_artifact",
+        "durations_ms",
+        "outcome",
+        "covariates"
+      ],
+      "properties": {
+        "run_id": {"$ref": "#/$defs/schema_id"},
+        "run_digest": {"$ref": "#/$defs/sha256"},
+        "block_id": {"$ref": "#/$defs/schema_id"},
+        "observed_at": {"$ref": "#/$defs/utc_timestamp"},
+        "quality_population": {"enum": ["quality-pass", "quality-fail", "quality-unknown"]},
+        "censoring": {"$ref": "#/$defs/censoring"},
+        "first_artifact": {"$ref": "#/$defs/first_artifact"},
+        "durations_ms": {"$ref": "#/$defs/durations"},
+        "outcome": {"$ref": "#/$defs/outcome"},
+        "covariates": {"$ref": "#/$defs/covariates"}
+      }
+    },
+    "range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["minimum", "maximum"],
+      "properties": {
+        "minimum": {"$ref": "#/$defs/milliseconds"},
+        "maximum": {"$ref": "#/$defs/milliseconds"}
+      }
+    },
+    "point": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["run_id", "milliseconds"],
+      "properties": {
+        "run_id": {"$ref": "#/$defs/schema_id"},
+        "milliseconds": {"$ref": "#/$defs/milliseconds"}
+      }
+    },
+    "duration_view": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["view_id", "points"],
+      "properties": {
+        "view_id": {
+          "enum": [
+            "quality-pass-user-result",
+            "quality-fail-terminal",
+            "quality-unknown-terminal",
+            "censored-terminal",
+            "first-artifact-progress"
+          ]
+        },
+        "points": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5000,
+          "items": {"$ref": "#/$defs/point"}
+        },
+        "observed_range_ms": {"$ref": "#/$defs/range"}
+      }
+    },
+    "case_record": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stratum_id",
+        "primary_stratum",
+        "evidence_state",
+        "counts",
+        "observation_window",
+        "duration_views",
+        "samples"
+      ],
+      "properties": {
+        "stratum_id": {"$ref": "#/$defs/sha256"},
+        "primary_stratum": {"$ref": "#/$defs/primary_stratum"},
+        "evidence_state": {"enum": ["single-observation", "same-case-repeat"]},
+        "counts": {"$ref": "#/$defs/sample_counts"},
+        "observation_window": {"$ref": "#/$defs/window"},
+        "duration_views": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {"$ref": "#/$defs/duration_view"}
+        },
+        "samples": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5000,
+          "items": {"$ref": "#/$defs/sample"}
+        }
+      }
+    },
+    "case_median": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "revision", "milliseconds"],
+      "properties": {
+        "case_id": {"$ref": "#/$defs/schema_id"},
+        "revision": {"type": "integer", "minimum": 1},
+        "milliseconds": {"$ref": "#/$defs/milliseconds"}
+      }
+    },
+    "case_range": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["case_id", "revision", "minimum", "maximum"],
+      "properties": {
+        "case_id": {"$ref": "#/$defs/schema_id"},
+        "revision": {"type": "integer", "minimum": 1},
+        "minimum": {"$ref": "#/$defs/milliseconds"},
+        "maximum": {"$ref": "#/$defs/milliseconds"}
+      }
+    },
+    "case_aware_summary": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "view_id",
+        "method",
+        "case_median_points_ms",
+        "between_case_observed_range_ms",
+        "within_case_observed_ranges_ms"
+      ],
+      "properties": {
+        "view_id": {
+          "enum": [
+            "quality-pass-user-result",
+            "quality-fail-terminal",
+            "quality-unknown-terminal",
+            "censored-terminal",
+            "first-artifact-progress"
+          ]
+        },
+        "method": {"const": "equal-case-observed-medians-v1"},
+        "case_median_points_ms": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 5000,
+          "items": {"$ref": "#/$defs/case_median"}
+        },
+        "between_case_observed_range_ms": {"$ref": "#/$defs/range"},
+        "within_case_observed_ranges_ms": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 5000,
+          "items": {"$ref": "#/$defs/case_range"}
+        }
+      }
+    },
+    "characterization": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "reason"],
+      "properties": {
+        "status": {"const": "not-assessed"},
+        "reason": {"const": "study-specific-precision-and-coverage-criteria-unavailable"}
+      }
+    },
+    "series": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "series_id",
+        "series_stratum",
+        "evidence_state",
+        "characterization",
+        "case_aware_summary_status",
+        "counts",
+        "observation_window",
+        "cases",
+        "case_aware_summaries"
+      ],
+      "properties": {
+        "series_id": {"$ref": "#/$defs/sha256"},
+        "series_stratum": {"$ref": "#/$defs/series_stratum"},
+        "evidence_state": {
+          "enum": ["single-observation", "same-case-repeat", "family-provisional"]
+        },
+        "characterization": {"$ref": "#/$defs/characterization"},
+        "case_aware_summary_status": {
+          "enum": ["available", "insufficient-repeat-structure"]
+        },
+        "counts": {"$ref": "#/$defs/sample_counts"},
+        "observation_window": {"$ref": "#/$defs/window"},
+        "cases": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 5000,
+          "items": {"$ref": "#/$defs/case_record"}
+        },
+        "case_aware_summaries": {
+          "type": "array",
+          "maxItems": 5,
+          "items": {"$ref": "#/$defs/case_aware_summary"}
+        }
+      }
+    }
+  }
+}
