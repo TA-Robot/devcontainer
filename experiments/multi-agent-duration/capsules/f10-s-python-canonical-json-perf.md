@@ -2,6 +2,11 @@
 
 Diagnose the local report hot path and write `performance.json`. Do not patch source or tests.
 
+`performance-contract.json` is the public output vocabulary. Use its candidate,
+relation, counter, strategy, condition, and preservation IDs verbatim. The contract defines
+the answer shape, not which candidate the observations support; derive that from
+the counters and source evidence.
+
 Run the correctness suite and capture the JSON benchmark output for several field counts. The diagnosis must include:
 
 - the exact reproducible command and embedded raw observations;

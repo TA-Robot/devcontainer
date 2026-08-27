@@ -12,6 +12,7 @@ from agent_contracts import load_json
 from agent_duration_fixtures import (
     _install_known_good_for_test,
     _install_mutant_for_test,
+    _install_valid_alternative_for_test,
     _recipe_for_case,
     build_fixture,
     evaluate_fixture,
@@ -58,6 +59,29 @@ def assert_family_calibrated(
             good = evaluate_fixture(fixture_dir)
             testcase.assertEqual(good["status"], "pass", good)
             testcase.assertEqual(good["score"]["ratio"], 1.0)
+
+            alternatives = recipe.get("valid_alternatives", {})
+            testcase.assertIsInstance(alternatives, dict)
+            for alternative_id in sorted(alternatives):
+                alternative_dir = root / f"alternative-{case_id.lower()}-{alternative_id}"
+                build_fixture(
+                    case_id,
+                    alternative_dir,
+                    catalog_path=catalog_path,
+                    fixture_id=f"alternative-{case_id.lower()}-{alternative_id}",
+                    now=FIXED_CALIBRATION_TIME,
+                )
+                _install_valid_alternative_for_test(
+                    case_id,
+                    alternative_id,
+                    alternative_dir / "workspace",
+                )
+                alternative_result = evaluate_fixture(alternative_dir)
+                testcase.assertEqual(
+                    alternative_result["status"],
+                    "pass",
+                    (case_id, alternative_id, alternative_result),
+                )
 
             mutants = recipe.get("mutants", {})
             testcase.assertIsInstance(mutants, dict)

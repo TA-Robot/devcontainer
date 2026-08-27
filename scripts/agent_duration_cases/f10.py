@@ -168,6 +168,33 @@ if __name__ == "__main__":
 '''
 
 
+S_CONTRACT_VALUE = {
+    "schema_version": 1,
+    "artifact": "performance.json",
+    "candidate_ids": ["repeated-canonical-json", "field-sort"],
+    "relation_ids": ["one-call-per-output-field", "one-sort-per-run"],
+    "counter_ids": ["canonical_json_calls", "sort_calls"],
+    "strategy_ids": [
+        "cache-canonical-bytes-once-per-input-object",
+        "remove-canonical-json",
+    ],
+    "condition_ids": ["only-after-output-equivalence-tests-pass"],
+    "preservation_ids": [
+        "canonical-json-bytes",
+        "field-order",
+        "output-field-count",
+    ],
+    "requirements": {
+        "primary_candidate_must_scale_with_field_count": True,
+        "compare_every_candidate": True,
+        "portable_speedup_claim_must_be_null": True,
+        "generalization_must_be_none": True,
+    },
+}
+
+S_CONTRACT = _json_file(S_CONTRACT_VALUE)
+
+
 S_VALIDATOR = r'''#!/usr/bin/env python3
 from __future__ import annotations
 
@@ -193,14 +220,34 @@ def main(argv: list[str]) -> int:
     try:
         report = json.loads(Path(argv[1]).read_text(encoding="utf-8"))
         observed = json.loads(Path(argv[2]).read_text(encoding="utf-8"))
+        contract = json.loads(Path("performance-contract.json").read_text(encoding="utf-8"))
         require(report.get("schema_version") == 1, "report schema_version must be one")
         require(report.get("observation_digest") == digest(observed), "observation digest mismatch")
         require(report.get("command") == observed.get("command"), "command mismatch")
         runs = observed.get("runs")
         require(isinstance(runs, list) and len(runs) >= 3, "at least three runs are required")
-        require(isinstance(report.get("diagnosis"), dict), "diagnosis is required")
-        require(isinstance(report.get("optimization"), dict), "optimization is required")
-    except (OSError, ValueError, json.JSONDecodeError) as exc:
+        diagnosis = report.get("diagnosis")
+        optimization = report.get("optimization")
+        require(isinstance(diagnosis, dict), "diagnosis is required")
+        require(isinstance(optimization, dict), "optimization is required")
+        primary = diagnosis.get("primary", {})
+        require(primary.get("candidate") in contract["candidate_ids"], "unknown candidate ID")
+        require(primary.get("relation") in contract["relation_ids"], "unknown relation ID")
+        require(primary.get("counter") in contract["counter_ids"], "unknown counter ID")
+        candidates = diagnosis.get("candidates")
+        require(isinstance(candidates, list), "candidate comparison is required")
+        require(
+            {item.get("candidate") for item in candidates if isinstance(item, dict)}
+            == set(contract["candidate_ids"]),
+            "every contract candidate must be compared",
+        )
+        require(optimization.get("strategy") in contract["strategy_ids"], "unknown strategy ID")
+        require(optimization.get("condition") in contract["condition_ids"], "unknown condition ID")
+        require(
+            set(optimization.get("preserves", [])).issubset(contract["preservation_ids"]),
+            "unknown preservation ID",
+        )
+    except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
         print(f"invalid performance report: {exc}", file=sys.stderr)
         return 1
     return 0
@@ -215,6 +262,7 @@ S_FILES = {
     "AGENTS.md": AGENT_INSTRUCTIONS,
     "report.py": S_REPORT,
     "bench.py": S_BENCH,
+    "performance-contract.json": S_CONTRACT,
     "tests/test_report.py": S_TESTS,
     "tools/validate_performance.py": S_VALIDATOR,
 }
@@ -406,6 +454,7 @@ S_HIDDEN = S_HIDDEN_TEMPLATE.replace(
         {
             "report.py": S_REPORT,
             "bench.py": S_BENCH,
+            "performance-contract.json": S_CONTRACT,
             "tests/test_report.py": S_TESTS,
             "tools/validate_performance.py": S_VALIDATOR,
         }
@@ -1709,8 +1758,9 @@ L_HIDDEN = L_HIDDEN_TEMPLATE.replace(
 
 
 RECIPES: dict[str, dict[str, Any]] = {
-    "f10-s-python-canonical-json-perf-v1": {
+    "f10-s-python-canonical-json-perf-v2": {
         "case_id": "F10-S-PY-001",
+        "recipe_revision": 2,
         "files": S_FILES,
         "hidden": S_HIDDEN,
         "good": S_GOOD,

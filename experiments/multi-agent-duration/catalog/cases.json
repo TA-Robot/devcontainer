@@ -1,8 +1,8 @@
 {
   "schema_version": 1,
   "catalog_id": "duration-atlas-calibration",
-  "revision": 3,
-  "published_at": "2026-08-27T12:00:00.000Z",
+  "revision": 4,
+  "published_at": "2026-08-27T15:00:00.000Z",
   "entries": [
     {
       "case": {
@@ -2919,8 +2919,8 @@
       "case": {
         "schema_version": 2,
         "case_id": "F10-S-PY-001",
-        "revision": 1,
-        "capsule_digest": "sha256:c0efce6cb9cc78eda89064eb70cc2c2634495c331e19263b4fa38d57b25d3242",
+        "revision": 2,
+        "capsule_digest": "sha256:be344b012ae324fad601efc1874d7f0939dadfc75d98cb4be9659f03a11739a0",
         "source_type": "fixture",
         "family": "performance-resource",
         "size": "S",
@@ -2962,8 +2962,8 @@
       },
       "fixture": {
         "case_id": "F10-S-PY-001",
-        "recipe_id": "f10-s-python-canonical-json-perf-v1",
-        "recipe_revision": 1,
+        "recipe_id": "f10-s-python-canonical-json-perf-v2",
+        "recipe_revision": 2,
         "capsule_path": "experiments/multi-agent-duration/capsules/f10-s-python-canonical-json-perf.md",
         "lane": "isolated",
         "task_network_policy": "disabled",
@@ -3007,7 +3007,7 @@
             "test_target": "HiddenSmallPerformanceTests.test_claim_bounded"
           }
         ],
-        "online_evaluator_id": "f10-s-canonical-json-performance-v1",
+        "online_evaluator_id": "f10-s-canonical-json-performance-v2",
         "gold_visibility": "harness-only"
       }
     },
@@ -3314,8 +3314,8 @@
       "case": {
         "schema_version": 2,
         "case_id": "F12-L-MDJSON-001",
-        "revision": 1,
-        "capsule_digest": "sha256:362480840d6a640750f7e1e17edc73e1f883086d77a57cd32f56955d85b3908e",
+        "revision": 2,
+        "capsule_digest": "sha256:2f440ea0eef9b391499f21eb9deced0061602781504ca793dc2c345bb732615f",
         "source_type": "fixture",
         "family": "evidence-synthesis",
         "size": "L",
@@ -3343,7 +3343,7 @@
             "python"
           ]
         },
-        "ambiguity": "open",
+        "ambiguity": "bounded-open",
         "oracle_strength": "calibrated",
         "decomposability": "independent",
         "artifact_type": "synthesis",
@@ -3364,8 +3364,8 @@
       },
       "fixture": {
         "case_id": "F12-L-MDJSON-001",
-        "recipe_id": "f12-l-fabric-decision-record-v1",
-        "recipe_revision": 1,
+        "recipe_id": "f12-l-fabric-decision-record-v2",
+        "recipe_revision": 2,
         "capsule_path": "experiments/multi-agent-duration/capsules/f12-l-fabric-decision-record.md",
         "lane": "isolated",
         "task_network_policy": "disabled",
@@ -3428,7 +3428,7 @@
             "test_target": "HiddenFabricDecisionTests.test_doc_json_sync"
           }
         ],
-        "online_evaluator_id": "f12-l-fabric-decision-hidden-v1",
+        "online_evaluator_id": "f12-l-fabric-decision-hidden-v2",
         "gold_visibility": "harness-only"
       }
     },

@@ -28,6 +28,7 @@ from agent_duration_fixtures import (
     DEFAULT_CATALOG,
     _install_known_good_for_test,
     _install_mutant_for_test,
+    _install_valid_alternative_for_test,
     _recipe_for_case,
     build_fixture,
     evaluate_fixture,
@@ -73,6 +74,8 @@ class CorpusAuditRunner(Protocol):
         self, entry: Mapping[str, Any]
     ) -> Mapping[str, Sequence[str]]: ...
 
+    def declared_valid_alternatives(self, entry: Mapping[str, Any]) -> Sequence[str]: ...
+
     def build(self, entry: Mapping[str, Any]) -> Any: ...
 
     def initial_failed(self, artifact: Any) -> bool: ...
@@ -81,6 +84,10 @@ class CorpusAuditRunner(Protocol):
 
     def install_mutant(
         self, entry: Mapping[str, Any], mutant_id: str, artifact: Any
+    ) -> None: ...
+
+    def install_valid_alternative(
+        self, entry: Mapping[str, Any], alternative_id: str, artifact: Any
     ) -> None: ...
 
     def evaluate(self, artifact: Any) -> EvaluationOutcome: ...
@@ -166,6 +173,27 @@ class FixtureAuditRunner:
             declared[mutant_id] = tuple(expected)
         return declared
 
+    def declared_valid_alternatives(self, entry: Mapping[str, Any]) -> Sequence[str]:
+        case_id = entry["case"]["case_id"]
+        recipe_id = entry["fixture"]["recipe_id"]
+        recipe = _recipe_for_case(case_id, recipe_id)
+        alternatives = recipe.get("valid_alternatives", {})
+        if not isinstance(alternatives, dict):
+            raise CorpusAuditError("fixture valid alternatives declaration is invalid")
+        declared: list[str] = []
+        for alternative_id in sorted(alternatives):
+            alternative = alternatives[alternative_id]
+            files = alternative.get("files") if isinstance(alternative, dict) else None
+            if (
+                not isinstance(alternative_id, str)
+                or SAFE_ID.fullmatch(alternative_id) is None
+                or not isinstance(files, dict)
+                or not files
+            ):
+                raise CorpusAuditError("fixture valid alternative declaration is invalid")
+            declared.append(alternative_id)
+        return declared
+
     def _catalog_path(self, entry: Mapping[str, Any]) -> Path:
         case_id = entry["case"]["case_id"]
         existing = self._catalog_paths.get(case_id)
@@ -226,6 +254,18 @@ class FixtureAuditRunner:
         _install_mutant_for_test(
             entry["case"]["case_id"],
             mutant_id,
+            artifact.directory / "workspace",
+        )
+
+    def install_valid_alternative(
+        self,
+        entry: Mapping[str, Any],
+        alternative_id: str,
+        artifact: FixtureArtifact,
+    ) -> None:
+        _install_valid_alternative_for_test(
+            entry["case"]["case_id"],
+            alternative_id,
             artifact.directory / "workspace",
         )
 
@@ -355,6 +395,7 @@ def _audit_case(
 ) -> dict[str, Any]:
     started_ns = clock_ns()
     checks: list[dict[str, Any]] = []
+    valid_alternative_results: list[dict[str, Any]] = []
     mutant_results: list[dict[str, Any]] = []
     case_failed = False
 
@@ -366,17 +407,23 @@ def _audit_case(
         return passed
 
     if not add_check("capsule-digest", lambda: runner.capsule_digest_matches(entry)):
-        return _case_result(entry, checks, mutant_results, started_ns, clock_ns)
+        return _case_result(
+            entry, checks, valid_alternative_results, mutant_results, started_ns, clock_ns
+        )
 
     declared: Mapping[str, Sequence[str]] = {}
+    declared_valid_alternatives: Sequence[str] = ()
 
     def load_declarations() -> bool:
-        nonlocal declared
+        nonlocal declared, declared_valid_alternatives
         declared = runner.declared_mutants(entry)
+        declared_valid_alternatives = runner.declared_valid_alternatives(entry)
         return bool(declared)
 
     if not add_check("recipe-registry", load_declarations):
-        return _case_result(entry, checks, mutant_results, started_ns, clock_ns)
+        return _case_result(
+            entry, checks, valid_alternative_results, mutant_results, started_ns, clock_ns
+        )
 
     initial_artifact: Any = None
     initial_snapshot_key: Any = None
@@ -390,7 +437,9 @@ def _audit_case(
         return True
 
     if not add_check("initial-fail", build_initial):
-        return _case_result(entry, checks, mutant_results, started_ns, clock_ns)
+        return _case_result(
+            entry, checks, valid_alternative_results, mutant_results, started_ns, clock_ns
+        )
 
     def known_good_passes() -> bool:
         runner.install_known_good(entry, initial_artifact)
@@ -398,7 +447,42 @@ def _audit_case(
 
     known_good_ok = add_check("known-good-full-pass", known_good_passes)
     if not known_good_ok and failure_policy == "fail-fast":
-        return _case_result(entry, checks, mutant_results, started_ns, clock_ns)
+        return _case_result(
+            entry, checks, valid_alternative_results, mutant_results, started_ns, clock_ns
+        )
+
+    for alternative_id in declared_valid_alternatives:
+        alternative_started_ns = clock_ns()
+
+        def valid_alternative_passes() -> bool:
+            artifact = runner.build(entry)
+            runner.install_valid_alternative(entry, alternative_id, artifact)
+            return runner.evaluate(artifact).status == "pass"
+
+        alternative_check, alternative_passed = _check(
+            "valid-alternative-full-pass",
+            valid_alternative_passes,
+            clock_ns=clock_ns,
+        )
+        case_failed = case_failed or not alternative_passed
+        valid_alternative_results.append(
+            {
+                "alternative_id": alternative_id,
+                "status": "pass" if alternative_passed else "fail",
+                "duration_ms": _duration_ms(alternative_started_ns, clock_ns),
+                "checks": [alternative_check],
+            }
+        )
+        if not alternative_passed and failure_policy == "fail-fast":
+            return _case_result(
+                entry,
+                checks,
+                valid_alternative_results,
+                mutant_results,
+                started_ns,
+                clock_ns,
+                case_failed,
+            )
 
     def snapshot_reproduces() -> bool:
         reproduced = runner.build(entry)
@@ -409,7 +493,9 @@ def _audit_case(
 
     snapshot_ok = add_check("snapshot-reproducibility", snapshot_reproduces)
     if not snapshot_ok and failure_policy == "fail-fast":
-        return _case_result(entry, checks, mutant_results, started_ns, clock_ns)
+        return _case_result(
+            entry, checks, valid_alternative_results, mutant_results, started_ns, clock_ns
+        )
 
     for mutant_id in sorted(declared):
         mutant_started_ns = clock_ns()
@@ -452,20 +538,31 @@ def _audit_case(
         if not mutant_passed and failure_policy == "fail-fast":
             break
 
-    return _case_result(entry, checks, mutant_results, started_ns, clock_ns, case_failed)
+    return _case_result(
+        entry,
+        checks,
+        valid_alternative_results,
+        mutant_results,
+        started_ns,
+        clock_ns,
+        case_failed,
+    )
 
 
 def _case_result(
     entry: Mapping[str, Any],
     checks: list[dict[str, Any]],
+    valid_alternatives: list[dict[str, Any]],
     mutants: list[dict[str, Any]],
     started_ns: int,
     clock_ns: Callable[[], int],
     failed: bool | None = None,
 ) -> dict[str, Any]:
     if failed is None:
-        failed = any(item["status"] != "pass" for item in checks) or any(
-            item["status"] != "pass" for item in mutants
+        failed = (
+            any(item["status"] != "pass" for item in checks)
+            or any(item["status"] != "pass" for item in valid_alternatives)
+            or any(item["status"] != "pass" for item in mutants)
         )
     return {
         "case_id": entry["case"]["case_id"],
@@ -473,6 +570,7 @@ def _case_result(
         "status": "fail" if failed else "pass",
         "duration_ms": _duration_ms(started_ns, clock_ns),
         "checks": checks,
+        "valid_alternatives": valid_alternatives,
         "mutants": mutants,
     }
 

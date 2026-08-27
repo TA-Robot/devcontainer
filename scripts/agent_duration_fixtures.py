@@ -955,8 +955,11 @@ def build_fixture(
     case = entry["case"]
     contract = entry["fixture"]
     recipe = _recipe_for_case(case_id, contract["recipe_id"])
-    if contract["recipe_revision"] != 1:
-        raise DurationStudyError(f"unsupported fixture recipe revision for {case_id}")
+    registered_revision = recipe.get("recipe_revision", 1)
+    if contract["recipe_revision"] != registered_revision:
+        raise DurationStudyError(
+            f"fixture recipe revision does not match the registered recipe for {case_id}"
+        )
 
     observed_at = utc_timestamp(now or datetime.now(timezone.utc))
     chosen_fixture_id = fixture_id or (
@@ -1318,6 +1321,49 @@ def _install_known_good_for_test(case_id: str, workspace: Path) -> None:
         path = workspace / _safe_relative(raw_path)
         path.write_text(content, encoding="utf-8")
         path.chmod(0o700 if raw_path in set(recipe["executable"]) else 0o600)
+
+
+def task_artifact_paths(case_id: str, recipe_id: str | None = None) -> tuple[str, ...]:
+    """Return the bounded task-output allowlist without exposing gold content."""
+
+    recipe = _recipe_for_case(case_id, recipe_id)
+    good = recipe.get("good")
+    if not isinstance(good, dict) or not good or len(good) > 16:
+        raise DurationStudyError(f"fixture task artifact allowlist is invalid: {case_id}")
+    paths: list[str] = []
+    for raw_path in good:
+        if not isinstance(raw_path, str):
+            raise DurationStudyError(f"fixture task artifact path is invalid: {case_id}")
+        _safe_relative(raw_path)
+        paths.append(raw_path)
+    return tuple(sorted(paths))
+
+
+def _install_valid_alternative_for_test(
+    case_id: str,
+    alternative_id: str,
+    workspace: Path,
+) -> None:
+    """Install one private, independently valid calibration artifact."""
+
+    recipe = _recipe_for_case(case_id)
+    alternatives = recipe.get("valid_alternatives", {})
+    alternative = alternatives.get(alternative_id) if isinstance(alternatives, dict) else None
+    files = alternative.get("files") if isinstance(alternative, dict) else None
+    if not isinstance(files, dict) or not files:
+        raise DurationStudyError(
+            f"unknown fixture valid alternative: {case_id}/{alternative_id}"
+        )
+    executable = set(alternative.get("executable", []))
+    for raw_path, content in files.items():
+        if not isinstance(raw_path, str) or not isinstance(content, str):
+            raise DurationStudyError(
+                f"fixture valid alternative overlay is invalid: {case_id}/{alternative_id}"
+            )
+        path = workspace / _safe_relative(raw_path)
+        path.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+        path.write_text(content, encoding="utf-8")
+        path.chmod(0o700 if raw_path in executable else 0o600)
 
 
 def _install_mutant_for_test(case_id: str, mutant_id: str, workspace: Path) -> list[str]:

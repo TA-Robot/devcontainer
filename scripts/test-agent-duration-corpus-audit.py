@@ -50,10 +50,12 @@ class FakeRunner:
         stale_cases: set[str] | None = None,
         survivor_cases: set[str] | None = None,
         broken_good_cases: set[str] | None = None,
+        valid_alternative_cases: set[str] | None = None,
     ) -> None:
         self.stale_cases = stale_cases or set()
         self.survivor_cases = survivor_cases or set()
         self.broken_good_cases = broken_good_cases or set()
+        self.valid_alternative_cases = valid_alternative_cases or set()
         self.calls: list[tuple[str, str]] = []
         self._builds: dict[str, int] = {}
 
@@ -71,6 +73,15 @@ class FakeRunner:
         case_id = self._case_id(entry)
         self.calls.append(("recipe", case_id))
         return {"declared-mutant": ("hidden-contract",)}
+
+    def declared_valid_alternatives(
+        self, entry: Mapping[str, Any]
+    ) -> Sequence[str]:
+        return (
+            ("independent-valid",)
+            if self._case_id(entry) in self.valid_alternative_cases
+            else ()
+        )
 
     def build(self, entry: Mapping[str, Any]) -> dict[str, Any]:
         case_id = self._case_id(entry)
@@ -100,12 +111,22 @@ class FakeRunner:
     ) -> None:
         artifact["variant"] = "mutant"
 
+    def install_valid_alternative(
+        self,
+        entry: Mapping[str, Any],
+        alternative_id: str,
+        artifact: dict[str, Any],
+    ) -> None:
+        artifact["variant"] = "valid-alternative"
+
     def evaluate(self, artifact: dict[str, Any]) -> EvaluationOutcome:
         case_id = artifact["case_id"]
         self.calls.append(("evaluate", case_id))
         if artifact["variant"] == "good":
             status = "fail" if case_id in self.broken_good_cases else "pass"
             return EvaluationOutcome(status, frozenset())
+        if artifact["variant"] == "valid-alternative":
+            return EvaluationOutcome("pass", frozenset())
         if case_id in self.survivor_cases:
             return EvaluationOutcome("pass", frozenset())
         return EvaluationOutcome("fail", frozenset({"hidden-contract"}))
@@ -159,6 +180,20 @@ class AgentDurationCorpusAuditTests(unittest.TestCase):
                 failure_policy="continue",
             )
         self.assertEqual(runner.calls, [])
+
+    def test_declared_valid_alternative_must_full_pass(self) -> None:
+        runner = FakeRunner(valid_alternative_cases={"F01-S-FAKE-001"})
+        result = audit_catalog(
+            self.catalog,
+            runner,
+            case_ids=["F01-S-FAKE-001"],
+            max_cases=1,
+            failure_policy="continue",
+        )
+        alternatives = result["cases"][0]["valid_alternatives"]
+        self.assertEqual(len(alternatives), 1)
+        self.assertEqual(alternatives[0]["alternative_id"], "independent-valid")
+        self.assertEqual(alternatives[0]["status"], "pass")
 
     def test_continue_runs_later_cases_after_a_failure(self) -> None:
         runner = FakeRunner(broken_good_cases={"F01-S-FAKE-001"})

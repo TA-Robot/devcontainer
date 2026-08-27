@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from datetime import datetime, timezone
-import json
 from pathlib import Path
 import sys
 import tempfile
@@ -19,6 +18,7 @@ from agent_contracts import load_json  # noqa: E402
 from agent_duration_case_testing import assert_family_calibrated  # noqa: E402
 from agent_duration_fixtures import (  # noqa: E402
     _install_known_good_for_test,
+    _install_valid_alternative_for_test,
     build_fixture,
     evaluate_fixture,
 )
@@ -64,7 +64,7 @@ class EvidenceSynthesisFamilyTests(unittest.TestCase):
                     self.assertEqual(result["status"], "fail")
                     self.assertEqual(result["score"]["hidden_passed"], 0)
 
-    def test_large_case_accepts_equivalent_condition_and_owner_wording(self) -> None:
+    def test_large_case_accepts_distinct_control_ids_and_target_design(self) -> None:
         fixed_time = datetime(2026, 8, 27, 12, 0, tzinfo=timezone.utc)
         with tempfile.TemporaryDirectory(prefix="duration-f12-semantic-") as raw:
             fixture = Path(raw) / "fixture"
@@ -76,26 +76,10 @@ class EvidenceSynthesisFamilyTests(unittest.TestCase):
                 now=fixed_time,
             )
             workspace = fixture / "workspace"
-            _install_known_good_for_test("F12-L-MDJSON-001", workspace)
-            record_path = workspace / "decision-record.json"
-            record = json.loads(record_path.read_text(encoding="utf-8"))
-            warm = next(item for item in record["claims"] if item["claim_id"] == "A-WARM")
-            warm["condition"] = "limited to the measured warm-workload stratum"
-            cleanup = next(
-                item for item in record["controls"] if item["control_id"] == "cleanup-owner-token"
-            )
-            cleanup["owner"] = "resource-lifecycle-owner"
-            cleanup["decision_effect"] = "eligibility gate before option A"
-            record_path.write_text(
-                json.dumps(record, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
-                encoding="utf-8",
-            )
-            document_path = workspace / "DECISION-RECORD.md"
-            document_path.write_text(
-                document_path.read_text(encoding="utf-8").replace(
-                    "warm workload only", "limited to the measured warm-workload stratum"
-                ),
-                encoding="utf-8",
+            _install_valid_alternative_for_test(
+                "F12-L-MDJSON-001",
+                "controlled-a-target",
+                workspace,
             )
             result = evaluate_fixture(fixture)
             self.assertEqual(result["status"], "pass", result)

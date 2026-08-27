@@ -121,8 +121,8 @@
       "case": {
         "schema_version": 2,
         "case_id": "F12-L-MDJSON-001",
-        "revision": 1,
-        "capsule_digest": "sha256:362480840d6a640750f7e1e17edc73e1f883086d77a57cd32f56955d85b3908e",
+        "revision": 2,
+        "capsule_digest": "sha256:2f440ea0eef9b391499f21eb9deced0061602781504ca793dc2c345bb732615f",
         "source_type": "fixture",
         "family": "evidence-synthesis",
         "size": "L",
@@ -138,7 +138,7 @@
           "statefulness": "versioned-proposal-evidence-ledger",
           "language_toolchain": ["markdown", "json", "python"]
         },
-        "ambiguity": "open",
+        "ambiguity": "bounded-open",
         "oracle_strength": "calibrated",
         "decomposability": "independent",
         "artifact_type": "synthesis",
@@ -151,8 +151,8 @@
       },
       "fixture": {
         "case_id": "F12-L-MDJSON-001",
-        "recipe_id": "f12-l-fabric-decision-record-v1",
-        "recipe_revision": 1,
+        "recipe_id": "f12-l-fabric-decision-record-v2",
+        "recipe_revision": 2,
         "capsule_path": "experiments/multi-agent-duration/capsules/f12-l-fabric-decision-record.md",
         "lane": "isolated",
         "task_network_policy": "disabled",
@@ -174,7 +174,7 @@
           {"check_id": "synthesis-refresh-plan", "test_target": "HiddenFabricDecisionTests.test_refresh_plan"},
           {"check_id": "synthesis-doc-json-sync", "test_target": "HiddenFabricDecisionTests.test_doc_json_sync"}
         ],
-        "online_evaluator_id": "f12-l-fabric-decision-hidden-v1",
+        "online_evaluator_id": "f12-l-fabric-decision-hidden-v2",
         "gold_visibility": "harness-only"
       }
     }

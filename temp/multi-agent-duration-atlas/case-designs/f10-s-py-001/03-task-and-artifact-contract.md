@@ -4,6 +4,8 @@
 
 Diagnose the local report hot path and write `performance.json` with reproducible commands, raw observations, scaling evidence, root cause, and a safe optimization hypothesis. Do not patch production.
 
+Revision 2 requires the author to use the identifiers published in `performance-contract.json`. The public contract fixes vocabulary and shape while the benchmark counters determine which candidate is primary.
+
 ## Required result
 
 - Measurements include multiple input sizes and deterministic call counts.

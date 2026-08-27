@@ -16,6 +16,8 @@ public checksと以下のhidden criterionをcriterion-levelで別々に記録す
 | `synthesis-refresh-plan` | Staleness/evidence refresh triggers are concrete. | identity/window/incident trigger set complete |
 | `synthesis-doc-json-sync` | Human record and machine graph agree. | normalized decision/claim sets match |
 
+Revision 2 checks semantic evidence coverage rather than exact private identifiers. Any exact vocabulary or minimum evidence set used by the evaluator is present in the visible contract. It accepts both calibrated target designs and rejects only evidence/constraint violations; D→B is not a hidden preferred architecture.
+
 ## Negative calibration set
 
 次のplausible-but-wrong artifactをそれぞれ少なくとも一つのcriterionがrejectしなければ、rubricは識別力不足として実装を差し戻す。
@@ -38,5 +40,7 @@ public checksと以下のhidden criterionをcriterion-levelで別々に記録す
 ## Rubric boundary
 
 The calibrated corpus validates entailment, metric integrity, and decision trace against supplied evidence. It does not prove that the resulting design is globally optimal or predict future provider behavior.
+
+At least two materially distinct valid artifacts must full-pass. A single known-good is insufficient evidence that the evaluator accepts the bounded solution space.
 
 このrubricはhuman preferenceの代用ではない。観測可能なcontract coverageだけをqualityとして記録し、usefulnessやeleganceを推測しない。

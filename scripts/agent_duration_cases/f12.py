@@ -755,6 +755,61 @@ L_EVIDENCE_INDEX = {
 }
 
 
+L_DECISION_CONTRACT_VALUE = {
+    "schema_version": 2,
+    "artifact": "decision-record.json",
+    "claim_ids": [
+        "A-WARM",
+        "A-COLD",
+        "B-ISOLATION",
+        "B-MIGRATION",
+        "C-THROUGHPUT",
+        "D-MIGRATION",
+        "D-RECOVERY",
+        "CON-MIGRATION",
+        "CON-OWNER",
+        "CON-ROLLBACK",
+    ],
+    "proposal_options": ["A", "B", "C", "D"],
+    "constraint_ids": ["CON-MIGRATION", "CON-OWNER", "CON-ROLLBACK"],
+    "constraint_status_values": ["satisfied-by-stage-1", "gated"],
+    "confidence_values": ["high", "medium", "low", "unknown"],
+    "refresh_categories": ["identity", "window", "incident"],
+    "required_claim_outcomes": {
+        "D-RECOVERY": {
+            "disposition": "unknown",
+            "confidence": "unknown",
+            "required_evidence": ["INC-D-RECOVERY"],
+        }
+    },
+    "claim_condition_terms": {"A-WARM": "warm", "A-COLD": "cold"},
+    "alternative_minimum_evidence": {
+        "A": ["BM-A-COLD", "INC-A-CLEANUP"],
+        "B": ["SEC-B-ISOLATION", "CON-MIGRATION"],
+        "C": ["BM-C-POOLED"],
+        "D": ["PROP-D", "INC-D-RECOVERY", "CON-OWNER"],
+    },
+    "decision_space": {
+        "migration_bridge_option": "D",
+        "permitted_target_options": ["A", "B"],
+        "forbidden_selected_options": ["C"],
+        "target_evidence": {
+            "A": ["A-WARM", "A-COLD", "INC-A-CLEANUP", "SEC-A-BIND"],
+            "B": ["B-ISOLATION", "SEC-B-ISOLATION"],
+        },
+    },
+    "semantic_requirements": {
+        "control_ids_are_author_chosen": True,
+        "unknown_ids_are_author_chosen": True,
+        "trigger_ids_are_author_chosen": True,
+        "all_proposals_must_be_assessed": True,
+        "selected_target_must_follow_the_migration_bridge": True,
+    },
+}
+
+L_DECISION_CONTRACT = _document(L_DECISION_CONTRACT_VALUE)
+
+
 L_VALIDATE = r'''#!/usr/bin/env python3
 from __future__ import annotations
 
@@ -785,6 +840,7 @@ def main() -> int:
     try:
         value = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
         markdown = Path(sys.argv[2]).read_text(encoding="utf-8")
+        contract = json.loads(Path("decision-contract.json").read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError):
         return 1
     if not isinstance(value, dict) or value.get("version") != 1:
@@ -794,6 +850,8 @@ def main() -> int:
         return 1
     required = {"claim_id", "provenance", "disposition", "evidence", "condition", "confidence"}
     if any(not isinstance(item, dict) or not required.issubset(item) for item in claims):
+        return 1
+    if {item.get("claim_id") for item in claims} != set(contract["claim_ids"]):
         return 1
     structured = [(item["claim_id"], item["disposition"], tuple(item["evidence"]), item["condition"], item["confidence"]) for item in claims]
     if rows(markdown) != structured:
@@ -818,6 +876,39 @@ def main() -> int:
     for key in ("metrics", "alternatives", "constraint_matrix", "unknowns", "refresh_plan"):
         if not isinstance(value.get(key), list):
             return 1
+    phases = decision.get("phases", [])
+    phase_options = [item.get("option") for item in phases if isinstance(item, dict)]
+    decision_space = contract["decision_space"]
+    if len(phase_options) < 2 or phase_options[0] != decision_space["migration_bridge_option"]:
+        return 1
+    if phase_options[-1] not in decision_space["permitted_target_options"]:
+        return 1
+    if any(item not in contract["proposal_options"] for item in phase_options):
+        return 1
+    if {item.get("option") for item in value["alternatives"] if isinstance(item, dict)} != set(contract["proposal_options"]):
+        return 1
+    if {item.get("constraint_id") for item in value["constraint_matrix"] if isinstance(item, dict)} != set(contract["constraint_ids"]):
+        return 1
+    if any(item.get("status") not in contract["constraint_status_values"] for item in value["constraint_matrix"] if isinstance(item, dict)):
+        return 1
+    alternatives = {item.get("option"): item for item in value["alternatives"] if isinstance(item, dict)}
+    for option, required_evidence in contract["alternative_minimum_evidence"].items():
+        if not set(required_evidence).issubset(set(alternatives[option].get("evidence", []))):
+            return 1
+    claims_by_id = {item.get("claim_id"): item for item in claims if isinstance(item, dict)}
+    if any(item.get("confidence") not in contract["confidence_values"] for item in claims_by_id.values()):
+        return 1
+    for claim_id, requirement in contract["required_claim_outcomes"].items():
+        claim = claims_by_id[claim_id]
+        if claim.get("disposition") != requirement["disposition"] or claim.get("confidence") != requirement["confidence"]:
+            return 1
+        if not set(requirement["required_evidence"]).issubset(set(claim.get("evidence", []))):
+            return 1
+    for claim_id, term in contract["claim_condition_terms"].items():
+        if term not in str(claims_by_id[claim_id].get("condition", "")).lower():
+            return 1
+    if {item.get("category") for item in value["refresh_plan"] if isinstance(item, dict)} != set(contract["refresh_categories"]):
+        return 1
     return 0
 
 
@@ -916,6 +1007,7 @@ if __name__ == "__main__":
 
 L_FILES = {
     "AGENTS.md": AGENT_INSTRUCTIONS,
+    "decision-contract.json": L_DECISION_CONTRACT,
     "proposals/A.md": "# Proposal A\n\nCLAIM A-WARM: lowest warm median. CLAIM A-COLD: acceptable cold behavior. Evidence BM-A-WARM, BM-A-COLD.\n",
     "proposals/B.md": "# Proposal B\n\nCLAIM B-ISOLATION: strongest supplied isolation. CLAIM B-MIGRATION: immediate migration is feasible. Evidence SEC-B-ISOLATION, CON-MIGRATION.\n",
     "proposals/C.md": "# Proposal C\n\nCLAIM C-THROUGHPUT: highest universal throughput from pooled samples. Evidence BM-C-POOLED.\n",
@@ -1031,10 +1123,10 @@ L_GOOD: dict[str, Any] = {
         },
     },
     "alternatives": [
-        {"option": "A-direct", "disposition": "rejected-as-universal", "counterexample": "cold tail and cleanup incident", "evidence": ["BM-A-COLD", "INC-A-CLEANUP"]},
-        {"option": "B-immediate", "disposition": "rejected-for-stage-1", "counterexample": "14-day legacy-compatible migration constraint", "evidence": ["CON-MIGRATION"]},
+        {"option": "A", "disposition": "conditional-optimization", "counterexample": "cold tail and cleanup incident prevent an unconditional target", "evidence": ["BM-A-WARM", "BM-A-COLD", "INC-A-CLEANUP", "SEC-A-BIND"]},
+        {"option": "B", "disposition": "selected-target", "counterexample": "cannot satisfy the legacy-compatible first stage by itself", "evidence": ["SEC-B-ISOLATION", "CON-MIGRATION"]},
         {"option": "C", "disposition": "rejected", "counterexample": "invalid mixed-workload pooled sample", "evidence": ["BM-C-POOLED"]},
-        {"option": "D-final", "disposition": "gated-not-final", "counterexample": "recovery owner remains unknown", "evidence": ["INC-D-RECOVERY", "CON-OWNER"]},
+        {"option": "D", "disposition": "selected-bridge-not-final", "counterexample": "recovery owner remains unknown", "evidence": ["PROP-D", "INC-D-RECOVERY", "CON-OWNER"]},
     ],
     "unknowns": [
         {"unknown_id": "U-D-RECOVERY", "status": "unknown", "evidence": ["INC-D-RECOVERY"], "missing_evidence": "named recovery owner and drill result"},
@@ -1083,6 +1175,57 @@ def _render_l(record: dict[str, Any]) -> str:
 L_GOOD_MD = _render_l(L_GOOD)
 
 
+L_VALID_ALTERNATIVE = copy.deepcopy(L_GOOD)
+L_VALID_ALTERNATIVE["controls"] = [
+    {"control_id": "ownership-token-gate", "evidence": ["INC-A-CLEANUP"], "owner": "lifecycle-lead", "decision_effect": "blocks A until owner-token authorization passes"},
+    {"control_id": "safe-bind-gate", "evidence": ["SEC-A-BIND"], "owner": "security-lead", "decision_effect": "blocks A until structured bind validation passes"},
+    {"control_id": "workspace-isolation-reference", "evidence": ["SEC-B-ISOLATION"], "owner": "security-lead", "decision_effect": "defines the isolation acceptance baseline"},
+    {"control_id": "recovery-drill-gate", "evidence": ["INC-D-RECOVERY", "CON-OWNER"], "owner": "operations-lead", "decision_effect": "blocks cutover until ownership and drill evidence exist"},
+]
+L_VALID_ALTERNATIVE["decision"] = {
+    "strategy": "staged-controlled-A-target",
+    "depends_on": ["D-MIGRATION", "A-WARM", "A-COLD", "CON-MIGRATION", "CON-OWNER", "CON-ROLLBACK"],
+    "phases": [
+        copy.deepcopy(L_GOOD["decision"]["phases"][0]),
+        {
+            "phase": 2,
+            "option": "A",
+            "purpose": "workload-bounded target after lifecycle and bind controls pass",
+            "owner": "performance-owner",
+            "gates": [
+                {"gate_id": "G-A-OWNER", "check": "owner-token cleanup authorization", "expected": "pass"},
+                {"gate_id": "G-A-BIND", "check": "structured bind validation", "expected": "pass"},
+                {"gate_id": "G-A-COLD", "check": "uncensored cold-tail threshold", "expected": "within declared bound"},
+            ],
+            "rollback_triggers": [
+                {"trigger_id": "R-A", "check": "cleanup or cold-tail regression", "condition": "acceptance gate fails", "action": "return to D bridge"}
+            ],
+        },
+    ],
+    "conditional_optimization": {
+        "option": "B",
+        "eligible_only_if": ["workspace-isolation-reference", "recovery-drill-gate"],
+        "evidence": ["SEC-B-ISOLATION", "INC-D-RECOVERY", "CON-OWNER"],
+    },
+}
+L_VALID_ALTERNATIVE["alternatives"] = [
+    {"option": "A", "disposition": "selected-target", "counterexample": "selection remains bounded to workloads and explicit gates", "evidence": ["BM-A-WARM", "BM-A-COLD", "INC-A-CLEANUP", "SEC-A-BIND"]},
+    {"option": "B", "disposition": "retained-isolation-fallback", "counterexample": "cannot satisfy the legacy-compatible first stage by itself", "evidence": ["SEC-B-ISOLATION", "CON-MIGRATION"]},
+    {"option": "C", "disposition": "rejected", "counterexample": "invalid mixed-workload pooled sample", "evidence": ["BM-C-POOLED"]},
+    {"option": "D", "disposition": "selected-bridge-not-final", "counterexample": "recovery owner remains unknown", "evidence": ["PROP-D", "INC-D-RECOVERY", "CON-OWNER"]},
+]
+L_VALID_ALTERNATIVE["unknowns"] = [
+    {"unknown_id": "recovery-drill-result", "status": "unknown", "evidence": ["INC-D-RECOVERY"], "missing_evidence": "named recovery owner and drill result"},
+    {"unknown_id": "future-provider-semantics", "status": "unknown", "evidence": [], "missing_evidence": "future provider latency and revocation semantics"},
+]
+L_VALID_ALTERNATIVE["refresh_plan"] = [
+    {"trigger_id": "identity-change", "category": "identity", "condition": "runtime or provider identity changes", "action": "rerun security and benchmark evidence"},
+    {"trigger_id": "evidence-age", "category": "window", "condition": "benchmark window exceeds 30 days", "action": "recompute workload-separated distributions"},
+    {"trigger_id": "new-incident", "category": "incident", "condition": "new cleanup, recovery, or security incident", "action": "reopen affected claims and gates"},
+]
+L_VALID_ALTERNATIVE_MD = _render_l(L_VALID_ALTERNATIVE)
+
+
 L_HIDDEN_BODY = r'''def record() -> dict[str, object]:
     try:
         value = json.loads((WORKSPACE / "decision-record.json").read_text(encoding="utf-8"))
@@ -1093,6 +1236,14 @@ L_HIDDEN_BODY = r'''def record() -> dict[str, object]:
 
 def claims() -> dict[str, dict[str, object]]:
     return {item.get("claim_id"): item for item in record().get("claims", []) if isinstance(item, dict)}
+
+
+def contract() -> dict[str, object]:
+    try:
+        value = json.loads((WORKSPACE / "decision-contract.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return value if isinstance(value, dict) else {}
 
 
 def run_tool(*argv: str) -> subprocess.CompletedProcess[str]:
@@ -1112,16 +1263,17 @@ class HiddenFabricDecisionTests(unittest.TestCase):
         assert_fixture_integrity(self)
 
     def test_claim_provenance(self):
-        expected = {"A-WARM", "A-COLD", "B-ISOLATION", "B-MIGRATION", "C-THROUGHPUT", "D-MIGRATION", "D-RECOVERY", "CON-MIGRATION", "CON-OWNER", "CON-ROLLBACK"}
+        expected = set(contract().get("claim_ids", []))
         self.assertEqual(set(claims()), expected)
         for claim_id, item in claims().items():
             self.assertTrue(item.get("provenance"), claim_id)
             self.assertTrue(item.get("condition"), claim_id)
-            self.assertIn(item.get("confidence"), {"high", "medium", "low", "unknown"})
+            self.assertIn(item.get("confidence"), set(contract().get("confidence_values", [])))
+        condition_terms = contract().get("claim_condition_terms", {})
         warm_condition = str(claims()["A-WARM"].get("condition", "")).lower()
-        self.assertIn("warm", warm_condition)
+        self.assertIn(condition_terms["A-WARM"], warm_condition)
         self.assertFalse(any(term in warm_condition for term in ("universal", "all workloads", "cold and warm")))
-        self.assertIn("cold", claims()["A-COLD"].get("condition", ""))
+        self.assertIn(condition_terms["A-COLD"], claims()["A-COLD"].get("condition", "").lower())
 
     def test_metric_integrity(self):
         completed = run_tool("tools/recompute_metrics.py", "evidence/benchmarks", "decision-record.json")
@@ -1139,18 +1291,19 @@ class HiddenFabricDecisionTests(unittest.TestCase):
         self.assertIsInstance(controls, list)
         edges = {evidence for item in controls if isinstance(item, dict) for evidence in item.get("evidence", [])}
         self.assertTrue({"INC-A-CLEANUP", "INC-D-RECOVERY", "SEC-A-BIND", "SEC-B-ISOLATION"}.issubset(edges))
-        by_id = {item.get("control_id"): item for item in controls if isinstance(item, dict)}
-        cleanup_control = by_id["cleanup-owner-token"]
-        self.assertTrue(cleanup_control.get("owner"))
-        self.assertTrue(any(term in str(cleanup_control.get("decision_effect", "")).lower() for term in ("required", "gate", "eligible")))
-        decision_text = json.dumps(record().get("decision", {}), sort_keys=True)
-        self.assertIn("cleanup-owner-token", decision_text)
-        self.assertIn("SEC-B-ISOLATION", json.dumps(record(), sort_keys=True))
+        for item in controls:
+            self.assertTrue(item.get("control_id"))
+            self.assertTrue(item.get("owner"))
+            self.assertTrue(item.get("decision_effect"))
+        target = record().get("decision", {}).get("phases", [])[-1].get("option")
+        required_edges = set(contract().get("decision_space", {}).get("target_evidence", {}).get(target, []))
+        control_evidence = {item for item in required_edges if item.startswith(("INC-", "SEC-"))}
+        self.assertTrue(control_evidence.issubset(edges))
 
     def test_migration_operations(self):
         matrix = {item.get("constraint_id"): item for item in record().get("constraint_matrix", []) if isinstance(item, dict)}
-        self.assertEqual(set(matrix), {"CON-MIGRATION", "CON-OWNER", "CON-ROLLBACK"})
-        self.assertTrue(all(item.get("status") in {"satisfied-by-stage-1", "gated"} for item in matrix.values()))
+        self.assertEqual(set(matrix), set(contract().get("constraint_ids", [])))
+        self.assertTrue(all(item.get("status") in set(contract().get("constraint_status_values", [])) for item in matrix.values()))
         phases = record().get("decision", {}).get("phases", [])
         self.assertGreaterEqual(len(phases), 2)
         for phase in phases:
@@ -1165,24 +1318,32 @@ class HiddenFabricDecisionTests(unittest.TestCase):
         self.assertTrue(decision.get("strategy"))
         phase_options = [item.get("option") for item in decision.get("phases", [])]
         self.assertGreaterEqual(len(phase_options), 2)
-        self.assertTrue({"D", "B"}.issubset(set(phase_options)))
+        decision_space = contract().get("decision_space", {})
+        self.assertEqual(phase_options[0], decision_space.get("migration_bridge_option"))
+        target = phase_options[-1]
+        self.assertIn(target, decision_space.get("permitted_target_options", []))
+        self.assertFalse(set(phase_options) & set(decision_space.get("forbidden_selected_options", [])))
         dependencies = set(decision.get("depends_on", []))
-        self.assertTrue({"D-MIGRATION", "B-ISOLATION", "A-COLD", "CON-MIGRATION", "CON-OWNER", "CON-ROLLBACK"}.issubset(dependencies))
+        self.assertTrue({"D-MIGRATION", "CON-MIGRATION", "CON-OWNER", "CON-ROLLBACK"}.issubset(dependencies))
+        target_claims = {
+            item for item in decision_space.get("target_evidence", {}).get(target, [])
+            if item in claims()
+        }
+        self.assertTrue(target_claims.issubset(dependencies))
         completed = run_tool("tools/check_entailment.py", "decision-record.json")
         self.assertEqual(completed.returncode, 0, completed.stdout + completed.stderr)
 
     def test_alternative_rejection(self):
         alternatives = {item.get("option"): item for item in record().get("alternatives", []) if isinstance(item, dict)}
-        self.assertEqual(set(alternatives), {"A-direct", "B-immediate", "C", "D-final"})
+        self.assertEqual(set(alternatives), set(contract().get("proposal_options", [])))
         required = {
-            "A-direct": {"BM-A-COLD", "INC-A-CLEANUP"},
-            "B-immediate": {"CON-MIGRATION"},
-            "C": {"BM-C-POOLED"},
-            "D-final": {"INC-D-RECOVERY", "CON-OWNER"},
+            option: set(evidence)
+            for option, evidence in contract().get("alternative_minimum_evidence", {}).items()
         }
         for option, evidence in required.items():
             self.assertTrue(evidence.issubset(set(alternatives[option].get("evidence", []))))
             self.assertTrue(alternatives[option].get("counterexample"))
+            self.assertTrue(alternatives[option].get("disposition"))
 
     def test_unknown_honesty(self):
         unknowns = [item for item in record().get("unknowns", []) if isinstance(item, dict)]
@@ -1193,7 +1354,10 @@ class HiddenFabricDecisionTests(unittest.TestCase):
         provider = [item for item in unknowns if "provider" in str(item.get("missing_evidence", "")).lower()]
         self.assertEqual(len(recovery), 1)
         self.assertEqual(len(provider), 1)
-        self.assertEqual(claims()["D-RECOVERY"].get("disposition"), "unknown")
+        for claim_id, requirement in contract().get("required_claim_outcomes", {}).items():
+            self.assertEqual(claims()[claim_id].get("disposition"), requirement["disposition"])
+            self.assertEqual(claims()[claim_id].get("confidence"), requirement["confidence"])
+            self.assertTrue(set(requirement["required_evidence"]).issubset(set(claims()[claim_id].get("evidence", []))))
         serialized = json.dumps(record(), sort_keys=True).lower()
         self.assertNotIn("universal winner", serialized)
         self.assertNotIn("provider behavior guaranteed", serialized)
@@ -1202,7 +1366,7 @@ class HiddenFabricDecisionTests(unittest.TestCase):
         plan = record().get("refresh_plan", [])
         self.assertIsInstance(plan, list)
         by_category = {item.get("category"): item for item in plan if isinstance(item, dict)}
-        self.assertEqual(set(by_category), {"identity", "window", "incident"})
+        self.assertEqual(set(by_category), set(contract().get("refresh_categories", [])))
         for item in by_category.values():
             self.assertTrue(item.get("trigger_id") and item.get("condition") and item.get("action"))
 
@@ -1353,8 +1517,9 @@ RECIPES: dict[str, dict[str, Any]] = {
             },
         },
     },
-    "f12-l-fabric-decision-record-v1": {
+    "f12-l-fabric-decision-record-v2": {
         "case_id": "F12-L-MDJSON-001",
+        "recipe_revision": 2,
         "files": L_FILES,
         "hidden": L_HIDDEN,
         "good": {
@@ -1362,6 +1527,14 @@ RECIPES: dict[str, dict[str, Any]] = {
             "decision-record.json": _document(L_GOOD),
         },
         "executable": [],
+        "valid_alternatives": {
+            "controlled-a-target": {
+                "files": {
+                    "DECISION-RECORD.md": L_VALID_ALTERNATIVE_MD,
+                    "decision-record.json": _document(L_VALID_ALTERNATIVE),
+                }
+            }
+        },
         "mutants": {
             "warm-median-only": {
                 "files": {

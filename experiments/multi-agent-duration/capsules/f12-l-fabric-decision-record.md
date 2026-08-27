@@ -5,6 +5,12 @@ proposal claim, benchmark distribution, incident/security finding, and hard
 constraint. Preserve workload, sample count, censoring, invalid-run exclusions,
 source identity, confidence, and unknown boundaries.
 
+`decision-contract.json` publishes the required claim/option/constraint,
+confidence/status vocabulary, minimum evidence obligations, and bounded decision space. It deliberately leaves control,
+unknown, and trigger IDs to the author and permits either A or B as the eventual
+target after the D migration bridge, provided the selected target's evidence
+and controls are traced. Do not infer a hidden preferred identifier or wording.
+
 The selected or staged design must trace to cited evidence. Include alternatives
 with bounded counterexamples, migration/operations ownership, executable gates,
 rollback triggers, incident/security controls, unresolved recovery/provider
