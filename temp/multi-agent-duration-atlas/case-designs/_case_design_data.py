@@ -304,6 +304,7 @@ CASES: list[dict[str, Any]] = [
         mutants=["A review saying only 'use pathlib' with no bypass trigger.", "A finding against an unchanged `resolve()` call that is actually safe.", "A low-severity style comment presented as the sole result."],
         known_good="One high-severity finding cites the `startswith` hunk, supplies `/work/project` versus `/work/project-other/file`, explains workspace escape, and recommends canonical `relative_to` containment.",
         rubric_boundary="False positives are checked only for blocking findings. The evaluator does not score writing style or harmless low-severity suggestions.",
+        artifact_type="findings",
         collaboration=["C0 only; the diff has one serial finding surface.", "Independent candidate review is deferred because one tiny seeded defect would mostly measure duplicate overhead."],
         analysis=["Does depth change concrete-trigger quality?", "How quickly does the first valid finding appear?", "Are shorter reviews more likely to omit impact or evidence?"],
         capsule_path="experiments/multi-agent-duration/capsules/f02-s-python-path-review.md",

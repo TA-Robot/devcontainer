@@ -17,7 +17,7 @@ How do diff surface and hidden lifecycle interactions affect review time and see
 | ambiguity | `exact` |
 | oracle | `deterministic` |
 | decomposability | `serial` |
-| artifact | `answer` |
+| artifact | `findings` |
 | risk | `low` |
 | lane | `read` |
 | environment | `local-tool` |
