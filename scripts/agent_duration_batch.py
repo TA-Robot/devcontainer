@@ -142,7 +142,11 @@ def execute_batch(
         if not execute:
             observations.append({"run_id": entry["run_id"], "status": "planned"})
             continue
-        if monotonic() >= deadline:
+        remaining_seconds = deadline - monotonic()
+        declared_run_budget = (
+            entry["timeout_seconds"] + entry["evaluator_timeout_seconds"]
+        )
+        if remaining_seconds < declared_run_budget:
             stop_reason = "deadline"
             break
         provider = entry["provider"]

@@ -192,6 +192,31 @@ class AgentDurationBatchTests(unittest.TestCase):
                 execute=True,
             )
 
+    def test_execution_does_not_start_a_run_that_cannot_fit_deadline_budget(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="duration-batch-deadline-") as raw:
+            batch = self.batch([self.entry(1)])
+            batch["safety"]["deadline_seconds"] = 60
+            calls: list[str] = []
+
+            def fake_run_once(provider, case_id, output_dir, **kwargs):
+                calls.append(kwargs["run_id"])
+                raise AssertionError("run must not start")
+
+            moments = iter((0.0, 25.0))
+            result = execute_batch(
+                batch,
+                output_dir=Path(raw) / "runs",
+                image="fixture-image",
+                auth_files={"codex": Path(raw) / "auth.json"},
+                live_generation_authorized=True,
+                execute=True,
+                run_once=fake_run_once,
+                monotonic=lambda: next(moments),
+            )
+            self.assertEqual(calls, [])
+            self.assertEqual(result["stop_reason"], "deadline")
+            self.assertEqual(result["remaining"], 1)
+
     def test_resume_reuses_only_the_exact_declared_series(self) -> None:
         with tempfile.TemporaryDirectory(prefix="duration-batch-resume-") as raw:
             root = Path(raw)
