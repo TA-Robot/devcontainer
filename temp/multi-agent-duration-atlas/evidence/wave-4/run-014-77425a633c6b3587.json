@@ -1,0 +1,390 @@
+{
+  "block_id": "c0-sol-medium-breadth",
+  "case": {
+    "capsule_digest": "sha256:a8490b3cf30e52857c5edc7871d6cf181bfb2af5ba501c263f3ece99a8b9ef55",
+    "case_id": "F01-M-PYJS-001",
+    "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
+    "family": "repository-trace",
+    "profile_id": "M-coupled-gold-trace-python-js",
+    "revision": 1,
+    "size": "M",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 365.967,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-2",
+          "duration_ms": 415.837,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-3",
+          "duration_ms": 367.802,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "trace-success-chain",
+          "duration_ms": 466.833,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "trace-schema-boundary",
+          "duration_ms": 416.768,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "trace-fail-open-branches",
+          "duration_ms": 568.866,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "trace-no-telemetry-detour",
+          "duration_ms": 522.417,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "trace-evidence-integrity",
+          "duration_ms": 517.612,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f01-m-hook-state-render-hidden-v1",
+      "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+      "isolation_profile": "network-disabled-read-only-container",
+      "score": {
+        "all_checks_required": true,
+        "failed_check_ids": [
+          "trace-success-chain",
+          "trace-fail-open-branches",
+          "trace-evidence-integrity"
+        ],
+        "hidden_passed": 2,
+        "hidden_total": 5,
+        "passed": 5,
+        "public_passed": 3,
+        "public_total": 3,
+        "ratio": 0.625,
+        "resolution": "criterion",
+        "total": 8
+      },
+      "status": "fail"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 11,
+          "name": "item.completed"
+        },
+        {
+          "count": 7,
+          "name": "item.started"
+        },
+        {
+          "count": 1,
+          "name": "thread.started"
+        },
+        {
+          "count": 1,
+          "name": "turn.completed"
+        },
+        {
+          "count": 1,
+          "name": "turn.started"
+        }
+      ],
+      "event_failure_terms": [],
+      "exit_code": 0,
+      "failure_signals": [],
+      "failure_terms": [],
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [
+        {
+          "count": 4,
+          "name": "agent_message"
+        },
+        {
+          "count": 12,
+          "name": "command_execution"
+        },
+        {
+          "count": 2,
+          "name": "file_change"
+        }
+      ],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 16529,
+      "output_cap_bytes": 1048576,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "result_is_error": false,
+      "sandbox_preflight": {
+        "assurance": "probed",
+        "command_network": "denied",
+        "generation_request_performed": false,
+        "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+        "profile_digest": "sha256:e3b76b6d4d473e01898811a3933665dff68aacd1101e1e438734bca310655724",
+        "status": "pass",
+        "unrelated_read": "denied",
+        "workspace_write": "observed"
+      },
+      "status": "success",
+      "stderr_bytes": 0,
+      "task_network": "denied-by-permission-profile",
+      "terminal_event": "turn.completed",
+      "terminal_wall_ms": 82713.865,
+      "thread_id_digest": "sha256:7b87ac07e75ed1cb29de252b8ed45f668194b581559b5bdfc08bbaa61c3a4145",
+      "tool_error_count": 0,
+      "usage": {
+        "cached_input_tokens": 43008,
+        "input_tokens": 68716,
+        "output_tokens": 2882,
+        "reasoning_output_tokens": 1019
+      },
+      "workspace_changed_path_count": 1
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.007,
+    "online_validation": 3661.124,
+    "post_validation_tail": 0.044,
+    "provision": 2556.936,
+    "terminal_wall": 86416.812,
+    "user_result": 86416.799,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider"
+    ],
+    "unknown": [
+      "/participants/0/generation_settings/0/applied_value"
+    ]
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 89707517748323,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T02:22:28.104Z"
+    },
+    "P1": {
+      "monotonic_ns": 89710074684061,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T02:22:30.660Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 89710104807158,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T02:22:30.691Z"
+    },
+    "T1": {
+      "monotonic_ns": 89710104814493,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T02:22:30.691Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 89796521606157,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T02:24:00.790Z"
+    },
+    "TX": {
+      "monotonic_ns": 89796521618851,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T02:24:00.790Z"
+    },
+    "V0": {
+      "monotonic_ns": 89792860438799,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T02:23:57.129Z"
+    },
+    "V1": {
+      "monotonic_ns": 89796521562506,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T02:24:00.790Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 1800000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": "online-validation-failed",
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "fail",
+    "quality_basis": "online-fail",
+    "quality_pass": false,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "key": "effort",
+          "namespace": "codex.reasoning",
+          "requested_value": "medium",
+          "status": "unknown"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "alias-only",
+        "requested_alias": "gpt-5.6-sol",
+        "requested_source": "flag"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+        "observed_at": "2026-08-27T02:22:30.660Z",
+        "permission_mode": "automatic",
+        "provider": "codex"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "run-014-77425a633c6b3587",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "7a5e4660fc48682c497fcaec4ac2d4738eab15d6",
+    "bundle_digest": "sha256:62038f121775e5caa0de935cd5c38f3dcdb11a8478c583a52d8633cbf318f634",
+    "fixture_revision": "f01-m-hook-state-render-trace-v1-r1",
+    "instruction_set_digest": "sha256:495ef09bdc9e57a6d24e686168a3d2e409fecec071caf7d7a0bf4a79cf050edd"
+  },
+  "study_id": "duration-atlas-wave4-corpus",
+  "workers": []
+}
