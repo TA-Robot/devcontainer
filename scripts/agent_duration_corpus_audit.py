@@ -33,7 +33,12 @@ from agent_duration_fixtures import (
     evaluate_fixture,
     evaluate_fixture_isolated,
 )
-from agent_duration_study import DurationStudyError, ROOT, content_digest
+from agent_duration_study import (
+    DurationStudyError,
+    ROOT,
+    atomic_write_json,
+    content_digest,
+)
 
 
 MAX_CATALOG_CASES = 512
@@ -578,6 +583,11 @@ def build_parser() -> argparse.ArgumentParser:
         type=_bounded_timeout,
         default=30.0,
     )
+    parser.add_argument(
+        "--output",
+        type=Path,
+        help="atomically create a private JSON audit record instead of printing all case details",
+    )
     return parser
 
 
@@ -606,8 +616,22 @@ def main(argv: Sequence[str] | None = None) -> int:
     except (CorpusAuditError, DurationStudyError, OSError, ValueError) as exc:
         print(f"corpus audit configuration failed: {exc}", file=sys.stderr)
         return 2
-    json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
-    sys.stdout.write("\n")
+    if args.output is None:
+        json.dump(result, sys.stdout, ensure_ascii=False, indent=2)
+        sys.stdout.write("\n")
+    else:
+        atomic_write_json(args.output.resolve(), result)
+        print(
+            json.dumps(
+                {
+                    "status": result["status"],
+                    "cases": len(result["cases"]),
+                    "passed": sum(item["status"] == "pass" for item in result["cases"]),
+                    "output": str(args.output.resolve()),
+                },
+                sort_keys=True,
+            )
+        )
     return 0 if result["status"] == "pass" else 1
 
 
