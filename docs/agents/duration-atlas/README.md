@@ -112,6 +112,7 @@ Raw run recordを`generated/`、`docs/`、skillへ複製しません。`temp/`�
 | [`audit-agent-duration-corpus`](../../../scripts/audit-agent-duration-corpus) | なし | `--max-cases`と、`--fail-fast` / `--continue-on-failure`のどちらか |
 | [`plan-agent-duration-batch`](../../../scripts/plan-agent-duration-batch) | なし | 明示filter、series row、ID、repeat、rotation、run/deadline/output cap |
 | [`run-agent-duration-batch`](../../../scripts/run-agent-duration-batch) | defaultはdry-run | `--output-dir`、`--image`; liveには`--execute --confirm-live-provider`の両方 |
+| [`run-agent-duration-collaboration`](../../../scripts/run-agent-duration-collaboration) | `run-fake`のみ、provider接続なし | manifestにparticipant、DAG、deadline、step timeout、concurrency、failure policyをすべて明示 |
 | [`build-agent-duration-atlas`](../../../scripts/build-agent-duration-atlas) | なし | `--output`、`--max-records` |
 | [`query-agent-duration-atlas`](../../../scripts/query-agent-duration-atlas) | なし | `--max-rows`、`--max-output-bytes` |
 | [`report-agent-duration-study`](../../../scripts/report-agent-duration-study) | なし | `--output`、`--max-series`、`--max-cases`、`--max-output-bytes` |
@@ -124,6 +125,7 @@ Raw run recordを`generated/`、`docs/`、skillへ複製しません。`temp/`�
 | corpus audit | `max-cases`: 1..512。filter後、fixture生成前に検査 |
 | batch planner | `max-runs`: 1..36、`repeat`: positive、`rotation-seed`: non-negative、deadline: `> 0`かつ`<= 604800`秒、provider timeout: `> 0`かつ`<= 3600`秒、evaluator timeout: `> 0`かつ`<= 300`秒、per-run output: 1024..67108864 bytes。deadlineは少なくとも一件のprovider + evaluator budgetを収容すること |
 | batch runner | manifest内の`max_runs`、deadline、per-run timeout、evaluator timeout、output capを使用。automatic retryなし |
+| collaboration control-plane | participant/exchange数にdefaultなし。manifest上限はparticipants 256、steps/exchanges 4096、deadline 7日、step timeout 24時間。これらはresource hard guardであり推奨値ではない |
 | atlas builder | `max-records`: 1..5000が必須。`max-input-bytes`と`max-output-bytes`のhard ceilingは512 MiB。CLI defaultはそれぞれ64 MiB / 32 MiB |
 | atlas query | `max-rows`: 1..1000、`max-output-bytes`: 1..32 MiB。両方必須 |
 | study report | `max-series`: 1..5000、`max-cases`: 1..5000、`max-output-bytes`: 1..512 MiB。すべて必須 |
@@ -325,6 +327,28 @@ scripts/report-agent-duration-study \
 ```
 
 Reportはvalidated atlasだけを読み、raw runを直接読みません。Methodology、run-set digest、observation window、exact environment/model/requested/applied/surface、family/size coverage、各caseのraw point/range、quality/censor counts、content-free scoreとfailed IDs、limitationsを出します。Catalog digestが一致しない、case revisionが違う、atlas caseがcatalogに無い、または36 cellの一部が未測定なら明示します。Derived Markdownはcap検査後にatomic create/replaceされます。
+
+### 6.9 Collaboration manifestをprovider-freeで検証する
+
+`run-agent-duration-collaboration`は、`bounded-delegation`、`parallel-shards`、`independent-candidates`、`maker-verifier`、`evidence-dialogue`、`staged-pipeline`の有限DAGを検証・計測するcontrol-planeです。人数や対話回数を決め打ちせず、manifestごとにparticipant、step、依存関係、上限、停止方針を指定します。
+
+```bash
+scripts/run-agent-duration-collaboration validate <collaboration-manifest.json>
+scripts/run-agent-duration-collaboration run-fake \
+  <collaboration-manifest.json> \
+  --output <private-collaboration-result.json>
+```
+
+`run-fake`はinjected fake adapterだけを使用します。現在の境界は`provider_execution=not-implemented`、`agentctl_mapping=adapter-owned-not-implemented`です。したがって、この出力をlive provider durationやschema-v2 atlas runへ混ぜません。実adapterを追加するときも、automatic retryやrecurring schedulerをcontrol-planeへ持ち込まず、adapterが一dispatchのcancelとowned resource cleanupを完了するcontractを維持します。
+
+Manifestは次を実行前にfail closedで検査します。
+
+- unknown dependency、cycle、unused participant、cap超過
+- relation固有の構造。例えばindependent candidatesのcontext分離、maker/verifier分離、複数participant間で証拠依存を持つdialogue
+- `nested_delegation=disabled`、`retry_policy=none`、dependency failure時の`skip`
+- global concurrencyと同一participantの同時dispatch禁止
+
+Analyticsにはtask reference、prompt、transcript、credential、private artifact、例外詳細を保存せず、dispatch、worker stop、synthesis count、dialogue evidence countだけを記録します。
 
 ## 7. lookup-agent-duration skill
 
