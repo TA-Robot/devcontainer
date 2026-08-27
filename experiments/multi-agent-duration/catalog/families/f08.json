@@ -1,0 +1,181 @@
+{
+  "schema_version": 1,
+  "catalog_id": "duration-atlas-f08",
+  "revision": 1,
+  "published_at": "2026-08-27T00:00:00.000Z",
+  "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F08-S-MDJSON-001",
+        "revision": 1,
+        "capsule_digest": "sha256:f39b06eabb05f2e1da3125ac55dc8267ed387d5fe7002a97a70256d67ffee2cc",
+        "source_type": "fixture",
+        "family": "architecture-design",
+        "size": "S",
+        "profile_id": "S-local-constraint-design",
+        "variant_group_id": "F08-S-MDJSON",
+        "descriptors": {
+          "context_surface": "two-api-sketches-callers-and-five-constraints",
+          "artifact_surface": "decision-note-and-structured-rationale",
+          "coupling": "local-api-constraint-fit",
+          "validation_depth": ["schema", "constraint", "counterexample"],
+          "environment_setup": "none",
+          "failure_distance": "design-time",
+          "statefulness": "configuration-layering",
+          "language_toolchain": ["markdown", "json", "python"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "structured",
+        "decomposability": "serial",
+        "artifact_type": "design",
+        "risk": "low",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["constraint-omission", "missing-counterexample", "unsupported-claim", "document-drift"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F08-S-MDJSON-001",
+        "recipe_id": "f08-s-config-api-design-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f08-s-config-api-design.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "tools/validate_decision.py", "decision.json", "DECISION.md"],
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"]
+        ],
+        "hidden_validation_targets": [
+          {"check_id": "design-constraint-coverage", "test_target": "HiddenSmallArchitectureTests.test_constraint_coverage"},
+          {"check_id": "design-counterexamples", "test_target": "HiddenSmallArchitectureTests.test_counterexamples"},
+          {"check_id": "design-selected-contract", "test_target": "HiddenSmallArchitectureTests.test_selected_contract"},
+          {"check_id": "design-evidence-entailment", "test_target": "HiddenSmallArchitectureTests.test_evidence_entailment"},
+          {"check_id": "design-doc-json-sync", "test_target": "HiddenSmallArchitectureTests.test_doc_json_sync"}
+        ],
+        "online_evaluator_id": "f08-s-config-design-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F08-M-MDJSON-001",
+        "revision": 1,
+        "capsule_digest": "sha256:b387c811c5371e97f84eba0e6793e2ad86f743c6eb3e3f45109f1b66092d2c62",
+        "source_type": "fixture",
+        "family": "architecture-design",
+        "size": "M",
+        "profile_id": "M-coupled-calibrated-architecture",
+        "variant_group_id": "F08-M-MDJSON",
+        "descriptors": {
+          "context_surface": "three-components-options-failure-traces-and-invariants",
+          "artifact_surface": "architecture-proposal-and-responsibility-matrix",
+          "coupling": "component-ownership-and-failure-transitions",
+          "validation_depth": ["schema", "constraint", "failure-simulation", "counterexample"],
+          "environment_setup": "deterministic-event-simulator",
+          "failure_distance": "cross-component-restart",
+          "statefulness": "durable-job-state",
+          "language_toolchain": ["markdown", "json", "python"]
+        },
+        "ambiguity": "open",
+        "oracle_strength": "calibrated",
+        "decomposability": "independent",
+        "artifact_type": "design",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["invariant-omission", "ownership-conflict", "transition-gap", "preference-only-rejection", "unsupported-guarantee"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F08-M-MDJSON-001",
+        "recipe_id": "f08-m-job-responsibility-design-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f08-m-job-responsibility-design.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "tools/validate_proposal.py", "proposal.json", "PROPOSAL.md"],
+          ["python3", "simulator.py", "--proposal", "proposal.json", "--all-scenarios"]
+        ],
+        "hidden_validation_targets": [
+          {"check_id": "design-invariant-coverage", "test_target": "HiddenMediumArchitectureTests.test_invariant_coverage"},
+          {"check_id": "design-state-ownership", "test_target": "HiddenMediumArchitectureTests.test_state_ownership"},
+          {"check_id": "design-failure-transitions", "test_target": "HiddenMediumArchitectureTests.test_failure_transitions"},
+          {"check_id": "design-option-counterexamples", "test_target": "HiddenMediumArchitectureTests.test_option_counterexamples"},
+          {"check_id": "design-migration-observability", "test_target": "HiddenMediumArchitectureTests.test_migration_observability"},
+          {"check_id": "design-unknown-honesty", "test_target": "HiddenMediumArchitectureTests.test_unknown_honesty"}
+        ],
+        "online_evaluator_id": "f08-m-job-design-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F08-L-MDJSON-001",
+        "revision": 1,
+        "capsule_digest": "sha256:82ba9e0a704fcb780f381744bd03d9739324d0f4e2d42b5dba1ca16631f878e8",
+        "source_type": "fixture",
+        "family": "architecture-design",
+        "size": "L",
+        "profile_id": "L-cross-boundary-calibrated-execution-design",
+        "variant_group_id": "F08-L-MDJSON",
+        "descriptors": {
+          "context_surface": "execution-persistence-provider-isolation-ui-and-operations-evidence",
+          "artifact_surface": "multi-section-design-record-and-machine-model",
+          "coupling": "security-migration-and-operations-coupling",
+          "validation_depth": ["schema", "constraint", "threat", "failure-simulation", "migration", "operations"],
+          "environment_setup": "deterministic-topology-lifecycle-simulator",
+          "failure_distance": "multi-stage-restart-and-migration",
+          "statefulness": "durable-jobs-leases-and-event-ledger",
+          "language_toolchain": ["markdown", "json", "python", "bash", "docker"]
+        },
+        "ambiguity": "open",
+        "oracle_strength": "calibrated",
+        "decomposability": "independent",
+        "artifact_type": "design",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["requirement-omission", "ownership-conflict", "unbounded-recovery", "destructive-migration", "trust-boundary-gap", "unsupported-claim"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F08-L-MDJSON-001",
+        "recipe_id": "f08-l-execution-fabric-design-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f08-l-execution-fabric-design.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "tools/validate_design.py", "design.json", "DESIGN.md"],
+          ["python3", "simulator.py", "--design", "design.json", "--scenario-set", "visible"],
+          ["bash", "tools/replay_migration.sh", "design.json", "visible"]
+        ],
+        "hidden_validation_targets": [
+          {"check_id": "design-requirement-coverage", "test_target": "HiddenLargeArchitectureTests.test_requirement_coverage"},
+          {"check_id": "design-topology-ownership", "test_target": "HiddenLargeArchitectureTests.test_topology_ownership"},
+          {"check_id": "design-failure-recovery", "test_target": "HiddenLargeArchitectureTests.test_failure_recovery"},
+          {"check_id": "design-migration-rollback", "test_target": "HiddenLargeArchitectureTests.test_migration_rollback"},
+          {"check_id": "design-security-boundaries", "test_target": "HiddenLargeArchitectureTests.test_security_boundaries"},
+          {"check_id": "design-observability", "test_target": "HiddenLargeArchitectureTests.test_observability"},
+          {"check_id": "design-alternative-counterexamples", "test_target": "HiddenLargeArchitectureTests.test_alternative_counterexamples"},
+          {"check_id": "design-unknown-honesty", "test_target": "HiddenLargeArchitectureTests.test_unknown_honesty"}
+        ],
+        "online_evaluator_id": "f08-l-execution-design-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    }
+  ]
+}
