@@ -1,0 +1,375 @@
+{
+  "block_id": "c0-sol-high-family-coverage",
+  "case": {
+    "capsule_digest": "sha256:6bb5179f7978f93e1d019d44d35e29a52b004bf7a9d801e8448cbd05bc449841",
+    "case_id": "F01-S-PY-001",
+    "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
+    "family": "repository-trace",
+    "profile_id": "S-local-gold-trace-python",
+    "revision": 1,
+    "size": "S",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 517.52,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-2",
+          "duration_ms": 569.591,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "trace-required-nodes",
+          "duration_ms": 467.822,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "trace-required-edges",
+          "duration_ms": 576.756,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "trace-evidence-exists",
+          "duration_ms": 517.767,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "trace-no-distractor",
+          "duration_ms": 668.942,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f01-s-python-trace-hidden-v1",
+      "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+      "isolation_profile": "network-disabled-read-only-container",
+      "score": {
+        "all_checks_required": true,
+        "failed_check_ids": [
+          "trace-required-nodes",
+          "trace-required-edges"
+        ],
+        "hidden_passed": 2,
+        "hidden_total": 4,
+        "passed": 4,
+        "public_passed": 2,
+        "public_total": 2,
+        "ratio": 0.666667,
+        "resolution": "criterion",
+        "total": 6
+      },
+      "status": "fail"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 10,
+          "name": "item.completed"
+        },
+        {
+          "count": 6,
+          "name": "item.started"
+        },
+        {
+          "count": 1,
+          "name": "thread.started"
+        },
+        {
+          "count": 1,
+          "name": "turn.completed"
+        },
+        {
+          "count": 1,
+          "name": "turn.started"
+        }
+      ],
+      "event_failure_terms": [],
+      "exit_code": 0,
+      "failure_signals": [],
+      "failure_terms": [],
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [
+        {
+          "count": 4,
+          "name": "agent_message"
+        },
+        {
+          "count": 10,
+          "name": "command_execution"
+        },
+        {
+          "count": 2,
+          "name": "file_change"
+        }
+      ],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 12595,
+      "output_cap_bytes": 1048576,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "result_is_error": false,
+      "sandbox_preflight": {
+        "assurance": "probed",
+        "command_network": "denied",
+        "generation_request_performed": false,
+        "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+        "profile_digest": "sha256:e3b76b6d4d473e01898811a3933665dff68aacd1101e1e438734bca310655724",
+        "status": "pass",
+        "unrelated_read": "denied",
+        "workspace_write": "observed"
+      },
+      "status": "success",
+      "stderr_bytes": 0,
+      "task_network": "denied-by-permission-profile",
+      "terminal_event": "turn.completed",
+      "terminal_wall_ms": 104537.373,
+      "thread_id_digest": "sha256:3e8fe90c32ac36de661a3368b2d93c5b116da0d7a2849a7f41be51ca1ccd1499",
+      "tool_error_count": 0,
+      "usage": {
+        "cached_input_tokens": 40960,
+        "input_tokens": 74307,
+        "output_tokens": 4307,
+        "reasoning_output_tokens": 2697
+      },
+      "workspace_changed_path_count": 1
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.013,
+    "online_validation": 3346.887,
+    "post_validation_tail": 0.025,
+    "provision": 2582.584,
+    "terminal_wall": 107946.959,
+    "user_result": 107946.954,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider"
+    ],
+    "unknown": [
+      "/participants/0/generation_settings/0/applied_value"
+    ]
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 93551485111174,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:27:50.191Z"
+    },
+    "P1": {
+      "monotonic_ns": 93554067695491,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:27:52.774Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 93554109209046,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:27:52.816Z"
+    },
+    "T1": {
+      "monotonic_ns": 93554109222157,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:27:52.816Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 93662056162657,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:29:40.763Z"
+    },
+    "TX": {
+      "monotonic_ns": 93662056167981,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:29:40.763Z"
+    },
+    "V0": {
+      "monotonic_ns": 93658709250758,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:29:37.416Z"
+    },
+    "V1": {
+      "monotonic_ns": 93662056138099,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:29:40.762Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 1800000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": "online-validation-failed",
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "fail",
+    "quality_basis": "online-fail",
+    "quality_pass": false,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "key": "effort",
+          "namespace": "codex.reasoning",
+          "requested_value": "high",
+          "status": "unknown"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "alias-only",
+        "requested_alias": "gpt-5.6-sol",
+        "requested_source": "flag"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+        "observed_at": "2026-08-27T03:27:52.774Z",
+        "permission_mode": "automatic",
+        "provider": "codex"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "run-003-d15e57bcc079496a",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "31046588bb74aa5af53c80ea82ad2812808ba06a",
+    "bundle_digest": "sha256:ca4a54b9e0db7e49da139793e549bcdd3473e486c241eca0df3db6b6a1bdc6c0",
+    "fixture_revision": "f01-s-python-flag-trace-v1-r1",
+    "instruction_set_digest": "sha256:495ef09bdc9e57a6d24e686168a3d2e409fecec071caf7d7a0bf4a79cf050edd"
+  },
+  "study_id": "duration-atlas-wave5-depth",
+  "workers": []
+}
