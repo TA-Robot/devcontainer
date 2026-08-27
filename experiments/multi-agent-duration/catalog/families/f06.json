@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "catalog_id": "duration-atlas-f06",
+  "revision": 1,
+  "published_at": "2026-08-27T00:00:00.000Z",
+  "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F06-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:83f6dabffa995d10d05d2531e0689686bc80428b1a0e723944903d28db183a69",
+        "source_type": "fixture",
+        "family": "test-design",
+        "size": "S",
+        "profile_id": "S-local-mutation-test-python",
+        "variant_group_id": "F06-S-PY",
+        "descriptors": {
+          "context_surface": "one-python-function-and-test-module",
+          "artifact_surface": "unit-tests-only",
+          "coupling": "local-behavior-matrix",
+          "validation_depth": ["unit", "mutation"],
+          "environment_setup": "none",
+          "failure_distance": "direct",
+          "statefulness": "stateless",
+          "language_toolchain": ["python"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "tests",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["boundary-omission", "type-partition-omission", "production-edit"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F06-S-PY-001",
+        "recipe_id": "f06-s-python-port-tests-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f06-s-python-port-tests.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["git", "diff", "--exit-code", "--", "ports.py"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "test-kills-upper-bound",
+            "test_target": "HiddenSmallTestDesignTests.test_kills_upper_bound"
+          },
+          {
+            "check_id": "test-kills-bool",
+            "test_target": "HiddenSmallTestDesignTests.test_kills_bool"
+          },
+          {
+            "check_id": "test-kills-whitespace",
+            "test_target": "HiddenSmallTestDesignTests.test_kills_whitespace"
+          },
+          {
+            "check_id": "test-kills-float",
+            "test_target": "HiddenSmallTestDesignTests.test_kills_float"
+          },
+          {
+            "check_id": "test-production-untouched",
+            "test_target": "HiddenSmallTestDesignTests.test_production_untouched"
+          }
+        ],
+        "online_evaluator_id": "f06-s-python-port-mutation-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F06-M-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:382c08a96029e368b0c18a95a706cb1e1ded3dd09ebdd037263fcbe7c1c4b2c4",
+        "source_type": "fixture",
+        "family": "test-design",
+        "size": "M",
+        "profile_id": "M-coupled-mutation-test-python",
+        "variant_group_id": "F06-M-PY",
+        "descriptors": {
+          "context_surface": "policy-clock-and-test-harness",
+          "artifact_surface": "table-property-test-suite",
+          "coupling": "four-axis-decision-contract",
+          "validation_depth": ["unit", "table", "mutation"],
+          "environment_setup": "fake-clock",
+          "failure_distance": "interaction-only",
+          "statefulness": "attempt-counter-state",
+          "language_toolchain": ["python"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "tests",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["axis-omission", "interaction-omission", "wall-clock-flake", "production-edit"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F06-M-PY-001",
+        "recipe_id": "f06-m-python-retry-tests-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f06-m-python-retry-tests.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["python3", "tools/check_test_only.py"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "test-kills-status-mutant",
+            "test_target": "HiddenMediumTestDesignTests.test_kills_status_mutant"
+          },
+          {
+            "check_id": "test-kills-method-mutant",
+            "test_target": "HiddenMediumTestDesignTests.test_kills_method_mutant"
+          },
+          {
+            "check_id": "test-kills-attempt-mutant",
+            "test_target": "HiddenMediumTestDesignTests.test_kills_attempt_mutant"
+          },
+          {
+            "check_id": "test-kills-delay-mutant",
+            "test_target": "HiddenMediumTestDesignTests.test_kills_delay_mutant"
+          },
+          {
+            "check_id": "test-kills-interaction-mutant",
+            "test_target": "HiddenMediumTestDesignTests.test_kills_interaction_mutant"
+          },
+          {
+            "check_id": "test-production-untouched",
+            "test_target": "HiddenMediumTestDesignTests.test_production_untouched"
+          }
+        ],
+        "online_evaluator_id": "f06-m-python-retry-mutation-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F06-L-PYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:5dc9de1e14cd90c4ef03a3e19f561c4ec0134a8db07099e7a7e34efaddc2d807",
+        "source_type": "fixture",
+        "family": "test-design",
+        "size": "L",
+        "profile_id": "L-cross-process-lifecycle-test-design",
+        "variant_group_id": "F06-L-PYBASH",
+        "descriptors": {
+          "context_surface": "python-worker-lease-store-and-bash-harness",
+          "artifact_surface": "lifecycle-integration-suite",
+          "coupling": "concurrency-and-restart-ownership",
+          "validation_depth": ["unit", "integration", "concurrency", "crash", "restart", "mutation"],
+          "environment_setup": "multiple-fresh-subprocesses",
+          "failure_distance": "race-restart-delayed",
+          "statefulness": "lease-and-process-state",
+          "language_toolchain": ["python", "bash", "json"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "independent",
+        "artifact_type": "tests",
+        "risk": "high",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["lost-wakeup", "stale-lease", "duplicate-owner", "broad-cleanup", "flake", "production-edit"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F06-L-PYBASH-001",
+        "recipe_id": "f06-l-lease-lifecycle-tests-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f06-l-lease-lifecycle-tests.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["bash", "-n", "tests/lifecycle.sh"],
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["bash", "tools/run-lifecycle-repeat.sh", "5"],
+          ["python3", "tools/check_test_only.py"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "test-kills-lost-wakeup",
+            "test_target": "HiddenLargeTestDesignTests.test_kills_lost_wakeup"
+          },
+          {
+            "check_id": "test-kills-stale-lease",
+            "test_target": "HiddenLargeTestDesignTests.test_kills_stale_lease"
+          },
+          {
+            "check_id": "test-kills-duplicate-owner",
+            "test_target": "HiddenLargeTestDesignTests.test_kills_duplicate_owner"
+          },
+          {
+            "check_id": "test-kills-broad-cleanup",
+            "test_target": "HiddenLargeTestDesignTests.test_kills_broad_cleanup"
+          },
+          {
+            "check_id": "test-repeatability",
+            "test_target": "HiddenLargeTestDesignTests.test_repeatability"
+          },
+          {
+            "check_id": "test-bounded-cleanup",
+            "test_target": "HiddenLargeTestDesignTests.test_bounded_cleanup"
+          },
+          {
+            "check_id": "test-production-untouched",
+            "test_target": "HiddenLargeTestDesignTests.test_production_untouched"
+          }
+        ],
+        "online_evaluator_id": "f06-l-lease-lifecycle-mutation-v1",
+        "gold_visibility": "harness-only"
+      }
+    }
+  ]
+}
