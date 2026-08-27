@@ -12,9 +12,10 @@ Atlasはrouterではありません。provider、model、effort、agent数、rel
 - 同一case・同一primary stratumのrepeatだけが、同一case内のobserved rangeを作れます。異なるcaseを平坦化しません。
 - requested model/settingと、runtimeで確認できたresolved/applied valueを分離します。requested valueをapplied valueとして補完しません。
 - quality-pass、quality-fail、quality-unknownを混ぜません。timeoutやcancelledを速い完了として扱いません。
+- Terminal timeの妥当性とeffort-quality inferenceの妥当性を分けます。Case design、observation artifact、comparisonの3 gateが揃わない限り、flat scoreを問題飽和や`mediumで十分`と解釈しません。
 - exact cellが無ければ`unmeasured`です。近隣caseや別modelの時間を代入しません。
 - credentialが存在しない、期限を確認できない、または安全window内に失効する場合、live runは開始前に拒否されます。そのcellは`unmeasured`のままであり、別providerへ自動fallbackしません。
-- raw prompt、transcript、private reasoning、credentialはatlas、query、study reportへ保存しません。
+- raw prompt、transcript、private reasoning、credentialはatlas、query、study reportへ保存しません。明示opt-in時だけ、synthetic fixtureのallowlisted task artifactをbounded run snapshotへ保存します。
 - 数値capはresource/context safety guardです。統計精度、model quality、agent数の推奨値ではありません。
 
 ## 2. Corpusと設計正本
@@ -55,6 +56,7 @@ Runtimeのversioned入力は次です。
 - family別のexclusive edit surface: [`experiments/multi-agent-duration/catalog/families/`](../../../experiments/multi-agent-duration/catalog/families/README.md)
 - agentへ渡すcontent capsule: [`experiments/multi-agent-duration/capsules/`](../../../experiments/multi-agent-duration/capsules/)
 - case、run、batch、atlasのcontract: [`experiments/multi-agent-duration/schemas/`](../../../experiments/multi-agent-duration/schemas/)
+- effort-quality inference validity: [`experiments/multi-agent-duration/validity/effort-quality.json`](../../../experiments/multi-agent-duration/validity/effort-quality.json)
 - deterministic fixture/evaluator実装: [`scripts/agent_duration_cases/`](../../../scripts/agent_duration_cases/)
 
 ## 3. Data flow
@@ -80,6 +82,8 @@ family fragments + capsules + deterministic evaluators
                                              ▼
                               deterministic aggregate atlas
                                       │              │
+                       validity companion            │
+                                      │              │
                                       ▼              ▼
                                 bounded query   Markdown study report
                                       │
@@ -97,10 +101,12 @@ Provider-free calibrationがtaskとoracleを検証し、その後にだけ明示
 | `temp/multi-agent-duration-atlas/` | 設計、実験計画、review、implementation provenance | operator commandや現在値のruntime sourceにはしない |
 | `<private-run-dir>/<study-id>/*.json` | live runのimmutable raw evidence | private directoryへatomic create。credentialは含めない。既存run IDを上書きしない |
 | `generated/duration-atlas/current.json` | query/skillが読むmachine aggregate（atlas schema v2） | validated raw run setからprovider-freeで再生成し、derived fileとしてatomic replace |
+| `generated/duration-atlas/current-validity.json` | case revisionとobservationのeffort-quality inference gate | versioned validity sourceとbyte-identicalに配布 |
 | `docs/agents/duration-atlas/studies/current.md` | 人間がauditするcurrent aggregateのcontent-free study report | current atlasと同じrun-set digestで再生成。releaseを残す場合は別の一意なpathへcopyする |
 | `docs/agents/duration-atlas/README.md` | operator contract | この文書 |
 | `project/.codex/skills/lookup-agent-duration/` | target projectへ配るbounded lookup skill | project templateからcopyし、詳細datasetをskill本文へ埋め込まない |
 | `/usr/local/share/mira-duration-atlas/current.json` | Dev Container image同梱のversioned reference snapshot | image build時に固定。更新にはDev Container rebuildが必要 |
+| `/usr/local/share/mira-duration-atlas/current-validity.json` | image同梱のvalidity companion | atlas snapshotと対でroot-owned / read-onlyに固定 |
 
 Raw run recordを`generated/`、`docs/`、skillへ複製しません。`temp/`には設計provenanceを残しますが、そこに書かれた検討中の数値をatlas観測値として返してはいけません。
 
@@ -115,7 +121,8 @@ Raw run recordを`generated/`、`docs/`、skillへ複製しません。`temp/`�
 | [`run-agent-duration-collaboration`](../../../scripts/run-agent-duration-collaboration) | `run-fake`のみ、provider接続なし | manifestにparticipant、DAG、deadline、step timeout、concurrency、failure policyをすべて明示 |
 | [`build-agent-duration-atlas`](../../../scripts/build-agent-duration-atlas) | なし | `--output`、`--max-records` |
 | [`query-agent-duration-atlas`](../../../scripts/query-agent-duration-atlas) | なし | `--max-rows`、`--max-output-bytes` |
-| [`report-agent-duration-study`](../../../scripts/report-agent-duration-study) | なし | `--output`、`--max-series`、`--max-cases`、`--max-output-bytes` |
+| [`validate-agent-duration-validity`](../../../scripts/validate-agent-duration-validity) | なし | current catalog digest、revision-aware validity contract |
+| [`report-agent-duration-study`](../../../scripts/report-agent-duration-study) | なし | `--output`、`--max-series`、`--max-cases`、`--max-output-bytes`; validity結合は`--validity`で明示 |
 | [`lookup-agent-duration`](../../../project/.codex/skills/lookup-agent-duration/SKILL.md) | なし | queryへcontext capとfilterを渡す |
 
 ### Cap contract
@@ -123,7 +130,7 @@ Raw run recordを`generated/`、`docs/`、skillへ複製しません。`temp/`�
 | Surface | Contract |
 | --- | --- |
 | corpus audit | `max-cases`: 1..512。filter後、fixture生成前に検査 |
-| batch planner | `max-runs`: 1..36、`repeat`: positive、`rotation-seed`: non-negative、deadline: `> 0`かつ`<= 604800`秒、provider timeout: `> 0`かつ`<= 3600`秒、evaluator timeout: `> 0`かつ`<= 300`秒、per-run output: 1024..67108864 bytes。deadlineは少なくとも一件のprovider + evaluator budgetを収容すること |
+| batch planner | `max-runs`: 1..36、`repeat`: positive、`rotation-seed`: non-negative、deadline: `> 0`かつ`<= 604800`秒、provider timeout: `> 0`かつ`<= 3600`秒、evaluator timeout: `> 0`かつ`<= 300`秒、per-run output: 1024..67108864 bytes。task artifactは最大16 files、1 file 256 KiB、合計1 MiB。deadlineは少なくとも一件のprovider + evaluator budgetを収容すること |
 | batch runner | manifest内の`max_runs`、deadline、per-run timeout、evaluator timeout、output capを使用。automatic retryなし |
 | collaboration control-plane | participant/exchange数にdefaultなし。manifest上限はparticipants 256、steps/exchanges 4096、deadline 7日、step timeout 24時間。これらはresource hard guardであり推奨値ではない |
 | atlas builder | `max-records`: 1..5000が必須。`max-input-bytes`と`max-output-bytes`のhard ceilingは512 MiB。CLI defaultはそれぞれ64 MiB / 32 MiB |
@@ -196,7 +203,8 @@ scripts/plan-agent-duration-batch \
   --deadline-seconds <batch-deadline> \
   --timeout-seconds <per-run-timeout> \
   --evaluator-timeout-seconds <evaluator-timeout> \
-  --output-bytes-cap <per-run-output-byte-cap>
+  --output-bytes-cap <per-run-output-byte-cap> \
+  --artifact-retention <task-artifacts-or-content-free-only>
 ```
 
 少なくとも一つの`--case-id`、`--family`、`--size`が必要です。複数seriesを測る場合は`--provider`、`--model`、`--effort`を同数だけrepeatします。同じ位置の三値が一行になり、暗黙のCartesian productにはなりません。
@@ -207,7 +215,7 @@ Provider surfaceが現在受理するeffort labelは次です。これはCLI com
 - Claude: `low`, `medium`, `high`, `xhigh`, `max`
 - Grok: `medium`, `high`, `xhigh`, `max`
 
-PlannerはS/M/Lをseed付きでinterleaveし、catalog digest、repeat、run ID、全budgetをmanifestへ固定します。modelやeffortを推測せず、`terra`、`low`、その他の値を暗黙選択しません。Manifestはimmutable createであり、同じpathを上書きしません。
+PlannerはS/M/Lをseed付きでinterleaveし、catalog digest、repeat、run ID、全budgetをmanifestへ固定します。新規manifestのartifact retention defaultは`task-artifacts`です。保存対象はrecipeのtask-output allowlistだけで、credential実値、unexpected path、non-UTF-8、non-regular、size超過があれば本文を保持せず`partial`にします。modelやeffortを推測せず、`terra`、`low`、その他の値を暗黙選択しません。Manifestはimmutable createであり、同じpathを上書きしません。
 
 ### 6.4 必ずdry-runしてからlive実行する
 
@@ -274,6 +282,7 @@ Atlasは次を保持します。
 - evaluator status、criterionまたはaggregate-check score、存在するfailed criterion IDs
 - complete / right-censored / administratively-censored countsとsafety cap
 - first-artifactの`progress-envelope` / `not-observed` / `not-applicable` / `unknown`
+- task artifactの`content-free-only` / `task-artifacts`と`not-retained` / `complete` / `partial` auditability metadata。Artifact本文はatlasへ複製しない
 
 Aggregate生成はprovider-freeで、derived outputをatomic replaceします。
 
@@ -284,6 +293,7 @@ Aggregate生成はprovider-freeで、derived outputをatomic replaceします。
 ```bash
 scripts/query-agent-duration-atlas \
   generated/duration-atlas/current.json \
+  --validity generated/duration-atlas/current-validity.json \
   --mode coverage \
   --format markdown \
   --max-rows <context-row-cap> \
@@ -316,12 +326,15 @@ scripts/query-agent-duration-atlas \
 
 `compare`はuserが明示したdimensionだけを`--compare-by`へ、`curve`は観測済みの`participants-actual` / `workers-actual` / `peak-concurrent`だけを`--curve-by`へ指定します。Curve outputのinterpolationは常に`none`です。`audit`はsource run digestとstudy report pathを返し、`explain`は解釈referenceを返します。
 
+Validity outputの`eligible-pending-comparison-gates`はcase/observation gateだけが通り、comparison gateの評価待ちである状態です。Same revision/fixture identity、applied setting、repeat/singleton制約、infrastructure population、quality measureのheadroomをqueryが自動補完せず、`not-evaluated`として残します。全run passはceiling-limitedであり、model reasoningの飽和とは扱いません。`conditional-only`と`excluded`をquality winner判断へ使いません。
+
 ### 6.8 Markdown study reportを生成する
 
 ```bash
 scripts/report-agent-duration-study \
   generated/duration-atlas/current.json \
   --catalog experiments/multi-agent-duration/catalog/cases.json \
+  --validity experiments/multi-agent-duration/validity/effort-quality.json \
   --output docs/agents/duration-atlas/studies/current.md \
   --max-series <explicit-series-cap> \
   --max-cases <explicit-case-strata-cap> \
@@ -383,7 +396,7 @@ Atlas discovery orderは次です。
 4. skill package内の`assets/current.json`がある場合
 5. image同梱の`/usr/local/share/mira-duration-atlas/current.json`
 
-`--print-atlas-path`で実際に選ばれたsourceを確認できます。`AGENT_DURATION_QUERY_COMMAND`はquery executableを明示的に差し替えるoperator overrideです。
+`--print-atlas-path`と`--print-validity-path`で実際に選ばれた対のsourceを確認できます。`AGENT_DURATION_VALIDITY_PATH`は明示overrideです。自動discoveryは選択atlasが`current.json`の場合だけ、同じdirectoryの`current-validity.json`を結合し、別snapshotのauditを混ぜません。別名の明示snapshotには`--validity`も明示します。`AGENT_DURATION_QUERY_COMMAND`はquery executableを明示的に差し替えるoperator overrideです。
 
 Dev Container imageは、root-ownedな`query-agent-duration-atlas` runtimeと、build時点のversioned system snapshotを同梱します。Target projectの`PYTHONPATH`をruntimeへ持ち込まず、bundled schemaで検証します。Project aggregateまたは`AGENT_DURATION_ATLAS_PATH`はsystem snapshotより優先されるため、project-localな新しいatlasはimageを変えず利用できます。System snapshot自体を更新した場合はDev Containerをrebuildしてください。単なるwindow reload、container restart、reopenではimage内snapshotは更新されません。
 
@@ -392,9 +405,11 @@ Rebuild後はproviderを呼ばずにinstall surfaceを確認できます。
 ```bash
 command -v query-agent-duration-atlas
 test -r /usr/local/share/mira-duration-atlas/current.json
+test -r /usr/local/share/mira-duration-atlas/current-validity.json
 
 query-agent-duration-atlas \
   /usr/local/share/mira-duration-atlas/current.json \
+  --validity /usr/local/share/mira-duration-atlas/current-validity.json \
   --mode coverage \
   --format json \
   --max-rows <context-row-cap> \
@@ -420,6 +435,7 @@ VS Code / Cursorではsystem snapshotを更新したcommitへ移動した後、`
 - Scoreは`criterion`または`aggregate-check`のresolutionを保持します。
 - `failed_check_ids`はatlas sampleに存在するときだけ表示します。Rubric textや欠けたcriterionをreport/query側で推測しません。
 - Offline evaluator runtimeはuser waitとは別metricです。
+- Quality failで実在するcompleteなtask artifactが無ければ、semantic false negativeを再判定できないためeffort-quality useは`conditional-only`です。保持処理がcompleteでも対象artifactが0件なら`task-artifact-missing`です。
 
 ### Censoringとfirst artifact
 
@@ -452,13 +468,13 @@ VS Code / Cursorではsystem snapshotを更新したcommitへ移動した後、`
 
 1. Caseの意味を変える場合は、該当caseの6 design docsを先にreviewする。
 2. Family fragment、capsule、recipe/evaluator、focused testを同じcase identityへ揃える。
-3. Provider-free corpus auditでinitial fail、known-good、negative mutantsを通す。
+3. Provider-free corpus auditでinitial fail、known-good、declared valid alternatives、negative mutantsを通す。
 4. Catalog revision/published timestampを明示してaggregateを再composeする。
 5. 新しいcatalog digest、study/block/run ID、series row、repeat、budgetを持つfinite manifestを作る。
 6. Dry-runを確認し、credentialが有効な明示seriesだけをlive実行する。Unavailable seriesは未測定のまま残す。
 7. Immutable run recordsからatlasを再buildし、source run-set digestを確認する。
-8. Coverage/summary queryとMarkdown study reportを生成し、unmeasured、quality、censoring、requested/applied差をreviewする。
-9. `generated/duration-atlas/current.json`をtarget projectへ提供する。
+8. Validity companionを検証し、coverage/summary queryとMarkdown study reportを生成して、unmeasured、quality、artifact auditability、censoring、requested/applied差をreviewする。
+9. `generated/duration-atlas/current.json`とmatching `current-validity.json`をtarget projectへ提供する。
 10. Versioned system snapshotを更新した場合はDev Container imageをrebuildする。
 11. Skill contractを変更した場合は`project/.codex/skills/lookup-agent-duration/`からtarget projectのcopyを更新する。
 

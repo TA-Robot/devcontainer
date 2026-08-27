@@ -8,10 +8,10 @@
     "series": 104
   },
   "safety_caps": {
-    "max_input_bytes": 8388608,
+    "max_input_bytes": 67108864,
     "max_output_bytes": 33554432,
-    "max_output_entities": 600,
-    "max_records": 200,
+    "max_output_entities": 324,
+    "max_records": 108,
     "role": "hard-resource-cap"
   },
   "schema_version": 2,
@@ -127,6 +127,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -400,6 +406,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-high-family-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -673,6 +685,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -945,6 +963,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -1212,6 +1236,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-high-family-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -1483,6 +1513,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "codex-primary-calibration",
               "catalog_digest": "sha256:5e1f6f6f3d29ab4e9d0e73bacb870d2bec32d05d6edabcebe784a15e445f6c79",
               "censoring": {
@@ -1762,6 +1798,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "provider-path-canary",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -1810,6 +1852,12 @@
               "run_id": "claude-f04-s-opus-medium-20260827-r01"
             },
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "provider-path-canary",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -1858,6 +1906,12 @@
               "run_id": "claude-f04-s-opus-medium-20260827-r02"
             },
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "provider-path-canary",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -2109,6 +2163,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -2376,6 +2436,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "depth-curve-l-coverage-1",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -2645,6 +2711,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-medium-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -2919,6 +2991,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-xhigh-deep-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -3192,6 +3270,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -3463,6 +3547,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -3732,6 +3822,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-high-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -4008,6 +4104,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-high-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -4283,6 +4385,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "provider-path-canary",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -4547,6 +4655,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "provider-path-canary",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -4595,6 +4709,12 @@
               "run_id": "claude-f04-s-opus-medium-20260827-r05"
             },
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "provider-path-canary",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -4643,6 +4763,12 @@
               "run_id": "claude-f04-s-opus-medium-20260827-r06"
             },
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "provider-path-canary",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -4897,6 +5023,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-medium-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -5170,6 +5302,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-max-deep-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -5444,6 +5582,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-xhigh-deep-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -5714,6 +5858,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-high-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -5986,6 +6136,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -6239,6 +6395,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-xhigh-deep4",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -6513,6 +6675,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-high-family-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -6780,6 +6948,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -7051,6 +7225,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-f06l-current-identity",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -7325,6 +7505,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -7595,6 +7781,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -7862,6 +8054,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-high-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -8131,6 +8329,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -8398,6 +8602,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-max-deep-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -8671,6 +8881,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-high-family-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -8938,6 +9154,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-medium-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -9215,6 +9437,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -9482,6 +9710,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -9754,6 +9988,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -10027,6 +10267,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -10298,6 +10544,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -10566,6 +10818,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -10839,6 +11097,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-high-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -11116,6 +11380,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-high-family-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -11386,6 +11656,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "depth-curve-l-coverage-1",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -11653,6 +11929,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-medium-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -11929,6 +12211,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "depth-curve-l-coverage-1",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -12196,6 +12484,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -12469,6 +12763,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-medium-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -12738,6 +13038,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -13011,6 +13317,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "provider-path-canary",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -13278,6 +13590,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -13549,6 +13867,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-high-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -13823,6 +14147,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -14091,6 +14421,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -14361,6 +14697,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -14629,6 +14971,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "depth-curve-l-coverage-1",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -14881,6 +15229,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-high-family-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -15155,6 +15509,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "codex-primary-calibration",
               "catalog_digest": "sha256:5e1f6f6f3d29ab4e9d0e73bacb870d2bec32d05d6edabcebe784a15e445f6c79",
               "censoring": {
@@ -15424,6 +15784,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-high-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -15699,6 +16065,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-xhigh-deep4",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -15973,6 +16345,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-high-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -16242,6 +16620,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -16516,6 +16900,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-high-family-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -16786,6 +17176,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-high-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -17060,6 +17456,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "provider-path-canary",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -17327,6 +17729,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -17595,6 +18003,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "depth-curve-l-coverage-1",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -17860,6 +18274,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "depth-curve-l-coverage-1",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -18127,6 +18547,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-medium-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -18403,6 +18829,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-medium-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -18672,6 +19104,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-high-family-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -18941,6 +19379,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -19206,6 +19650,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -19471,6 +19921,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-max-deep-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -19740,6 +20196,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-high-family-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -20007,6 +20469,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-high-family-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -20274,6 +20742,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-high-family-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -20544,6 +21018,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "depth-curve-l-coverage-1",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -20809,6 +21289,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -21078,6 +21564,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-infrastructure-recovery",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -21329,6 +21821,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-xhigh-deep-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -21604,6 +22102,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "depth-curve-l-coverage-1",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -21873,6 +22377,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-medium-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -22145,6 +22655,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -22413,6 +22929,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "codex-primary-calibration",
               "catalog_digest": "sha256:5e1f6f6f3d29ab4e9d0e73bacb870d2bec32d05d6edabcebe784a15e445f6c79",
               "censoring": {
@@ -22682,6 +23204,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-medium-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -22956,6 +23484,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "depth-curve-l-coverage-1",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -23223,6 +23757,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-high-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -23495,6 +24035,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -23760,6 +24306,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -24028,6 +24580,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "provider-path-canary",
               "catalog_digest": "sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d",
               "censoring": {
@@ -24279,6 +24837,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -24548,6 +25112,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-max-deep4",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -24802,6 +25372,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-medium-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -25076,6 +25652,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-xhigh-deep4",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -25355,6 +25937,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-high-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -25631,6 +26219,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-medium-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -25903,6 +26497,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -26175,6 +26775,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-medium-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -26449,6 +27055,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-xhigh-deep4",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -26724,6 +27336,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -26997,6 +27615,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "wave6-c0-grok-high-family12",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -27269,6 +27893,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-medium-breadth",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -27539,6 +28169,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-xhigh-deep-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -27808,6 +28444,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-high-family-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {
@@ -28078,6 +28720,12 @@
           },
           "samples": [
             {
+              "artifact_auditability": {
+                "completeness": "not-retained",
+                "file_count": 0,
+                "retention": "content-free-only",
+                "total_bytes": 0
+              },
               "block_id": "c0-sol-max-deep-coverage",
               "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
               "censoring": {

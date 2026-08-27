@@ -13,7 +13,7 @@ Use the bundled discovery wrapper to query only the relevant atlas cells. Keep p
 2. If profile values are unknown, run `coverage` with the known filters. Return the compact value inventory and ask for refinement; do not select a nearby cell silently.
 3. Run `summary` for an exact cell. Start with `--max-rows 12 --max-output-bytes 32768`; these are context-safety caps, not agent-count or statistical defaults.
 4. Use `compare` or `curve` only for dimensions the user explicitly asks to inspect. Show every other differing primary field alongside the observations.
-5. Report the observation window, source run-set digest, evidence state, quality populations, failed criterion IDs, censoring and first-artifact resolution with any duration.
+5. Report the observation window, source run-set digest, evidence state, quality populations, failed criterion IDs, censoring, first-artifact resolution and inference-validity status with any duration.
 
 Run from the directory containing this skill, or pass its absolute path:
 
@@ -24,7 +24,7 @@ python3 scripts/query_atlas.py \
   --family failing-test-diagnosis --size M
 ```
 
-Set `AGENT_DURATION_ATLAS_PATH` or pass `--atlas PATH` to override data discovery. The wrapper checks a project aggregate, the skill snapshot and the installed devcontainer snapshot in that order. Use `--print-atlas-path` to disclose the selected source.
+Set `AGENT_DURATION_ATLAS_PATH` or pass `--atlas PATH` to override data discovery. Use `AGENT_DURATION_VALIDITY_PATH` or `--validity PATH` for its companion. The wrapper checks project, skill and installed snapshots in that order. It auto-pairs only `current.json` with a same-directory `current-validity.json`; pass both paths for differently named snapshots. Use `--print-atlas-path` and `--print-validity-path` to disclose both sources.
 
 ## Interpretation rules
 
@@ -33,6 +33,8 @@ Set `AGENT_DURATION_ATLAS_PATH` or pass `--atlas PATH` to override data discover
 - Use case-aware output only when the versioned query returns it. Never invent quantiles, p95, prediction intervals or interpolation.
 - Keep `requested`, `applied`, `rejected` and `unknown` generation settings separate.
 - Keep quality-pass, quality-fail and quality-unknown populations separate. Include content-free failed criterion IDs when available.
+- Treat `excluded` as unusable for effort-quality inference and `conditional-only` as exploratory evidence. `eligible-pending-comparison-gates` still requires matched identity, applied-setting evidence, repeat/singleton review and score headroom; it is not a recommendation. An all-pass ceiling does not prove reasoning saturation.
+- A failed observation without an actually present, complete retained task artifact cannot establish that more effort failed to improve reasoning; preserve `task-artifact-not-retained`, `task-artifact-partial`, or `task-artifact-missing`.
 - Keep right/admin-censored runs visible. Do not count a fast failure as a fast completion.
 - Emit first-artifact time only for `progress-envelope`; preserve `not-observed`, `not-applicable` and `unknown`.
 - Never rank providers/models/efforts/relations or generate a default configuration from this evidence.

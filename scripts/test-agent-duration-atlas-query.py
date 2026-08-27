@@ -12,6 +12,7 @@ import unittest
 
 
 SCRIPT_DIR = Path(__file__).resolve().parent
+ROOT = SCRIPT_DIR.parent
 CLI = SCRIPT_DIR / "query-agent-duration-atlas"
 sys.path.insert(0, str(SCRIPT_DIR))
 
@@ -88,6 +89,7 @@ class AgentDurationAtlasQueryTests(unittest.TestCase):
         output_format: str = "json",
         compare_by: tuple[str, ...] = (),
         curve_by: str = "workers-actual",
+        validity: dict[str, object] | None = None,
     ) -> dict[str, object]:
         return build_query_result(  # type: ignore[arg-type]
             atlas or self.atlas,
@@ -98,6 +100,62 @@ class AgentDurationAtlasQueryTests(unittest.TestCase):
             output_format=output_format,
             compare_by=compare_by,
             curve_by=curve_by,
+            validity=validity,
+        )
+
+    def test_validity_companion_excludes_overfit_revision_and_conditions_missing_artifact(self) -> None:
+        atlas = json.loads(
+            (ROOT / "generated/duration-atlas/current.json").read_text(encoding="utf-8")
+        )
+        validity = json.loads(
+            (
+                ROOT
+                / "experiments/multi-agent-duration/validity/effort-quality.json"
+            ).read_text(encoding="utf-8")
+        )
+        excluded = self.query(
+            atlas,
+            mode="compare",
+            filters=QueryFilters(case_id="F10-S-PY-001", case_revision=1),
+            max_rows=20,
+            max_output_bytes=512 * 1024,
+            validity=validity,
+        )
+        self.assertTrue(excluded["rows"])
+        self.assertTrue(
+            all(
+                row["inference_validity"]["effort_quality_use"] == "excluded"
+                for row in excluded["rows"]
+            )
+        )
+
+        conditional = self.query(
+            atlas,
+            mode="compare",
+            filters=QueryFilters(
+                case_id="F06-L-PYBASH-001",
+                case_revision=1,
+                provider="codex",
+                setting_requested_value="medium",
+            ),
+            max_rows=20,
+            max_output_bytes=512 * 1024,
+            validity=validity,
+        )
+        self.assertTrue(conditional["rows"])
+        self.assertTrue(
+            any(
+                row["inference_validity"]["effort_quality_use"] == "conditional-only"
+                for row in conditional["rows"]
+            )
+        )
+        observations = [
+            item
+            for row in conditional["rows"]
+            for item in row["inference_validity"]["observations"]
+        ]
+        self.assertTrue(
+            any(item["reason"] == "task-artifact-not-retained" for item in observations)
         )
 
     def test_exact_primary_stratum_filter_returns_one_compact_row(self) -> None:

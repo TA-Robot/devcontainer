@@ -77,16 +77,39 @@ def discover_query_command() -> Path:
     raise ValueError("query-agent-duration-atlas command is not installed")
 
 
+def discover_validity(explicit: Path | None, atlas: Path) -> Path | None:
+    if explicit is not None:
+        resolved = _regular_file(explicit)
+        if resolved is None:
+            raise ValueError("explicit duration validity companion does not exist")
+        return resolved
+    configured = os.environ.get("AGENT_DURATION_VALIDITY_PATH")
+    if configured:
+        resolved = _regular_file(Path(configured))
+        if resolved is None:
+            raise ValueError("AGENT_DURATION_VALIDITY_PATH does not name a file")
+        return resolved
+    # Never attach a validity audit from a different snapshot merely because it
+    # is bundled with the skill. Project, skill, and system atlas snapshots all
+    # place their matching companion beside the selected atlas.
+    if atlas.name != "current.json":
+        return None
+    return _regular_file(atlas.with_name("current-validity.json"))
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(add_help=False)
     parser.add_argument("-h", "--help", action="store_true")
     parser.add_argument("--atlas", type=Path)
+    parser.add_argument("--validity", type=Path)
     parser.add_argument("--print-atlas-path", action="store_true")
+    parser.add_argument("--print-validity-path", action="store_true")
     args, forwarded = parser.parse_known_args(argv)
     try:
         if args.help:
             print(
-                "usage: query_atlas.py [--atlas PATH] [--print-atlas-path] "
+                "usage: query_atlas.py [--atlas PATH] [--validity PATH] "
+                "[--print-atlas-path] [--print-validity-path] "
                 "QUERY_OPTIONS...\n\n"
                 "Discovers and injects the atlas positional argument; do not pass it "
                 "again in QUERY_OPTIONS.\n\n"
@@ -96,7 +119,9 @@ def main(argv: list[str] | None = None) -> int:
                 "  3. nearest generated/duration-atlas/current.json\n"
                 "  4. this skill's assets/current.json\n"
                 "  5. /usr/local/share/mira-duration-atlas/current.json\n\n"
-                "--print-atlas-path prints the selected file and exits without querying.\n\n"
+                "A matching validity companion is injected when available; override it with "
+                "--validity or AGENT_DURATION_VALIDITY_PATH.\n"
+                "--print-atlas-path or --print-validity-path prints the selected file and exits without querying.\n\n"
                 "Query options from the bounded CLI follow:\n",
                 flush=True,
             )
@@ -110,8 +135,15 @@ def main(argv: list[str] | None = None) -> int:
         if args.print_atlas_path:
             print(atlas)
             return 0
+        validity = discover_validity(args.validity, atlas)
+        if args.print_validity_path:
+            print(validity if validity is not None else "not-found")
+            return 0 if validity is not None else 2
         command = discover_query_command()
-        return subprocess.run([str(command), str(atlas), *forwarded], check=False).returncode
+        injected = [str(command), str(atlas)]
+        if validity is not None:
+            injected.extend(["--validity", str(validity)])
+        return subprocess.run([*injected, *forwarded], check=False).returncode
     except (OSError, ValueError) as exc:
         print(f"duration atlas skill query failed: {exc}", file=sys.stderr)
         return 2

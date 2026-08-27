@@ -1,5 +1,21 @@
 # Interpreting duration evidence
 
+## Inference validity
+
+The validity companion audits a case revision separately from each observation.
+`eligible-pending-comparison-gates` means only that case and observation gates
+passed. Before comparing effort, still require the same case revision and
+fixture identity, observed/applied setting evidence, no pooled infrastructure
+failure, an explicit repeat or singleton limitation, and enough quality-score
+headroom to distinguish settings. An all-pass cell is ceiling-limited evidence,
+not proof that model reasoning has saturated.
+
+`conditional-only` includes quality failures whose task artifact was absent, not
+retained, or only partially retained. Such points remain valid terminal-time
+observations but cannot distinguish model saturation from a semantic evaluator
+false negative. `excluded` identifies a case design whose old evaluator encoded
+undisclosed vocabulary or one preferred answer.
+
 ## Time values
 
 - Report exact milliseconds or a readable conversion derived from them.

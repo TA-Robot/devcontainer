@@ -4,6 +4,8 @@
 
 Status: **current study release complete**。12 family × S/M/Lの全36 caseを各6文書で設計し、fixture/evaluatorを実装・校正したうえで、有限live batchを安全境界まで実行した。108件のimmutable terminal recordをatlas schema v2へ集約し、人間向けreport、bounded query skill、Dev Container同梱snapshotまで同一run-setから生成した。
 
+> 2026-08-27 interpretation amendment: effort-quality inferenceのsolvability / artifact auditability再監査は`25-effort-inference-validity-review.md`を正本とする。旧108 recordsのterminal timeは維持するが、F10-S r1 / F12-L r1はquality推論から除外し、artifact未保持のquality failはconditionalとする。
+
 ここでいうcompleteは、計画したcase corpus、実行可能だったprovider block、拒否・credential barrierを含む実験provenance、配布経路が閉じたという意味である。provider × model × effort × collaboration × environmentの無限に近い全組合せを測り切ったという意味ではない。未測定cellは値を補完せず`unmeasured`として残す。
 
 ## 1. Release artifacts
@@ -13,6 +15,8 @@ Status: **current study release complete**。12 family × S/M/Lの全36 caseを�
 | `generated/duration-atlas/current.json` | atlas schema v2、108 records、36 case IDs、104 primary strata |
 | `docs/agents/duration-atlas/studies/current.md` | raw point、quality、censoring、identity、settingを省略しないcontent-free report |
 | `project/.codex/skills/lookup-agent-duration/assets/current.json` | atlasとbyte-identicalなtarget-project skill snapshot |
+| `generated/duration-atlas/current-validity.json` | case revision / observationのeffort-quality inference gate |
+| `project/.codex/skills/lookup-agent-duration/assets/current-validity.json` | validityとbyte-identicalなskill companion |
 | `/usr/local/share/mira-duration-atlas/current.json` | Dev Container imageへroot-owned / mode 0444で入るsnapshot |
 | `final-release-disposition.json` | canonical input grouping、除外record、calibration-only、未測定blockの機械可読なrelease判断 |
 
@@ -23,8 +27,9 @@ Release identity:
 - unique catalog case IDs: `36`
 - observation window: `2026-08-26T11:34:19.672Z` – `2026-08-27T06:07:15.461Z`
 - run-set digest: `sha256:402b7a5bb5efa351bd31f768a0058f296a2902a5586d327347bf8fac86244b3f`
-- atlas / skill snapshot SHA-256: `0713b2b9b3a1ce696ff5f3ec470e9265aa0e1f574f8ace231a7fd103132f7e62`
-- human report SHA-256: `113a4b060ca94f3e6a5bea4d69d11593ebb917f50557e9d00dcf23dce59a8d1d`
+- atlas / skill snapshot SHA-256: `baa05b27b0de1e0988b18017c74134da7298c7874aa3908fe90ab892cf95ce1a`
+- human report SHA-256: `d6c202e266da916b4acbffc03ae7e9757a2edefaddc83844a16a3e9d823a76b6`
+- validity / skill validity SHA-256: `753d53218bc30ecf90ea7cbda1c7707ad48221a7069748cda33bf486b0f97e21`
 
 ## 2. Case design and implementation closure
 
@@ -166,7 +171,7 @@ Repositoryにはprimary-only、parallel decomposition、independent advice、ite
 - Dev Container snapshotはroot-owned / 0444、query runtimeはcaller `PYTHONPATH`を継承しない。
 - exact cellが無ければ`unmeasured`。補間、ランキング、default routingをしない。
 
-Historical wave 1–3 recordsは旧catalog digestを含むため、current reportはdigest mismatchを明示する。case revision / identity差がないことは別に検査済みであり、mismatchを隠してcurrent digestへ書き換えない。
+Historical recordsは旧catalog digestを含むため、current reportはdigest mismatchを明示する。F10-S / F12-Lのcurrent catalogはrevision 2へ進み、旧atlasのrevision 1とは意図的に異なる。旧identityをcurrent digestへ書き換えず、validity companionでrevision 1を除外する。
 
 ## 10. Closure decision
 

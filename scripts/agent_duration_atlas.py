@@ -330,6 +330,23 @@ def _evaluator_score(record: Mapping[str, Any]) -> dict[str, Any] | None:
 def _sample(record: Mapping[str, Any], run_digest: str) -> dict[str, Any]:
     environment = record["environment"]
     evaluator = record["diagnostics"]["evaluator"]
+    artifact_snapshot = record.get("artifact_snapshot")
+    artifact_auditability: dict[str, Any]
+    if isinstance(artifact_snapshot, Mapping):
+        artifact_auditability = {
+            "retention": "task-artifacts",
+            "completeness": artifact_snapshot["completeness"],
+            "file_count": len(artifact_snapshot["files"]),
+            "total_bytes": artifact_snapshot["total_bytes"],
+            "manifest_digest": artifact_snapshot["manifest_digest"],
+        }
+    else:
+        artifact_auditability = {
+            "retention": "content-free-only",
+            "completeness": "not-retained",
+            "file_count": 0,
+            "total_bytes": 0,
+        }
     return {
         "run_id": record["run_id"],
         "run_digest": run_digest,
@@ -342,6 +359,7 @@ def _sample(record: Mapping[str, Any], run_digest: str) -> dict[str, Any]:
         "block_id": record["block_id"],
         "observed_at": record["landmarks"]["T0"]["wall_time"],
         "quality_population": _quality_population(record),
+        "artifact_auditability": artifact_auditability,
         "censoring": _censoring(record),
         "first_artifact": _first_artifact(record),
         "durations_ms": {

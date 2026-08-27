@@ -1,6 +1,6 @@
 # Agent Duration Study Report
 
-This is a deterministic, content-free observational report built from a validated aggregate atlas. It does not read raw run payloads or artifact content.
+This is a deterministic observational report built from a validated aggregate atlas. It does not copy raw prompts, transcripts, private reasoning, or retained task-artifact content.
 
 ## Methodology
 
@@ -9,6 +9,7 @@ This is a deterministic, content-free observational report built from a validate
 - One observation is shown only as one raw point. A range requires at least two points in the same case stratum.
 - Requested generation values remain distinct from applied values; an applied value appears only when the atlas records status `applied`.
 - Criterion scores and failed criterion IDs are emitted only from each sample's content-free quality evidence. Missing scores remain unavailable and are not inferred.
+- Case-design and observation validity are reported separately. Comparison gates remain open until identity, applied setting, repeat/singleton conditions, and quality-measurement headroom are checked.
 - The report is descriptive only. It produces no provider/model ranking, automatic route, or preferred configuration.
 
 ## Observation window and provenance
@@ -20,14 +21,24 @@ This is a deterministic, content-free observational report built from a validate
 - Source records: 108
 - Canonical source bytes: 808990
 - Atlas counts: series=104; case-strata=104; samples=108
-- Report resource caps: max-series=500; max-cases=500; max-output-bytes=8388608
+- Report resource caps: max-series=104; max-cases=104; max-output-bytes=33554432
+
+## Effort-quality inference validity
+
+- Validity audit: <code>duration-effort-quality-audit-20260827</code>
+- Audit scope: <code>same-case-effort-quality-inference</code>
+- Audit catalog digest: <code>sha256:c3c386e697885b96ce20571628e1923b27498db720afd34605a4931c47a3ff59</code>
+- Observed case-stratum use counts: <code>{"conditional-only":53,"eligible-pending-comparison-gates":11,"excluded":17,"not-audited":23}</code>
+- Pending comparison gates: <code>same-case-revision</code>, <code>same-fixture-identity</code>, <code>applied-setting-evidence</code>, <code>repeat-or-explicit-singleton-limit</code>, <code>no-infrastructure-failure-pooling</code>, <code>quality-measurement-headroom</code>
+- `eligible-pending-comparison-gates` is not a conclusion that effort caused quality; this report does not evaluate those comparison gates.
+- Revision-1 F10-S and F12-L are excluded. Missing/partial failed artifacts remain conditional, even when their terminal time is valid.
 
 ## Family and size coverage
 
-- Supplied catalog: <code>duration-atlas-calibration</code>, revision <code>3</code>
-- Supplied catalog digest: <code>sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0</code>
+- Supplied catalog: <code>duration-atlas-calibration</code>, revision <code>4</code>
+- Supplied catalog digest: <code>sha256:c3c386e697885b96ce20571628e1923b27498db720afd34605a4931c47a3ff59</code>
 - Atlas case catalog digest(s): <code>sha256:5e1f6f6f3d29ab4e9d0e73bacb870d2bec32d05d6edabcebe784a15e445f6c79</code>, <code>sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0</code>, <code>sha256:d339d14fff72cf7ac4d1213805d3e049adedc0e2268242b19d26dbae5aafb73d</code>
-- Digest compatibility: mismatch; the atlas digest set does not identify supplied catalog revision <code>3</code>. The earlier catalog revision number is not encoded in the atlas.
+- Digest compatibility: mismatch; the atlas digest set does not identify supplied catalog revision <code>4</code>. The earlier catalog revision number is not encoded in the atlas.
 - Observed supplied-catalog cells: 36 / 36
 - Unmeasured supplied-catalog cells: 0 / 36
 - Reference corpus check: 36 supplied cells; the checked-in target is 36.
@@ -53,11 +64,11 @@ Unmeasured catalog case IDs (0):
 Atlas case IDs absent from supplied catalog (0):
 - none
 
-Case revision differences (0):
-- none
+Case revision differences (2):
+- F10-S-PY-001: atlas=1 catalog=2; F12-L-MDJSON-001: atlas=1 catalog=2
 
-Case identity/profile differences (0):
-- none
+Case identity/profile differences (12):
+- F10-S-PY-001/sha256:0362a20c3390e55dd3e203228ab79d73fd71000042ba93dec9bb97ab0ef4e5e9: capsule-digest; F10-S-PY-001/sha256:8fe4116d254b1de4a20b37e0059ecbf234e48cce1840be6d4d6bf60d4a78332e: capsule-digest; F10-S-PY-001/sha256:e74df3b0ef1ac97b552f0077e854c8d63402e3569509489cf6cc2e611a07074f: capsule-digest; F10-S-PY-001/sha256:296ed2a22b56ec9b3a5167f8d69c197b814b3d233132072891f740d9662dd412: capsule-digest; F12-L-MDJSON-001/sha256:411e61f1802c9123d6ea4d496f379da7d651c6161f536e972ace9aa3e0f284de: capsule-digest; F12-L-MDJSON-001/sha256:d1e3ce8659044143457e43370a1394f6ed71c15100dba2fb3817d8fc8a27810f: capsule-digest; F12-L-MDJSON-001/sha256:ec1b7c9d3bc70c817f1784ecc1ca9e548865826e5049fc725563725c9c817485: capsule-digest; F12-L-MDJSON-001/sha256:98f4b4834e2eb45c6b0ebd7c5651a1ed6bc19aae8c5e9089b5f565c472ec2ccf: capsule-digest; F12-L-MDJSON-001/sha256:7ba1c7e0fcc949e18c4e454d70b3f0f9f477b00f2db8fdfd652704282d2936b6: capsule-digest; F12-L-MDJSON-001/sha256:774574f9e776d973b58be7a4ba7ec057e24e91be85f69fb3cc38edfca6f5018c: capsule-digest; F12-L-MDJSON-001/sha256:96239078e7c76e3ed70e9e4ef7ce8a9278e317b113e6f090c968e570c4d798a2: capsule-digest; F12-L-MDJSON-001/sha256:b37d6ff5d2a8cfcd5d15e42a6810c3a74fe3b9d772e316bc94d5ab498db3eb8e: capsule-digest
 
 ## Series 1
 
@@ -141,6 +152,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:02:47.109Z</code> to <code>2026-08-27T02:02:47.109Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -168,9 +183,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-006-81f4af8229d34d0f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=236879.158 ms; declared-cap=1800000 ms | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-006-81f4af8229d34d0f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=236879.158 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
 
 ## Series 2
 
@@ -254,6 +269,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:21:46.054Z</code> to <code>2026-08-27T03:21:46.054Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -281,9 +300,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-002-923734856e7421d3 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=364107.089 ms; declared-cap=1800000 ms | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-923734856e7421d3 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=364107.089 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
 
 ## Series 3
 
@@ -367,6 +386,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:57:36.271Z</code> to <code>2026-08-27T02:57:36.271Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -394,9 +417,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-029-e8988878c3986d64 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=164556.497 ms; declared-cap=1800000 ms | fail | 8 | criterion; 2/8; ratio=0.25; public=2/2; hidden=0/6; all-checks-required=true | perf-instrumentation-consistency, perf-cold-warm-separation, perf-cache-diagnosis, perf-secondary-costs, perf-distribution, perf-output-equivalence |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-029-e8988878c3986d64 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=164556.497 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 8 | criterion; 2/8; ratio=0.25; public=2/2; hidden=0/6; all-checks-required=true | perf-instrumentation-consistency, perf-cold-warm-separation, perf-cache-diagnosis, perf-secondary-costs, perf-distribution, perf-output-equivalence |
 
 ## Series 4
 
@@ -480,6 +503,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:52:59.928Z</code> to <code>2026-08-27T02:52:59.928Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -507,9 +534,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-026-39f72c8bd04ecf35 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=68438.135 ms; declared-cap=1800000 ms | fail | 3 | criterion; 2/3; ratio=0.666667; public=1/1; hidden=1/2; all-checks-required=true | hidden-round-trip-storage |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-026-39f72c8bd04ecf35 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=68438.135 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 3 | criterion; 2/3; ratio=0.666667; public=1/1; hidden=1/2; all-checks-required=true | hidden-round-trip-storage |
 
 ## Series 5
 
@@ -593,6 +620,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:38:37.856Z</code> to <code>2026-08-27T03:38:37.856Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>hidden-controlled-vocabulary</code>, <code>semantic-false-negative-risk</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -620,9 +651,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-006-1fb427e3921a635c | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=118368.565 ms; declared-cap=1800000 ms | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-006-1fb427e3921a635c | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=118368.565 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
 
 ## Series 6
 
@@ -706,6 +737,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T11:34:19.672Z</code> to <code>2026-08-26T11:34:19.672Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -733,9 +768,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| codex-f04-s-terra-low-20260826-r02 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=40936.286 ms; declared-cap=300000 ms | fail | 2 | aggregate-check; 1/2; ratio=0.5; public=0/0; hidden=0/0; all-checks-required=true | f04-s-python-hidden-v1 |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| codex-f04-s-terra-low-20260826-r02 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=40936.286 ms; declared-cap=300000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 2 | aggregate-check; 1/2; ratio=0.5; public=0/0; hidden=0/0; all-checks-required=true | f04-s-python-hidden-v1 |
 
 ## Series 7
 
@@ -819,6 +854,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>same-case-repeat</code>
 - Observation window: <code>2026-08-26T18:11:27.450Z</code> to <code>2026-08-26T18:13:12.638Z</code>
 - Runs / observation blocks: 3 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>, <code>quality-unobserved</code>, <code>no-observed-quality</code>
 
 #### Exact case identity
 
@@ -846,11 +885,11 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| claude-f04-s-opus-medium-20260827-r01 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=configuration | complete-terminal; observed-terminal=2004.757 ms; declared-cap=900000 ms | not-run | 0 | unavailable | unavailable |
-| claude-f04-s-opus-medium-20260827-r02 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=configuration | complete-terminal; observed-terminal=2162.787 ms; declared-cap=900000 ms | not-run | 0 | unavailable | unavailable |
-| claude-f04-s-opus-medium-20260827-r03 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=configuration | complete-terminal; observed-terminal=1951.568 ms; declared-cap=900000 ms | not-run | 0 | unavailable | unavailable |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| claude-f04-s-opus-medium-20260827-r01 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=configuration | complete-terminal; observed-terminal=2004.757 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
+| claude-f04-s-opus-medium-20260827-r02 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=configuration | complete-terminal; observed-terminal=2162.787 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
+| claude-f04-s-opus-medium-20260827-r03 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=configuration | complete-terminal; observed-terminal=1951.568 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
 
 ## Series 8
 
@@ -934,6 +973,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:03:55.741Z</code> to <code>2026-08-27T03:03:55.741Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -961,9 +1004,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-031-981e1065e16f96d7 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=65814.754 ms; declared-cap=1800000 ms | pass | 7 | criterion; 7/7; ratio=1.0; public=2/2; hidden=5/5; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-031-981e1065e16f96d7 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=65814.754 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | pass | 7 | criterion; 7/7; ratio=1.0; public=2/2; hidden=5/5; all-checks-required=true | none |
 
 ## Series 9
 
@@ -1049,6 +1092,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T18:41:39.372Z</code> to <code>2026-08-26T18:41:39.372Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>true-task-ceiling-observed</code>
 
 #### Exact case identity
 
@@ -1076,9 +1123,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| grok-f04-l-46-medium-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=86564.216 ms; declared-cap=900000 ms | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| grok-f04-l-46-medium-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=86564.216 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
 ## Series 10
 
@@ -1164,6 +1211,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:03:47.728Z</code> to <code>2026-08-27T05:03:47.728Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -1191,9 +1242,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-005-02d98291e743f9fc | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=335103.998 ms; declared-cap=1800000 ms | fail | 12 | criterion; 6/12; ratio=0.5; public=3/3; hidden=3/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-005-02d98291e743f9fc | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=335103.998 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 12 | criterion; 6/12; ratio=0.5; public=3/3; hidden=3/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
 
 ## Series 11
 
@@ -1277,6 +1328,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:58:32.215Z</code> to <code>2026-08-27T03:58:32.215Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>conditional</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>semantic-false-negative-risk</code>, <code>historical-artifact-missing</code>, <code>case-design-conditional</code>
 
 #### Exact case identity
 
@@ -1304,9 +1359,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-002-b4b5e02070295756 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=400639.065 ms; declared-cap=3600000 ms | fail | 11 | criterion; 4/11; ratio=0.363636; public=3/3; hidden=1/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-bind-injection, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-b4b5e02070295756 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=400639.065 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; case-design-conditional | fail | 11 | criterion; 4/11; ratio=0.363636; public=3/3; hidden=1/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-bind-injection, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-unknown-honesty |
 
 ## Series 12
 
@@ -1390,6 +1445,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:33:32.385Z</code> to <code>2026-08-27T02:33:32.385Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -1417,9 +1476,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-018-db68c23ca7e2058f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=178055.788 ms; declared-cap=1800000 ms | fail | 10 | criterion; 5/10; ratio=0.5; public=4/4; hidden=1/6; all-checks-required=true | trace-lifecycle-nodes, trace-boundary-artifacts, trace-runtime-chain, trace-recovery-ownership, trace-evidence-integrity |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-018-db68c23ca7e2058f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=178055.788 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 10 | criterion; 5/10; ratio=0.5; public=4/4; hidden=1/6; all-checks-required=true | trace-lifecycle-nodes, trace-boundary-artifacts, trace-runtime-chain, trace-recovery-ownership, trace-evidence-integrity |
 
 ## Series 13
 
@@ -1503,6 +1562,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:56:28.843Z</code> to <code>2026-08-27T02:56:28.843Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -1530,9 +1593,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-028-dbd23105c9d8f9c2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=62955.684 ms; declared-cap=1800000 ms | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-028-dbd23105c9d8f9c2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=62955.684 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
 
 ## Series 14
 
@@ -1618,6 +1681,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:38:53.848Z</code> to <code>2026-08-27T05:38:53.848Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>conditional</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>semantic-false-negative-risk</code>, <code>historical-artifact-missing</code>, <code>case-design-conditional</code>
 
 #### Exact case identity
 
@@ -1645,9 +1712,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-011-2af82cf0bd3c0e93 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=288450.221 ms; declared-cap=1800000 ms | fail | 11 | criterion; 5/11; ratio=0.454545; public=3/3; hidden=2/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-011-2af82cf0bd3c0e93 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=288450.221 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; case-design-conditional | fail | 11 | criterion; 5/11; ratio=0.454545; public=3/3; hidden=2/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-unknown-honesty |
 
 ## Series 15
 
@@ -1733,6 +1800,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:28:34.896Z</code> to <code>2026-08-27T05:28:34.896Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -1760,9 +1831,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-008-13a21f3548bff40a | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=278896.326 ms; declared-cap=1800000 ms | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-008-13a21f3548bff40a | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=278896.326 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
 
 ## Series 16
 
@@ -1846,6 +1917,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T18:18:16.190Z</code> to <code>2026-08-26T18:18:16.190Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>, <code>quality-unobserved</code>, <code>no-observed-quality</code>
 
 #### Exact case identity
 
@@ -1873,9 +1948,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| claude-f04-s-opus-medium-20260827-r04 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=sandbox | complete-terminal; observed-terminal=4024.107 ms; declared-cap=900000 ms | not-run | 0 | unavailable | unavailable |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| claude-f04-s-opus-medium-20260827-r04 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=sandbox | complete-terminal; observed-terminal=4024.107 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
 
 ## Series 17
 
@@ -1960,6 +2035,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>same-case-repeat</code>
 - Observation window: <code>2026-08-26T18:21:40.671Z</code> to <code>2026-08-26T18:23:21.886Z</code>
 - Runs / observation blocks: 3 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>, <code>quality-unobserved</code>, <code>no-observed-quality</code>
 
 #### Exact case identity
 
@@ -1987,11 +2066,11 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| claude-f04-s-opus-medium-20260827-r05 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=6636.095 ms; declared-cap=900000 ms | not-run | 0 | unavailable | unavailable |
-| claude-f04-s-opus-medium-20260827-r06 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=6389.315 ms; declared-cap=900000 ms | not-run | 0 | unavailable | unavailable |
-| claude-f04-s-opus-medium-20260827-r07 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=6384.674 ms; declared-cap=900000 ms | not-run | 0 | unavailable | unavailable |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| claude-f04-s-opus-medium-20260827-r05 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=6636.095 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
+| claude-f04-s-opus-medium-20260827-r06 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=6389.315 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
+| claude-f04-s-opus-medium-20260827-r07 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=6384.674 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
 
 ## Series 18
 
@@ -2077,6 +2156,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:10:04.130Z</code> to <code>2026-08-27T05:10:04.130Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-migration-contract</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -2104,9 +2187,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-007-5ef5a801077ce49c | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=57595.624 ms; declared-cap=1800000 ms | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | migration-all-callers, migration-policy-lifecycle, migration-compat-bytes, migration-warning-once, migration-api-surface |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-007-5ef5a801077ce49c | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=57595.624 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | migration-all-callers, migration-policy-lifecycle, migration-compat-bytes, migration-warning-once, migration-api-surface |
 
 ## Series 19
 
@@ -2190,6 +2273,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T04:41:37.237Z</code> to <code>2026-08-27T04:41:37.237Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>conditional</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>semantic-false-negative-risk</code>, <code>historical-artifact-missing</code>, <code>case-design-conditional</code>
 
 #### Exact case identity
 
@@ -2217,9 +2304,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-004-5f81d658366f99c7 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=657648.615 ms; declared-cap=3600000 ms | fail | 11 | criterion; 3/11; ratio=0.272727; public=3/3; hidden=0/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-bind-injection, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-control-counterexamples, threat-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-004-5f81d658366f99c7 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=657648.615 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; case-design-conditional | fail | 11 | criterion; 3/11; ratio=0.272727; public=3/3; hidden=0/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-bind-injection, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-control-counterexamples, threat-unknown-honesty |
 
 ## Series 20
 
@@ -2303,6 +2390,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:56:07.727Z</code> to <code>2026-08-27T03:56:07.727Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-event-order</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -2330,9 +2421,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-001-183a3c863cef1999 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=140109.287 ms; declared-cap=3600000 ms | fail | 9 | criterion; 7/9; ratio=0.777778; public=3/3; hidden=4/6; all-checks-required=true | diagnosis-ordering-cause, diagnosis-cleanup-bounded |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-183a3c863cef1999 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=140109.287 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 7/9; ratio=0.777778; public=3/3; hidden=4/6; all-checks-required=true | diagnosis-ordering-cause, diagnosis-cleanup-bounded |
 
 ## Series 21
 
@@ -2418,6 +2509,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:26:23.410Z</code> to <code>2026-08-27T05:26:23.410Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>oracle-derived-from-visible-input</code>, <code>bounded-design-space</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -2445,9 +2540,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-007-6ba767ed3c7f3033 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=128448.926 ms; declared-cap=1800000 ms | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | design-invariant-coverage, design-option-counterexamples, design-migration-observability, design-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-007-6ba767ed3c7f3033 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=128448.926 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | design-invariant-coverage, design-option-counterexamples, design-migration-observability, design-unknown-honesty |
 
 ## Series 22
 
@@ -2531,6 +2626,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:14:14.806Z</code> to <code>2026-08-27T02:14:14.806Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -2558,9 +2657,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-010-ddfa3e87bf3ce516 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=14638.748 ms; declared-cap=1800000 ms | not-run | 0 | unavailable | unavailable |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-010-ddfa3e87bf3ce516 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=14638.748 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | not-run | 0 | unavailable | unavailable |
 
 ## Series 23
 
@@ -2646,6 +2745,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:51:53.647Z</code> to <code>2026-08-27T05:51:53.647Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>conditional</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>semantic-false-negative-risk</code>, <code>historical-artifact-missing</code>, <code>case-design-conditional</code>
 
 #### Exact case identity
 
@@ -2673,9 +2776,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-002-e4d72e12f812a802 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=277973.04 ms; declared-cap=1800000 ms | fail | 11 | criterion; 5/11; ratio=0.454545; public=3/3; hidden=2/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-e4d72e12f812a802 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=277973.04 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; case-design-conditional | fail | 11 | criterion; 5/11; ratio=0.454545; public=3/3; hidden=2/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-unknown-honesty |
 
 ## Series 24
 
@@ -2759,6 +2862,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:40:39.003Z</code> to <code>2026-08-27T03:40:39.003Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-recovery-contract</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -2786,9 +2893,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-007-c3f8b69c171a79e5 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=200243.599 ms; declared-cap=1800000 ms | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | ops-ready-after-verify |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-007-c3f8b69c171a79e5 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=200243.599 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | ops-ready-after-verify |
 
 ## Series 25
 
@@ -2872,6 +2979,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:54:12.056Z</code> to <code>2026-08-27T02:54:12.056Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -2899,9 +3010,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-027-c7b66ee0a4c79b37 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=134528.766 ms; declared-cap=1800000 ms | fail | 11 | criterion; 6/11; ratio=0.545455; public=4/4; hidden=2/7; all-checks-required=true | review-redaction-order, review-stale-restart, review-cleanup-owner, review-lifecycle-model, review-evidence-integrity |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-027-c7b66ee0a4c79b37 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=134528.766 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 11 | criterion; 6/11; ratio=0.545455; public=4/4; hidden=2/7; all-checks-required=true | review-redaction-order, review-stale-restart, review-cleanup-owner, review-lifecycle-model, review-evidence-integrity |
 
 ## Series 26
 
@@ -2985,6 +3096,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T06:07:15.461Z</code> to <code>2026-08-27T06:07:15.461Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-lifecycle-invariants</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -3012,9 +3127,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-001-758f6d400a39baad | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=678286.534 ms; declared-cap=1800000 ms | fail | 11 | criterion; 3/11; ratio=0.272727; public=2/4; hidden=1/7; all-checks-required=true | workspace-2, workspace-3, test-kills-lost-wakeup, test-kills-stale-lease, test-kills-duplicate-owner, test-kills-broad-cleanup, test-repeatability, test-bounded-cleanup |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-758f6d400a39baad | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=678286.534 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 3/11; ratio=0.272727; public=2/4; hidden=1/7; all-checks-required=true | workspace-2, workspace-3, test-kills-lost-wakeup, test-kills-stale-lease, test-kills-duplicate-owner, test-kills-broad-cleanup, test-repeatability, test-bounded-cleanup |
 
 ## Series 27
 
@@ -3098,6 +3213,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:48:22.783Z</code> to <code>2026-08-27T02:48:22.783Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>oracle-derived-from-visible-input</code>, <code>bounded-design-space</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -3125,9 +3244,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-023-40f2340957975477 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=116919.829 ms; declared-cap=1800000 ms | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | design-invariant-coverage, design-option-counterexamples, design-migration-observability, design-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-023-40f2340957975477 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=116919.829 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | design-invariant-coverage, design-option-counterexamples, design-migration-observability, design-unknown-honesty |
 
 ## Series 28
 
@@ -3211,6 +3330,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:22:01.931Z</code> to <code>2026-08-27T02:22:01.931Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -3238,9 +3361,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-013-960048619f36327b | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=24325.887 ms; declared-cap=1800000 ms | pass | 5 | criterion; 5/5; ratio=1.0; public=2/2; hidden=3/3; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-013-960048619f36327b | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=24325.887 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | pass | 5 | criterion; 5/5; ratio=1.0; public=2/2; hidden=3/3; all-checks-required=true | none |
 
 ## Series 29
 
@@ -3326,6 +3449,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:36:19.251Z</code> to <code>2026-08-27T05:36:19.251Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-recovery-contract</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -3353,9 +3480,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-010-b7f2aefde4b0d672 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=150938.446 ms; declared-cap=1800000 ms | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | ops-ready-after-verify |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-010-b7f2aefde4b0d672 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=150938.446 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | ops-ready-after-verify |
 
 ## Series 30
 
@@ -3439,6 +3566,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:11:40.336Z</code> to <code>2026-08-27T03:11:40.336Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-recovery-contract</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -3466,9 +3597,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-035-428b05a832bea50f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=136402.672 ms; declared-cap=1800000 ms | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | ops-ready-after-verify |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-035-428b05a832bea50f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=136402.672 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | ops-ready-after-verify |
 
 ## Series 31
 
@@ -3552,6 +3683,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T04:19:32.272Z</code> to <code>2026-08-27T04:19:32.272Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -3579,9 +3714,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-001-f2d7073edac558ff | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=722083.503 ms; declared-cap=3600000 ms | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-f2d7073edac558ff | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=722083.503 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
 
 ## Series 32
 
@@ -3665,6 +3800,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:31:31.232Z</code> to <code>2026-08-27T03:31:31.232Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-lifecycle-invariants</code>, <code>behavioral-oracle</code>
 
 #### Exact case identity
 
@@ -3692,9 +3831,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-005-8d34b88f024eda13 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=423969.821 ms; declared-cap=1800000 ms | pass | 11 | criterion; 11/11; ratio=1.0; public=4/4; hidden=7/7; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-005-8d34b88f024eda13 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=423969.821 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 11 | criterion; 11/11; ratio=1.0; public=4/4; hidden=7/7; all-checks-required=true | none |
 
 ## Series 33
 
@@ -3780,6 +3919,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:14:09.245Z</code> to <code>2026-08-27T05:14:09.245Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-event-order</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -3807,9 +3950,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-011-16e30cd1a1c95aa0 | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=35550.239 ms; declared-cap=1800000 ms | fail | 9 | criterion; 0/9; ratio=0.0; public=0/3; hidden=0/6; all-checks-required=true | workspace-1, workspace-2, workspace-3, diagnosis-deterministic-barrier, diagnosis-ordering-cause, diagnosis-restart-state, diagnosis-regression-reliable, diagnosis-cleanup-bounded, diagnosis-semantics-honest |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-011-16e30cd1a1c95aa0 | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=35550.239 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 0/9; ratio=0.0; public=0/3; hidden=0/6; all-checks-required=true | workspace-1, workspace-2, workspace-3, diagnosis-deterministic-barrier, diagnosis-ordering-cause, diagnosis-restart-state, diagnosis-regression-reliable, diagnosis-cleanup-bounded, diagnosis-semantics-honest |
 
 ## Series 34
 
@@ -3893,6 +4036,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:47:17.641Z</code> to <code>2026-08-27T02:47:17.641Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -3920,9 +4067,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-022-f8fc43a390c18674 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=61555.492 ms; declared-cap=1800000 ms | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | review-evidence-line |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-022-f8fc43a390c18674 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=61555.492 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | review-evidence-line |
 
 ## Series 35
 
@@ -4006,6 +4153,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:00:24.662Z</code> to <code>2026-08-27T03:00:24.662Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -4033,9 +4184,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-030-8f31d4aa692ecffe | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=206795.196 ms; declared-cap=1800000 ms | fail | 10 | criterion; 4/10; ratio=0.4; public=4/4; hidden=0/6; all-checks-required=true | migration-v1-compat, migration-backend-boundary, migration-atomic-order, migration-resume, migration-rollback, migration-operations-doc |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-030-8f31d4aa692ecffe | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=206795.196 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 10 | criterion; 4/10; ratio=0.4; public=4/4; hidden=0/6; all-checks-required=true | migration-v1-compat, migration-backend-boundary, migration-atomic-order, migration-resume, migration-rollback, migration-operations-doc |
 
 ## Series 36
 
@@ -4119,6 +4270,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:06:44.696Z</code> to <code>2026-08-27T03:06:44.696Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -4146,9 +4301,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-033-d81bf119d0024dba | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=237033.765 ms; declared-cap=1800000 ms | fail | 9 | criterion; 2/9; ratio=0.222222; public=2/2; hidden=0/7; all-checks-required=true | perf-stage-correlation, perf-time-accounting, perf-width-curve, perf-probe-lock-cause, perf-provider-distinction, perf-censoring-resource, perf-claim-bounded |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-033-d81bf119d0024dba | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=237033.765 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 9 | criterion; 2/9; ratio=0.222222; public=2/2; hidden=0/7; all-checks-required=true | perf-stage-correlation, perf-time-accounting, perf-width-curve, perf-probe-lock-cause, perf-provider-distinction, perf-censoring-resource, perf-claim-bounded |
 
 ## Series 37
 
@@ -4232,6 +4387,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:37:52.969Z</code> to <code>2026-08-27T02:37:52.969Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -4259,9 +4418,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-020-15fb2a0ebf188352 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=122555.296 ms; declared-cap=1800000 ms | fail | 10 | criterion; 5/10; ratio=0.5; public=4/4; hidden=1/6; all-checks-required=true | security-symlink-exploit, security-env-root-exploit, security-composition, security-negative-tests, security-no-false-positive |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-020-15fb2a0ebf188352 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=122555.296 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 10 | criterion; 5/10; ratio=0.5; public=4/4; hidden=1/6; all-checks-required=true | security-symlink-exploit, security-env-root-exploit, security-composition, security-negative-tests, security-no-false-positive |
 
 ## Series 38
 
@@ -4345,6 +4504,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:10:44.564Z</code> to <code>2026-08-27T03:10:44.564Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -4372,9 +4535,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-034-06f90eaba1a453af | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=52958.618 ms; declared-cap=1800000 ms | fail | 6 | criterion; 4/6; ratio=0.666667; public=2/2; hidden=2/4; all-checks-required=true | diagnosis-root-cause, diagnosis-regression |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-034-06f90eaba1a453af | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=52958.618 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 6 | criterion; 4/6; ratio=0.666667; public=2/2; hidden=2/4; all-checks-required=true | diagnosis-root-cause, diagnosis-regression |
 
 ## Series 39
 
@@ -4458,6 +4621,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:17:40.482Z</code> to <code>2026-08-27T02:17:40.482Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -4485,9 +4652,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-011-212fc62819d02ecc | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=130227.713 ms; declared-cap=1800000 ms | fail | 9 | criterion; 4/9; ratio=0.444444; public=2/2; hidden=2/7; all-checks-required=true | synthesis-provenance, synthesis-race-accepted, synthesis-fix-refuted, synthesis-platform-unknown, synthesis-severity-narrowed |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-011-212fc62819d02ecc | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=130227.713 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 9 | criterion; 4/9; ratio=0.444444; public=2/2; hidden=2/7; all-checks-required=true | synthesis-provenance, synthesis-race-accepted, synthesis-fix-refuted, synthesis-platform-unknown, synthesis-severity-narrowed |
 
 ## Series 40
 
@@ -4573,6 +4740,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:24:25.229Z</code> to <code>2026-08-27T05:24:25.229Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-event-order</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -4600,9 +4771,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-005-a16270dc591bde8a | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=65990.167 ms; declared-cap=1800000 ms | fail | 9 | criterion; 0/9; ratio=0.0; public=0/3; hidden=0/6; all-checks-required=true | workspace-1, workspace-2, workspace-3, diagnosis-deterministic-barrier, diagnosis-ordering-cause, diagnosis-restart-state, diagnosis-regression-reliable, diagnosis-cleanup-bounded, diagnosis-semantics-honest |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-005-a16270dc591bde8a | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=65990.167 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 0/9; ratio=0.0; public=0/3; hidden=0/6; all-checks-required=true | workspace-1, workspace-2, workspace-3, diagnosis-deterministic-barrier, diagnosis-ordering-cause, diagnosis-restart-state, diagnosis-regression-reliable, diagnosis-cleanup-bounded, diagnosis-semantics-honest |
 
 ## Series 41
 
@@ -4686,6 +4857,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:44:01.960Z</code> to <code>2026-08-27T03:44:01.960Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-event-order</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -4713,9 +4888,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-008-41f6d565527a0a08 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=103239.161 ms; declared-cap=1800000 ms | fail | 9 | criterion; 5/9; ratio=0.555556; public=3/3; hidden=2/6; all-checks-required=true | diagnosis-ordering-cause, diagnosis-restart-state, diagnosis-cleanup-bounded, diagnosis-semantics-honest |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-008-41f6d565527a0a08 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=103239.161 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 5/9; ratio=0.555556; public=3/3; hidden=2/6; all-checks-required=true | diagnosis-ordering-cause, diagnosis-restart-state, diagnosis-cleanup-bounded, diagnosis-semantics-honest |
 
 ## Series 42
 
@@ -4799,6 +4974,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T18:50:43.912Z</code> to <code>2026-08-26T18:50:43.912Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>true-task-ceiling-observed</code>
 
 #### Exact case identity
 
@@ -4826,9 +5005,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| codex-f04-l-sol-medium-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=96938.053 ms; declared-cap=900000 ms | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| codex-f04-l-sol-medium-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=96938.053 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
 ## Series 43
 
@@ -4914,6 +5093,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:11:37.108Z</code> to <code>2026-08-27T05:11:37.108Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>hidden-controlled-vocabulary</code>, <code>semantic-false-negative-risk</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -4941,9 +5124,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-009-2bb14915b664e5af | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=46691.145 ms; declared-cap=1800000 ms | fail | 7 | criterion; 1/7; ratio=0.142857; public=1/2; hidden=0/5; all-checks-required=true | workspace-2, perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-009-2bb14915b664e5af | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=46691.145 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 7 | criterion; 1/7; ratio=0.142857; public=1/2; hidden=0/5; all-checks-required=true | workspace-2, perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
 
 ## Series 44
 
@@ -5029,6 +5212,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T18:43:22.390Z</code> to <code>2026-08-26T18:43:22.390Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>true-task-ceiling-observed</code>
 
 #### Exact case identity
 
@@ -5056,9 +5243,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| grok-f04-l-46-high-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=100239.97 ms; declared-cap=900000 ms | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| grok-f04-l-46-high-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=100239.97 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
 ## Series 45
 
@@ -5142,6 +5329,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T01:59:15.797Z</code> to <code>2026-08-27T01:59:15.797Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>hidden-controlled-vocabulary</code>, <code>semantic-false-negative-risk</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -5169,9 +5360,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-004-771bcffe5e8c9972 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=103620.903 ms; declared-cap=1800000 ms | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-004-771bcffe5e8c9972 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=103620.903 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
 
 ## Series 46
 
@@ -5257,6 +5448,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:14:46.118Z</code> to <code>2026-08-27T05:14:46.118Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -5284,9 +5479,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-012-06ed7485f4107e51 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=64269.798 ms; declared-cap=1800000 ms | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-012-06ed7485f4107e51 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=64269.798 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
 
 ## Series 47
 
@@ -5370,6 +5565,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T01:33:27.161Z</code> to <code>2026-08-27T01:33:27.161Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -5397,9 +5596,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-001-8a98736041817333 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=110968.743 ms; declared-cap=1800000 ms | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | design-constraint-coverage, design-counterexamples, design-selected-contract, design-evidence-entailment, design-doc-json-sync |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-8a98736041817333 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=110968.743 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | design-constraint-coverage, design-counterexamples, design-selected-contract, design-evidence-entailment, design-doc-json-sync |
 
 ## Series 48
 
@@ -5485,6 +5684,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T18:25:52.023Z</code> to <code>2026-08-26T18:25:52.023Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>
 
 #### Exact case identity
 
@@ -5512,9 +5715,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| grok-f04-s-46-medium-20260827-r02 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=52670.704 ms; declared-cap=900000 ms | pass | 5 | criterion; 5/5; ratio=1.0; public=1/1; hidden=4/4; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| grok-f04-s-46-medium-20260827-r02 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=52670.704 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 5 | criterion; 5/5; ratio=1.0; public=1/1; hidden=4/4; all-checks-required=true | none |
 
 ## Series 49
 
@@ -5598,6 +5801,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:36:44.136Z</code> to <code>2026-08-27T02:36:44.136Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -5625,9 +5832,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-019-08b62149616e646f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=61960.683 ms; declared-cap=1800000 ms | fail | 6 | criterion; 3/6; ratio=0.5; public=1/1; hidden=2/5; all-checks-required=true | synthesis-claim-coverage, synthesis-conflict-adjudication, synthesis-unsupported |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-019-08b62149616e646f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=61960.683 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 6 | criterion; 3/6; ratio=0.5; public=1/1; hidden=2/5; all-checks-required=true | synthesis-claim-coverage, synthesis-conflict-adjudication, synthesis-unsupported |
 
 ## Series 50
 
@@ -5713,6 +5920,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:43:44.595Z</code> to <code>2026-08-27T05:43:44.595Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>hidden-controlled-vocabulary</code>, <code>semantic-false-negative-risk</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -5740,9 +5951,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-012-598bdb7aa67e5c56 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=56971.561 ms; declared-cap=1800000 ms | fail | 7 | criterion; 1/7; ratio=0.142857; public=1/2; hidden=0/5; all-checks-required=true | workspace-2, perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-012-598bdb7aa67e5c56 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=56971.561 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 7 | criterion; 1/7; ratio=0.142857; public=1/2; hidden=0/5; all-checks-required=true | workspace-2, perf-repro-command, perf-scaling-evidence, perf-root-cause, perf-distractor-rejected, perf-claim-bounded |
 
 ## Series 51
 
@@ -5826,6 +6037,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T01:54:49.373Z</code> to <code>2026-08-27T01:54:49.373Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>oracle-derived-from-visible-input</code>, <code>evidence-trace-required</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -5853,9 +6068,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-003-456211b1993ac2d2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=249148.556 ms; declared-cap=1800000 ms | fail | 11 | criterion; 9/11; ratio=0.818182; public=3/3; hidden=6/8; all-checks-required=true | design-security-boundaries, design-alternative-counterexamples |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-003-456211b1993ac2d2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=249148.556 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 9/11; ratio=0.818182; public=3/3; hidden=6/8; all-checks-required=true | design-security-boundaries, design-alternative-counterexamples |
 
 ## Series 52
 
@@ -5939,6 +6154,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:31:43.912Z</code> to <code>2026-08-27T02:31:43.912Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -5966,9 +6185,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-017-999a8eedbe1d1e9f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=99825.095 ms; declared-cap=1800000 ms | fail | 7 | criterion; 3/7; ratio=0.428571; public=2/2; hidden=1/5; all-checks-required=true | diagnosis-reload-contrast, diagnosis-causal-chain, diagnosis-regression-layers, diagnosis-distractor-rejected |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-017-999a8eedbe1d1e9f | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=99825.095 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 7 | criterion; 3/7; ratio=0.428571; public=2/2; hidden=1/5; all-checks-required=true | diagnosis-reload-contrast, diagnosis-causal-chain, diagnosis-regression-layers, diagnosis-distractor-rejected |
 
 ## Series 53
 
@@ -6052,6 +6271,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:52:19.207Z</code> to <code>2026-08-27T02:52:19.207Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-command-evidence</code>, <code>bounded-document-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -6079,9 +6302,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-025-b2840e4aeb68baa2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=37859.725 ms; declared-cap=1800000 ms | fail | 6 | criterion; 5/6; ratio=0.833333; public=2/2; hidden=3/4; all-checks-required=true | doc-constraint-accurate |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-025-b2840e4aeb68baa2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=37859.725 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 5/6; ratio=0.833333; public=2/2; hidden=3/4; all-checks-required=true | doc-constraint-accurate |
 
 ## Series 54
 
@@ -6166,6 +6389,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T18:50:23.410Z</code> to <code>2026-08-26T18:50:23.410Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>true-task-ceiling-observed</code>, <code>quality-unobserved</code>, <code>no-observed-quality</code>
 
 #### Exact case identity
 
@@ -6193,9 +6420,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| grok-f04-l-46-max-20260827-r03 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=generation-setting-rejected | complete-terminal; observed-terminal=2358.287 ms; declared-cap=900000 ms | not-run | 0 | unavailable | unavailable |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| grok-f04-l-46-max-20260827-r03 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=generation-setting-rejected | complete-terminal; observed-terminal=2358.287 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
 
 ## Series 55
 
@@ -6279,6 +6506,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:48:52.547Z</code> to <code>2026-08-27T03:48:52.547Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>conditional</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>semantic-false-negative-risk</code>, <code>historical-artifact-missing</code>, <code>case-design-conditional</code>
 
 #### Exact case identity
 
@@ -6306,9 +6537,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-011-52a82583a7ab2da4 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=360122.581 ms; declared-cap=1800000 ms | fail | 11 | criterion; 3/11; ratio=0.272727; public=3/3; hidden=0/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-bind-injection, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-control-counterexamples, threat-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-011-52a82583a7ab2da4 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=360122.581 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; case-design-conditional | fail | 11 | criterion; 3/11; ratio=0.272727; public=3/3; hidden=0/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-bind-injection, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-control-counterexamples, threat-unknown-honesty |
 
 ## Series 56
 
@@ -6392,6 +6623,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T11:37:22.576Z</code> to <code>2026-08-26T11:37:22.576Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -6419,9 +6654,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| codex-f04-s-sol-low-20260826-r04 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=52766.608 ms; declared-cap=300000 ms | fail | 2 | aggregate-check; 1/2; ratio=0.5; public=0/0; hidden=0/0; all-checks-required=true | f04-s-python-hidden-v1 |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| codex-f04-s-sol-low-20260826-r04 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=52766.608 ms; declared-cap=300000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 2 | aggregate-check; 1/2; ratio=0.5; public=0/0; hidden=0/0; all-checks-required=true | f04-s-python-hidden-v1 |
 
 ## Series 57
 
@@ -6507,6 +6742,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:16:27.059Z</code> to <code>2026-08-27T05:16:27.059Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-migration-contract</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -6534,9 +6773,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-001-9c16b4749bbfca63 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=71657.485 ms; declared-cap=1800000 ms | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | migration-all-callers, migration-policy-lifecycle, migration-compat-bytes, migration-warning-once, migration-api-surface |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-9c16b4749bbfca63 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=71657.485 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 2/7; ratio=0.285714; public=2/2; hidden=0/5; all-checks-required=true | migration-all-callers, migration-policy-lifecycle, migration-compat-bytes, migration-warning-once, migration-api-surface |
 
 ## Series 58
 
@@ -6622,6 +6861,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:57:27.756Z</code> to <code>2026-08-27T05:57:27.756Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>oracle-derived-from-visible-input</code>, <code>evidence-trace-required</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -6649,9 +6892,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-004-a96094fecd70da84 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=270403.618 ms; declared-cap=1800000 ms | fail | 11 | criterion; 7/11; ratio=0.636364; public=3/3; hidden=4/8; all-checks-required=true | design-requirement-coverage, design-security-boundaries, design-alternative-counterexamples, design-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-004-a96094fecd70da84 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=270403.618 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 7/11; ratio=0.636364; public=3/3; hidden=4/8; all-checks-required=true | design-requirement-coverage, design-security-boundaries, design-alternative-counterexamples, design-unknown-honesty |
 
 ## Series 59
 
@@ -6737,6 +6980,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:18:13.759Z</code> to <code>2026-08-27T05:18:13.759Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -6764,9 +7011,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-003-01b8985244ba715d | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=87272.838 ms; declared-cap=1800000 ms | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-003-01b8985244ba715d | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=87272.838 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
 
 ## Series 60
 
@@ -6850,6 +7097,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:24:05.256Z</code> to <code>2026-08-27T02:24:05.256Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>conditional</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>semantic-false-negative-risk</code>, <code>historical-artifact-missing</code>, <code>case-design-conditional</code>
 
 #### Exact case identity
 
@@ -6877,9 +7128,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-015-a022a158880d7e0a | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=347100.663 ms; declared-cap=1800000 ms | fail | 11 | criterion; 3/11; ratio=0.272727; public=3/3; hidden=0/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-bind-injection, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-control-counterexamples, threat-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-015-a022a158880d7e0a | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=347100.663 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; case-design-conditional | fail | 11 | criterion; 3/11; ratio=0.272727; public=3/3; hidden=0/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-bind-injection, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-control-counterexamples, threat-unknown-honesty |
 
 ## Series 61
 
@@ -6963,6 +7214,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:27:52.816Z</code> to <code>2026-08-27T03:27:52.816Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-trace-answer</code>, <code>deterministic-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -6990,9 +7245,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-003-d15e57bcc079496a | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=107946.959 ms; declared-cap=1800000 ms | fail | 6 | criterion; 4/6; ratio=0.666667; public=2/2; hidden=2/4; all-checks-required=true | trace-required-nodes, trace-required-edges |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-003-d15e57bcc079496a | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=107946.959 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 4/6; ratio=0.666667; public=2/2; hidden=2/4; all-checks-required=true | trace-required-nodes, trace-required-edges |
 
 ## Series 62
 
@@ -7078,6 +7333,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:17:43.584Z</code> to <code>2026-08-27T05:17:43.584Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-lifecycle-invariants</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -7105,9 +7364,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-002-a5c7151046553dac | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=28870.428 ms; declared-cap=1800000 ms | fail | 11 | criterion; 5/11; ratio=0.454545; public=4/4; hidden=1/7; all-checks-required=true | test-kills-lost-wakeup, test-kills-stale-lease, test-kills-duplicate-owner, test-kills-broad-cleanup, test-repeatability, test-bounded-cleanup |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-a5c7151046553dac | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=28870.428 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 5/11; ratio=0.454545; public=4/4; hidden=1/7; all-checks-required=true | test-kills-lost-wakeup, test-kills-stale-lease, test-kills-duplicate-owner, test-kills-broad-cleanup, test-repeatability, test-bounded-cleanup |
 
 ## Series 63
 
@@ -7191,6 +7450,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T18:34:26.530Z</code> to <code>2026-08-26T18:34:26.530Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -7218,9 +7481,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| codex-f04-s-sol-medium-20260827-r02 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=70678.478 ms; declared-cap=900000 ms | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| codex-f04-s-sol-medium-20260827-r02 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=70678.478 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
 
 ## Series 64
 
@@ -7304,6 +7567,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:50:24.441Z</code> to <code>2026-08-27T02:50:24.441Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-event-order</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -7331,9 +7598,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-024-87cd2afe0c349367 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=109957.872 ms; declared-cap=1800000 ms | fail | 9 | criterion; 7/9; ratio=0.777778; public=3/3; hidden=4/6; all-checks-required=true | diagnosis-ordering-cause, diagnosis-cleanup-bounded |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-024-87cd2afe0c349367 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=109957.872 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 7/9; ratio=0.777778; public=3/3; hidden=4/6; all-checks-required=true | diagnosis-ordering-cause, diagnosis-cleanup-bounded |
 
 ## Series 65
 
@@ -7417,6 +7684,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T18:54:52.303Z</code> to <code>2026-08-26T18:54:52.303Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>true-task-ceiling-observed</code>
 
 #### Exact case identity
 
@@ -7444,9 +7715,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| codex-f04-l-sol-xhigh-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=136639.17 ms; declared-cap=900000 ms | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| codex-f04-l-sol-xhigh-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=136639.17 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
 ## Series 66
 
@@ -7530,6 +7801,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T18:57:17.229Z</code> to <code>2026-08-26T18:57:17.229Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>true-task-ceiling-observed</code>
 
 #### Exact case identity
 
@@ -7557,9 +7832,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| codex-f04-l-sol-max-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=235214.495 ms; declared-cap=900000 ms | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| codex-f04-l-sol-max-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=235214.495 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
 ## Series 67
 
@@ -7645,6 +7920,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T04:55:47.439Z</code> to <code>2026-08-27T04:55:47.439Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>conditional</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>semantic-false-negative-risk</code>, <code>historical-artifact-missing</code>, <code>case-design-conditional</code>
 
 #### Exact case identity
 
@@ -7672,9 +7951,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-002-a43af54d4188cd09 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=219751.254 ms; declared-cap=1800000 ms | fail | 11 | criterion; 5/11; ratio=0.454545; public=3/3; hidden=2/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-a43af54d4188cd09 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=219751.254 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; case-design-conditional | fail | 11 | criterion; 5/11; ratio=0.454545; public=3/3; hidden=2/8; all-checks-required=true | threat-assets-boundaries, threat-worktree-race, threat-credential-scope, threat-cleanup-ownership, threat-detection-recovery, threat-unknown-honesty |
 
 ## Series 68
 
@@ -7760,6 +8039,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T04:53:17.582Z</code> to <code>2026-08-27T04:53:17.582Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-recovery-contract</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -7787,9 +8070,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-001-553053b48f6fd867 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=146230.102 ms; declared-cap=1800000 ms | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | ops-ready-after-verify |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-553053b48f6fd867 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=146230.102 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 6/7; ratio=0.857143; public=2/2; hidden=4/5; all-checks-required=true | ops-ready-after-verify |
 
 ## Series 69
 
@@ -7873,6 +8156,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:46:56.871Z</code> to <code>2026-08-27T03:46:56.871Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-migration-contract</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -7900,9 +8187,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-010-5c5781cb4a3c9fc2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=111445.433 ms; declared-cap=1800000 ms | fail | 7 | criterion; 4/7; ratio=0.571429; public=2/2; hidden=2/5; all-checks-required=true | migration-all-callers, migration-warning-once, migration-api-surface |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-010-5c5781cb4a3c9fc2 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=111445.433 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 4/7; ratio=0.571429; public=2/2; hidden=2/5; all-checks-required=true | migration-all-callers, migration-warning-once, migration-api-surface |
 
 ## Series 70
 
@@ -7986,6 +8273,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:07:01.359Z</code> to <code>2026-08-27T02:07:01.359Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -8013,9 +8304,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-007-f5a79e0d92fdb1db | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=52693.291 ms; declared-cap=1800000 ms | pass | 6 | criterion; 6/6; ratio=1.0; public=2/2; hidden=4/4; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-007-f5a79e0d92fdb1db | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=52693.291 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | pass | 6 | criterion; 6/6; ratio=1.0; public=2/2; hidden=4/4; all-checks-required=true | none |
 
 ## Series 71
 
@@ -8099,6 +8390,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:08:03.853Z</code> to <code>2026-08-27T02:08:03.853Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -8126,9 +8421,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-008-79a7c1108ab317a7 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=79791.241 ms; declared-cap=1800000 ms | pass | 8 | criterion; 8/8; ratio=1.0; public=2/2; hidden=6/6; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-008-79a7c1108ab317a7 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=79791.241 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | pass | 8 | criterion; 8/8; ratio=1.0; public=2/2; hidden=6/6; all-checks-required=true | none |
 
 ## Series 72
 
@@ -8212,6 +8507,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T04:35:18.969Z</code> to <code>2026-08-27T04:35:18.969Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>oracle-derived-from-visible-input</code>, <code>evidence-trace-required</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -8239,9 +8538,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-003-49afd61bc454adc9 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=372593.588 ms; declared-cap=3600000 ms | fail | 11 | criterion; 8/11; ratio=0.727273; public=3/3; hidden=5/8; all-checks-required=true | design-security-boundaries, design-alternative-counterexamples, design-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-003-49afd61bc454adc9 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=372593.588 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 8/11; ratio=0.727273; public=3/3; hidden=5/8; all-checks-required=true | design-security-boundaries, design-alternative-counterexamples, design-unknown-honesty |
 
 ## Series 73
 
@@ -8325,6 +8624,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:54:55.762Z</code> to <code>2026-08-27T03:54:55.762Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-command-evidence</code>, <code>bounded-document-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -8352,9 +8655,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-012-ce6494b8f453a28e | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=49031.41 ms; declared-cap=1800000 ms | fail | 6 | criterion; 5/6; ratio=0.833333; public=2/2; hidden=3/4; all-checks-required=true | doc-constraint-accurate |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-012-ce6494b8f453a28e | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=49031.41 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 5/6; ratio=0.833333; public=2/2; hidden=3/4; all-checks-required=true | doc-constraint-accurate |
 
 ## Series 74
 
@@ -8438,6 +8741,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:45:47.310Z</code> to <code>2026-08-27T03:45:47.310Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -8465,9 +8772,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-009-87ca73f14e652da7 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=66810.307 ms; declared-cap=1800000 ms | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-009-87ca73f14e652da7 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=66810.307 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 5 | criterion; 4/5; ratio=0.8; public=1/1; hidden=3/4; all-checks-required=true | hidden-empty-result |
 
 ## Series 75
 
@@ -8551,6 +8858,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:29:43.723Z</code> to <code>2026-08-27T03:29:43.723Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-review-contract</code>, <code>evidence-grounded-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -8578,9 +8889,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-004-f9ccfab8da105516 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=101718.315 ms; declared-cap=1800000 ms | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | review-symlink-recall, review-ownership-recall, review-interaction, review-evidence |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-004-f9ccfab8da105516 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=101718.315 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | review-symlink-recall, review-ownership-recall, review-interaction, review-evidence |
 
 ## Series 76
 
@@ -8664,6 +8975,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T19:01:20.727Z</code> to <code>2026-08-26T19:01:20.727Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>true-task-ceiling-observed</code>
 
 #### Exact case identity
 
@@ -8691,9 +9006,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| codex-f04-l-sol-ultra-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=568271.833 ms; declared-cap=900000 ms | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| codex-f04-l-sol-ultra-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=568271.833 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
 ## Series 77
 
@@ -8777,6 +9092,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:22:30.691Z</code> to <code>2026-08-27T02:22:30.691Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -8804,9 +9123,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-014-77425a633c6b3587 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=86416.812 ms; declared-cap=1800000 ms | fail | 8 | criterion; 5/8; ratio=0.625; public=3/3; hidden=2/5; all-checks-required=true | trace-success-chain, trace-fail-open-branches, trace-evidence-integrity |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-014-77425a633c6b3587 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=86416.812 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 8 | criterion; 5/8; ratio=0.625; public=3/3; hidden=2/5; all-checks-required=true | trace-success-chain, trace-fail-open-branches, trace-evidence-integrity |
 
 ## Series 78
 
@@ -8890,6 +9209,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:17:59.055Z</code> to <code>2026-08-27T03:17:59.055Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -8917,9 +9240,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-001-40ab8393969ce705 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-result-error | complete-terminal; observed-terminal=13330.398 ms; declared-cap=1800000 ms | not-run | 0 | unavailable | unavailable |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-40ab8393969ce705 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-result-error | complete-terminal; observed-terminal=13330.398 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | not-run | 0 | unavailable | unavailable |
 
 ## Series 79
 
@@ -9003,6 +9326,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T04:11:02.716Z</code> to <code>2026-08-27T04:11:02.716Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -9030,9 +9357,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-004-28eff8f860ac8e39 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=488483.356 ms; declared-cap=3600000 ms | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-004-28eff8f860ac8e39 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=488483.356 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
 
 ## Series 80
 
@@ -9118,6 +9445,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T18:45:11.350Z</code> to <code>2026-08-26T18:45:11.350Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>true-task-ceiling-observed</code>
 
 #### Exact case identity
 
@@ -9145,9 +9476,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| grok-f04-l-46-xhigh-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=181362.993 ms; declared-cap=900000 ms | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| grok-f04-l-46-xhigh-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=181362.993 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
 ## Series 81
 
@@ -9233,6 +9564,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T04:59:28.963Z</code> to <code>2026-08-27T04:59:28.963Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-trace-answer</code>, <code>deterministic-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -9260,9 +9595,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-003-e4e5f8e76cc855cb | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=56650.022 ms; declared-cap=1800000 ms | fail | 6 | criterion; 2/6; ratio=0.333333; public=2/2; hidden=0/4; all-checks-required=true | trace-required-nodes, trace-required-edges, trace-evidence-exists, trace-no-distractor |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-003-e4e5f8e76cc855cb | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=56650.022 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 2/6; ratio=0.333333; public=2/2; hidden=0/4; all-checks-required=true | trace-required-nodes, trace-required-edges, trace-evidence-exists, trace-no-distractor |
 
 ## Series 82
 
@@ -9346,6 +9681,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:01:09.130Z</code> to <code>2026-08-27T02:01:09.130Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-migration-contract</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -9373,9 +9712,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-005-f794c147fee31ef4 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=90255.067 ms; declared-cap=1800000 ms | fail | 7 | criterion; 5/7; ratio=0.714286; public=2/2; hidden=3/5; all-checks-required=true | migration-all-callers, migration-warning-once |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-005-f794c147fee31ef4 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=90255.067 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 7 | criterion; 5/7; ratio=0.714286; public=2/2; hidden=3/5; all-checks-required=true | migration-all-callers, migration-warning-once |
 
 ## Series 83
 
@@ -9459,6 +9798,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T11:36:26.352Z</code> to <code>2026-08-26T11:36:26.352Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -9486,9 +9829,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| codex-f04-s-terra-high-20260826-r03 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=35339.102 ms; declared-cap=300000 ms | fail | 2 | aggregate-check; 1/2; ratio=0.5; public=0/0; hidden=0/0; all-checks-required=true | f04-s-python-hidden-v1 |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| codex-f04-s-terra-high-20260826-r03 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=35339.102 ms; declared-cap=300000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 2 | aggregate-check; 1/2; ratio=0.5; public=0/0; hidden=0/0; all-checks-required=true | f04-s-python-hidden-v1 |
 
 ## Series 84
 
@@ -9574,6 +9917,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:11:06.702Z</code> to <code>2026-08-27T05:11:06.702Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-lifecycle-invariants</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -9601,9 +9948,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-008-9d2df08335c0b277 | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=28368.778 ms; declared-cap=1800000 ms | fail | 11 | criterion; 5/11; ratio=0.454545; public=4/4; hidden=1/7; all-checks-required=true | test-kills-lost-wakeup, test-kills-stale-lease, test-kills-duplicate-owner, test-kills-broad-cleanup, test-repeatability, test-bounded-cleanup |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-008-9d2df08335c0b277 | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=28368.778 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 5/11; ratio=0.454545; public=4/4; hidden=1/7; all-checks-required=true | test-kills-lost-wakeup, test-kills-stale-lease, test-kills-duplicate-owner, test-kills-broad-cleanup, test-repeatability, test-bounded-cleanup |
 
 ## Series 85
 
@@ -9687,6 +10034,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T18:52:28.869Z</code> to <code>2026-08-26T18:52:28.869Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>true-task-ceiling-observed</code>
 
 #### Exact case identity
 
@@ -9714,9 +10065,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| codex-f04-l-sol-high-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=134933.673 ms; declared-cap=900000 ms | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| codex-f04-l-sol-high-20260827-r01 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=134933.673 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
 ## Series 86
 
@@ -9802,6 +10153,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:33:15.682Z</code> to <code>2026-08-27T05:33:15.682Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-trace-answer</code>, <code>deterministic-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -9829,9 +10184,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-009-c02f4a4c4f9d3ffe | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=181656.97 ms; declared-cap=1800000 ms | fail | 6 | criterion; 2/6; ratio=0.333333; public=2/2; hidden=0/4; all-checks-required=true | trace-required-nodes, trace-required-edges, trace-evidence-exists, trace-no-distractor |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-009-c02f4a4c4f9d3ffe | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=181656.97 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 2/6; ratio=0.333333; public=2/2; hidden=0/4; all-checks-required=true | trace-required-nodes, trace-required-edges, trace-evidence-exists, trace-no-distractor |
 
 ## Series 87
 
@@ -9915,6 +10270,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:20:00.197Z</code> to <code>2026-08-27T02:20:00.197Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>eligible-pending-comparison-gates</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>true-task-ceiling-observed</code>
 
 #### Exact case identity
 
@@ -9942,9 +10301,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-012-0da5e12408544291 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=112737.884 ms; declared-cap=1800000 ms | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-012-0da5e12408544291 | infrastructure=success; artifact=valid; online=pass; offline=not-run; basis=strong-online-oracle; failure=None | complete-terminal; observed-terminal=112737.884 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | eligible; case-and-observation-gates-pass | pass | 4 | criterion; 4/4; ratio=1.0; public=2/2; hidden=2/2; all-checks-required=true | none |
 
 ## Series 88
 
@@ -10028,6 +10387,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:30:15.506Z</code> to <code>2026-08-27T02:30:15.506Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-trace-answer</code>, <code>deterministic-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -10055,9 +10418,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-016-eb96bfd1078b0676 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=80652.138 ms; declared-cap=1800000 ms | fail | 6 | criterion; 4/6; ratio=0.666667; public=2/2; hidden=2/4; all-checks-required=true | trace-required-nodes, trace-required-edges |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-016-eb96bfd1078b0676 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=80652.138 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 4/6; ratio=0.666667; public=2/2; hidden=2/4; all-checks-required=true | trace-required-nodes, trace-required-edges |
 
 ## Series 89
 
@@ -10141,6 +10504,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-26T18:25:07.938Z</code> to <code>2026-08-26T18:25:07.938Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>behavioral-acceptance</code>, <code>implementation-flexible</code>, <code>quality-unobserved</code>, <code>no-observed-quality</code>
 
 #### Exact case identity
 
@@ -10168,9 +10535,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| grok-f04-s-46-medium-20260827-r01 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=1647.74 ms; declared-cap=900000 ms | not-run | 0 | unavailable | unavailable |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| grok-f04-s-46-medium-20260827-r01 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=provider-startup-unknown | complete-terminal; observed-terminal=1647.74 ms; declared-cap=900000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; quality-unobserved | not-run | 0 | unavailable | unavailable |
 
 ## Series 90
 
@@ -10254,6 +10621,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T01:35:28.172Z</code> to <code>2026-08-27T01:35:28.172Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -10281,9 +10652,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-002-995688fc397ebf01 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=118243.023 ms; declared-cap=1800000 ms | fail | 9 | criterion; 7/9; ratio=0.777778; public=3/3; hidden=4/6; all-checks-required=true | runbook-fact-accuracy, runbook-owned-restart |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-995688fc397ebf01 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=118243.023 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 9 | criterion; 7/9; ratio=0.777778; public=3/3; hidden=4/6; all-checks-required=true | runbook-fact-accuracy, runbook-owned-restart |
 
 ## Series 91
 
@@ -10368,6 +10739,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T06:03:04.823Z</code> to <code>2026-08-27T06:03:04.823Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -10395,9 +10770,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-001-b555a63a5f2dc998 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=generation-setting-rejected | complete-terminal; observed-terminal=1572.332 ms; declared-cap=1800000 ms | not-run | 0 | unavailable | unavailable |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-b555a63a5f2dc998 | infrastructure=failure; artifact=missing; online=unavailable; offline=not-run; basis=unavailable; failure=generation-setting-rejected | complete-terminal; observed-terminal=1572.332 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | not-run | 0 | unavailable | unavailable |
 
 ## Series 92
 
@@ -10483,6 +10858,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:00:27.692Z</code> to <code>2026-08-27T05:00:27.692Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-review-contract</code>, <code>evidence-grounded-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -10510,9 +10889,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-004-6090cc0ecbc71b38 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=196820.85 ms; declared-cap=1800000 ms | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | review-symlink-recall, review-ownership-recall, review-interaction, review-evidence |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-004-6090cc0ecbc71b38 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=196820.85 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | review-symlink-recall, review-ownership-recall, review-interaction, review-evidence |
 
 ## Series 93
 
@@ -10598,6 +10977,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:56:37.040Z</code> to <code>2026-08-27T05:56:37.040Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-event-order</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -10625,9 +11008,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-003-361a0549df85bf5f | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=48403.744 ms; declared-cap=1800000 ms | fail | 9 | criterion; 0/9; ratio=0.0; public=0/3; hidden=0/6; all-checks-required=true | workspace-1, workspace-2, workspace-3, diagnosis-deterministic-barrier, diagnosis-ordering-cause, diagnosis-restart-state, diagnosis-regression-reliable, diagnosis-cleanup-bounded, diagnosis-semantics-honest |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-003-361a0549df85bf5f | infrastructure=success; artifact=missing; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=48403.744 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 0/9; ratio=0.0; public=0/3; hidden=0/6; all-checks-required=true | workspace-1, workspace-2, workspace-3, diagnosis-deterministic-barrier, diagnosis-ordering-cause, diagnosis-restart-state, diagnosis-regression-reliable, diagnosis-cleanup-bounded, diagnosis-semantics-honest |
 
 ## Series 94
 
@@ -10713,6 +11096,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:19:44.082Z</code> to <code>2026-08-27T05:19:44.082Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-review-contract</code>, <code>evidence-grounded-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -10740,9 +11127,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-004-cb1f76abd54ed185 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=279038.423 ms; declared-cap=1800000 ms | fail | 8 | criterion; 2/8; ratio=0.25; public=2/2; hidden=0/6; all-checks-required=true | review-symlink-recall, review-ownership-recall, review-interaction, review-ranking, review-evidence, review-false-positive |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-004-cb1f76abd54ed185 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=279038.423 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 2/8; ratio=0.25; public=2/2; hidden=0/6; all-checks-required=true | review-symlink-recall, review-ownership-recall, review-interaction, review-ranking, review-evidence, review-false-positive |
 
 ## Series 95
 
@@ -10828,6 +11215,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:12:25.897Z</code> to <code>2026-08-27T05:12:25.897Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>oracle-derived-from-visible-input</code>, <code>bounded-design-space</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -10855,9 +11246,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-010-3339588d55d9be29 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=101045.282 ms; declared-cap=1800000 ms | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | design-invariant-coverage, design-option-counterexamples, design-migration-observability, design-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-010-3339588d55d9be29 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=101045.282 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | design-invariant-coverage, design-option-counterexamples, design-migration-observability, design-unknown-honesty |
 
 ## Series 96
 
@@ -10941,6 +11332,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:14:00.759Z</code> to <code>2026-08-27T03:14:00.759Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -10968,9 +11363,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-036-ece6d80c5700ed21 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=189818.452 ms; declared-cap=1800000 ms | fail | 10 | criterion; 6/10; ratio=0.6; public=3/3; hidden=3/7; all-checks-required=true | docs-current-target-facts, docs-migration-order, docs-ownership-consistency, docs-no-early-removal |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-036-ece6d80c5700ed21 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=189818.452 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 10 | criterion; 6/10; ratio=0.6; public=3/3; hidden=3/7; all-checks-required=true | docs-current-target-facts, docs-migration-order, docs-ownership-consistency, docs-no-early-removal |
 
 ## Series 97
 
@@ -11056,6 +11451,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:09:25.078Z</code> to <code>2026-08-27T05:09:25.078Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-command-evidence</code>, <code>bounded-document-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -11083,9 +11482,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-006-b36e517437e66ec9 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=37095.261 ms; declared-cap=1800000 ms | fail | 6 | criterion; 2/6; ratio=0.333333; public=2/2; hidden=0/4; all-checks-required=true | doc-command-replay, doc-constraint-accurate, doc-invalid-form-removed, doc-link-integrity |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-006-b36e517437e66ec9 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=37095.261 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 2/6; ratio=0.333333; public=2/2; hidden=0/4; all-checks-required=true | doc-command-replay, doc-constraint-accurate, doc-invalid-form-removed, doc-link-integrity |
 
 ## Series 98
 
@@ -11171,6 +11570,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:45:22.597Z</code> to <code>2026-08-27T05:45:22.597Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>excluded</code>
+- Case design status: <code>ineligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>preferred-architecture-enforced</code>, <code>invented-identifiers-enforced</code>, <code>superseded-by-revision-2</code>, <code>case-design-ineligible</code>
 
 #### Exact case identity
 
@@ -11198,9 +11601,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-001-9b3208f07e508e3a | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=387475.599 ms; declared-cap=1800000 ms | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-9b3208f07e508e3a | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=387475.599 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | excluded; case-design-ineligible | fail | 12 | criterion; 5/12; ratio=0.416667; public=3/3; hidden=2/9; all-checks-required=true | synthesis-claim-provenance, synthesis-incident-security, synthesis-migration-operations, synthesis-decision-trace, synthesis-alternative-rejection, synthesis-unknown-honesty, synthesis-refresh-plan |
 
 ## Series 99
 
@@ -11284,6 +11687,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T02:09:34.235Z</code> to <code>2026-08-27T02:09:34.235Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>not-audited</code>
+- Case design status: <code>not-audited</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>case-revision-not-audited</code>
 
 #### Exact case identity
 
@@ -11311,9 +11718,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-009-52e8d594af96b186 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=262673.3 ms; declared-cap=1800000 ms | fail | 11 | criterion; 6/11; ratio=0.545455; public=4/4; hidden=2/7; all-checks-required=true | ops-lifecycle-ownership, ops-migration-fault-cuts, ops-reopen-resume, ops-marker-verification, ops-recovery-doc |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-009-52e8d594af96b186 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=262673.3 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | not-audited; case-revision-not-audited | fail | 11 | criterion; 6/11; ratio=0.545455; public=4/4; hidden=2/7; all-checks-required=true | ops-lifecycle-ownership, ops-migration-fault-cuts, ops-reopen-resume, ops-marker-verification, ops-recovery-doc |
 
 ## Series 100
 
@@ -11399,6 +11806,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T05:25:33.249Z</code> to <code>2026-08-27T05:25:33.249Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-command-evidence</code>, <code>bounded-document-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -11426,9 +11837,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-006-6029cdb4396a27bf | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=48167.606 ms; declared-cap=1800000 ms | fail | 6 | criterion; 2/6; ratio=0.333333; public=2/2; hidden=0/4; all-checks-required=true | doc-command-replay, doc-constraint-accurate, doc-invalid-form-removed, doc-link-integrity |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-006-6029cdb4396a27bf | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=48167.606 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 6 | criterion; 2/6; ratio=0.333333; public=2/2; hidden=0/4; all-checks-required=true | doc-command-replay, doc-constraint-accurate, doc-invalid-form-removed, doc-link-integrity |
 
 ## Series 101
 
@@ -11512,6 +11923,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:05:05.952Z</code> to <code>2026-08-27T03:05:05.952Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-review-contract</code>, <code>evidence-grounded-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -11539,9 +11954,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-032-4a12a4754b552ed6 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=93656.282 ms; declared-cap=1800000 ms | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | review-symlink-recall, review-ownership-recall, review-interaction, review-evidence |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-032-4a12a4754b552ed6 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=93656.282 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | review-symlink-recall, review-ownership-recall, review-interaction, review-evidence |
 
 ## Series 102
 
@@ -11625,6 +12040,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T04:05:16.602Z</code> to <code>2026-08-27T04:05:16.602Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>oracle-derived-from-visible-input</code>, <code>evidence-trace-required</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -11652,9 +12071,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-003-3dab55ace564cde8 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=342032.799 ms; declared-cap=3600000 ms | fail | 11 | criterion; 8/11; ratio=0.727273; public=3/3; hidden=5/8; all-checks-required=true | design-security-boundaries, design-alternative-counterexamples, design-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-003-3dab55ace564cde8 | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=342032.799 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 11 | criterion; 8/11; ratio=0.727273; public=3/3; hidden=5/8; all-checks-required=true | design-security-boundaries, design-alternative-counterexamples, design-unknown-honesty |
 
 ## Series 103
 
@@ -11738,6 +12157,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T03:19:13.689Z</code> to <code>2026-08-27T03:19:13.689Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>oracle-derived-from-visible-input</code>, <code>bounded-design-space</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -11765,9 +12188,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-001-d017aba0f530eb2c | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=148137.452 ms; declared-cap=1800000 ms | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | design-invariant-coverage, design-option-counterexamples, design-migration-observability, design-unknown-honesty |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-001-d017aba0f530eb2c | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=148137.452 ms; declared-cap=1800000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 8 | criterion; 4/8; ratio=0.5; public=2/2; hidden=2/6; all-checks-required=true | design-invariant-coverage, design-option-counterexamples, design-migration-observability, design-unknown-honesty |
 
 ## Series 104
 
@@ -11851,6 +12274,10 @@ Case identity/profile differences (0):
 - Evidence state: <code>single-observation</code>
 - Observation window: <code>2026-08-27T04:31:37.639Z</code> to <code>2026-08-27T04:31:37.639Z</code>
 - Runs / observation blocks: 1 / 1
+- Effort-quality use: <code>conditional-only</code>
+- Case design status: <code>eligible</code>
+- Comparison gates: <code>not-evaluated</code>; not evaluated by this report
+- Validity reasons: <code>visible-event-order</code>, <code>behavioral-oracle</code>, <code>task-artifact-not-retained</code>
 
 #### Exact case identity
 
@@ -11878,9 +12305,9 @@ Case identity/profile differences (0):
 
 #### Content-free quality evidence
 
-| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |
-| --- | --- | --- | --- | --- | --- | --- |
-| run-002-8febe3786dc60c0e | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=217853.034 ms; declared-cap=3600000 ms | fail | 9 | criterion; 7/9; ratio=0.777778; public=3/3; hidden=4/6; all-checks-required=true | diagnosis-ordering-cause, diagnosis-cleanup-bounded |
+| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| run-002-8febe3786dc60c0e | infrastructure=success; artifact=valid; online=fail; offline=not-run; basis=online-fail; failure=online-validation-failed | complete-terminal; observed-terminal=217853.034 ms; declared-cap=3600000 ms | content-free-only/not-retained; files=0; bytes=0 | conditional; task-artifact-not-retained | fail | 9 | criterion; 7/9; ratio=0.777778; public=3/3; hidden=4/6; all-checks-required=true | diagnosis-ordering-cause, diagnosis-cleanup-bounded |
 
 ## Limitations
 
@@ -11889,4 +12316,4 @@ Case identity/profile differences (0):
 - Right- or administratively-censored terminal times are incomplete observations and are counted separately.
 - Criterion-level details are limited to the aggregate's content-free score fields and failed IDs; evaluator rubric text is not present and is not reconstructed.
 - Unmeasured catalog cells remain unmeasured; no adjacent family, size, model, or provider value is substituted.
-- Raw prompts, transcripts, private reasoning, generated artifacts, and evaluator output are outside this content-free report.
+- Raw prompts, transcripts, private reasoning, retained task-artifact contents, and evaluator output are outside this report; only auditability metadata is shown.

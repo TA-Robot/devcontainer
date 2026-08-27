@@ -5,12 +5,16 @@
   "canonical_case_count": 36,
   "release_artifacts": {
     "atlas_path": "generated/duration-atlas/current.json",
-    "atlas_sha256": "0713b2b9b3a1ce696ff5f3ec470e9265aa0e1f574f8ace231a7fd103132f7e62",
+    "atlas_sha256": "baa05b27b0de1e0988b18017c74134da7298c7874aa3908fe90ab892cf95ce1a",
     "atlas_run_set_digest": "sha256:402b7a5bb5efa351bd31f768a0058f296a2902a5586d327347bf8fac86244b3f",
     "report_path": "docs/agents/duration-atlas/studies/current.md",
-    "report_sha256": "113a4b060ca94f3e6a5bea4d69d11593ebb917f50557e9d00dcf23dce59a8d1d",
+    "report_sha256": "d6c202e266da916b4acbffc03ae7e9757a2edefaddc83844a16a3e9d823a76b6",
     "skill_snapshot_path": "project/.codex/skills/lookup-agent-duration/assets/current.json",
-    "skill_snapshot_sha256": "0713b2b9b3a1ce696ff5f3ec470e9265aa0e1f574f8ace231a7fd103132f7e62"
+    "skill_snapshot_sha256": "baa05b27b0de1e0988b18017c74134da7298c7874aa3908fe90ab892cf95ce1a",
+    "validity_path": "generated/duration-atlas/current-validity.json",
+    "validity_sha256": "753d53218bc30ecf90ea7cbda1c7707ad48221a7069748cda33bf486b0f97e21",
+    "skill_validity_path": "project/.codex/skills/lookup-agent-duration/assets/current-validity.json",
+    "skill_validity_sha256": "753d53218bc30ecf90ea7cbda1c7707ad48221a7069748cda33bf486b0f97e21"
   },
   "canonical_input_groups": [
     {

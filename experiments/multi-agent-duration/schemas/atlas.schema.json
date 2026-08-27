@@ -535,7 +535,34 @@
         "durations_ms": {"$ref": "#/$defs/durations"},
         "outcome": {"$ref": "#/$defs/outcome"},
         "quality_evidence": {"$ref": "#/$defs/quality_evidence"},
-        "covariates": {"$ref": "#/$defs/covariates"}
+        "covariates": {"$ref": "#/$defs/covariates"},
+        "artifact_auditability": {"$ref": "#/$defs/artifact_auditability"}
+      }
+    },
+    "artifact_auditability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["retention", "completeness", "file_count", "total_bytes"],
+      "properties": {
+        "retention": {
+          "enum": ["content-free-only", "task-artifacts"]
+        },
+        "completeness": {
+          "enum": ["not-retained", "complete", "partial"]
+        },
+        "file_count": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 16
+        },
+        "total_bytes": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 1048576
+        },
+        "manifest_digest": {
+          "$ref": "#/$defs/sha256"
+        }
       }
     },
     "range": {

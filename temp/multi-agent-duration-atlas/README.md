@@ -10,6 +10,8 @@
 
 2026-08-27 current releaseは、108件のcanonical terminal recordからatlas schema v2を生成し、全36 case IDを一度以上観測しています。内訳はquality-pass 15、quality-fail 81、infrastructure failure / quality-unknown 12で、全件complete terminalです。Solはmedium/high/xhigh/max、Grokはmedium/high/xhighをcase scopeを変えて観測しました。Grok maxはprovider rejection、Claude current blockはcredential freshness不明のため、未測定cellを値で埋めずmachine dispositionへ残しています。
 
+同日のsolvability再監査により、旧flat scoreからproblem saturationや`mediumで十分`とは判断できないことを明示しました。F10-S r1 / F12-L r1はeffort-quality inferenceから除外し、artifact未保持のquality failはconditionalです。詳細は`25-effort-inference-validity-review.md`、machine contractは`../../experiments/multi-agent-duration/validity/effort-quality.json`を参照してください。
+
 正本は次です。
 
 - release closure: `24-complete-corpus-atlas-release.md`
@@ -77,6 +79,7 @@ evidence grade:              single-observation
 - `22-provider-depth-curve.md`: 3 provider runner、sandbox/auth知見、mediumからmax/ultraまでのdepth curve
 - `23-first-l-depth-coverage.md`: L caseでのGrok applied curve、Sol requested curve、max rejection、rubric飽和
 - `24-complete-corpus-atlas-release.md`: 36 case closure、108 record release、欠測・除外・skill/container配布の最終判断
+- `25-effort-inference-validity-review.md`: problem identifiability、oracle alignment、artifact auditability、comparison gateの再監査とrevision 2 repair
 - `final-release-disposition.json`: final canonical input grouping、除外record、calibration-only、未測定block
 - `case-designs/`: 全36 candidateのprofile、fixture、task、rubric、execution、implementation handoff（各6文書）
 

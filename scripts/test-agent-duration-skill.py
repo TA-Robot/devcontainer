@@ -87,6 +87,37 @@ class DurationSkillDiscoveryTests(unittest.TestCase):
             ):
                 self.assertEqual(asset.resolve(), self.module.discover_atlas(None))
 
+    def test_validity_discovery_uses_only_explicit_env_or_selected_atlas_sibling(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            directory = Path(raw)
+            atlas = directory / "current.json"
+            sibling = directory / "current-validity.json"
+            explicit = directory / "explicit-validity.json"
+            configured = directory / "configured-validity.json"
+            for path in (atlas, sibling, explicit, configured):
+                path.write_text("{}\n", encoding="utf-8")
+            with mock.patch.dict(
+                os.environ,
+                {"AGENT_DURATION_VALIDITY_PATH": str(configured)},
+                clear=False,
+            ):
+                self.assertEqual(
+                    explicit.resolve(),
+                    self.module.discover_validity(explicit, atlas),
+                )
+                self.assertEqual(
+                    configured.resolve(),
+                    self.module.discover_validity(None, atlas),
+                )
+            with mock.patch.dict(os.environ, {}, clear=True):
+                self.assertEqual(
+                    sibling.resolve(),
+                    self.module.discover_validity(None, atlas),
+                )
+                unrelated = directory / "arbitrary.json"
+                unrelated.write_text("{}\n", encoding="utf-8")
+                self.assertIsNone(self.module.discover_validity(None, unrelated))
+
 
 class DurationSkillCliTests(unittest.TestCase):
     def test_help_explains_that_atlas_positional_is_injected(self) -> None:
@@ -162,6 +193,55 @@ class DurationSkillCliTests(unittest.TestCase):
                 json.loads(capture.read_text(encoding="utf-8")),
             )
 
+    def test_wrapper_injects_only_the_selected_atlas_sibling_validity(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            directory = Path(raw)
+            atlas = directory / "current.json"
+            validity = directory / "current-validity.json"
+            capture = directory / "capture.json"
+            command = directory / "query-fixture"
+            atlas.write_text("{}\n", encoding="utf-8")
+            validity.write_text("{}\n", encoding="utf-8")
+            command.write_text(
+                "#!/usr/bin/env python3\n"
+                "import json, os, sys\n"
+                "with open(os.environ['CAPTURE_PATH'], 'w', encoding='utf-8') as handle:\n"
+                "    json.dump(sys.argv[1:], handle)\n",
+                encoding="utf-8",
+            )
+            command.chmod(0o755)
+            environment = {
+                **os.environ,
+                "AGENT_DURATION_QUERY_COMMAND": str(command),
+                "CAPTURE_PATH": str(capture),
+            }
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(WRAPPER),
+                    "--atlas",
+                    str(atlas),
+                    "--mode",
+                    "coverage",
+                ],
+                env=environment,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertEqual(
+                [
+                    str(atlas.resolve()),
+                    "--validity",
+                    str(validity.resolve()),
+                    "--mode",
+                    "coverage",
+                ],
+                json.loads(capture.read_text(encoding="utf-8")),
+            )
+
     def test_print_atlas_path_does_not_require_query_command(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             atlas = Path(raw) / "atlas.json"
@@ -186,6 +266,34 @@ class DurationSkillCliTests(unittest.TestCase):
             )
             self.assertEqual(0, completed.returncode, completed.stderr)
             self.assertEqual(str(atlas.resolve()), completed.stdout.strip())
+
+    def test_print_validity_path_does_not_require_query_command(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            directory = Path(raw)
+            atlas = directory / "current.json"
+            validity = directory / "current-validity.json"
+            atlas.write_text("{}\n", encoding="utf-8")
+            validity.write_text("{}\n", encoding="utf-8")
+            environment = {
+                **os.environ,
+                "AGENT_DURATION_QUERY_COMMAND": str(directory / "missing"),
+            }
+            completed = subprocess.run(
+                [
+                    sys.executable,
+                    str(WRAPPER),
+                    "--atlas",
+                    str(atlas),
+                    "--print-validity-path",
+                ],
+                env=environment,
+                text=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                check=False,
+            )
+            self.assertEqual(0, completed.returncode, completed.stderr)
+            self.assertEqual(str(validity.resolve()), completed.stdout.strip())
 
 
 if __name__ == "__main__":

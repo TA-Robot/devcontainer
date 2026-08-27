@@ -22,6 +22,7 @@ from agent_duration_study_report import (
     load_validated_atlas,
     load_validated_catalog,
 )
+from agent_duration_validity import load_validated_validity
 
 
 def _cap(label: str, upper: int):
@@ -48,6 +49,11 @@ def build_parser() -> argparse.ArgumentParser:
         help="validated case catalog used for coverage and digest comparison",
     )
     parser.add_argument(
+        "--validity",
+        type=Path,
+        help="optional revision-aware case and observation validity companion",
+    )
+    parser.add_argument(
         "--max-series",
         type=_cap("max-series", HARD_SERIES_LIMIT),
         required=True,
@@ -71,9 +77,18 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         atlas = load_validated_atlas(args.atlas)
         catalog = load_validated_catalog(args.catalog)
+        validity = (
+            load_validated_validity(
+                args.validity,
+                catalog_path=args.catalog,
+            )
+            if args.validity is not None
+            else None
+        )
         report = build_study_report(
             atlas,
             catalog=catalog,
+            validity=validity,
             max_series=args.max_series,
             max_cases=args.max_cases,
             max_output_bytes=args.max_output_bytes,

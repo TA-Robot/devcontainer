@@ -1,0 +1,225 @@
+{
+  "schema_version": 1,
+  "validity_id": "duration-effort-quality-audit-20260827",
+  "catalog": {
+    "catalog_id": "duration-atlas-calibration",
+    "revision": 4,
+    "digest": "sha256:c3c386e697885b96ce20571628e1923b27498db720afd34605a4931c47a3ff59"
+  },
+  "audited_at": "2026-08-27T15:00:00.000Z",
+  "scope": "same-case-effort-quality-inference",
+  "policy": {
+    "case_design_gates": [
+      "visible-task-contract",
+      "aligned-oracle",
+      "calibrated-solution-space"
+    ],
+    "observation_gates": [
+      "criterion-quality-evidence",
+      "failed-artifact-auditable",
+      "terminal-infrastructure-state"
+    ],
+    "comparison_gates": [
+      "same-case-revision",
+      "same-fixture-identity",
+      "applied-setting-evidence",
+      "repeat-or-explicit-singleton-limit",
+      "no-infrastructure-failure-pooling",
+      "quality-measurement-headroom"
+    ]
+  },
+  "entries": [
+    {
+      "case_id": "F01-S-PY-001",
+      "case_revision": 1,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "contract-bound",
+      "solution_space_calibration": "single-gold",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["visible-trace-answer", "deterministic-oracle"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f01-s-python-flag-trace.md", "scripts/agent_duration_cases/f01.py"]
+    },
+    {
+      "case_id": "F02-M-PY-001",
+      "case_revision": 1,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "semantic",
+      "solution_space_calibration": "single-gold",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["visible-review-contract", "evidence-grounded-oracle"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f02-m-python-isolation-review.md", "scripts/agent_duration_cases/f02.py"]
+    },
+    {
+      "case_id": "F03-L-PYBASH-001",
+      "case_revision": 1,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "contract-bound",
+      "solution_space_calibration": "not-required",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["visible-event-order", "behavioral-oracle"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f03-l-crash-restart-diagnosis.md", "scripts/agent_duration_cases/f03.py"]
+    },
+    {
+      "case_id": "F04-S-PY-001",
+      "case_revision": 1,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "contract-bound",
+      "solution_space_calibration": "not-required",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["behavioral-acceptance", "implementation-flexible"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f04-s-python-normalizer.md", "scripts/agent_duration_cases/f04.py"]
+    },
+    {
+      "case_id": "F04-L-PYBASH-001",
+      "case_revision": 1,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "contract-bound",
+      "solution_space_calibration": "not-required",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["behavioral-acceptance", "true-task-ceiling-observed"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f04-l-python-bash-restart.md", "scripts/agent_duration_cases/f04.py"]
+    },
+    {
+      "case_id": "F05-M-PY-001",
+      "case_revision": 1,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "contract-bound",
+      "solution_space_calibration": "not-required",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["visible-migration-contract", "behavioral-oracle"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f05-m-python-codec-migration.md", "scripts/agent_duration_cases/f05.py"]
+    },
+    {
+      "case_id": "F06-L-PYBASH-001",
+      "case_revision": 1,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "contract-bound",
+      "solution_space_calibration": "not-required",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["visible-lifecycle-invariants", "behavioral-oracle"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f06-l-lease-lifecycle-tests.md", "scripts/agent_duration_cases/f06.py"]
+    },
+    {
+      "case_id": "F07-S-MD-001",
+      "case_revision": 1,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "semantic",
+      "solution_space_calibration": "single-gold",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["visible-command-evidence", "bounded-document-oracle"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f07-s-agentctl-doctor-doc.md", "scripts/agent_duration_cases/f07.py"]
+    },
+    {
+      "case_id": "F08-M-MDJSON-001",
+      "case_revision": 1,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "semantic",
+      "solution_space_calibration": "single-gold",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["oracle-derived-from-visible-input", "bounded-design-space"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f08-m-job-responsibility-design.md", "scripts/agent_duration_cases/f08.py"]
+    },
+    {
+      "case_id": "F08-L-MDJSON-001",
+      "case_revision": 1,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "semantic",
+      "solution_space_calibration": "single-gold",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["oracle-derived-from-visible-input", "evidence-trace-required"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f08-l-execution-fabric-design.md", "scripts/agent_duration_cases/f08.py"]
+    },
+    {
+      "case_id": "F09-L-PYBASHDOCKER-001",
+      "case_revision": 1,
+      "design_status": "conditional",
+      "inference_use": "conditional-only",
+      "task_contract_visibility": "partial",
+      "oracle_alignment": "lexical-proxy",
+      "solution_space_calibration": "unverified",
+      "artifact_retention_requirement": "required-for-all-quality",
+      "reason_codes": ["semantic-false-negative-risk", "historical-artifact-missing"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f09-l-worktree-container-threat-model.md", "scripts/agent_duration_cases/f09.py", "temp/multi-agent-duration-atlas/25-effort-inference-validity-review.md"]
+    },
+    {
+      "case_id": "F10-S-PY-001",
+      "case_revision": 1,
+      "design_status": "ineligible",
+      "inference_use": "excluded",
+      "task_contract_visibility": "incomplete",
+      "oracle_alignment": "overfit",
+      "solution_space_calibration": "single-gold",
+      "artifact_retention_requirement": "required-for-all-quality",
+      "reason_codes": ["hidden-controlled-vocabulary", "semantic-false-negative-risk", "superseded-by-revision-2"],
+      "evidence_paths": ["temp/multi-agent-duration-atlas/25-effort-inference-validity-review.md"]
+    },
+    {
+      "case_id": "F10-S-PY-001",
+      "case_revision": 2,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "contract-bound",
+      "solution_space_calibration": "not-required",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["public-controlled-vocabulary", "counter-derived-answer", "revision-2-repair"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f10-s-python-canonical-json-perf.md", "scripts/agent_duration_cases/f10.py"]
+    },
+    {
+      "case_id": "F11-M-BASH-001",
+      "case_revision": 1,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "contract-bound",
+      "solution_space_calibration": "not-required",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["visible-recovery-contract", "behavioral-oracle"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f11-m-post-start-version-recovery.md", "scripts/agent_duration_cases/f11.py"]
+    },
+    {
+      "case_id": "F12-L-MDJSON-001",
+      "case_revision": 1,
+      "design_status": "ineligible",
+      "inference_use": "excluded",
+      "task_contract_visibility": "incomplete",
+      "oracle_alignment": "overfit",
+      "solution_space_calibration": "single-gold",
+      "artifact_retention_requirement": "required-for-all-quality",
+      "reason_codes": ["preferred-architecture-enforced", "invented-identifiers-enforced", "superseded-by-revision-2"],
+      "evidence_paths": ["temp/multi-agent-duration-atlas/25-effort-inference-validity-review.md"]
+    },
+    {
+      "case_id": "F12-L-MDJSON-001",
+      "case_revision": 2,
+      "design_status": "eligible",
+      "inference_use": "eligible-after-observation-gates",
+      "task_contract_visibility": "complete",
+      "oracle_alignment": "semantic",
+      "solution_space_calibration": "plural-gold",
+      "artifact_retention_requirement": "required-for-fail-adjudication",
+      "reason_codes": ["public-bounded-decision-space", "semantic-identifiers", "plural-target-designs", "revision-2-repair"],
+      "evidence_paths": ["experiments/multi-agent-duration/capsules/f12-l-fabric-decision-record.md", "scripts/agent_duration_cases/f12.py", "scripts/test-agent-duration-case-f12.py"]
+    }
+  ]
+}

@@ -16,6 +16,9 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 ROOT = SCRIPT_DIR.parent
 CLI = SCRIPT_DIR / "report-agent-duration-study"
 CATALOG_PATH = ROOT / "experiments" / "multi-agent-duration" / "catalog" / "cases.json"
+VALIDITY_PATH = (
+    ROOT / "experiments" / "multi-agent-duration" / "validity" / "effort-quality.json"
+)
 sys.path.insert(0, str(SCRIPT_DIR))
 
 from agent_contracts import load_json  # noqa: E402
@@ -112,6 +115,14 @@ class AgentDurationStudyReportTests(unittest.TestCase):
         self.assertNotIn("fixture-online-v1", report)
         for forbidden in ("winner", "recommendation", "selection", "band"):
             self.assertNotIn(forbidden, report.lower())
+
+    def test_explicit_validity_companion_reports_open_comparison_gates(self) -> None:
+        atlas = self.atlas([self.matched_run()])
+        report = self.report(atlas, validity=load_json(VALIDITY_PATH))
+        self.assertIn("## Effort-quality inference validity", report)
+        self.assertIn("comparison gates", report.lower())
+        self.assertIn("quality-measurement-headroom", report)
+        self.assertIn("Effort-quality use: <code>not-audited</code>", report)
 
     def test_single_observation_is_a_raw_point_and_requested_only_is_not_promoted(self) -> None:
         record = self.matched_run()

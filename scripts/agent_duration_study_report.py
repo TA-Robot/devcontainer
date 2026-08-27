@@ -19,6 +19,11 @@ from agent_duration_study import (
     canonical_json_digest,
     validate_case_catalog_record,
 )
+from agent_duration_validity import (
+    DEFAULT_VALIDITY,
+    summarize_case_validity,
+    validate_validity_record,
+)
 
 
 DEFAULT_CATALOG = ROOT / "experiments" / "multi-agent-duration" / "catalog" / "cases.json"
@@ -287,10 +292,17 @@ def _render_duration_views(case: Mapping[str, Any]) -> list[str]:
     return lines
 
 
-def _render_quality_evidence(case: Mapping[str, Any]) -> list[str]:
+def _render_quality_evidence(
+    case: Mapping[str, Any],
+    validity: Mapping[str, Any] | None,
+) -> list[str]:
+    inference = summarize_case_validity(case, validity)
+    inference_by_run = {
+        item["run_id"]: item for item in inference["observations"]
+    }
     lines = [
-        "| Run | Outcome | Censoring / cap | Evaluator status | Check count | Criterion score | Failed criterion IDs |",
-        "| --- | --- | --- | --- | --- | --- | --- |",
+        "| Run | Outcome | Censoring / cap | Artifact auditability | Inference gate | Evaluator status | Check count | Criterion score | Failed criterion IDs |",
+        "| --- | --- | --- | --- | --- | --- | --- | --- | --- |",
     ]
     for sample in sorted(case["samples"], key=lambda item: (item["observed_at"], item["run_id"])):
         evidence = sample["quality_evidence"]
@@ -319,6 +331,16 @@ def _render_quality_evidence(case: Mapping[str, Any]) -> list[str]:
             f"{_milliseconds(censoring['observed_terminal_ms'])} ms; "
             f"declared-cap={_milliseconds(censoring['safety_cap_ms'])} ms"
         )
+        auditability = sample.get(
+            "artifact_auditability",
+            {
+                "retention": "content-free-only",
+                "completeness": "not-retained",
+                "file_count": 0,
+                "total_bytes": 0,
+            },
+        )
+        inference_observation = inference_by_run[sample["run_id"]]
         lines.append(
             "| "
             + " | ".join(
@@ -327,6 +349,11 @@ def _render_quality_evidence(case: Mapping[str, Any]) -> list[str]:
                     sample["run_id"],
                     outcome_label,
                     censoring_label,
+                    (
+                        f"{auditability['retention']}/{auditability['completeness']}; "
+                        f"files={auditability['file_count']}; bytes={auditability['total_bytes']}"
+                    ),
+                    f"{inference_observation['status']}; {inference_observation['reason']}",
                     evidence["evaluator_status"],
                     evidence["check_count"],
                     score_label,
@@ -338,13 +365,19 @@ def _render_quality_evidence(case: Mapping[str, Any]) -> list[str]:
     return lines
 
 
-def _render_case(case: Mapping[str, Any], *, ordinal: int) -> list[str]:
+def _render_case(
+    case: Mapping[str, Any],
+    *,
+    ordinal: int,
+    validity: Mapping[str, Any] | None,
+) -> list[str]:
     identity = case["primary_stratum"]["case"]
     counts = case["counts"]
     quality = counts["quality_population"]
     censoring = counts["censoring"]
     artifact = counts["first_artifact_resolution"]
     window = case["observation_window"]
+    inference = summarize_case_validity(case, validity)
     lines = [
         f"### Case {ordinal}: {identity['case_id']} revision {identity['revision']}",
         "",
@@ -352,6 +385,10 @@ def _render_case(case: Mapping[str, Any], *, ordinal: int) -> list[str]:
         f"- Evidence state: {_code(case['evidence_state'])}",
         f"- Observation window: {_code(window['first_observed_at'])} to {_code(window['last_observed_at'])}",
         f"- Runs / observation blocks: {counts['runs']} / {counts['observation_blocks']}",
+        f"- Effort-quality use: {_code(inference['effort_quality_use'])}",
+        f"- Case design status: {_code(inference['design_status'])}",
+        f"- Comparison gates: {_code(inference['comparison_gate_status'])}; not evaluated by this report",
+        f"- Validity reasons: {', '.join(_code(item) for item in inference['reason_codes'])}",
         "",
         "#### Exact case identity",
         "",
@@ -382,12 +419,18 @@ def _render_case(case: Mapping[str, Any], *, ordinal: int) -> list[str]:
     )
     lines.extend(_render_duration_views(case))
     lines.extend(["", "#### Content-free quality evidence", ""])
-    lines.extend(_render_quality_evidence(case))
+    lines.extend(_render_quality_evidence(case, validity))
     lines.append("")
     return lines
 
 
-def _render_series(series: Mapping[str, Any], *, ordinal: int, case_ordinal: int) -> tuple[list[str], int]:
+def _render_series(
+    series: Mapping[str, Any],
+    *,
+    ordinal: int,
+    case_ordinal: int,
+    validity: Mapping[str, Any] | None,
+) -> tuple[list[str], int]:
     stratum = series["series_stratum"]
     window = series["observation_window"]
     lines = [
@@ -411,7 +454,7 @@ def _render_series(series: Mapping[str, Any], *, ordinal: int, case_ordinal: int
     lines.extend(["", "### Case observations", ""])
     for case in _ordered_cases(series):
         case_ordinal += 1
-        lines.extend(_render_case(case, ordinal=case_ordinal))
+        lines.extend(_render_case(case, ordinal=case_ordinal, validity=validity))
     return lines, case_ordinal
 
 
@@ -419,6 +462,7 @@ def build_study_report(
     atlas: Mapping[str, Any],
     *,
     catalog: Mapping[str, Any] | None = None,
+    validity: Mapping[str, Any] | None = None,
     max_series: int,
     max_cases: int,
     max_output_bytes: int,
@@ -433,6 +477,8 @@ def build_study_report(
         if not isinstance(catalog, Mapping):
             raise StudyReportError("study report catalog root must be an object")
         validate_case_catalog_record(dict(catalog))
+    if validity is not None:
+        validate_validity_record(validity, catalog=catalog)
     series_items = _ordered_series(atlas)
     case_rows = _case_rows(atlas)
     if len(series_items) > max_series:
@@ -449,7 +495,7 @@ def build_study_report(
     lines = [
         "# Agent Duration Study Report",
         "",
-        "This is a deterministic, content-free observational report built from a validated aggregate atlas. It does not read raw run payloads or artifact content.",
+        "This is a deterministic observational report built from a validated aggregate atlas. It does not copy raw prompts, transcripts, private reasoning, or retained task-artifact content.",
         "",
         "## Methodology",
         "",
@@ -458,6 +504,7 @@ def build_study_report(
         "- One observation is shown only as one raw point. A range requires at least two points in the same case stratum.",
         "- Requested generation values remain distinct from applied values; an applied value appears only when the atlas records status `applied`.",
         "- Criterion scores and failed criterion IDs are emitted only from each sample's content-free quality evidence. Missing scores remain unavailable and are not inferred.",
+        "- Case-design and observation validity are reported separately. Comparison gates remain open until identity, applied setting, repeat/singleton conditions, and quality-measurement headroom are checked.",
         "- The report is descriptive only. It produces no provider/model ranking, automatic route, or preferred configuration.",
         "",
         "## Observation window and provenance",
@@ -472,6 +519,32 @@ def build_study_report(
         f"- Report resource caps: max-series={max_series}; max-cases={max_cases}; max-output-bytes={max_output_bytes}",
         "",
     ]
+    if validity is not None:
+        summaries = [summarize_case_validity(case, validity) for _series, case in case_rows]
+        use_counts = {
+            status: sum(item["effort_quality_use"] == status for item in summaries)
+            for status in (
+                "eligible-pending-comparison-gates",
+                "conditional-only",
+                "excluded",
+                "not-audited",
+            )
+        }
+        lines.extend(
+            [
+                "## Effort-quality inference validity",
+                "",
+                f"- Validity audit: {_code(validity['validity_id'])}",
+                f"- Audit scope: {_code(validity['scope'])}",
+                f"- Audit catalog digest: {_code(validity['catalog']['digest'])}",
+                f"- Observed case-stratum use counts: {_code(use_counts)}",
+                "- Pending comparison gates: "
+                + ", ".join(_code(item) for item in validity["policy"]["comparison_gates"]),
+                "- `eligible-pending-comparison-gates` is not a conclusion that effort caused quality; this report does not evaluate those comparison gates.",
+                "- Revision-1 F10-S and F12-L are excluded. Missing/partial failed artifacts remain conditional, even when their terminal time is valid.",
+                "",
+            ]
+        )
     lines.extend(_render_catalog_coverage(catalog, case_rows))
     case_ordinal = 0
     for ordinal, series in enumerate(series_items, start=1):
@@ -479,6 +552,7 @@ def build_study_report(
             series,
             ordinal=ordinal,
             case_ordinal=case_ordinal,
+            validity=validity,
         )
         lines.extend(rendered)
     lines.extend(
@@ -490,7 +564,7 @@ def build_study_report(
             "- Right- or administratively-censored terminal times are incomplete observations and are counted separately.",
             "- Criterion-level details are limited to the aggregate's content-free score fields and failed IDs; evaluator rubric text is not present and is not reconstructed.",
             "- Unmeasured catalog cells remain unmeasured; no adjacent family, size, model, or provider value is substituted.",
-            "- Raw prompts, transcripts, private reasoning, generated artifacts, and evaluator output are outside this content-free report.",
+            "- Raw prompts, transcripts, private reasoning, retained task-artifact contents, and evaluator output are outside this report; only auditability metadata is shown.",
             "",
         ]
     )
@@ -542,6 +616,7 @@ def atomic_write_study_report(
 
 __all__ = [
     "DEFAULT_CATALOG",
+    "DEFAULT_VALIDITY",
     "HARD_CASE_LIMIT",
     "HARD_OUTPUT_BYTES",
     "HARD_SERIES_LIMIT",

@@ -18,12 +18,17 @@ from typing import Any, Callable, Mapping, Sequence
 
 from agent_contracts import ContractValidationError
 from agent_duration_atlas import AtlasError, validate_atlas
+from agent_duration_validity import (
+    summarize_case_validity,
+    validate_validity_record,
+)
 
 
 QUERY_SCHEMA_VERSION = 1
 HARD_MAX_ROWS = 1_000
 HARD_MAX_OUTPUT_BYTES = 32 * 1024 * 1024
 HARD_MAX_ATLAS_BYTES = 512 * 1024 * 1024
+HARD_MAX_VALIDITY_BYTES = 2 * 1024 * 1024
 MODES = ("summary", "compare", "curve", "coverage", "audit", "explain")
 FORMATS = ("json", "markdown")
 CURRENT_STUDY_REPORT = "docs/agents/duration-atlas/studies/current.md"
@@ -128,6 +133,28 @@ def load_atlas(path: Path) -> dict[str, Any]:
         validate_atlas(value)
     except (AtlasError, ContractValidationError, KeyError, TypeError, ValueError) as exc:
         raise AtlasQueryError("duration atlas schema or semantics are invalid") from exc
+    return value
+
+
+def load_validity(path: Path) -> dict[str, Any]:
+    """Load one compact validity companion without requiring a local catalog."""
+
+    try:
+        raw = path.read_bytes()
+    except OSError as exc:
+        raise AtlasQueryError(f"cannot read duration validity companion: {path}") from exc
+    if not raw or len(raw) > HARD_MAX_VALIDITY_BYTES:
+        raise AtlasQueryError("duration validity companion is empty or exceeds its byte cap")
+    try:
+        value = json.loads(raw)
+    except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+        raise AtlasQueryError("duration validity companion is not valid UTF-8 JSON") from exc
+    if not isinstance(value, dict):
+        raise AtlasQueryError("duration validity companion root must be an object")
+    try:
+        validate_validity_record(value)
+    except (ContractValidationError, KeyError, TypeError, ValueError) as exc:
+        raise AtlasQueryError("duration validity companion is invalid") from exc
     return value
 
 
@@ -438,9 +465,17 @@ def _validate_filters(filters: QueryFilters) -> None:
         raise AtlasQueryError("setting-applied-value contradicts the requested setting status")
 
 
+def _case_inference_validity(
+    case: Mapping[str, Any],
+    validity: Mapping[str, Any] | None,
+) -> dict[str, Any]:
+    return summarize_case_validity(case, validity)
+
+
 def _compact_row(
     series: Mapping[str, Any],
     case: Mapping[str, Any],
+    validity: Mapping[str, Any] | None,
 ) -> dict[str, Any]:
     stratum = case["primary_stratum"]
     durations = {
@@ -485,10 +520,15 @@ def _compact_row(
             "status": "unknown",
             "reason": "atlas-schema-has-no-stale-annotation",
         },
+        "inference_validity": _case_inference_validity(case, validity),
     }
 
 
-def _audit_row(series: Mapping[str, Any], case: Mapping[str, Any]) -> dict[str, Any]:
+def _audit_row(
+    series: Mapping[str, Any],
+    case: Mapping[str, Any],
+    validity: Mapping[str, Any] | None,
+) -> dict[str, Any]:
     stratum = case["primary_stratum"]
     study_id = stratum["study_id"]
     return {
@@ -503,6 +543,7 @@ def _audit_row(series: Mapping[str, Any], case: Mapping[str, Any]) -> dict[str, 
             {"run_id": sample["run_id"], "run_digest": sample["run_digest"]}
             for sample in case["samples"]
         ],
+        "inference_validity": _case_inference_validity(case, validity),
     }
 
 
@@ -689,6 +730,7 @@ def build_query_result(
     compare_by: Sequence[str] = (),
     curve_by: str = "workers-actual",
     output_format: str = "json",
+    validity: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
     """Build and byte-fit one compact result without returning the atlas body."""
 
@@ -715,6 +757,11 @@ def build_query_result(
         validate_atlas(atlas)
     except (AtlasError, ContractValidationError, KeyError, TypeError, ValueError) as exc:
         raise AtlasQueryError("duration atlas schema or semantics are invalid") from exc
+    if validity is not None:
+        try:
+            validate_validity_record(validity)
+        except (ContractValidationError, KeyError, TypeError, ValueError) as exc:
+            raise AtlasQueryError("duration validity companion is invalid") from exc
 
     all_cells = _cells(atlas)
     matched = _matched_cells(atlas, filters)
@@ -727,6 +774,20 @@ def build_query_result(
             "schema_version": atlas["schema_version"],
             "source_run_set_digest": atlas["source"]["run_set_digest"],
         },
+        "validity": (
+            {
+                "status": "supplied",
+                "validity_id": validity["validity_id"],
+                "scope": validity["scope"],
+                "catalog_digest": validity["catalog"]["digest"],
+                "comparison_gate_status": "not-evaluated-by-query",
+            }
+            if validity is not None
+            else {
+                "status": "not-supplied",
+                "comparison_gate_status": "not-evaluated-by-query",
+            }
+        ),
         "filters": _filters_payload(filters),
         "limits": {
             "role": "context-safety-cap",
@@ -788,9 +849,11 @@ def build_query_result(
             ),
         }
     elif mode == "audit":
-        result["rows"] = [_audit_row(series, case) for series, case in matched]
+        result["rows"] = [
+            _audit_row(series, case, validity) for series, case in matched
+        ]
     else:
-        rows = [_compact_row(series, case) for series, case in matched]
+        rows = [_compact_row(series, case, validity) for series, case in matched]
         if mode == "curve":
             for row, (_series, case) in zip(rows, matched):
                 row["curve"] = {
@@ -881,6 +944,7 @@ def render_markdown(result: Mapping[str, Any]) -> str:
         f"- matched case strata: {result['match']['case_strata']}",
         f"- displayed rows: {result['match']['displayed_rows']}",
         f"- truncated: `{str(result['truncation']['truncated']).lower()}`",
+        f"- validity companion: `{result['validity']['status']}`",
     ]
     if result.get("rows"):
         lines.extend(
@@ -923,7 +987,9 @@ def render_markdown(result: Mapping[str, Any]) -> str:
                 f"caps={row['censoring']['safety_caps_ms']} | "
                 f"{row['evidence']['case_state']}; "
                 f"{_quality_evidence_label(row['evidence']['quality_evidence'])}; "
-                f"freshness={row['freshness']['status']} |"
+                f"freshness={row['freshness']['status']}; "
+                f"effort-use={row['inference_validity']['effort_quality_use']}; "
+                "comparison-gates=not-evaluated |"
             )
     if result.get("coverage"):
         coverage = result["coverage"]
@@ -953,7 +1019,13 @@ def render_markdown(result: Mapping[str, Any]) -> str:
             lines.append(f"- `{hint['filter']}`: {values}")
     if result["status"] == "unmeasured":
         lines.extend(["", "No exact measured stratum matched; no duration was interpolated."])
-    lines.extend(["", "Observed evidence only; no decision policy was generated."])
+    lines.extend(
+        [
+            "",
+            "Observed evidence only; no decision policy was generated. "
+            "Effort-quality use remains conditional until comparison gates are evaluated.",
+        ]
+    )
     return "\n".join(lines) + "\n"
 
 
@@ -1022,6 +1094,7 @@ def _scalar(raw: str) -> Any:
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("atlas", type=Path)
+    parser.add_argument("--validity", type=Path)
     parser.add_argument("--mode", choices=MODES, default="summary")
     parser.add_argument("--format", choices=FORMATS, default="json")
     parser.add_argument(
@@ -1128,6 +1201,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     try:
         atlas = load_atlas(args.atlas)
+        validity = load_validity(args.validity) if args.validity is not None else None
         result = build_query_result(
             atlas,
             mode=args.mode,
@@ -1137,6 +1211,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             compare_by=args.compare_by,
             curve_by=args.curve_by,
             output_format=args.format,
+            validity=validity,
         )
         encoded = encode_result(result, args.format)
         if len(encoded) > args.max_output_bytes:
