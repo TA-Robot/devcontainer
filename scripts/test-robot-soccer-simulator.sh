@@ -62,8 +62,9 @@ def call(path, payload=None):
 
 status, spec = call("/v1/spec")
 assert status == 200
-assert len(spec["friendly_robot_ids"]) == 3
-assert len(spec["enemy_robot_ids"]) == 2
+assert len(spec["friendly_robot_ids"]) == 2
+assert len(spec["enemy_robot_ids"]) == 3
+assert spec["schema_version"] == 2
 assert spec["observation_nominal_delay_ms"] == 200
 encoded = json.dumps(spec)
 for forbidden in ("kick_speed", "max_acceleration", "lateral_slip", "restitution"):
@@ -116,7 +117,11 @@ import sys
 text = Path(sys.argv[1]).read_text(encoding="utf-8")
 events = [json.loads(line) for line in text.splitlines()]
 kinds = {item["event"] for item in events}
-assert {"server_started", "episode_started", "command_received", "observation_delivered", "episode_terminal"} <= kinds
+assert {"server_started", "episode_started", "command_received", "observation_delivered", "terminal_snapshot", "episode_terminal"} <= kinds
+delivered = [item["payload"] for item in events if item["event"] == "observation_delivered"]
+terminal = next(item["payload"] for item in events if item["event"] == "terminal_snapshot")
+assert len(terminal["robots"]) == 5
+assert terminal["sequence"] > delivered[-1]["sequence"]
 for forbidden in ("kick_speed", "max_acceleration", "lateral_slip", "observation_jitter_s"):
     assert forbidden not in text
 PY

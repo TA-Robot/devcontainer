@@ -19,9 +19,9 @@ path = Path(sys.argv[1])
 robots = [
     ("friendly_0", "friendly", -1.7, 0.0, 0.0),
     ("friendly_1", "friendly", 0.4, 1.0, -0.4),
-    ("friendly_2", "friendly", 0.2, -1.0, 0.4),
     ("enemy_0", "enemy", -0.5, 0.5, 3.14),
     ("enemy_1", "enemy", 3.5, 0.0, 3.14),
+    ("enemy_2", "enemy", 2.8, -0.8, 3.14),
 ]
 events = [{"event": "episode_started", "payload": {}}]
 for sequence in range(1, 31):
