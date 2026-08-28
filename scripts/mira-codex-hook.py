@@ -93,6 +93,35 @@ AGENT_JOB_TERMINAL_EVENTS = {
     "AgentJobCancelled": ("ready", "unknown"),
 }
 AGENT_JOB_EVENTS = {"AgentJobStart", *AGENT_JOB_TERMINAL_EVENTS}
+COLLABORATION_RELATIONS = {
+    "solo", "delegate", "consult", "compete", "verify", "project-specific"
+}
+COLLABORATION_LIFECYCLES = {
+    "one-shot", "bounded-exchange", "event-triggered", "scheduled", "project-specific"
+}
+COLLABORATION_MECHANISMS = {
+    "latency-overlap",
+    "context-partitioning",
+    "coverage",
+    "error-decorrelation",
+    "empirical-selection",
+    "evidence-producing-refinement",
+    "temporal-sampling",
+    "project-specific",
+}
+COLLABORATION_CONSTRAINTS = {
+    "serialization",
+    "human-review",
+    "wall-clock",
+    "quota",
+    "agentctl-capacity",
+    "integration",
+    "context-coupling",
+    "evaluator",
+    "late-failure",
+    "other",
+    "unknown",
+}
 
 OBSERVATION_TERMINAL_EVENTS = {
     "AgentJobSucceeded",
@@ -278,6 +307,52 @@ def canonical_hook_event(value: object) -> str:
     return GROK_EVENT_NAMES.get(event.lower(), "Unknown")
 
 
+def collaboration_annotation(value: object) -> dict[str, Any] | None:
+    """Accept only opaque identifiers and schema-bounded decision semantics."""
+
+    if not isinstance(value, dict):
+        return None
+    plan = value.get("plan")
+    candidate = value.get("candidate")
+    digest = value.get("decisionDigest")
+    relation = enum_field(value.get("relation"), COLLABORATION_RELATIONS)
+    lifecycle = enum_field(value.get("lifecycle"), COLLABORATION_LIFECYCLES)
+    constraint = enum_field(value.get("bindingConstraint"), COLLABORATION_CONSTRAINTS)
+    raw_mechanisms = value.get("expectedMechanisms")
+    mechanisms = (
+        [enum_field(item, COLLABORATION_MECHANISMS) for item in raw_mechanisms]
+        if isinstance(raw_mechanisms, list)
+        else []
+    )
+    if not (
+        isinstance(plan, str)
+        and re.fullmatch(r"[0-9a-f]{16}", plan)
+        and isinstance(candidate, str)
+        and re.fullmatch(r"[0-9a-f]{16}", candidate)
+        and isinstance(digest, str)
+        and re.fullmatch(r"sha256:[0-9a-f]{64}", digest)
+        and relation != "unknown"
+        and lifecycle != "unknown"
+        and value.get("bindingConstraint") in COLLABORATION_CONSTRAINTS
+    ):
+        return None
+    if not mechanisms or len(mechanisms) > 8 or "unknown" in mechanisms:
+        return None
+    mechanisms = list(dict.fromkeys(mechanisms))
+    if value.get("annotationSource") != "primary-plan":
+        return None
+    return {
+        "plan": plan,
+        "candidate": candidate,
+        "decisionDigest": digest,
+        "relation": relation,
+        "lifecycle": lifecycle,
+        "expectedMechanisms": mechanisms,
+        "bindingConstraint": constraint,
+        "annotationSource": "primary-plan",
+    }
+
+
 def normalize_hook_payload(payload: dict[str, Any], provider: str) -> dict[str, Any]:
     """Keep only bridge inputs and adapt Grok's camelCase hook wire format."""
 
@@ -293,6 +368,7 @@ def normalize_hook_payload(payload: dict[str, Any], provider: str) -> dict[str, 
             "provider": payload.get("provider"),
             "role": payload.get("role"),
             "_mira_workspace": payload.get("_mira_workspace"),
+            "collaboration": collaboration_annotation(payload.get("collaboration")),
         }
 
     if provider == "grok":
@@ -516,6 +592,7 @@ def begin_observation(
         "lastWorkerStoppedEpoch": None,
         "postWorkerEventCounts": {},
         "postWorkerCategoryCounts": {},
+        "collaboration": collaboration_annotation(record.get("collaboration")),
     }
     record["observation"] = observation
     return observation
@@ -594,6 +671,7 @@ def finalize_observation(
     for outcome in ("success", "failure", "unknown"):
         test_outcomes.setdefault(outcome, 0)
 
+    collaboration = collaboration_annotation(observation.get("collaboration"))
     episode = {
         "schemaVersion": OBSERVATION_SCHEMA_VERSION,
         "id": string_field(observation.get("id"), 32),
@@ -648,11 +726,25 @@ def finalize_observation(
             ),
         },
         "semantics": {
-            "expectedMechanisms": [],
-            "bindingConstraint": "unknown",
-            "relation": "unknown",
-            "lifecycle": "unknown",
-            "annotationSource": "none",
+            "expectedMechanisms": (
+                collaboration["expectedMechanisms"] if collaboration else []
+            ),
+            "bindingConstraint": (
+                collaboration["bindingConstraint"] if collaboration else "unknown"
+            ),
+            "relation": collaboration["relation"] if collaboration else "unknown",
+            "lifecycle": collaboration["lifecycle"] if collaboration else "unknown",
+            "annotationSource": (
+                collaboration["annotationSource"] if collaboration else "none"
+            ),
+            "correlation": {
+                "available": collaboration is not None,
+                "plan": collaboration["plan"] if collaboration else None,
+                "candidate": collaboration["candidate"] if collaboration else None,
+                "decisionDigest": (
+                    collaboration["decisionDigest"] if collaboration else None
+                ),
+            },
         },
         "coverage": {
             "startObserved": bool(observation.get("startObserved")),
@@ -901,6 +993,7 @@ def apply_event(
         set_record_state(record, "ready", event, now)
         timeline_status = "ready"
     elif event == "UserPromptSubmit":
+        record["collaboration"] = None
         set_record_state(record, "thinking", event, now)
         timeline_status = "thinking"
     elif event == "PreToolUse":
@@ -961,6 +1054,9 @@ def apply_event(
         timeline_status = status
         timeline_category = "agent"
     elif event == "AgentJobStart" and source == "agentctl":
+        record["collaboration"] = collaboration_annotation(
+            payload.get("collaboration")
+        )
         agent_id = opaque_id(
             payload.get("attempt_id") or payload.get("agent_id"),
             f"agent-{len(subagents) + 1}",

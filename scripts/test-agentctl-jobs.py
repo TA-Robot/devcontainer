@@ -229,6 +229,7 @@ class AgentctlJobTests(unittest.TestCase):
         dependency_job_ids: list[str] | None = None,
         resource_class: str = "write",
         priority: str | None = None,
+        collaboration: dict[str, object] | None = None,
     ) -> Path:
         task = {
             "schema_version": 1,
@@ -247,6 +248,8 @@ class AgentctlJobTests(unittest.TestCase):
         }
         if priority is not None:
             task["priority"] = priority
+        if collaboration is not None:
+            task["collaboration"] = collaboration
         path = self.workspace / name
         path.write_text(json.dumps(task), encoding="utf-8")
         return path
@@ -515,6 +518,54 @@ class AgentctlJobTests(unittest.TestCase):
             "--json",
         )
         self.assertEqual(fail_open.returncode, 0, fail_open.stdout + fail_open.stderr)
+
+    def test_collaboration_decision_is_opaquely_correlated_to_mira_episode(self) -> None:
+        mira_state = self.root / "mira-correlation-state"
+        self.extra_environment.update(
+            {
+                "AGENTCTL_MIRA_BRIDGE_BIN": str(ROOT / "scripts/mira-codex-hook.py"),
+                "MIRA_COMPANION_ENABLED": "1",
+                "MIRA_COMPANION_STATE_DIR": str(mira_state),
+            }
+        )
+        raw_plan_id = "private-plan-parser-001"
+        raw_candidate_id = "private-candidate-consult-001"
+        digest = "sha256:" + "c" * 64
+        collaboration = {
+            "plan_id": raw_plan_id,
+            "candidate_id": raw_candidate_id,
+            "decision_digest": digest,
+            "relation": "consult",
+            "lifecycle": "bounded-exchange",
+            "expected_mechanisms": ["coverage", "error-decorrelation"],
+            "binding_constraint": "evaluator",
+            "annotation_source": "primary-plan",
+        }
+        job = self.create("mira-correlated-task.json", collaboration=collaboration)
+        result = self.invoke(
+            "job", "run", str(job["job_id"]), "--provider", "claude", "--json"
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+
+        ledger = json.loads(
+            (mira_state / "collaboration-episodes.json").read_text(encoding="utf-8")
+        )
+        self.assertEqual(len(ledger["episodes"]), 1)
+        semantics = ledger["episodes"][0]["semantics"]
+        self.assertEqual(semantics["relation"], "consult")
+        self.assertEqual(semantics["lifecycle"], "bounded-exchange")
+        self.assertEqual(semantics["bindingConstraint"], "evaluator")
+        self.assertEqual(
+            semantics["expectedMechanisms"], ["coverage", "error-decorrelation"]
+        )
+        self.assertTrue(semantics["correlation"]["available"])
+        self.assertEqual(semantics["correlation"]["decisionDigest"], digest)
+        persisted = "".join(
+            path.read_text(encoding="utf-8") for path in mira_state.glob("*.json")
+        )
+        self.assertNotIn(raw_plan_id, persisted)
+        self.assertNotIn(raw_candidate_id, persisted)
+        self.assertNotIn(str(job["job_id"]), persisted)
 
     def test_grok_text_fallback_uses_only_a_fully_valid_final_document(self) -> None:
         recovered_job = self.create("grok-duplicate.json")

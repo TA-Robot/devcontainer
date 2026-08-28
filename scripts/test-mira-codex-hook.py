@@ -199,6 +199,15 @@ class MiraCodexHookTest(unittest.TestCase):
             episode["reworkProxy"]["editEventsAfterTestFailure"], 1
         )
         self.assertEqual(episode["semantics"]["relation"], "unknown")
+        self.assertEqual(
+            episode["semantics"]["correlation"],
+            {
+                "available": False,
+                "plan": None,
+                "candidate": None,
+                "decisionDigest": None,
+            },
+        )
         self.assertTrue(episode["coverage"]["startObserved"])
         self.assertTrue(episode["coverage"]["terminalObserved"])
         persisted = self.all_persisted_json()
@@ -494,6 +503,84 @@ class MiraCodexHookTest(unittest.TestCase):
         self.assertNotIn("private-grok-job-id", persisted)
         self.assertNotIn("private-grok-attempt-id", persisted)
         self.assertNotIn("/private/customer/workspace", persisted)
+
+    def test_agentctl_collaboration_semantics_are_correlated_without_raw_ids(self) -> None:
+        digest = "sha256:" + "a" * 64
+        annotation = {
+            "plan": "0123456789abcdef",
+            "candidate": "fedcba9876543210",
+            "decisionDigest": digest,
+            "relation": "consult",
+            "lifecycle": "bounded-exchange",
+            "expectedMechanisms": [
+                "coverage",
+                "evidence-producing-refinement",
+            ],
+            "bindingConstraint": "evaluator",
+            "annotationSource": "primary-plan",
+            "privateRationale": "must-never-persist",
+        }
+        start = {
+            "mira_source": "agentctl",
+            "session_id": "private-correlated-job",
+            "attempt_id": "private-correlated-attempt",
+            "hook_event_name": "AgentJobStart",
+            "provider": "claude",
+            "role": "reviewer",
+            "collaboration": annotation,
+        }
+        self.emit(start)
+        start["hook_event_name"] = "AgentJobSucceeded"
+        self.emit(start)
+
+        semantics = self.observation_ledger()["episodes"][0]["semantics"]
+        self.assertEqual(semantics["relation"], "consult")
+        self.assertEqual(semantics["lifecycle"], "bounded-exchange")
+        self.assertEqual(semantics["bindingConstraint"], "evaluator")
+        self.assertEqual(
+            semantics["expectedMechanisms"],
+            ["coverage", "evidence-producing-refinement"],
+        )
+        self.assertEqual(
+            semantics["correlation"],
+            {
+                "available": True,
+                "plan": "0123456789abcdef",
+                "candidate": "fedcba9876543210",
+                "decisionDigest": digest,
+            },
+        )
+        persisted = self.all_persisted_json()
+        self.assertNotIn("private-correlated-job", persisted)
+        self.assertNotIn("private-correlated-attempt", persisted)
+        self.assertNotIn("must-never-persist", persisted)
+
+    def test_invalid_collaboration_annotation_falls_back_to_unknown(self) -> None:
+        event = {
+            "mira_source": "agentctl",
+            "session_id": "invalid-correlation-job",
+            "attempt_id": "invalid-correlation-attempt",
+            "hook_event_name": "AgentJobStart",
+            "provider": "grok",
+            "role": "implementer",
+            "collaboration": {
+                "plan": "not-opaque",
+                "candidate": "fedcba9876543210",
+                "decisionDigest": "sha256:" + "b" * 64,
+                "relation": "private-semantic-label",
+                "lifecycle": "one-shot",
+                "expectedMechanisms": ["coverage"],
+                "bindingConstraint": "wall-clock",
+                "annotationSource": "primary-plan",
+            },
+        }
+        self.emit(event)
+        event["hook_event_name"] = "AgentJobFailed"
+        self.emit(event)
+        semantics = self.observation_ledger()["episodes"][0]["semantics"]
+        self.assertEqual(semantics["relation"], "unknown")
+        self.assertFalse(semantics["correlation"]["available"])
+        self.assertNotIn("private-semantic-label", self.all_persisted_json())
 
     def test_agentctl_envelope_event_name_is_allowlisted(self) -> None:
         secret_event = "AgentJobPrivateCustomerObjective"

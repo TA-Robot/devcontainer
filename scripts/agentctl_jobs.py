@@ -71,6 +71,35 @@ MIRA_AGENT_JOB_EVENTS = {
     "AgentJobCancelled",
     "AgentJobOrphaned",
 }
+COLLABORATION_RELATIONS = {
+    "solo", "delegate", "consult", "compete", "verify", "project-specific"
+}
+COLLABORATION_LIFECYCLES = {
+    "one-shot", "bounded-exchange", "event-triggered", "scheduled", "project-specific"
+}
+COLLABORATION_MECHANISMS = {
+    "latency-overlap",
+    "context-partitioning",
+    "coverage",
+    "error-decorrelation",
+    "empirical-selection",
+    "evidence-producing-refinement",
+    "temporal-sampling",
+    "project-specific",
+}
+COLLABORATION_CONSTRAINTS = {
+    "serialization",
+    "human-review",
+    "wall-clock",
+    "quota",
+    "agentctl-capacity",
+    "integration",
+    "context-coupling",
+    "evaluator",
+    "late-failure",
+    "other",
+    "unknown",
+}
 
 ACTIVE_STATES = {"waiting_capacity", "preparing", "ready", "running"}
 RETRYABLE_STATES = {"failed", "cancelled", "orphaned", "rejected"}
@@ -542,6 +571,56 @@ def latest_attempt(store: Store, job_id: str) -> dict[str, Any] | None:
     return dict(row) if row is not None else None
 
 
+def _mira_collaboration_annotation(task_path: object) -> dict[str, Any] | None:
+    """Return the bounded, content-free projection accepted by Mira telemetry."""
+
+    try:
+        task = load_json(Path(str(task_path)))
+    except (ContractValidationError, OSError, TypeError, ValueError):
+        return None
+    raw = task.get("collaboration") if isinstance(task, dict) else None
+    if not isinstance(raw, dict):
+        return None
+    plan_id = raw.get("plan_id")
+    candidate_id = raw.get("candidate_id")
+    digest = raw.get("decision_digest")
+    relation = raw.get("relation")
+    lifecycle = raw.get("lifecycle")
+    mechanisms = raw.get("expected_mechanisms")
+    constraint = raw.get("binding_constraint")
+    if not (
+        isinstance(plan_id, str)
+        and isinstance(candidate_id, str)
+        and isinstance(digest, str)
+        and re.fullmatch(r"sha256:[0-9a-f]{64}", digest)
+        and relation in COLLABORATION_RELATIONS
+        and lifecycle in COLLABORATION_LIFECYCLES
+        and isinstance(mechanisms, list)
+        and 1 <= len(mechanisms) <= 8
+        and len(set(mechanisms)) == len(mechanisms)
+        and all(item in COLLABORATION_MECHANISMS for item in mechanisms)
+        and constraint in COLLABORATION_CONSTRAINTS
+        and raw.get("annotation_source") == "primary-plan"
+    ):
+        return None
+    return {
+        "plan": hashlib.sha256(
+            f"collaboration-plan:{plan_id}".encode("utf-8", errors="replace")
+        ).hexdigest()[:16],
+        "candidate": hashlib.sha256(
+            f"collaboration-candidate:{plan_id}:{candidate_id}".encode(
+                "utf-8", errors="replace"
+            )
+        ).hexdigest()[:16],
+        "decisionDigest": digest,
+        "relation": relation,
+        "lifecycle": lifecycle,
+        "expectedMechanisms": list(mechanisms),
+        "bindingConstraint": constraint,
+        "annotationSource": "primary-plan",
+    }
+
+
 def _emit_mira_agent_job_event(
     store: Store,
     job_id: str,
@@ -571,7 +650,7 @@ def _emit_mira_agent_job_event(
         return
     job = store.connection.execute(
         """
-        SELECT jobs.role, projects.registered_path
+        SELECT jobs.role, jobs.task_path, projects.registered_path
         FROM jobs
         JOIN projects ON projects.project_id = jobs.project_id
         WHERE jobs.job_id = ?
@@ -600,6 +679,9 @@ def _emit_mira_agent_job_event(
         "role": job["role"],
         "_mira_workspace": opaque_workspace,
     }
+    collaboration = _mira_collaboration_annotation(job["task_path"])
+    if collaboration is not None:
+        payload["collaboration"] = collaboration
     environment = {
         key: os.environ[key]
         for key in (
