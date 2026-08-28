@@ -277,12 +277,24 @@ impl Simulator {
         let ball_position = self.ball.position;
         let goal_position = Vec2::new(self.public.field.length_m / 2.0, 0.0);
         let exclusion = self.public.prestart_enemy_exclusion_radius_m + 0.08;
+        let predicted_ball = ball_position + (self.ball.velocity * 0.18).clamp_length(0.35);
         let outside_exclusion = |target: Vec2, fallback: Vec2| {
             let delta = target - ball_position;
             if delta.length() >= exclusion {
                 target
             } else {
                 ball_position + delta.normalized_or(fallback) * exclusion
+            }
+        };
+        let clearing_position = |robot_position: Vec2| {
+            let relative = robot_position - predicted_ball;
+            let side = if relative.y >= 0.0 { 1.0 } else { -1.0 };
+            if relative.x < 0.10 && relative.y.abs() < 0.22 {
+                Vec2::new(robot_position.x, predicted_ball.y + side * 0.30)
+            } else if relative.x < 0.10 {
+                predicted_ball + Vec2::new(0.18, side * 0.28)
+            } else {
+                predicted_ball + Vec2::new(0.14, 0.0)
             }
         };
         for index in FRIENDLY_IDS.len()..self.robots.len() {
@@ -305,11 +317,14 @@ impl Simulator {
                     _ => Vec2::new(4.02, (receiver_position.y * 0.55).clamp(-0.62, 0.62)),
                 }
             } else if self.robots[index].id == "enemy_0" {
-                let lead = self.ball.velocity * 0.28;
-                ball_position + lead
+                clearing_position(robot_position)
             } else if self.robots[index].id == "enemy_1" {
-                let mark = receiver_position + (ball_position - receiver_position) * 0.28;
-                Vec2::new(mark.x.clamp(-3.8, 3.8), mark.y.clamp(-2.6, 2.6))
+                if (ball_position - robot_position).length() < 0.65 {
+                    clearing_position(robot_position)
+                } else {
+                    let mark = receiver_position + (ball_position - receiver_position) * 0.28;
+                    Vec2::new(mark.x.clamp(-3.8, 3.8), mark.y.clamp(-2.6, 2.6))
+                }
             } else {
                 let goal_guard_x = 4.02;
                 let intercept_limit = self.public.field.attacking_goal_width_m / 2.0 + 0.55;
@@ -328,10 +343,11 @@ impl Simulator {
             let face_ball = ball_position - robot_position;
             let heading_target = face_ball.y.atan2(face_ball.x);
             let heading_error = wrap_angle(heading_target - self.robots[index].heading);
+            let can_clear_away_from_goal = robot_position.x > ball_position.x + 0.06;
             self.robots[index].command = RobotCommand {
                 local_velocity: desired_global.rotate(-self.robots[index].heading),
                 angular_velocity: (heading_error * 4.0).clamp(-4.5, 4.5),
-                kick: self.play_started,
+                kick: self.play_started && can_clear_away_from_goal,
             };
         }
     }
@@ -920,6 +936,37 @@ mod tests {
             - simulator.public.robot.radius_m;
         assert!(simulator.robots[goalkeeper].position.y > goal_mouth_center_limit);
         assert!(simulator.is_running());
+    }
+
+    #[test]
+    fn defenders_route_goal_side_before_enabling_a_clearance_kick() {
+        let mut simulator = Simulator::new(33);
+        let defender = FRIENDLY_IDS.len();
+        simulator.play_started = true;
+        simulator.ball.position = Vec2::ZERO;
+        simulator.ball.velocity = Vec2::ZERO;
+        simulator.robots[defender].position = Vec2::new(-0.4, 0.0);
+        simulator.robots[defender].heading = 0.0;
+
+        simulator.update_enemy_commands();
+
+        let route_command = simulator.robots[defender].command;
+        let route_global = route_command
+            .local_velocity
+            .rotate(simulator.robots[defender].heading);
+        assert!(!route_command.kick);
+        assert!(route_global.x.abs() < 1e-9);
+        assert!(route_global.y.abs() > 0.1);
+
+        simulator.robots[defender].position = Vec2::new(0.20, 0.0);
+        simulator.update_enemy_commands();
+
+        let clear_command = simulator.robots[defender].command;
+        let clear_global = clear_command
+            .local_velocity
+            .rotate(simulator.robots[defender].heading);
+        assert!(clear_command.kick);
+        assert!(clear_global.x < 0.0);
     }
 
     #[test]
