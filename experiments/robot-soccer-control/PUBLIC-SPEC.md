@@ -56,9 +56,11 @@ All distances are metres and all angles are radians.
 | `enemy_1` | `(2.15, 0.75)` | `pi` | receiver marker / second defender |
 | `enemy_2` | `(4.08, 0.0)` | `pi` | goalkeeper |
 
-Before the first friendly contact, defenders hold this formation and are also
-subject to the enemy exclusion radius. They do not walk toward the ball while
-waiting for the sideline restart.
+Before the first friendly contact, enemies may actively reposition in response
+to the friendly formation. They remain subject to the enemy exclusion radius:
+the near defender may block the changing ball-to-receiver lane, the second may
+mark from the goal side, and the goalkeeper may track an anticipated shot line.
+The exact opponent policy and control parameters are hidden.
 
 If `kick` is true while the ball newly contacts the kick-capable segment, the
 simulator applies a forward kick. There is no time-based cooldown. A continuous

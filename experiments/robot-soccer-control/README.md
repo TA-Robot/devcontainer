@@ -5,8 +5,9 @@ Status: v0 simulator and public controller contract
 This experiment supplies a source-hidden Rust runtime for evaluating a central
 controller that operates two omnidirectional friendly robots against three
 built-in opponents in an attacking-half sideline-restart formation, analogous
-to a throw-in or robot-soccer kick-in. The target
-project receives only the runtime image and
+to a throw-in or robot-soccer kick-in. The opponents actively adjust their
+lane block, receiver mark, and goal coverage before and after the restart. The
+target project receives only the runtime image and
 [`PUBLIC-SPEC.md`](PUBLIC-SPEC.md); simulator source remains in this authoring
 repository so hidden dynamics are not disclosed to the development agent.
 
