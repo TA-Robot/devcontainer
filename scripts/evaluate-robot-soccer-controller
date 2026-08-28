@@ -1,0 +1,182 @@
+#!/usr/bin/env python3
+"""Require one controller command to succeed on exactly three distinct seeds."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+
+
+DEFAULT_SEEDS = (1, 2, 3)
+
+
+def parse_seeds(raw: str) -> tuple[int, int, int]:
+    try:
+        seeds = tuple(int(item.strip()) for item in raw.split(","))
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("seeds must be comma-separated integers") from error
+    if len(seeds) != 3 or len(set(seeds)) != 3:
+        raise argparse.ArgumentTypeError("exactly three distinct seeds are required")
+    if any(seed < 0 or seed > 2**64 - 1 for seed in seeds):
+        raise argparse.ArgumentTypeError("seeds must be unsigned 64-bit integers")
+    return seeds  # type: ignore[return-value]
+
+
+def gate_passes(runs: list[dict[str, object]]) -> bool:
+    return len(runs) == 3 and all(
+        run.get("simulator_status") == "success" for run in runs
+    )
+
+
+def get_json(url: str, timeout: float = 1.0) -> dict[str, object]:
+    with urllib.request.urlopen(url, timeout=timeout) as response:
+        payload = json.loads(response.read())
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"expected JSON object from {url}")
+    return payload
+
+
+def wait_for_health(base_url: str, timeout_s: float) -> None:
+    deadline = time.monotonic() + timeout_s
+    last_error: BaseException | None = None
+    while time.monotonic() < deadline:
+        try:
+            if get_json(f"{base_url}/health", 0.4).get("ok") is True:
+                return
+        except (OSError, urllib.error.URLError, ValueError) as error:
+            last_error = error
+        time.sleep(0.05)
+    raise RuntimeError(f"simulator health timeout: {last_error}")
+
+
+def controller_command(template: list[str], base_url: str, seed: int) -> list[str]:
+    expanded = [
+        item.replace("{base_url}", base_url).replace("{seed}", str(seed))
+        for item in template
+    ]
+    if not any("{base_url}" in item for item in template):
+        expanded.extend(("--base-url", base_url))
+    if not any("{seed}" in item for item in template):
+        expanded.extend(("--seed", str(seed)))
+    return expanded
+
+
+def run_seed(args: argparse.Namespace, seed: int, index: int) -> dict[str, object]:
+    output_dir = Path(args.output_dir).resolve()
+    trace = output_dir / f"seed-{seed}.jsonl"
+    stdout_path = output_dir / f"seed-{seed}.stdout.log"
+    stderr_path = output_dir / f"seed-{seed}.stderr.log"
+    trace.touch()
+    trace.chmod(0o666)
+    container_name = f"robot-soccer-gate-{os.getpid()}-{index}"
+    base_url = f"http://127.0.0.1:{args.port}"
+    docker_command = [
+        "docker",
+        "run",
+        "--rm",
+        "-d",
+        "--name",
+        container_name,
+        "--user",
+        f"{os.getuid()}:{os.getgid()}",
+        "-p",
+        f"127.0.0.1:{args.port}:8080",
+        "-v",
+        f"{trace}:/tmp/robot-soccer-simulator.jsonl",
+        args.image,
+    ]
+    started_at = time.monotonic()
+    controller_result: subprocess.CompletedProcess[str] | None = None
+    simulator_result: dict[str, object] = {
+        "status": "infrastructure_error",
+        "reason": "simulator_not_started",
+    }
+    infrastructure_error: str | None = None
+    try:
+        subprocess.run(docker_command, check=True, capture_output=True, text=True)
+        wait_for_health(base_url, args.startup_timeout)
+        command = controller_command(args.controller_command, base_url, seed)
+        controller_result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=args.episode_timeout,
+        )
+        stdout_path.write_text(controller_result.stdout, encoding="utf-8")
+        stderr_path.write_text(controller_result.stderr, encoding="utf-8")
+        simulator_result = get_json(f"{base_url}/v1/result")
+    except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+        infrastructure_error = str(error)
+    finally:
+        subprocess.run(
+            ["docker", "kill", container_name],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    return {
+        "seed": seed,
+        "simulator_status": simulator_result.get("status"),
+        "simulator_reason": simulator_result.get("reason"),
+        "simulator_elapsed_ms": simulator_result.get("elapsed_ms"),
+        "controller_exit_code": (
+            None if controller_result is None else controller_result.returncode
+        ),
+        "wall_time_s": round(time.monotonic() - started_at, 3),
+        "trace": str(trace),
+        "stdout": str(stdout_path),
+        "stderr": str(stderr_path),
+        "infrastructure_error": infrastructure_error,
+    }
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--image", default="robot-soccer-simulator:dev")
+    parser.add_argument("--seeds", type=parse_seeds, default=DEFAULT_SEEDS)
+    parser.add_argument("--output-dir", required=True)
+    parser.add_argument("--port", type=int, default=18080)
+    parser.add_argument("--startup-timeout", type=float, default=5.0)
+    parser.add_argument("--episode-timeout", type=float, default=40.0)
+    parser.add_argument("controller_command", nargs=argparse.REMAINDER)
+    return parser
+
+
+def main() -> int:
+    parser = build_parser()
+    args = parser.parse_args()
+    if args.controller_command[:1] == ["--"]:
+        args.controller_command = args.controller_command[1:]
+    if not args.controller_command:
+        parser.error("controller command is required after --")
+    if not 1 <= args.port <= 65535:
+        parser.error("--port must be between 1 and 65535")
+    output_dir = Path(args.output_dir).resolve()
+    output_dir.mkdir(parents=True, exist_ok=False)
+    runs = [run_seed(args, seed, index) for index, seed in enumerate(args.seeds)]
+    accepted = gate_passes(runs)
+    summary = {
+        "accepted": accepted,
+        "criterion": "all_three_distinct_seeds_succeed",
+        "seeds": list(args.seeds),
+        "successes": sum(run["simulator_status"] == "success" for run in runs),
+        "runs": runs,
+    }
+    summary_path = output_dir / "summary.json"
+    summary_path.write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    print(json.dumps(summary, ensure_ascii=False, sort_keys=True))
+    return 0 if accepted else 1
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
