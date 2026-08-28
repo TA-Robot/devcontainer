@@ -3,7 +3,9 @@
   "default_permission_profile": "safe",
   "contracts": {
     "task": ".agent/schemas/task.schema.json",
-    "result": ".agent/schemas/result.schema.json"
+    "result": ".agent/schemas/result.schema.json",
+    "collaboration_decision": ".agent/schemas/collaboration-decision.schema.json",
+    "collaboration_outcome": ".agent/schemas/collaboration-outcome.schema.json"
   },
   "roles": {
     "researcher": {

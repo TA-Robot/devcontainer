@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "plan_id": "plan-parser-regression-001",
+  "project_id": "project-local-001",
+  "base_sha": "0123456789abcdef0123456789abcdef01234567",
+  "task_fingerprint": {
+    "family": "parser-regression",
+    "structural_size": "medium",
+    "decomposability": "high",
+    "context_coupling": "partial",
+    "oracle_strength": "strong",
+    "risk": "reversible",
+    "temporal_shape": "one-shot"
+  },
+  "candidates": [
+    {
+      "candidate_id": "solo",
+      "relation": "solo",
+      "lifecycle": "one-shot",
+      "expected_mechanisms": ["context-partitioning"],
+      "binding_constraint": "wall-clock",
+      "participant_basis": "One primary agent retains all context and implementation ownership.",
+      "independence_policy": "Not applicable to the solo candidate.",
+      "lane": "write",
+      "permission_profile": "safe",
+      "prediction": {
+        "wall_time": "similar",
+        "quality": "similar",
+        "coordination_cost": "low",
+        "evidence_basis": "mechanistic-prior"
+      },
+      "stop_conditions": ["Acceptance checks pass."]
+    },
+    {
+      "candidate_id": "delegate-tests",
+      "relation": "delegate",
+      "lifecycle": "one-shot",
+      "expected_mechanisms": ["latency-overlap", "context-partitioning"],
+      "binding_constraint": "wall-clock",
+      "participant_basis": "The independent test surface can be explored while the primary agent inspects implementation boundaries.",
+      "independence_policy": "The worker writes only the isolated test scope and does not see a sibling answer.",
+      "lane": "write",
+      "permission_profile": "safe",
+      "prediction": {
+        "wall_time": "lower",
+        "quality": "higher",
+        "coordination_cost": "medium",
+        "evidence_basis": "mechanistic-prior"
+      },
+      "stop_conditions": ["Acceptance checks pass.", "Integration cost exceeds the remaining implementation estimate."]
+    }
+  ],
+  "selected_candidate_id": "delegate-tests",
+  "decision": {
+    "confidence": "medium",
+    "rationale": "A separable test surface permits useful overlap without sharing write ownership.",
+    "decisive_evidence": ["The parser behavior has a deterministic test oracle."],
+    "external_side_effect_owner": "primary"
+  },
+  "limits": [
+    {
+      "name": "parallel-workers",
+      "value": "One isolated writer for this candidate.",
+      "role": "planning-prior",
+      "scope": "candidate",
+      "invalidation_evidence": "A second independent surface appears on the critical path.",
+      "update_owner": "primary"
+    }
+  ],
+  "unknowns": ["Project-local coordination cost has not yet been measured."]
+}

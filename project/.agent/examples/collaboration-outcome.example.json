@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "plan_id": "plan-parser-regression-001",
+  "candidate_id": "delegate-tests",
+  "decision_digest": "sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
+  "status": "completed",
+  "timing": {
+    "terminal_wall_ms": 184000,
+    "aggregate_worker_ms": 121000,
+    "synthesis_tail_ms": 32000,
+    "integration_validation_ms": 18000
+  },
+  "topology": {
+    "participants_planned": 2,
+    "participants_dispatched": 2,
+    "workers_started": 1,
+    "peak_parallel_workers": 1,
+    "waves": 1
+  },
+  "quality": {
+    "artifact": "valid",
+    "checks": "passed",
+    "review_proxy": "available"
+  },
+  "coordination": {
+    "conflicts": 0,
+    "primary_edit_events": 1,
+    "test_recoveries": 0,
+    "adopted_artifacts": 1,
+    "duplicate_work": null
+  },
+  "stop_reason": "objective-met",
+  "coverage": {
+    "decision_linked": true,
+    "terminal_observed": true,
+    "quality_observed": true,
+    "coordination_observed": false
+  },
+  "learning_delta": {
+    "mechanism_result": "inconclusive",
+    "prediction_result": "inconclusive",
+    "routing_prior": "insufficient-evidence"
+  }
+}

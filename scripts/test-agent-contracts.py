@@ -31,6 +31,8 @@ class AgentContractTests(unittest.TestCase):
         cls.fixtures = SCRIPT_DIR / "fixtures/agent-contracts"
         cls.task_schema = load_json(cls.template / ".agent/schemas/task.schema.json")
         cls.result_schema = load_json(cls.template / ".agent/schemas/result.schema.json")
+        cls.decision_schema = load_json(cls.template / ".agent/schemas/collaboration-decision.schema.json")
+        cls.outcome_schema = load_json(cls.template / ".agent/schemas/collaboration-outcome.schema.json")
 
     def test_template_provider_mappings_are_consistent(self) -> None:
         load_template_validator().validate_template(self.template)
@@ -82,6 +84,55 @@ class AgentContractTests(unittest.TestCase):
         candidate["priority"] = "urgent"
         with self.assertRaises(ContractValidationError):
             validate(candidate, self.task_schema)
+
+    def test_task_collaboration_projection_is_optional_and_content_free(self) -> None:
+        candidate = load_json(self.fixtures / "task.valid.json")
+        candidate["collaboration"] = {
+            "plan_id": "plan-001",
+            "candidate_id": "delegate-tests",
+            "decision_digest": "sha256:" + "1" * 64,
+            "relation": "delegate",
+            "lifecycle": "one-shot",
+            "expected_mechanisms": ["latency-overlap", "context-partitioning"],
+            "binding_constraint": "wall-clock",
+            "annotation_source": "primary-plan",
+        }
+        validate(candidate, self.task_schema)
+
+        candidate["collaboration"]["rationale"] = "free-form text must stay in the decision packet"
+        with self.assertRaises(ContractValidationError):
+            validate(candidate, self.task_schema)
+
+    def test_task_collaboration_projection_rejects_unbounded_categories(self) -> None:
+        candidate = load_json(self.fixtures / "task.valid.json")
+        candidate["collaboration"] = {
+            "plan_id": "plan-001",
+            "candidate_id": "candidate-001",
+            "decision_digest": "sha256:" + "2" * 64,
+            "relation": "ask-a-friend-about-parser-details",
+            "lifecycle": "one-shot",
+            "expected_mechanisms": ["coverage"],
+            "binding_constraint": "wall-clock",
+            "annotation_source": "primary-plan",
+        }
+        with self.assertRaises(ContractValidationError):
+            validate(candidate, self.task_schema)
+
+    def test_collaboration_examples_validate(self) -> None:
+        validate(
+            load_json(self.template / ".agent/examples/collaboration-decision.example.json"),
+            self.decision_schema,
+        )
+        validate(
+            load_json(self.template / ".agent/examples/collaboration-outcome.example.json"),
+            self.outcome_schema,
+        )
+
+    def test_outcome_requires_a_decision_digest(self) -> None:
+        candidate = load_json(self.template / ".agent/examples/collaboration-outcome.example.json")
+        candidate["decision_digest"] = "not-a-digest"
+        with self.assertRaises(ContractValidationError):
+            validate(candidate, self.outcome_schema)
 
     def test_completed_result_must_be_clean(self) -> None:
         with self.assertRaises(ContractValidationError):

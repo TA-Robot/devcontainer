@@ -144,16 +144,26 @@ def validate_operating_docs(root: Path) -> None:
 
 def validate_schemas_and_examples(root: Path, config: dict[str, Any]) -> None:
     contracts = config.get("contracts", {})
-    task_schema_path = root / contracts.get("task", "")
-    result_schema_path = root / contracts.get("result", "")
-    for path, kind in ((task_schema_path, "task"), (result_schema_path, "result")):
+    required_contracts = {
+        "task": ".agent/examples/task.example.json",
+        "result": ".agent/examples/result.example.json",
+        "collaboration_decision": ".agent/examples/collaboration-decision.example.json",
+        "collaboration_outcome": ".agent/examples/collaboration-outcome.example.json",
+    }
+    require(
+        set(required_contracts).issubset(contracts),
+        "config must publish task, result, collaboration_decision, and collaboration_outcome contracts",
+    )
+    schema_paths: dict[str, Path] = {}
+    for kind, example in required_contracts.items():
+        path = root / contracts.get(kind, "")
+        schema_paths[kind] = path
         schema = load_json(path)
         require(isinstance(schema, dict), f"{kind} schema root must be an object")
         require(schema.get("$schema") == "https://json-schema.org/draft/2020-12/schema", f"{kind}: wrong draft")
         require(schema.get("properties", {}).get("schema_version", {}).get("const") == 1, f"{kind}: version must be 1")
-    validate_file(root / ".agent/examples/task.example.json", task_schema_path)
-    validate_file(root / ".agent/examples/result.example.json", result_schema_path)
-    validate_file(root / ".agent/examples/provider-result.example.json", result_schema_path)
+        validate_file(root / example, path)
+    validate_file(root / ".agent/examples/provider-result.example.json", schema_paths["result"])
 
 
 def validate_codex_templates(root: Path) -> None:
