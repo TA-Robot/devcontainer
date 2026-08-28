@@ -312,13 +312,14 @@ impl Simulator {
                 Vec2::new(mark.x.clamp(-3.8, 3.8), mark.y.clamp(-2.6, 2.6))
             } else {
                 let goal_guard_x = 4.02;
+                let intercept_limit = self.public.field.attacking_goal_width_m / 2.0 + 0.55;
                 let intercept_time = if self.ball.velocity.x > 0.2 {
                     ((goal_guard_x - ball_position.x) / self.ball.velocity.x).clamp(0.0, 0.9)
                 } else {
                     0.35
                 };
-                let projected_y =
-                    (ball_position.y + self.ball.velocity.y * intercept_time).clamp(-0.62, 0.62);
+                let projected_y = (ball_position.y + self.ball.velocity.y * intercept_time)
+                    .clamp(-intercept_limit, intercept_limit);
                 Vec2::new(goal_guard_x, projected_y)
             };
             let delta = target - robot_position;
@@ -903,6 +904,22 @@ mod tests {
                     >= simulator.public.prestart_enemy_exclusion_radius_m - 1e-9
             );
         }
+    }
+
+    #[test]
+    fn goalkeeper_moves_outside_goal_mouth_to_intercept_a_diagonal_shot() {
+        let mut simulator = Simulator::new(31);
+        let goalkeeper = simulator.robots.len() - 1;
+        simulator.play_started = true;
+        simulator.ball.position = Vec2::new(0.0, 2.0);
+        simulator.ball.velocity = Vec2::new(1.0, -0.3);
+
+        advance_for(&mut simulator, 1.5);
+
+        let goal_mouth_center_limit = simulator.public.field.attacking_goal_width_m / 2.0
+            - simulator.public.robot.radius_m;
+        assert!(simulator.robots[goalkeeper].position.y > goal_mouth_center_limit);
+        assert!(simulator.is_running());
     }
 
     #[test]
