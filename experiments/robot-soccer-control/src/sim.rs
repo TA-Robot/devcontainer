@@ -1,0 +1,817 @@
+use crate::math::Vec2;
+use crate::protocol::{
+    BallObservation, EpisodeResult, Observation, PublicSpec, RobotCommand, RobotObservation,
+    FRIENDLY_IDS,
+};
+use std::collections::VecDeque;
+use std::f64::consts::PI;
+
+const ENEMY_IDS: [&str; 2] = ["enemy_0", "enemy_1"];
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum Team {
+    Friendly,
+    Enemy,
+}
+
+#[derive(Clone, Debug)]
+struct Robot {
+    id: &'static str,
+    team: Team,
+    position: Vec2,
+    velocity: Vec2,
+    heading: f64,
+    angular_velocity: f64,
+    command: RobotCommand,
+    previous_kick: bool,
+    kicker_contact: bool,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct Ball {
+    position: Vec2,
+    velocity: Vec2,
+}
+
+#[derive(Clone, Copy, Debug)]
+struct HiddenDynamics {
+    robot_velocity_response: f64,
+    robot_angular_response: f64,
+    robot_max_acceleration: f64,
+    robot_max_angular_acceleration: f64,
+    robot_max_velocity: f64,
+    robot_max_angular_velocity: f64,
+    lateral_slip: f64,
+    robot_restitution: f64,
+    ball_restitution: f64,
+    ball_linear_drag: f64,
+    kick_speed: f64,
+    observation_jitter_s: f64,
+}
+
+impl HiddenDynamics {
+    fn from_rng(rng: &mut Rng64) -> Self {
+        Self {
+            robot_velocity_response: rng.range(4.7, 5.6),
+            robot_angular_response: rng.range(6.0, 7.5),
+            robot_max_acceleration: rng.range(2.5, 3.1),
+            robot_max_angular_acceleration: rng.range(10.0, 13.0),
+            robot_max_velocity: rng.range(1.65, 1.9),
+            robot_max_angular_velocity: rng.range(5.2, 6.2),
+            lateral_slip: rng.range(0.82, 0.94),
+            robot_restitution: rng.range(0.08, 0.16),
+            ball_restitution: rng.range(0.52, 0.66),
+            ball_linear_drag: rng.range(0.42, 0.56),
+            kick_speed: rng.range(4.8, 5.6),
+            observation_jitter_s: 0.045,
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, Eq, PartialEq)]
+enum Terminal {
+    Running,
+    Success(&'static str),
+    Failure(&'static str),
+}
+
+#[derive(Clone, Debug)]
+struct DelayedObservation {
+    release_at: f64,
+    observation: Observation,
+}
+
+#[derive(Clone, Debug)]
+struct Rng64 {
+    state: u64,
+}
+
+impl Rng64 {
+    fn new(seed: u64) -> Self {
+        Self {
+            state: seed.max(1) ^ 0x9e37_79b9_7f4a_7c15,
+        }
+    }
+
+    fn next_u64(&mut self) -> u64 {
+        let mut value = self.state;
+        value ^= value << 13;
+        value ^= value >> 7;
+        value ^= value << 17;
+        self.state = value;
+        value
+    }
+
+    fn unit(&mut self) -> f64 {
+        (self.next_u64() >> 11) as f64 / ((1_u64 << 53) as f64)
+    }
+
+    fn range(&mut self, minimum: f64, maximum: f64) -> f64 {
+        minimum + (maximum - minimum) * self.unit()
+    }
+}
+
+pub struct Simulator {
+    public: PublicSpec,
+    hidden: HiddenDynamics,
+    robots: Vec<Robot>,
+    ball: Ball,
+    elapsed_s: f64,
+    play_started: bool,
+    first_friendly_contact: Option<usize>,
+    pass_received: bool,
+    shot_after_pass: bool,
+    terminal: Terminal,
+    observation_accumulator: f64,
+    observation_sequence: u64,
+    delayed_observations: VecDeque<DelayedObservation>,
+    latest_released: Option<Observation>,
+    rng: Rng64,
+}
+
+impl Simulator {
+    pub fn new(seed: u64) -> Self {
+        let public = PublicSpec::default();
+        let mut rng = Rng64::new(seed);
+        let hidden = HiddenDynamics::from_rng(&mut rng);
+        let ball = Ball {
+            position: Vec2::new(-1.35, 0.0),
+            velocity: Vec2::ZERO,
+        };
+        let robots = vec![
+            Robot::new(FRIENDLY_IDS[0], Team::Friendly, -1.72, 0.0, 0.0),
+            Robot::new(FRIENDLY_IDS[1], Team::Friendly, 0.55, 1.45, -0.55),
+            Robot::new(FRIENDLY_IDS[2], Team::Friendly, 0.25, -1.55, 0.55),
+            Robot::new(ENEMY_IDS[0], Team::Enemy, -0.55, 0.55, PI),
+            Robot::new(ENEMY_IDS[1], Team::Enemy, 3.55, 0.0, PI),
+        ];
+        Self {
+            public,
+            hidden,
+            robots,
+            ball,
+            elapsed_s: 0.0,
+            play_started: false,
+            first_friendly_contact: None,
+            pass_received: false,
+            shot_after_pass: false,
+            terminal: Terminal::Running,
+            observation_accumulator: 0.0,
+            observation_sequence: 0,
+            delayed_observations: VecDeque::new(),
+            latest_released: None,
+            rng,
+        }
+    }
+
+    pub fn set_friendly_commands(
+        &mut self,
+        updates: &[(usize, RobotCommand)],
+    ) -> Result<(), &'static str> {
+        if self.terminal != Terminal::Running {
+            return Err("episode_not_running");
+        }
+        for (index, command) in updates {
+            if *index >= FRIENDLY_IDS.len()
+                || !command.local_velocity.is_finite()
+                || !command.angular_velocity.is_finite()
+            {
+                return Err("invalid_command");
+            }
+        }
+        for (index, command) in updates {
+            self.robots[*index].command = *command;
+        }
+        Ok(())
+    }
+
+    pub fn advance(&mut self, dt: f64) {
+        if self.terminal != Terminal::Running || !dt.is_finite() || dt <= 0.0 {
+            self.release_observations();
+            return;
+        }
+        self.elapsed_s += dt;
+        self.update_enemy_commands();
+        self.integrate_robots(dt);
+        self.resolve_robot_collisions();
+        self.enforce_prestart_enemy_exclusion();
+        self.resolve_robot_ball_contacts();
+        self.integrate_ball(dt);
+        self.check_rules();
+        self.sample_observations(dt);
+        self.release_observations();
+    }
+
+    pub fn latest_observation(&self) -> Option<Observation> {
+        self.latest_released.clone()
+    }
+
+    pub fn result(&self) -> EpisodeResult {
+        let elapsed_ms = (self.elapsed_s * 1000.0).round().max(0.0) as u64;
+        match self.terminal {
+            Terminal::Running => EpisodeResult {
+                status: "running",
+                reason: None,
+                elapsed_ms,
+            },
+            Terminal::Success(reason) => EpisodeResult {
+                status: "success",
+                reason: Some(reason),
+                elapsed_ms,
+            },
+            Terminal::Failure(reason) => EpisodeResult {
+                status: "failure",
+                reason: Some(reason),
+                elapsed_ms,
+            },
+        }
+    }
+
+    pub fn is_running(&self) -> bool {
+        self.terminal == Terminal::Running
+    }
+
+    fn update_enemy_commands(&mut self) {
+        let exclusion = self.public.prestart_enemy_exclusion_radius_m;
+        for index in FRIENDLY_IDS.len()..self.robots.len() {
+            let robot_position = self.robots[index].position;
+            let target = if !self.play_started {
+                let away = (robot_position - self.ball.position).normalized_or(Vec2::new(1.0, 0.0));
+                self.ball.position + away * (exclusion + 0.08)
+            } else if self.robots[index].id == "enemy_0" {
+                let lead = self.ball.velocity * 0.18;
+                self.ball.position + lead
+            } else {
+                let goal_guard_x = 3.72;
+                let projected_y =
+                    (self.ball.position.y + self.ball.velocity.y * 0.35).clamp(-0.62, 0.62);
+                if self.ball.position.x > 1.8 {
+                    Vec2::new(goal_guard_x, projected_y)
+                } else {
+                    Vec2::new(
+                        (self.ball.position.x + 0.9).clamp(1.1, goal_guard_x),
+                        (self.ball.position.y * 0.65).clamp(-1.5, 1.5),
+                    )
+                }
+            };
+            let delta = target - robot_position;
+            let desired_global = delta.clamp_length(1.35);
+            let heading_target = delta.y.atan2(delta.x);
+            let heading_error = wrap_angle(heading_target - self.robots[index].heading);
+            self.robots[index].command = RobotCommand {
+                local_velocity: desired_global.rotate(-self.robots[index].heading),
+                angular_velocity: (heading_error * 4.0).clamp(-4.5, 4.5),
+                kick: self.play_started,
+            };
+        }
+    }
+
+    fn integrate_robots(&mut self, dt: f64) {
+        let half_length = self.public.field.length_m / 2.0;
+        let half_width = self.public.field.width_m / 2.0;
+        let radius = self.public.robot.radius_m;
+        for robot in &mut self.robots {
+            let mut desired_global = robot.command.local_velocity.rotate(robot.heading);
+            let forward = Vec2::new(robot.heading.cos(), robot.heading.sin());
+            let lateral = Vec2::new(-forward.y, forward.x);
+            let forward_component = desired_global.dot(forward);
+            let lateral_component = desired_global.dot(lateral) * self.hidden.lateral_slip;
+            desired_global = forward * forward_component + lateral * lateral_component;
+            desired_global = desired_global.clamp_length(self.hidden.robot_max_velocity);
+            let acceleration = ((desired_global - robot.velocity)
+                * self.hidden.robot_velocity_response)
+                .clamp_length(self.hidden.robot_max_acceleration);
+            robot.velocity += acceleration * dt;
+            robot.position += robot.velocity * dt;
+
+            let desired_angular = robot.command.angular_velocity.clamp(
+                -self.hidden.robot_max_angular_velocity,
+                self.hidden.robot_max_angular_velocity,
+            );
+            let angular_acceleration = ((desired_angular - robot.angular_velocity)
+                * self.hidden.robot_angular_response)
+                .clamp(
+                    -self.hidden.robot_max_angular_acceleration,
+                    self.hidden.robot_max_angular_acceleration,
+                );
+            robot.angular_velocity += angular_acceleration * dt;
+            robot.heading = wrap_angle(robot.heading + robot.angular_velocity * dt);
+
+            if robot.position.x < -half_length + radius {
+                robot.position.x = -half_length + radius;
+                robot.velocity.x = robot.velocity.x.abs() * self.hidden.robot_restitution;
+            } else if robot.position.x > half_length - radius {
+                robot.position.x = half_length - radius;
+                robot.velocity.x = -robot.velocity.x.abs() * self.hidden.robot_restitution;
+            }
+            if robot.position.y < -half_width + radius {
+                robot.position.y = -half_width + radius;
+                robot.velocity.y = robot.velocity.y.abs() * self.hidden.robot_restitution;
+            } else if robot.position.y > half_width - radius {
+                robot.position.y = half_width - radius;
+                robot.velocity.y = -robot.velocity.y.abs() * self.hidden.robot_restitution;
+            }
+        }
+    }
+
+    fn resolve_robot_collisions(&mut self) {
+        let minimum = self.public.robot.radius_m * 2.0;
+        for left in 0..self.robots.len() {
+            for right in (left + 1)..self.robots.len() {
+                let delta = self.robots[right].position - self.robots[left].position;
+                let distance = delta.length();
+                if distance >= minimum {
+                    continue;
+                }
+                let normal = delta.normalized_or(Vec2::new(1.0, 0.0));
+                let correction = normal * ((minimum - distance) * 0.5 + 1e-6);
+                self.robots[left].position -= correction;
+                self.robots[right].position += correction;
+                let relative = self.robots[right].velocity - self.robots[left].velocity;
+                let closing = relative.dot(normal);
+                if closing < 0.0 {
+                    let impulse = normal * (-(1.0 + self.hidden.robot_restitution) * closing * 0.5);
+                    self.robots[left].velocity -= impulse;
+                    self.robots[right].velocity += impulse;
+                }
+            }
+        }
+    }
+
+    fn enforce_prestart_enemy_exclusion(&mut self) {
+        if self.play_started {
+            return;
+        }
+        let minimum = self.public.prestart_enemy_exclusion_radius_m;
+        for robot in self.robots.iter_mut().skip(FRIENDLY_IDS.len()) {
+            let delta = robot.position - self.ball.position;
+            let distance = delta.length();
+            if distance >= minimum {
+                continue;
+            }
+            let normal = delta.normalized_or(Vec2::new(1.0, 0.0));
+            robot.position = self.ball.position + normal * minimum;
+            let inward_speed = robot.velocity.dot(normal);
+            if inward_speed < 0.0 {
+                robot.velocity -= normal * inward_speed;
+            }
+        }
+    }
+
+    fn resolve_robot_ball_contacts(&mut self) {
+        let mut friendly_contacts = [false; FRIENDLY_IDS.len()];
+        let mut friendly_kicks = [false; FRIENDLY_IDS.len()];
+        let radius = self.public.robot.radius_m;
+        let ball_radius = self.public.ball_radius_m;
+        let kicker_half = self.public.robot.kicker_width_m / 2.0;
+        let front_x = (radius * radius - kicker_half * kicker_half).sqrt();
+
+        for (robot_index, robot) in self.robots.iter_mut().enumerate() {
+            let relative_global = self.ball.position - robot.position;
+            let relative_local = relative_global.rotate(-robot.heading);
+            let closest_y = relative_local.y.clamp(-kicker_half, kicker_half);
+            let segment_delta = relative_local - Vec2::new(front_x, closest_y);
+            let segment_distance = segment_delta.length();
+            let segment_contact = relative_local.x >= front_x - ball_radius
+                && relative_local.x <= front_x + ball_radius * 1.5
+                && segment_distance <= ball_radius + 1e-5;
+            let on_removed_front =
+                relative_local.x > front_x && relative_local.y.abs() < kicker_half;
+            let circle_distance = relative_global.length();
+            let circle_contact = !on_removed_front && circle_distance < radius + ball_radius;
+            let contact = segment_contact || circle_contact;
+
+            if contact {
+                if robot.team == Team::Friendly {
+                    friendly_contacts[robot_index] = true;
+                }
+                let normal = if segment_contact {
+                    segment_delta
+                        .normalized_or(
+                            Vec2::new(robot.heading.cos(), robot.heading.sin())
+                                .rotate(-robot.heading),
+                        )
+                        .rotate(robot.heading)
+                } else {
+                    relative_global.normalized_or(Vec2::new(1.0, 0.0))
+                };
+                let target_distance = if segment_contact {
+                    ball_radius
+                } else {
+                    radius + ball_radius
+                };
+                let penetration = if segment_contact {
+                    (target_distance - segment_distance).max(0.0)
+                } else {
+                    (target_distance - circle_distance).max(0.0)
+                };
+                self.ball.position += normal * (penetration + 1e-6);
+                let relative_velocity = self.ball.velocity - robot.velocity;
+                let closing = relative_velocity.dot(normal);
+                if closing < 0.0 {
+                    self.ball.velocity -= normal * ((1.0 + self.hidden.ball_restitution) * closing);
+                }
+                self.ball.velocity += robot.velocity * 0.035;
+
+                let rising_kick = robot.command.kick && !robot.previous_kick;
+                if segment_contact && robot.command.kick && (!robot.kicker_contact || rising_kick) {
+                    let forward = Vec2::new(robot.heading.cos(), robot.heading.sin());
+                    self.ball.velocity = self.ball.velocity * 0.25
+                        + forward * self.hidden.kick_speed
+                        + robot.velocity * 0.35;
+                    if robot.team == Team::Friendly {
+                        friendly_kicks[robot_index] = true;
+                    }
+                }
+            }
+            robot.kicker_contact = segment_contact;
+            robot.previous_kick = robot.command.kick;
+        }
+
+        for (index, touched) in friendly_contacts.into_iter().enumerate() {
+            if !touched {
+                continue;
+            }
+            self.play_started = true;
+            match self.first_friendly_contact {
+                None => self.first_friendly_contact = Some(index),
+                Some(first) if first != index => self.pass_received = true,
+                Some(_) => {}
+            }
+        }
+        if self.pass_received {
+            for (index, kicked) in friendly_kicks.into_iter().enumerate() {
+                if kicked && self.first_friendly_contact != Some(index) {
+                    self.shot_after_pass = true;
+                }
+            }
+        }
+    }
+
+    fn integrate_ball(&mut self, dt: f64) {
+        let drag = (-self.hidden.ball_linear_drag * dt).exp();
+        self.ball.velocity *= drag;
+        if self.ball.velocity.length() < 0.005 {
+            self.ball.velocity = Vec2::ZERO;
+        }
+        self.ball.position += self.ball.velocity * dt;
+    }
+
+    fn check_rules(&mut self) {
+        let half_length = self.public.field.length_m / 2.0;
+        let half_width = self.public.field.width_m / 2.0;
+        let goal_half = self.public.field.attacking_goal_width_m / 2.0;
+        if self.ball.position.x >= half_length && self.ball.position.y.abs() <= goal_half {
+            self.terminal = if self.shot_after_pass {
+                Terminal::Success("pass_and_goal")
+            } else {
+                Terminal::Failure("pass_sequence_incomplete")
+            };
+            return;
+        }
+        if self.ball.position.x <= -half_length
+            || self.ball.position.x >= half_length
+            || self.ball.position.y.abs() >= half_width
+        {
+            self.terminal = Terminal::Failure("ball_out");
+            return;
+        }
+        if !self.play_started && self.elapsed_s >= self.public.start_touch_limit_ms as f64 / 1000.0
+        {
+            self.terminal = Terminal::Failure("start_timeout");
+            return;
+        }
+        if self.elapsed_s >= self.public.episode_limit_ms as f64 / 1000.0 {
+            self.terminal = Terminal::Failure("episode_timeout");
+        }
+    }
+
+    fn sample_observations(&mut self, dt: f64) {
+        self.observation_accumulator += dt;
+        let period = 1.0 / self.public.observation_nominal_hz as f64;
+        while self.observation_accumulator >= period {
+            self.observation_accumulator -= period;
+            self.observation_sequence += 1;
+            let jitter = self.rng.range(
+                -self.hidden.observation_jitter_s,
+                self.hidden.observation_jitter_s,
+            );
+            let release_at =
+                self.elapsed_s + self.public.observation_nominal_delay_ms as f64 / 1000.0 + jitter;
+            self.delayed_observations.push_back(DelayedObservation {
+                release_at,
+                observation: self.make_observation(self.observation_sequence),
+            });
+        }
+    }
+
+    fn release_observations(&mut self) {
+        while self
+            .delayed_observations
+            .front()
+            .is_some_and(|item| item.release_at <= self.elapsed_s)
+        {
+            if let Some(item) = self.delayed_observations.pop_front() {
+                self.latest_released = Some(item.observation);
+            }
+        }
+    }
+
+    fn make_observation(&self, sequence: u64) -> Observation {
+        Observation {
+            sequence,
+            robots: self
+                .robots
+                .iter()
+                .map(|robot| RobotObservation {
+                    id: robot.id.to_string(),
+                    team: match robot.team {
+                        Team::Friendly => "friendly",
+                        Team::Enemy => "enemy",
+                    },
+                    position: robot.position,
+                    velocity: robot.velocity,
+                    heading: robot.heading,
+                    angular_velocity: robot.angular_velocity,
+                })
+                .collect(),
+            ball: BallObservation {
+                position: self.ball.position,
+                velocity: self.ball.velocity,
+            },
+        }
+    }
+}
+
+impl Robot {
+    fn new(id: &'static str, team: Team, x: f64, y: f64, heading: f64) -> Self {
+        Self {
+            id,
+            team,
+            position: Vec2::new(x, y),
+            velocity: Vec2::ZERO,
+            heading,
+            angular_velocity: 0.0,
+            command: RobotCommand::default(),
+            previous_kick: false,
+            kicker_contact: false,
+        }
+    }
+}
+
+fn wrap_angle(mut angle: f64) -> f64 {
+    while angle > PI {
+        angle -= 2.0 * PI;
+    }
+    while angle < -PI {
+        angle += 2.0 * PI;
+    }
+    angle
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn advance_for(simulator: &mut Simulator, seconds: f64) {
+        let dt = 1.0 / 240.0;
+        for _ in 0..(seconds / dt).round() as usize {
+            simulator.advance(dt);
+        }
+    }
+
+    #[test]
+    fn observations_are_delayed_and_contain_five_robots() {
+        let mut simulator = Simulator::new(7);
+        advance_for(&mut simulator, 0.10);
+        assert!(simulator.latest_observation().is_none());
+        advance_for(&mut simulator, 0.20);
+        let observation = simulator.latest_observation().expect("delayed frame");
+        assert_eq!(observation.robots.len(), 5);
+        assert!(observation.sequence > 0);
+    }
+
+    #[test]
+    fn no_friendly_touch_fails_at_five_seconds() {
+        let mut simulator = Simulator::new(11);
+        advance_for(&mut simulator, 5.1);
+        let result = simulator.result();
+        assert_eq!(result.status, "failure");
+        assert_eq!(result.reason, Some("start_timeout"));
+    }
+
+    #[test]
+    fn desired_velocity_is_not_applied_instantly() {
+        let mut simulator = Simulator::new(17);
+        simulator
+            .set_friendly_commands(&[(
+                0,
+                RobotCommand {
+                    local_velocity: Vec2::new(10.0, 0.0),
+                    angular_velocity: 0.0,
+                    kick: false,
+                },
+            )])
+            .unwrap();
+        simulator.advance(1.0 / 240.0);
+        let speed = simulator.robots[0].velocity.length();
+        assert!(speed > 0.0);
+        assert!(speed < 0.1);
+        advance_for(&mut simulator, 1.0);
+        assert!(simulator.robots[0].velocity.length() < 2.0);
+    }
+
+    #[test]
+    fn local_velocity_rotates_with_true_heading() {
+        let mut simulator = Simulator::new(19);
+        simulator.robots[0].heading = PI / 2.0;
+        simulator
+            .set_friendly_commands(&[(
+                0,
+                RobotCommand {
+                    local_velocity: Vec2::new(1.0, 0.0),
+                    angular_velocity: 0.0,
+                    kick: false,
+                },
+            )])
+            .unwrap();
+        advance_for(&mut simulator, 0.25);
+        assert!(simulator.robots[0].velocity.y > 0.2);
+        assert!(simulator.robots[0].velocity.x.abs() < 0.1);
+    }
+
+    #[test]
+    fn front_contact_starts_play_and_kicks_forward() {
+        let mut simulator = Simulator::new(21);
+        let radius = simulator.public.robot.radius_m;
+        let kicker_half = simulator.public.robot.kicker_width_m / 2.0;
+        let front_x = (radius * radius - kicker_half * kicker_half).sqrt();
+        simulator.robots[0].position = Vec2::ZERO;
+        simulator.robots[0].heading = 0.0;
+        simulator.ball.position = Vec2::new(front_x + simulator.public.ball_radius_m * 0.9, 0.0);
+        simulator
+            .set_friendly_commands(&[(
+                0,
+                RobotCommand {
+                    local_velocity: Vec2::ZERO,
+                    angular_velocity: 0.0,
+                    kick: true,
+                },
+            )])
+            .unwrap();
+
+        simulator.advance(1.0 / 240.0);
+
+        assert!(simulator.play_started);
+        assert!(simulator.ball.velocity.x > 4.0);
+        assert!(simulator.ball.velocity.y.abs() < 1e-9);
+    }
+
+    #[test]
+    fn continuous_kicker_contact_does_not_repeat_impulse_each_tick() {
+        let mut simulator = Simulator::new(22);
+        let radius = simulator.public.robot.radius_m;
+        let kicker_half = simulator.public.robot.kicker_width_m / 2.0;
+        let front_x = (radius * radius - kicker_half * kicker_half).sqrt();
+        simulator.robots[0].position = Vec2::ZERO;
+        simulator.robots[0].heading = 0.0;
+        simulator.ball.position = Vec2::new(front_x + simulator.public.ball_radius_m * 0.9, 0.0);
+        simulator
+            .set_friendly_commands(&[(
+                0,
+                RobotCommand {
+                    local_velocity: Vec2::ZERO,
+                    angular_velocity: 0.0,
+                    kick: true,
+                },
+            )])
+            .unwrap();
+
+        simulator.advance(1.0 / 240.0);
+        let first_speed = simulator.ball.velocity.x;
+        simulator.ball.position = Vec2::new(front_x + simulator.public.ball_radius_m * 0.9, 0.0);
+        simulator.ball.velocity = Vec2::ZERO;
+        simulator.advance(1.0 / 240.0);
+
+        assert!(first_speed > 4.0);
+        assert!(simulator.ball.velocity.x.abs() < 0.01);
+    }
+
+    #[test]
+    fn goal_and_other_boundary_crossings_have_distinct_results() {
+        let mut goal = Simulator::new(24);
+        goal.shot_after_pass = true;
+        goal.ball.position = Vec2::new(goal.public.field.length_m / 2.0 + 0.01, 0.0);
+        goal.check_rules();
+        assert_eq!(goal.result().status, "success");
+        assert_eq!(goal.result().reason, Some("pass_and_goal"));
+
+        let mut out = Simulator::new(25);
+        out.ball.position = Vec2::new(0.0, out.public.field.width_m / 2.0 + 0.01);
+        out.check_rules();
+        assert_eq!(out.result().status, "failure");
+        assert_eq!(out.result().reason, Some("ball_out"));
+    }
+
+    #[test]
+    fn direct_goal_without_pass_and_receiver_kick_fails() {
+        let mut simulator = Simulator::new(26);
+        simulator.ball.position = Vec2::new(simulator.public.field.length_m / 2.0 + 0.01, 0.0);
+        simulator.check_rules();
+        assert_eq!(simulator.result().status, "failure");
+        assert_eq!(
+            simulator.result().reason,
+            Some("pass_sequence_incomplete")
+        );
+    }
+
+    #[test]
+    fn distinct_receiver_contact_and_kick_complete_the_scoring_sequence() {
+        let mut simulator = Simulator::new(28);
+        let radius = simulator.public.robot.radius_m;
+        let kicker_half = simulator.public.robot.kicker_width_m / 2.0;
+        let front_x = (radius * radius - kicker_half * kicker_half).sqrt();
+        let contact_position = Vec2::new(
+            front_x + simulator.public.ball_radius_m * 0.9,
+            0.0,
+        );
+
+        simulator.robots[0].position = Vec2::ZERO;
+        simulator.robots[0].heading = 0.0;
+        simulator.ball.position = contact_position;
+        simulator.advance(1.0 / 240.0);
+        assert_eq!(simulator.first_friendly_contact, Some(0));
+
+        simulator.robots[0].position = Vec2::new(-2.0, -2.0);
+        simulator.robots[1].position = Vec2::ZERO;
+        simulator.robots[1].heading = 0.0;
+        simulator.ball.position = contact_position;
+        simulator.ball.velocity = Vec2::ZERO;
+        simulator
+            .set_friendly_commands(&[(
+                1,
+                RobotCommand {
+                    local_velocity: Vec2::ZERO,
+                    angular_velocity: 0.0,
+                    kick: true,
+                },
+            )])
+            .unwrap();
+        simulator.advance(1.0 / 240.0);
+
+        assert!(simulator.pass_received);
+        assert!(simulator.shot_after_pass);
+        simulator.ball.position =
+            Vec2::new(simulator.public.field.length_m / 2.0 + 0.01, 0.0);
+        simulator.check_rules();
+        assert_eq!(simulator.result().status, "success");
+    }
+
+    #[test]
+    fn prestart_enemy_exclusion_is_a_hard_constraint() {
+        let mut simulator = Simulator::new(27);
+        let enemy = FRIENDLY_IDS.len();
+        simulator.robots[enemy].position = simulator.ball.position + Vec2::new(0.1, 0.0);
+        simulator.robots[enemy].velocity = Vec2::new(-1.0, 0.0);
+
+        simulator.advance(1.0 / 240.0);
+
+        let distance = (simulator.robots[enemy].position - simulator.ball.position).length();
+        assert!(distance >= simulator.public.prestart_enemy_exclusion_radius_m - 1e-9);
+    }
+
+    #[test]
+    fn public_spec_does_not_serialize_hidden_dynamics() {
+        let encoded = serde_json::to_string(&PublicSpec::default()).unwrap();
+        for forbidden in [
+            "kick_speed",
+            "max_acceleration",
+            "lateral_slip",
+            "restitution",
+            "jitter_s",
+        ] {
+            assert!(!encoded.contains(forbidden));
+        }
+    }
+
+    #[test]
+    fn same_seed_and_commands_are_deterministic() {
+        let mut left = Simulator::new(23);
+        let mut right = Simulator::new(23);
+        let command = RobotCommand {
+            local_velocity: Vec2::new(0.7, -0.2),
+            angular_velocity: 0.5,
+            kick: true,
+        };
+        left.set_friendly_commands(&[(0, command)]).unwrap();
+        right.set_friendly_commands(&[(0, command)]).unwrap();
+        advance_for(&mut left, 1.2);
+        advance_for(&mut right, 1.2);
+        assert_eq!(left.robots[0].position, right.robots[0].position);
+        assert_eq!(left.ball.position, right.ball.position);
+        assert_eq!(
+            left.latest_observation().unwrap().sequence,
+            right.latest_observation().unwrap().sequence
+        );
+    }
+}
