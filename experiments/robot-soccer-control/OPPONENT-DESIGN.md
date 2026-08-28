@@ -3,93 +3,396 @@
 This is an authoring-repository document. It describes hidden evaluation logic
 and must not be shipped beside `PUBLIC-SPEC.md` to a controller developer.
 
-## Design objective
+## Purpose and standard of strength
 
 The opponent is a centrally coordinated defensive team, not three independent
-robots chasing the current ball position. Its objective is to deny the
-pass-and-shot sequence while preserving the same physical dynamics, collision
-model, field geometry, and pre-restart exclusion rule as the controlled team.
+robots chasing the current ball position. It should force a development agent
+to solve delayed observation, local-frame control, coordination, passing, and
+shooting as a coupled problem. A controller that succeeds only because the
+opponent stands still, blindly follows the ball, or kicks into its own goal is
+not useful evidence about the devcontainer's multi-agent development quality.
 
-The implementation prioritizes these invariants:
+"Strong" is therefore not a synonym for high speed or aggressive pressing.
+The policy should:
 
-- no active kick toward the opponent's own goal;
-- no enemy entry into the restart exclusion area before friendly contact;
-- one field defender pressures the predicted ball while the other preserves
-  pass-lane and receiver coverage;
-- roles change only when the alternative interceptor has a material advantage;
-- the goalkeeper predicts the shot crossing rather than following ball `y`;
-- motion commands respect acceleration, speed, angular-rate, and braking limits.
+- deny the pass-and-shot sequence over varied hidden dynamics and seeds;
+- react to a real shot before optimizing against hypothetical later actions;
+- cover distinct threats with distinct robots instead of duplicating effort;
+- clear toward safe exits without creating own-goal trajectories;
+- preserve restart exclusion, field boundaries, and collision safety;
+- remain deterministic, inexpensive enough for a 240 Hz simulation, and
+  explainable enough to diagnose benchmark failures.
 
-## Control pipeline
+The current implementation is a deterministic receding-horizon hybrid policy.
+It combines a phase automaton, continuous possession belief, an adversarial
+threat ensemble, acceleration-aware reachability, a two-role assignment
+auction, minimax cover and goalkeeper placement, maximin clearance selection,
+and sampled velocity-obstacle execution. It is deliberately more substantial
+than an MVP heuristic, while avoiding a heavyweight optimizer whose numerical
+runtime would become part of the benchmark.
 
-The policy runs on every 240 Hz physics tick using the simulator's true state.
-It does not use or weaken the controller-facing 200 ms delayed observation API.
+## Objective hierarchy
 
-1. **Drag-aware ball prediction** integrates the analytic displacement under
-   linear drag instead of using constant-velocity extrapolation.
-2. **Reachability estimation** samples future ball positions and compares them
-   with the distance each defender can cover under its current speed, maximum
-   acceleration, velocity limit, and a rotation-time penalty.
-3. **Role auction with hysteresis** assigns the materially faster field robot
-   as ball winner. A 120 ms-equivalent intercept advantage and 300 ms switch
-   hold prevent role chatter.
-4. **Role-specific target generation** creates a goal-side striking pose for
-   the winner and a ball-to-receiver shadow position for the cover defender.
-5. **Braking-distance motion control** derives desired speed from
-   `sqrt(v_arrival^2 + 2*a*distance)`, adds bounded target feed-forward, converts
-   it to the robot-local command frame, and computes a bounded angular braking
-   command.
-6. **Short-range collision avoidance** adds repulsion from all other robots
-   before the final speed clamp.
+The policy approximates a lexicographic objective. Earlier items dominate
+later ones:
 
-## Ball winner and safe clearance
+1. obey the restart exclusion and simulator rules;
+2. prevent a valid goal and avoid an own goal;
+3. intercept an observed in-flight shot;
+4. win or remove the loose ball;
+5. deny the legal receiver and high-value pass/shot lanes;
+6. avoid collisions and boundary overshoot;
+7. minimize travel time, role switching, and redundant coverage.
 
-The ball winner predicts an intercept point up to two seconds ahead. It chooses
-a negative-`x` clearance direction biased toward field centre and away from the
-nearest friendly attacker. The desired robot pose lies behind the predicted
-ball relative to that clearance direction.
+This ordering matters. A weighted sum alone can make a goalkeeper remain
+central because several low-probability imagined shots collectively outweigh
+one observed diagonal shot. The real in-flight trajectory is therefore given
+evidential priority, and shot emergency can preempt phase hysteresis.
 
-If the defender is still on the attacking side of the ball, it first moves
-laterally, then around the ball, and only then closes the striking pose. Kicking
-remains disabled until the defender is goal-side. This prevents the previous
-failure mode where a defender reached the ball from the left and kicked toward
-its own goal.
+## Information boundary
 
-## Cover defender
+The opponent runs inside the hidden simulator and uses the simulator's current
+state and hidden dynamics. It does not consume, modify, or weaken the public
+200 ms delayed observation stream. Controller authors still see only the
+documented public API. No contact event, role, threat score, dynamics parameter,
+or private terminal state is exposed.
 
-The second field defender occupies the interior of the current
-ball-to-receiver segment with a goal-side offset. Receiver velocity is used as
-feed-forward so the marker does not trail a moving setup. It changes to a
-clearance role when the ball enters its local pressure radius or when a shot is
-already progressing through the defensive half.
+Using true state here is intentional: this is the private environment policy,
+not another contestant. Adding artificial perception error to the opponent
+would confound controller quality with an undocumented opponent handicap.
 
-## Goalkeeper
+## Layered control architecture
 
-For a positive-`x` shot, the goalkeeper solves the time at which the drag-aware
-ball trajectory crosses its guard plane and moves toward the corresponding
-`y`. Feed-forward is derived from the remaining crossing time, so a sudden
-trajectory reversal requests an immediate high-speed recovery rather than a
-unit-gain position correction.
+The control pipeline runs at 60 Hz while physics remains at 240 Hz:
 
-When no shot will reach the guard plane, the goalkeeper steps forward and uses
-the line between the likely source and goal centre to reduce the open angle.
-It may move beyond the goal-mouth `y` range to intercept a diagonal shot before
-the goal line. Its kick is subject to the same goal-side clearance invariant as
-the field defenders.
+1. update the defensive phase and attacker-control beliefs;
+2. construct observed and counterfactual threat trajectories;
+3. solve directed robot reachability and drag-aware ball interception;
+4. compare both possible ball-winner/cover assignments;
+5. optimize the cover target against threats not already handled by the GK;
+6. optimize the GK guard-plane position with a minimax objective;
+7. search safe clearance rays when an enemy can win the ball;
+8. convert tactical poses to braking-distance nominal velocities;
+9. sample collision- and boundary-safe local velocity alternatives;
+10. issue local-frame translational, angular, and kick commands.
 
-## Verification snapshot
+The boundaries between these layers are deliberate. Tactical planning reasons
+about threats and responsibility. The execution layer reasons about dynamics
+and safety. Mixing both in one collection of position `if` statements was the
+main source of previous own goals, late saves, chatter, and collisions.
 
-The implementation is covered by tests for drag integration, reachability role
-switching, braking-distance command strength, goalkeeper crossing prediction,
-pre-restart exclusion, goal-side clearance, deterministic physics, and scoring
-rules. The prior best development controller was also run against seeds 1–12:
+## Hybrid defensive phase
 
-- controller successes: `0/12`;
-- `start_timeout`: 8;
-- defensive `ball_out`: 3;
-- `episode_timeout`: 1.
+Five phases make discontinuous tactical priorities explicit:
 
-This corpus is evidence against the current controller, not proof of global
-optimality. Future tuning should add diverse attacking controllers and compare
-defensive success rate, illegal-entry count, own-goal count, time to possession,
-shot suppression, and goalkeeper contact rate.
+- `Restart`: establish a lane block, mark the required receiver, keep the GK
+  prepared, and project all field-player targets outside the exclusion disk.
+- `FriendlyControl`: press an attacker likely to control the ball while the
+  second defender denies its next action.
+- `LooseBall`: auction the ball-winning role using predicted interception.
+- `Clearance`: an enemy is close enough to establish control; prioritize a
+  goal-side striking pose and safe exit ray.
+- `ShotEmergency`: the ball is moving toward the defended goal with sufficient
+  speed and either field position or a detected velocity jump indicates a
+  shot. This phase takes effect immediately.
+
+Non-emergency changes require a short dwell time. This is not a claim that one
+fixed dwell is universally optimal; it is a local stabilizer for the simulator
+tick rate. Emergency transitions bypass it, because tactical smoothness must
+not delay a save.
+
+## Continuous attacker-control belief
+
+Distance to the ball is insufficient evidence of possession. For each friendly
+robot, the policy computes a bounded control likelihood from:
+
+- distance to the ball through a smooth logistic transition;
+- whether the front/kicker direction faces the ball;
+- relative closing speed rather than absolute robot speed;
+- ball motion, which lowers confidence when the ball is escaping.
+
+The score does not claim to be a calibrated probability. It is a continuous
+belief used to rank threat hypotheses and avoid brittle distance thresholds.
+The phase automaton also uses it to distinguish likely friendly control from a
+merely nearby robot facing or moving away from the ball.
+
+## Adversarial threat ensemble
+
+The policy does not commit to one guessed attacking intent. It creates up to
+16 concurrent trajectory hypotheses:
+
+- the analytically predicted trajectory of a currently moving ball;
+- direct ball-to-goal-centre and ball-to-post lanes;
+- three possible shot lanes from the predicted pose of each attacker;
+- three lead-pass targets from each attacker to the other attacker.
+
+Each hypothesis has an origin, destination, estimated arrival time, and
+importance weight. Weight depends on control likelihood, goal geometry, and
+the special value of reaching the legal receiver. Arrival time includes robot
+control acquisition and ball flight, rather than comparing geometric distance
+alone.
+
+An observed in-flight trajectory is evidence and receives much greater weight
+than counterfactual future shots. This prevents robust/minimax planning from
+becoming indecisive in an actual emergency.
+
+The ensemble is intentionally small and structured. A dense continuous action
+tree or learned intent model would require a representative attacker corpus
+and a training/evaluation separation that does not yet exist.
+
+## Dynamics-aware reachability
+
+Ball prediction analytically integrates linear drag:
+
+`p(t) = p(0) + v(0) * (1 - exp(-drag*t)) / drag`.
+
+Robot reachability is directional. For a proposed target and time budget it:
+
+- projects current velocity onto the target direction, retaining negative
+  velocity when the robot is moving away;
+- charges a bounded delay for heading reversal;
+- integrates acceleration in 25 ms increments;
+- applies the hidden velocity limit;
+- includes robot and ball radii only at interception comparison time.
+
+This corrects the optimistic scalar-speed model, which treated a robot running
+away from a target as already moving toward it. The same reachability primitive
+is shared by role selection, threat timing, cover selection, clearance safety,
+and GK responsibility. Shared timing semantics are more important than
+independently tuned heuristics in each role.
+
+## Joint field-defender assignment
+
+There are only two legal ball-winner assignments, so both are evaluated. For
+each assignment the policy computes:
+
+- the primary defender's earliest drag-aware ball interception;
+- the other defender's optimized cover point;
+- directed travel time to both responsibilities;
+- a penalty when both targets collapse into the same small region.
+
+The incumbent changes only when the alternate joint assignment has a material
+advantage and the role hold has elapsed. Thus the auction is based on the pair's
+combined defensive value, not simply which robot is nearest to the ball.
+
+This is a compact joint optimizer, not three independent role rules. Exhaustive
+assignment is preferable to a generic combinatorial solver because there are
+only two field defenders and the exact search is trivial.
+
+## Complementary cover optimization
+
+Cover candidates are sampled on every shot and pass hypothesis, plus several
+interior points on the current ball-to-receiver segment. Candidate scoring
+combines:
+
+- worst-case weighted distance to any important threat segment;
+- a smaller aggregate residual over all hypotheses;
+- directed travel time;
+- minimum separation from the primary interception target;
+- a goal-side marking preference;
+- the fraction of the threat that the goalkeeper cannot already cover.
+
+The final term coordinates field defenders with the goalkeeper. A lane the GK
+can reach is discounted but not ignored; a lane outside the GK's directed
+reachable set remains the field defender's responsibility. This reduces the
+common failure where all three defenders follow the same ball line and leave
+the receiver unmarked.
+
+## Minimax goalkeeper
+
+The goalkeeper searches a small guard-plane grid at multiple depths and across
+lateral points. The candidate set includes regular goal-width samples and the
+intersection of every threat hypothesis with each guard plane.
+
+For each candidate it scores:
+
+- the worst weighted residual opening across all threats;
+- aggregate residual opening as a tie-breaker;
+- whether directed GK arrival is later than ball arrival;
+- travel cost;
+- a phase-dependent depth cost.
+
+The goalkeeper may move outside the nominal goal-mouth centre range to meet a
+diagonal shot early, while its physical radius still covers the line. During a
+shot emergency it favours a deeper guard plane; without an in-flight shot it
+may step forward to reduce the angular opening. Lateral feed-forward is derived
+from urgent arrival time rather than a fixed position gain.
+
+When close enough to the ball, the goalkeeper is allowed to kick only while it
+is goal-side and facing the ball, so a contact sends the ball away from its own
+goal.
+
+## Maximin clearance search
+
+The ball winner never blindly kicks along its arrival heading. It first routes
+around the ball to a striking pose on the own-goal side. Kick remains disabled
+until that invariant is satisfied.
+
+The clearance planner evaluates 21 rays spanning a broad downfield half-plane.
+For each ray it:
+
+- finds the first field-boundary intersection;
+- samples six positions along the ball path;
+- solves drag-aware ball arrival at every sample;
+- compares arrival with both attackers' directed minimum travel time;
+- measures interference with the two other enemy robots;
+- rewards a fast safe field exit and downfield progress;
+- gives a small preference to recoverable central outcomes only after safety.
+
+The selected ray maximizes the worst interception margin rather than merely
+pointing away from the nearest attacker. Every candidate has negative `x`, so
+no active clearance can target the defended positive-`x` goal. A defensive
+ball-out is legal and preferable to preserving possession under immediate goal
+threat in this benchmark's terminal rules.
+
+## Braking-distance pose control
+
+For any tactical target, nominal translational speed follows
+
+`v_request = sqrt(v_arrival^2 + 2*a*distance)`
+
+up to the robot speed limit, plus bounded target feed-forward. Heading uses an
+analogous angular braking request. Commands are finally rotated into each
+robot's local frame, matching the public control model.
+
+This produces rapid long-range movement without the slow response of a unit
+position gain, while still decelerating near an interception or marking pose.
+
+## Velocity-obstacle and boundary safety layer
+
+A tactically correct target is not automatically a safe immediate velocity.
+The execution layer creates 31 velocity candidates from:
+
+- the nominal command;
+- current velocity and a full stop;
+- four speed fractions;
+- seven angular offsets around the nominal direction.
+
+Every candidate is projected over a 750 ms collision horizon against the
+constant-velocity motion of all other robots. Predicted penetration of the hard
+separation radius receives a dominating penalty; near misses receive a smooth,
+time-weighted comfort penalty.
+
+Field safety uses a control-barrier-like stopping-distance test on all four
+boundaries. An outward velocity becomes prohibitively expensive before its
+required braking distance plus margin exceeds available field space. The final
+choice also considers tactical tracking error, acceleration discontinuity, and
+nominal deviation.
+
+This is a sampled dynamic-window/velocity-obstacle hybrid. It is deterministic,
+has a small bounded cost, and handles the simulator's velocity-command dynamics
+better than short-range position repulsion. It does not claim the completeness
+of continuous ORCA or nonlinear MPC.
+
+## Theory-to-implementation map
+
+The design intentionally draws from several control and planning families:
+
+- hybrid automata: explicit phase and emergency transitions;
+- Bayesian-style intent reasoning: multiple weighted hypotheses rather than a
+  single hard intent label;
+- pursuit/evasion: time-to-intercept and adversarial arrival margins;
+- assignment optimization: exhaustive two-role joint auction;
+- robust optimization: worst-case plus aggregate threat residuals;
+- model-predictive control: continuous replanning over finite future arrival;
+- computational geometry: segment distance, lane intersection, guard planes;
+- bang-bang/braking control: acceleration-limited arrival speed;
+- velocity obstacles/dynamic window: sampled collision-safe velocity choice;
+- control barrier functions: stopping-distance boundary protection;
+- hysteresis control: role and non-emergency phase stability.
+
+The held command is integrated by four physics steps between plans. This keeps
+shot-reaction latency below 17 ms while preventing the robust search from
+dominating CPU time during parallel benchmark episodes.
+
+These ideas are used where their assumptions fit the tiny deterministic world.
+Adding a named method without its needed state, horizon, or objective would not
+make the opponent stronger.
+
+## Rejected or deferred mechanisms
+
+The following are plausible later upgrades, but are not silently claimed by
+the current implementation:
+
+- full nonlinear MPC over all three robots and collision constraints;
+- Monte Carlo tree search over attacker/defender kick sequences;
+- learned attacker-intent classification;
+- online system identification of dynamics already known to the private policy;
+- randomized mixed strategies against an exploitative trained attacker;
+- a goalkeeper dive/contact trajectory optimizer;
+- post-clearance possession and counterattack planning;
+- offline self-play or population-based adversarial training.
+
+They require a diverse attacker corpus, performance budgets, and separate
+holdout seeds. Implementing them before those fixtures would mostly add
+complexity and tune against one development controller.
+
+## Failure modes explicitly removed
+
+The current layers target concrete earlier defects:
+
+- ball chase by all defenders -> joint primary/cover assignment;
+- late reaction to diagonal shots -> drag-aware crossing and emergency phase;
+- own goals from wrong-side contact -> goal-side pose and negative-`x` rays;
+- role chatter -> joint-cost advantage plus hold time;
+- marking a stale receiver pose -> lead-pass hypotheses and feed-forward;
+- optimistic interception while moving away -> directed reachability;
+- defender/GK coverage duplication -> GK-uncovered threat weighting;
+- collisions from target crossing -> velocity-obstacle candidate search;
+- wall impacts from high requested speed -> stopping-distance barrier;
+- clearances directly to an attacker -> sampled maximin interception margin.
+
+## Verification
+
+Unit and integration coverage includes:
+
+- drag integration and guard-plane crossing;
+- directed reachability when moving/facing toward and away from a target;
+- possession-belief sensitivity to distance, orientation, and closing speed;
+- material-advantage role switching;
+- immediate shot-emergency preemption;
+- goal-side clearance and no own-goal clearance direction;
+- braking-distance command strength;
+- velocity-obstacle head-on collision rejection;
+- boundary stopping-distance protection;
+- diagonal goalkeeper tracking;
+- restart exclusion, delayed observation, scoring, terminal trace, and
+  deterministic replay.
+
+After the complete minimax/safety upgrade, the prior best development controller
+was run on seeds 1-24:
+
+- controller successes: `0/24`;
+- `start_timeout`: 19;
+- defensive `ball_out`: 5;
+- `episode_timeout`: 0.
+
+The same 24 episodes were run four simulator containers at a time. After
+decoupling planning from physics, 5-6 second simulated episodes again completed
+in approximately 5-6 seconds of wall time under that concurrency. The simulator
+test workload containing long deterministic advances dropped from 5.74 seconds
+to 1.50 seconds in the same containerized debug-test setup.
+
+This corpus is evidence against one known controller, not proof of global
+optimality. The next meaningful strength increase should come from a diverse
+attacker suite and holdout seeds, not from further tuning solely against this
+controller.
+
+## Required future evaluation
+
+Defensive evaluation should retain at least these dimensions:
+
+- valid-goal suppression across fixed development and unseen holdout seeds;
+- start-touch denial without exclusion-rule violations;
+- shot attempts, shot-on-target rate, and time from pass to interception;
+- own-goal and unsafe-clearance count;
+- ball-out, enemy possession, and episode-timeout decomposition;
+- minimum robot separation and boundary contacts;
+- role-switch frequency and duplicated-coverage duration;
+- per-tick planning CPU time at p50, p95, and maximum;
+- sensitivity to distinct attacking families, not parameter variants of one
+  scripted play.
+
+Only the first outcome decomposition is currently measured end-to-end. The
+other metrics should be added to private authoring diagnostics before claiming
+that one architecture is globally optimal.
