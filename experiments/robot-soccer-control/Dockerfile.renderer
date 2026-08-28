@@ -1,0 +1,13 @@
+FROM alpine:3.22@sha256:14358309a308569c32bdc37e2e0e9694be33a9d99e68afb0f5ff33cc1f695dce
+
+RUN apk add --no-cache \
+    ffmpeg \
+    font-dejavu \
+    py3-pillow \
+    python3
+
+COPY experiments/robot-soccer-control/tools/render_trace.py \
+    /usr/local/bin/render-robot-soccer-trace
+RUN chmod 0555 /usr/local/bin/render-robot-soccer-trace
+
+ENTRYPOINT ["/usr/local/bin/render-robot-soccer-trace"]
