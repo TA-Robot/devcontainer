@@ -11,6 +11,9 @@
 - `provider-reviews/opus5/`: 独立Claude Opus 5 review 5文書
 - `04-cross-provider-synthesis.md`: primaryによる比較とゼロベース再設計
 - `05-first-episode-observation.md`: 今回の運用から得たcontent-free observation
+- `06-orchestration-evidence-readiness-audit.md`: 現在のguidance、execution、Atlas、observation、Skillがorchestration判断材料として十分かの監査
+- `07-decision-packet-and-evidence-architecture.md`: task fingerprint、candidate、evidence、prediction、outcome、learningを結ぶmachine decision packet案
+- `08-comparative-experimentation-and-learning-roadmap.md`: matched topology study、project-local learning、planning Skill、recurring pilotまでの実証順序
 
 正本へ昇格した内容は次へ置きます。
 
