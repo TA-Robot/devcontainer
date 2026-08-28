@@ -212,6 +212,13 @@ For each candidate it scores:
 - travel cost;
 - a phase-dependent depth cost.
 
+During `ShotEmergency`, coverage deficit and arrival lateness for the observed
+in-flight ball are a lexicographic first objective. Hypothetical future shots
+and movement cost cannot trade away coverage of a ball that already exists.
+The guaranteed corridor is the physical robot-plus-ball contact radius minus a
+35 mm planning margin; the margin shrinks the corridor and never creates
+fictitious physical reach.
+
 The goalkeeper may move outside the nominal goal-mouth centre range to meet a
 diagonal shot early, while its physical radius still covers the line. During a
 shot emergency it favours a deeper guard plane; without an in-flight shot it
