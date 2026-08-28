@@ -11,6 +11,7 @@ const FRIENDLY_STARTS: [(f64, f64, f64); 2] =
     [(0.20, 2.86, -1.10), (1.45, 0.55, 0.0)];
 const ENEMY_STARTS: [(f64, f64, f64); 3] =
     [(1.10, 2.05, -1.10), (2.15, 0.75, PI), (4.08, 0.0, PI)];
+const GOALKEEPER_COVERAGE_MARGIN_M: f64 = 0.035;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Team {
@@ -767,7 +768,12 @@ impl Simulator {
         }
         let mut best_position = Vec2::new(4.02, 0.0);
         let mut best_score = f64::INFINITY;
-        let coverage = self.public.robot.radius_m + self.public.ball_radius_m + 0.035;
+        let mut best_emergency_violation = f64::INFINITY;
+        // A planning margin must shrink the guaranteed contact corridor.  Adding
+        // it to the physical radii creates a fictitious annulus where the planner
+        // reports a save even though collision detection cannot touch the ball.
+        let physical_coverage = self.public.robot.radius_m + self.public.ball_radius_m;
+        let coverage = (physical_coverage - GOALKEEPER_COVERAGE_MARGIN_M).max(0.0);
         for x in [3.68, 3.84, 4.02] {
             for y in &y_candidates {
                 let candidate = Vec2::new(x, *y);
@@ -796,7 +802,28 @@ impl Simulator {
                     (x - 3.78).abs() * 0.18
                 };
                 let score = worst + aggregate * 0.07 + movement_cost + depth_cost;
-                if score < best_score {
+                let emergency_violation = if self.defensive_phase
+                    == DefensivePhase::ShotEmergency
+                {
+                    if let Some((arrival, crossing_y)) = self.ball_crossing_at_x(x) {
+                        let uncovered = ((crossing_y - y).abs() - coverage).max(0.0);
+                        let late_distance = (reach_time - arrival).max(0.0)
+                            * self.hidden.robot_max_velocity;
+                        uncovered + late_distance
+                    } else {
+                        0.0
+                    }
+                } else {
+                    0.0
+                };
+                let emergency_better = emergency_violation + 1e-9
+                    < best_emergency_violation;
+                let emergency_equal = (emergency_violation
+                    - best_emergency_violation)
+                    .abs()
+                    <= 1e-9;
+                if emergency_better || (emergency_equal && score < best_score) {
+                    best_emergency_violation = emergency_violation;
                     best_score = score;
                     best_position = candidate;
                 }
@@ -1603,6 +1630,31 @@ mod tests {
             simulator.defensive_phase,
         );
         assert!(simulator.is_running());
+    }
+
+    #[test]
+    fn goalkeeper_margin_stays_inside_the_physical_contact_radius() {
+        let mut simulator = Simulator::new(32);
+        let goalkeeper = simulator.robots.len() - 1;
+        simulator.play_started = true;
+        simulator.defensive_phase = DefensivePhase::ShotEmergency;
+        simulator.ball.position = Vec2::new(0.997, 2.647);
+        simulator.ball.velocity = Vec2::new(3.322, -2.118);
+        simulator.robots[goalkeeper].position = Vec2::new(3.686, 0.570);
+        simulator.robots[goalkeeper].heading = 2.507;
+
+        let intent = simulator.goalkeeper_intent(goalkeeper);
+        let (_, crossing_y) = simulator
+            .ball_crossing_at_x(intent.position.x)
+            .expect("shot reaches goalkeeper guard plane");
+        let physical_coverage = simulator.public.robot.radius_m
+            + simulator.public.ball_radius_m;
+        let planned_gap = (crossing_y - intent.position.y).abs();
+
+        assert!(
+            planned_gap + GOALKEEPER_COVERAGE_MARGIN_M <= physical_coverage + 1e-9,
+            "planned_gap={planned_gap} physical_coverage={physical_coverage} intent={intent:?}",
+        );
     }
 
     #[test]
