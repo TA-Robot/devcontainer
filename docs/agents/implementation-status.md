@@ -103,6 +103,16 @@ The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-r
 
 Run the same fixture on intentional `sbx --clone` and Docker Agent installations, then compare credential exposure, main-checkout/worktree constraints, cache, Compose, disk, teardown, and rollback before choosing an adapter. Destructive worktree/branch GC, verified job-scoped Docker teardown, evidence expiry, and live provider-log rotation remain unclaimed follow-ups; none should be inferred from Phase 3e eligibility.
 
-## Next: collaboration C1-C2
+## Collaboration R0-R1: decision semantics and project-local evidence
 
-Exercise delegate, consult, compete, and verify relations only where a representative task has a credible mechanism over solo. The zero-input ledger supplies observable timing, topology, test, rework, and post-worker-tail facts; the primary supplies semantic planning and synthesis during normal work without asking the user to maintain a form. Preserve unavailable fields as unknown. Use observations to remove unused fields and form project-local planning priors; do not infer global optima from provider count or invocation count. A comparison harness requires evidence that the evaluator can distinguish candidates. A read-only trigger pilot requires evidence that manual, CI, deterministic script, and ordinary cron alternatives are insufficient, plus specified trigger, dedupe, overlap, usage, backoff, circuit, restart, owner, expiry, and kill-path semantics.
+- Versioned decision and outcome schemas record solo alternatives, task fingerprints, expected mechanisms, binding constraints, predictions, stop conditions, observed costs, coverage, and project-local learning without imposing participant or exchange defaults.
+- The task envelope accepts an optional bounded collaboration projection. Existing tasks remain valid; free-form rationale remains in the decision packet.
+- `agentctl` re-reads the validated stored task, converts plan and candidate identifiers to opaque keys, and sends only allowlisted categories plus the decision digest through the fail-open Mira bridge.
+- The Mira episode ledger retains the correlated semantics when present and explicit `unknown` / unavailable correlation otherwise. It still stores no prompt, task objective, path, command, output, or raw job / attempt / plan / candidate identifier.
+- `report-agent-collaboration-evidence` emits bounded descriptive groups without episode bodies or identifiers. Missing evidence is `unmeasured`; it never ranks or recommends a topology.
+- `$review-collaboration-evidence` filters to the current workspace by default and keeps detailed contracts outside the normal context window.
+- Contract, broker, hook, report, Skill, plain-image, persistent-volume, and digest-locked official Dev Container builds pass.
+
+## Next: collaboration R2
+
+Use the new decision projection on representative delegate, consult, compete, and verify work only where a credible mechanism exists over solo. Build matched comparisons after project-local evidence shows that the task fingerprint and evaluator can distinguish candidates. Do not add automatic routing, a comparison runner, resource-aware recommendation, or scheduler merely because the schema now exists. A read-only trigger pilot still requires evidence that manual, CI, deterministic script, and ordinary cron alternatives are insufficient, plus specified trigger, dedupe, overlap, usage, backoff, circuit, restart, owner, expiry, and kill-path semantics.
