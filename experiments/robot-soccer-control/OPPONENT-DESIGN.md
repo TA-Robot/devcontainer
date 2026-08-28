@@ -349,6 +349,36 @@ The current layers target concrete earlier defects:
 - wall impacts from high requested speed -> stopping-distance barrier;
 - clearances directly to an attacker -> sampled maximin interception margin.
 
+## Compact-wall and rebound upgrade
+
+The corrected-goalkeeper controller search exposed two additional structural
+weaknesses that were not represented by the earlier `0/24` corpus:
+
+1. the secondary defender could follow a high moving receiver far enough to
+   abandon the direct ball-to-goal corridor;
+2. a goalkeeper save was treated as an ordinary loose ball on the next control
+   tick, so the rebound response had no memory and frequently left one attacker
+   unopposed.
+
+The opponent now adds two bounded mechanisms:
+
+- **early compact wall**: while the ball remains before `x=1.85`, the secondary
+  defender occupies the alternate side of a goal-side guard plane instead of
+  copying the receiver's high decoy motion. The primary still solves the direct
+  interception, producing a staggered two-layer wall rather than duplicate
+  ball chase;
+- **latched rebound emergency**: a dangerous positive-to-negative ball-velocity
+  reversal beyond `x=2.35` latches a 1.10-second emergency. The primary pursues
+  the drag-aware interception while the secondary moves goal-side of the
+  predicted rebound and nearest attacker as a backstop. This prevents the
+  state machine from forgetting a save after one 60 Hz planning tick.
+
+The backstop becomes a clearance intent when it is within 0.52 m of the
+predicted ball. Both mechanisms retain the existing goal-side kick condition,
+maximin negative-x clearance search, velocity-obstacle layer, and boundary
+barrier. They do not raise robot dynamics above the same hidden limits applied
+to every robot.
+
 ## Verification
 
 Unit and integration coverage includes:
@@ -384,6 +414,20 @@ This corpus is evidence against one known controller, not proof of global
 optimality. The next meaningful strength increase should come from a diverse
 attacker suite and holdout seeds, not from further tuning solely against this
 controller.
+
+After the compact-wall/rebound upgrade, the newer controller that had produced
+one valid corrected-goalkeeper success was evaluated through the three-seed
+gate on seeds `1,2,3`:
+
+- accepted: `false`;
+- controller successes: `0/3`;
+- failures: three defensive `ball_out` terminals;
+- infrastructure errors: `0`.
+
+The content-bearing traces and gate summary are retained in the authoring temp
+workspace. This is a regression check against a newly observed attack family,
+not a claim that three development seeds constitute a sufficient hidden
+benchmark.
 
 ## Required future evaluation
 

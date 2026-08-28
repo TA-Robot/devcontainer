@@ -37,6 +37,29 @@ python3 experiments/robot-soccer-control/examples/reference_controller.py \
   --base-url http://127.0.0.1:18080
 ```
 
+## Three-seed acceptance gate
+
+A single successful episode is diagnostic evidence, not controller acceptance.
+The development gate requires the same controller command to succeed on three
+distinct simulator seeds. Seeds `1,2,3` are the default development triplet:
+
+```bash
+scripts/evaluate-robot-soccer-controller \
+  --output-dir temp/robot-soccer-seed-gate/run-001 \
+  -- python3 /path/to/controller.py
+```
+
+The evaluator starts a fresh simulator container for each seed, passes
+`--base-url` and `--seed` to the controller, and writes the simulator trace,
+controller stdout/stderr, and `summary.json` under the requested new output
+directory. It exits zero only when the authoritative simulator result is
+`success` for all three distinct seeds. A controller exit code or a success
+claim in controller stdout cannot override a simulator failure.
+
+Use `--seeds A,B,C` to select another triplet; duplicate seeds or any count
+other than three are rejected. This is an authoring acceptance policy, not an
+extra rule inside an individual 30-second episode.
+
 The simulator writes a content-bearing development trace inside the runtime at
 `/tmp/robot-soccer-simulator.jsonl`. Mount that exact file or its parent only
 for private experiment diagnostics. It is not part of Mira's general telemetry.
@@ -93,5 +116,6 @@ Rendering does not expose exact contact events.
 - The private referee enforces a distinct friendly receiver and a receiver
   kick before a goal succeeds, without exposing touch or kick events.
 - A controller may be written in any language capable of JSON over HTTP.
-- UI, hidden evaluation corpus, randomized release packaging, and tmux goal
-  runner are later layers; they do not block validation of physics/API semantics.
+- UI, a larger hidden evaluation corpus, randomized release packaging, and tmux
+  goal runner are later layers. The three-seed authoring gate is intentionally
+  small and does not claim holdout generalization.
