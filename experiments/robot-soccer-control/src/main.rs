@@ -137,14 +137,20 @@ fn spawn_physics_thread(runtime: Arc<Mutex<Runtime>>, trace: Arc<TraceWriter>) {
             let mut delivered = None;
             let mut terminal = None;
             if let Ok(mut state) = runtime.lock() {
-                let (latest, completed) = match state.simulator.as_mut() {
+                let capture_terminal = !state.terminal_logged;
+                let (latest, completed, terminal_snapshot) = match state.simulator.as_mut() {
                     Some(simulator) => {
                         simulator.advance(dt);
                         let latest = simulator.latest_observation();
                         let completed = (!simulator.is_running()).then(|| simulator.result());
-                        (latest, completed)
+                        let terminal_snapshot = if completed.is_some() && capture_terminal {
+                            simulator.terminal_snapshot()
+                        } else {
+                            None
+                        };
+                        (latest, completed, terminal_snapshot)
                     }
-                    None => (None, None),
+                    None => (None, None, None),
                 };
                 if let Some(observation) = latest {
                     if observation.sequence > state.latest_logged_sequence {
@@ -154,7 +160,7 @@ fn spawn_physics_thread(runtime: Arc<Mutex<Runtime>>, trace: Arc<TraceWriter>) {
                 }
                 if completed.is_some() && !state.terminal_logged {
                     state.terminal_logged = true;
-                    terminal = completed;
+                    terminal = completed.zip(terminal_snapshot);
                 }
             }
             if let Some(observation) = delivered {
@@ -163,7 +169,11 @@ fn spawn_physics_thread(runtime: Arc<Mutex<Runtime>>, trace: Arc<TraceWriter>) {
                     serde_json::to_value(observation).unwrap_or_else(|_| json!({})),
                 );
             }
-            if let Some(result) = terminal {
+            if let Some((result, snapshot)) = terminal {
+                trace.event(
+                    "terminal_snapshot",
+                    serde_json::to_value(snapshot).unwrap_or_else(|_| json!({})),
+                );
                 trace.event(
                     "episode_terminal",
                     serde_json::to_value(result).unwrap_or_else(|_| json!({})),
@@ -282,7 +292,10 @@ fn validate_commands(
     request: CommandRequest,
 ) -> Result<(Vec<(usize, RobotCommand)>, serde_json::Value), String> {
     if request.robots.is_empty() || request.robots.len() > FRIENDLY_IDS.len() {
-        return Err("robots must contain between one and three updates".to_string());
+        return Err(format!(
+            "robots must contain between one and {} updates",
+            FRIENDLY_IDS.len()
+        ));
     }
     let mut seen = HashSet::new();
     let mut updates = Vec::new();

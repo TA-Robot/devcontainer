@@ -3,8 +3,9 @@
 Status: v0 simulator and public controller contract
 
 This experiment supplies a source-hidden Rust runtime for evaluating a central
-controller that operates three omnidirectional friendly robots against two
-built-in opponents. The target project receives only the runtime image and
+controller that operates two omnidirectional friendly robots against three
+built-in opponents in an attacking-half free-kick formation. The target
+project receives only the runtime image and
 [`PUBLIC-SPEC.md`](PUBLIC-SPEC.md); simulator source remains in this authoring
 repository so hidden dynamics are not disclosed to the development agent.
 
@@ -55,7 +56,11 @@ be selected with `--episode 3`; `-1` selects the latest run.
 Increase `--crf` toward 36 for a smaller, lower-quality file, or reduce it
 toward 22 for inspection. Width and height must be even. Rendering reconstructs
 only delivered public observation frames and linearly fills missing sequence
-numbers; it does not gain access to hidden state or exact contact events.
+numbers. New traces include one private terminal snapshot so replay reaches
+the actual terminal position despite observation latency. The snapshot is
+written only after physics stops and is never exposed by the controller API.
+Older traces receive a bounded estimate from their last public velocity.
+Rendering does not expose exact contact events.
 
 ## Dependency boundary
 

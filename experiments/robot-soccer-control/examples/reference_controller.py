@@ -71,6 +71,7 @@ def main() -> int:
         raise SystemExit(f"start failed: HTTP {status}: {response}")
 
     phase = "pass"
+    initial_ball = None
     last_sequence = -1
     while True:
         result_status, result = request(args.base_url, "/v1/result")
@@ -91,9 +92,15 @@ def main() -> int:
         robots = {item["id"]: item for item in observation["robots"]}
         ball = observation["ball"]["position"]
         ball_xy = (float(ball["x"]), float(ball["y"]))
+        if initial_ball is None:
+            initial_ball = ball_xy
         receiver = robots["friendly_1"]["position"]
         receiver_xy = (float(receiver["x"]), float(receiver["y"]))
-        if phase == "pass" and (ball_xy[0] > -0.6 or math.dist(ball_xy, receiver_xy) < 0.65):
+        ball_velocity = observation["ball"]["velocity"]
+        ball_speed = math.hypot(float(ball_velocity["x"]), float(ball_velocity["y"]))
+        if phase == "pass" and (
+            math.dist(ball_xy, initial_ball) > 0.22 or ball_speed > 0.65
+        ):
             phase = "shoot"
 
         if phase == "pass":
@@ -103,7 +110,6 @@ def main() -> int:
             commands = [
                 robot_command(robots["friendly_0"], behind, receiver_xy, True),
                 robot_command(robots["friendly_1"], receiver_xy, ball_xy, False),
-                robot_command(robots["friendly_2"], (0.3, -1.2), ball_xy, False),
             ]
         else:
             goal = (4.6, 0.0)
@@ -113,7 +119,6 @@ def main() -> int:
             commands = [
                 robot_command(robots["friendly_0"], (ball_xy[0] - 0.5, ball_xy[1] - 0.5), ball_xy, False),
                 robot_command(robots["friendly_1"], behind, goal, True),
-                robot_command(robots["friendly_2"], (2.4, -0.9), ball_xy, False),
             ]
         command_status, command_response = request(
             args.base_url, "/v1/command", {"robots": commands}

@@ -54,10 +54,16 @@ def load_episode(
                 raise ValueError(f"invalid JSON at line {line_number}: {error}") from error
             kind = event.get("event")
             if kind == "episode_started":
-                current = {"observations": [], "result": None}
+                current = {
+                    "observations": [],
+                    "terminal_snapshot": None,
+                    "result": None,
+                }
                 episodes.append(current)
             elif current is not None and kind == "observation_delivered":
                 current["observations"].append(event.get("payload"))
+            elif current is not None and kind == "terminal_snapshot":
+                current["terminal_snapshot"] = event.get("payload")
             elif current is not None and kind == "episode_terminal":
                 current["result"] = event.get("payload")
 
@@ -75,12 +81,49 @@ def load_episode(
         raise ValueError("selected episode contains no delivered observations")
     deduplicated = {int(item["sequence"]): item for item in observations}
     frames = [deduplicated[key] for key in sorted(deduplicated)]
+    result = episode["result"] or {"status": "incomplete", "reason": None}
+    terminal_snapshot = episode["terminal_snapshot"]
+    if isinstance(terminal_snapshot, dict):
+        if int(terminal_snapshot["sequence"]) <= int(frames[-1]["sequence"]):
+            terminal_snapshot["sequence"] = int(frames[-1]["sequence"]) + 1
+        frames.append(terminal_snapshot)
+    elif result.get("status") in {"success", "failure"}:
+        frames.append(synthesize_legacy_terminal(frames[-1], result))
     resolved_episode = index + 1 if index >= 0 else len(episodes) + index + 1
     return (
         frames,
-        episode["result"] or {"status": "incomplete", "reason": None},
+        result,
         resolved_episode,
     )
+
+
+def synthesize_legacy_terminal(
+    observation: dict[str, Any], result: dict[str, Any]
+) -> dict[str, Any]:
+    """Estimate a final frame for traces created before terminal snapshots existed."""
+    frame = json.loads(json.dumps(observation))
+    ball = frame["ball"]
+    position = ball["position"]
+    velocity = ball.get("velocity", {"x": 0.0, "y": 0.0})
+    dt = 0.20
+    if result.get("status") == "success" and velocity["x"] > 0.05:
+        dt = max(0.0, min(1.0, (FIELD_LENGTH / 2.0 + 0.01 - position["x"]) / velocity["x"]))
+    position["x"] += velocity["x"] * dt
+    position["y"] += velocity["y"] * dt
+    if result.get("status") == "success":
+        position["x"] = FIELD_LENGTH / 2.0 + 0.01
+        position["y"] = max(-GOAL_WIDTH / 2.0 + 0.02, min(GOAL_WIDTH / 2.0 - 0.02, position["y"]))
+    for robot in frame["robots"]:
+        robot_velocity = robot.get("velocity", {"x": 0.0, "y": 0.0})
+        robot["position"]["x"] += robot_velocity["x"] * dt
+        robot["position"]["y"] += robot_velocity["y"] * dt
+        robot["heading"] = wrap_angle(
+            robot["heading"] + robot.get("angular_velocity", 0.0) * dt
+        )
+    frame["sequence"] = int(observation["sequence"]) + max(
+        1, math.ceil(dt * OBSERVATION_HZ)
+    )
+    return frame
 
 
 def interpolate_observation(
@@ -272,6 +315,7 @@ class Painter:
         first_sequence: int,
         episode_number: int,
         result: dict[str, Any],
+        show_result: bool,
     ) -> Image.Image:
         image = Image.new("RGB", (self.width, self.height))
         draw = ImageDraw.Draw(image)
@@ -295,8 +339,8 @@ class Painter:
             width=2,
         )
         elapsed = (int(frame["sequence"]) - first_sequence) / OBSERVATION_HZ
-        status = str(result.get("status", "incomplete")).upper()
-        reason = result.get("reason") or ""
+        status = str(result.get("status", "incomplete")).upper() if show_result else "RUNNING"
+        reason = (result.get("reason") or "") if show_result else ""
         draw.text(
             (18, 10),
             f"EP {episode_number}   T+{elapsed:05.2f}s   {status} {reason}",
@@ -360,10 +404,16 @@ def encode(
     process = subprocess.Popen(command, stdin=subprocess.PIPE)
     assert process.stdin is not None
     first_sequence = int(frames[0]["sequence"])
+    render_frames = frames + [frames[-1]] * round(OBSERVATION_HZ * 0.5)
     try:
-        for index, frame in enumerate(frames):
+        for index, frame in enumerate(render_frames):
             image = painter.render(
-                frame, index, first_sequence, episode, result
+                frame,
+                index,
+                first_sequence,
+                episode,
+                result,
+                index >= len(frames) - 1,
             )
             process.stdin.write(image.tobytes())
         process.stdin.close()

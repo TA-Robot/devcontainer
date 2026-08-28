@@ -5,8 +5,11 @@ developer. Values or behavior not stated here must be treated as unknown.
 
 ## Objective and rules
 
-- One central controller operates `friendly_0`, `friendly_1`, and `friendly_2`.
-- The simulator operates `enemy_0` and `enemy_1`.
+- One central controller operates `friendly_0` and `friendly_1`.
+- The simulator operates `enemy_0`, `enemy_1`, and `enemy_2`.
+- The free-kick starts in the attacking half. `friendly_0` is behind the
+  stationary ball, `friendly_1` starts wide on the opposite side, two enemies
+  form the first defensive line, and the third starts as goalkeeper.
 - An episode begins when `POST /v1/start` succeeds and lasts at most 30 seconds
   of wall-clock time.
 - A friendly robot must contact the ball within the first 5 seconds. Otherwise
@@ -39,6 +42,21 @@ All distances are metres and all angles are radians.
   equal to 60% of the robot diameter.
 - Robot/robot, robot/ball, and robot/field collisions are physical. The ball
   leaving the field is not reflected.
+
+### Initial free-kick formation
+
+| Entity | Position `(x, y)` | Heading | Role |
+| --- | --- | --- | --- |
+| ball | `(1.35, 0.65)` | n/a | stationary free-kick ball |
+| `friendly_0` | `(0.95, 0.65)` | `0.0` | kicker behind the ball |
+| `friendly_1` | `(1.55, -1.25)` | `0.35` | wide receiver |
+| `enemy_0` | `(2.22, 0.55)` | `pi` | first defender |
+| `enemy_1` | `(2.28, 1.32)` | `pi` | second defender / marker |
+| `enemy_2` | `(4.08, 0.0)` | `pi` | goalkeeper |
+
+Before the first friendly contact, defenders hold this formation and are also
+subject to the enemy exclusion radius. They do not walk toward the ball while
+waiting for the free kick.
 
 If `kick` is true while the ball newly contacts the kick-capable segment, the
 simulator applies a forward kick. There is no time-based cooldown. A continuous

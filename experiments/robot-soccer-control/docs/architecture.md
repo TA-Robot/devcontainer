@@ -36,6 +36,10 @@ only the newest released frame. It never serializes the sample time or true
 state.
 
 The text trace records public requests, delivered observations, and public
-results. It intentionally omits private configuration and unreleased true
-state. Because it can still contain controller behavior and coordinates, it is
-private experiment evidence rather than general telemetry.
+results. At termination it records one `terminal_snapshot` so offline replay
+can show the goal or boundary crossing hidden behind observation latency. This
+is a single post-physics write, is not exposed through the controller API, and
+adds no per-tick rendering or serialization. The trace intentionally omits
+private configuration and all other unreleased true state. Because it can still
+contain controller behavior and coordinates, it is private experiment evidence
+rather than general telemetry.

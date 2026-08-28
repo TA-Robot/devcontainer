@@ -1,7 +1,8 @@
 use crate::math::Vec2;
 use serde::{Deserialize, Serialize};
 
-pub const FRIENDLY_IDS: [&str; 3] = ["friendly_0", "friendly_1", "friendly_2"];
+pub const FRIENDLY_IDS: [&str; 2] = ["friendly_0", "friendly_1"];
+pub const ENEMY_IDS: [&str; 3] = ["enemy_0", "enemy_1", "enemy_2"];
 
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct StartRequest {
@@ -32,8 +33,8 @@ pub struct RobotCommand {
 #[derive(Clone, Debug, Serialize)]
 pub struct PublicSpec {
     pub schema_version: u32,
-    pub friendly_robot_ids: [&'static str; 3],
-    pub enemy_robot_ids: [&'static str; 2],
+    pub friendly_robot_ids: [&'static str; 2],
+    pub enemy_robot_ids: [&'static str; 3],
     pub field: FieldSpec,
     pub robot: RobotGeometrySpec,
     pub ball_radius_m: f64,
@@ -50,9 +51,9 @@ pub struct PublicSpec {
 impl Default for PublicSpec {
     fn default() -> Self {
         Self {
-            schema_version: 1,
+            schema_version: 2,
             friendly_robot_ids: FRIENDLY_IDS,
-            enemy_robot_ids: ["enemy_0", "enemy_1"],
+            enemy_robot_ids: ENEMY_IDS,
             field: FieldSpec {
                 length_m: 9.0,
                 width_m: 6.0,

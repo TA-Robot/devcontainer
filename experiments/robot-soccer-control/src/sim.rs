@@ -1,12 +1,10 @@
 use crate::math::Vec2;
 use crate::protocol::{
     BallObservation, EpisodeResult, Observation, PublicSpec, RobotCommand, RobotObservation,
-    FRIENDLY_IDS,
+    ENEMY_IDS, FRIENDLY_IDS,
 };
 use std::collections::VecDeque;
 use std::f64::consts::PI;
-
-const ENEMY_IDS: [&str; 2] = ["enemy_0", "enemy_1"];
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Team {
@@ -135,15 +133,15 @@ impl Simulator {
         let mut rng = Rng64::new(seed);
         let hidden = HiddenDynamics::from_rng(&mut rng);
         let ball = Ball {
-            position: Vec2::new(-1.35, 0.0),
+            position: Vec2::new(1.35, 0.65),
             velocity: Vec2::ZERO,
         };
         let robots = vec![
-            Robot::new(FRIENDLY_IDS[0], Team::Friendly, -1.72, 0.0, 0.0),
-            Robot::new(FRIENDLY_IDS[1], Team::Friendly, 0.55, 1.45, -0.55),
-            Robot::new(FRIENDLY_IDS[2], Team::Friendly, 0.25, -1.55, 0.55),
-            Robot::new(ENEMY_IDS[0], Team::Enemy, -0.55, 0.55, PI),
-            Robot::new(ENEMY_IDS[1], Team::Enemy, 3.55, 0.0, PI),
+            Robot::new(FRIENDLY_IDS[0], Team::Friendly, 0.95, 0.65, 0.0),
+            Robot::new(FRIENDLY_IDS[1], Team::Friendly, 1.55, -1.25, 0.35),
+            Robot::new(ENEMY_IDS[0], Team::Enemy, 2.22, 0.55, PI),
+            Robot::new(ENEMY_IDS[1], Team::Enemy, 2.28, 1.32, PI),
+            Robot::new(ENEMY_IDS[2], Team::Enemy, 4.08, 0.0, PI),
         ];
         Self {
             public,
@@ -206,6 +204,13 @@ impl Simulator {
         self.latest_released.clone()
     }
 
+    pub fn terminal_snapshot(&self) -> Option<Observation> {
+        if self.terminal == Terminal::Running {
+            return None;
+        }
+        Some(self.make_observation(self.observation_sequence.max(1)))
+    }
+
     pub fn result(&self) -> EpisodeResult {
         let elapsed_ms = (self.elapsed_s * 1000.0).round().max(0.0) as u64;
         match self.terminal {
@@ -232,15 +237,22 @@ impl Simulator {
     }
 
     fn update_enemy_commands(&mut self) {
-        let exclusion = self.public.prestart_enemy_exclusion_radius_m;
+        let receiver_position = self.robots[1].position;
         for index in FRIENDLY_IDS.len()..self.robots.len() {
             let robot_position = self.robots[index].position;
             let target = if !self.play_started {
-                let away = (robot_position - self.ball.position).normalized_or(Vec2::new(1.0, 0.0));
-                self.ball.position + away * (exclusion + 0.08)
+                match self.robots[index].id {
+                    "enemy_0" => Vec2::new(2.22, 0.55),
+                    "enemy_1" => Vec2::new(2.28, 1.32),
+                    _ => Vec2::new(4.08, 0.0),
+                }
             } else if self.robots[index].id == "enemy_0" {
                 let lead = self.ball.velocity * 0.18;
                 self.ball.position + lead
+            } else if self.robots[index].id == "enemy_1" {
+                let mark =
+                    receiver_position + (self.ball.position - receiver_position) * 0.35;
+                Vec2::new(mark.x.clamp(1.7, 3.5), mark.y.clamp(-2.2, 2.2))
             } else {
                 let goal_guard_x = 3.72;
                 let projected_y =
@@ -592,6 +604,22 @@ mod tests {
     }
 
     #[test]
+    fn initial_layout_is_an_attacking_free_kick_with_two_attackers() {
+        let simulator = Simulator::new(9);
+        assert_eq!(FRIENDLY_IDS.len(), 2);
+        assert_eq!(ENEMY_IDS.len(), 3);
+        assert!(simulator.ball.position.x > 0.0);
+        assert!(simulator.robots[0].position.x < simulator.ball.position.x);
+        assert!(simulator.robots[1].position.y < simulator.ball.position.y - 1.0);
+        for enemy in simulator.robots.iter().skip(FRIENDLY_IDS.len()) {
+            let distance = (enemy.position - simulator.ball.position).length();
+            assert!(distance >= simulator.public.prestart_enemy_exclusion_radius_m);
+        }
+        assert_eq!(simulator.robots.last().unwrap().id, "enemy_2");
+        assert!(simulator.robots.last().unwrap().position.x > 4.0);
+    }
+
+    #[test]
     fn no_friendly_touch_fails_at_five_seconds() {
         let mut simulator = Simulator::new(11);
         advance_for(&mut simulator, 5.1);
@@ -723,6 +751,19 @@ mod tests {
             simulator.result().reason,
             Some("pass_sequence_incomplete")
         );
+    }
+
+    #[test]
+    fn terminal_snapshot_contains_the_actual_boundary_crossing() {
+        let mut simulator = Simulator::new(29);
+        simulator.shot_after_pass = true;
+        simulator.ball.position =
+            Vec2::new(simulator.public.field.length_m / 2.0 + 0.01, 0.1);
+        simulator.check_rules();
+
+        let snapshot = simulator.terminal_snapshot().expect("terminal snapshot");
+        assert!(snapshot.ball.position.x > simulator.public.field.length_m / 2.0);
+        assert_eq!(snapshot.robots.len(), 5);
     }
 
     #[test]
