@@ -10,6 +10,9 @@ lane block, receiver mark, and goal coverage before and after the restart. The
 target project receives only the runtime image and
 [`PUBLIC-SPEC.md`](PUBLIC-SPEC.md); simulator source remains in this authoring
 repository so hidden dynamics are not disclosed to the development agent.
+The authoring-only rationale for the private opponent is recorded in
+[`OPPONENT-DESIGN.md`](OPPONENT-DESIGN.md); do not copy it into an evaluation
+target.
 
 The experiment is not a sample application. It is an evaluation fixture for
 observing whether the devcontainer's primary agent can plan, delegate, compare
