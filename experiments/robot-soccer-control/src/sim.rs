@@ -6,6 +6,12 @@ use crate::protocol::{
 use std::collections::VecDeque;
 use std::f64::consts::PI;
 
+const BALL_START: (f64, f64) = (0.65, 2.80);
+const FRIENDLY_STARTS: [(f64, f64, f64); 2] =
+    [(0.20, 2.86, -1.10), (1.45, 0.55, 0.0)];
+const ENEMY_STARTS: [(f64, f64, f64); 3] =
+    [(1.10, 2.05, -1.10), (2.15, 0.75, PI), (4.08, 0.0, PI)];
+
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Team {
     Friendly,
@@ -133,15 +139,45 @@ impl Simulator {
         let mut rng = Rng64::new(seed);
         let hidden = HiddenDynamics::from_rng(&mut rng);
         let ball = Ball {
-            position: Vec2::new(1.35, 0.65),
+            position: Vec2::new(BALL_START.0, BALL_START.1),
             velocity: Vec2::ZERO,
         };
         let robots = vec![
-            Robot::new(FRIENDLY_IDS[0], Team::Friendly, 0.95, 0.65, 0.0),
-            Robot::new(FRIENDLY_IDS[1], Team::Friendly, 1.55, -1.25, 0.35),
-            Robot::new(ENEMY_IDS[0], Team::Enemy, 2.22, 0.55, PI),
-            Robot::new(ENEMY_IDS[1], Team::Enemy, 2.28, 1.32, PI),
-            Robot::new(ENEMY_IDS[2], Team::Enemy, 4.08, 0.0, PI),
+            Robot::new(
+                FRIENDLY_IDS[0],
+                Team::Friendly,
+                FRIENDLY_STARTS[0].0,
+                FRIENDLY_STARTS[0].1,
+                FRIENDLY_STARTS[0].2,
+            ),
+            Robot::new(
+                FRIENDLY_IDS[1],
+                Team::Friendly,
+                FRIENDLY_STARTS[1].0,
+                FRIENDLY_STARTS[1].1,
+                FRIENDLY_STARTS[1].2,
+            ),
+            Robot::new(
+                ENEMY_IDS[0],
+                Team::Enemy,
+                ENEMY_STARTS[0].0,
+                ENEMY_STARTS[0].1,
+                ENEMY_STARTS[0].2,
+            ),
+            Robot::new(
+                ENEMY_IDS[1],
+                Team::Enemy,
+                ENEMY_STARTS[1].0,
+                ENEMY_STARTS[1].1,
+                ENEMY_STARTS[1].2,
+            ),
+            Robot::new(
+                ENEMY_IDS[2],
+                Team::Enemy,
+                ENEMY_STARTS[2].0,
+                ENEMY_STARTS[2].1,
+                ENEMY_STARTS[2].2,
+            ),
         ];
         Self {
             public,
@@ -242,9 +278,9 @@ impl Simulator {
             let robot_position = self.robots[index].position;
             let target = if !self.play_started {
                 match self.robots[index].id {
-                    "enemy_0" => Vec2::new(2.22, 0.55),
-                    "enemy_1" => Vec2::new(2.28, 1.32),
-                    _ => Vec2::new(4.08, 0.0),
+                    "enemy_0" => Vec2::new(ENEMY_STARTS[0].0, ENEMY_STARTS[0].1),
+                    "enemy_1" => Vec2::new(ENEMY_STARTS[1].0, ENEMY_STARTS[1].1),
+                    _ => Vec2::new(ENEMY_STARTS[2].0, ENEMY_STARTS[2].1),
                 }
             } else if self.robots[index].id == "enemy_0" {
                 let lead = self.ball.velocity * 0.18;
@@ -604,13 +640,16 @@ mod tests {
     }
 
     #[test]
-    fn initial_layout_is_an_attacking_free_kick_with_two_attackers() {
+    fn initial_layout_is_a_touchline_restart_with_two_attackers() {
         let simulator = Simulator::new(9);
         assert_eq!(FRIENDLY_IDS.len(), 2);
         assert_eq!(ENEMY_IDS.len(), 3);
         assert!(simulator.ball.position.x > 0.0);
+        let upper_touchline = simulator.public.field.width_m / 2.0;
+        assert!(upper_touchline - simulator.ball.position.y <= 0.25);
         assert!(simulator.robots[0].position.x < simulator.ball.position.x);
-        assert!(simulator.robots[1].position.y < simulator.ball.position.y - 1.0);
+        assert!(simulator.robots[0].position.y > simulator.ball.position.y);
+        assert!(simulator.robots[1].position.y < simulator.ball.position.y - 2.0);
         for enemy in simulator.robots.iter().skip(FRIENDLY_IDS.len()) {
             let distance = (enemy.position - simulator.ball.position).length();
             assert!(distance >= simulator.public.prestart_enemy_exclusion_radius_m);
@@ -652,6 +691,7 @@ mod tests {
     #[test]
     fn local_velocity_rotates_with_true_heading() {
         let mut simulator = Simulator::new(19);
+        simulator.robots[0].position = Vec2::ZERO;
         simulator.robots[0].heading = PI / 2.0;
         simulator
             .set_friendly_commands(&[(

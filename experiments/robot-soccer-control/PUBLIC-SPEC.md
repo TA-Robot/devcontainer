@@ -7,9 +7,11 @@ developer. Values or behavior not stated here must be treated as unknown.
 
 - One central controller operates `friendly_0` and `friendly_1`.
 - The simulator operates `enemy_0`, `enemy_1`, and `enemy_2`.
-- The free-kick starts in the attacking half. `friendly_0` is behind the
-  stationary ball, `friendly_1` starts wide on the opposite side, two enemies
-  form the first defensive line, and the third starts as goalkeeper.
+- The set piece is a sideline restart in the attacking half, analogous to a
+  throw-in or robot-soccer kick-in rather than a central direct free kick.
+  `friendly_0` starts beside the stationary ball near the upper touchline,
+  `friendly_1` starts infield as the receiver, two enemies defend the passing
+  lane and receiver, and the third starts as goalkeeper.
 - An episode begins when `POST /v1/start` succeeds and lasts at most 30 seconds
   of wall-clock time.
 - A friendly robot must contact the ball within the first 5 seconds. Otherwise
@@ -43,20 +45,20 @@ All distances are metres and all angles are radians.
 - Robot/robot, robot/ball, and robot/field collisions are physical. The ball
   leaving the field is not reflected.
 
-### Initial free-kick formation
+### Initial sideline-restart formation
 
 | Entity | Position `(x, y)` | Heading | Role |
 | --- | --- | --- | --- |
-| ball | `(1.35, 0.65)` | n/a | stationary free-kick ball |
-| `friendly_0` | `(0.95, 0.65)` | `0.0` | kicker behind the ball |
-| `friendly_1` | `(1.55, -1.25)` | `0.35` | wide receiver |
-| `enemy_0` | `(2.22, 0.55)` | `pi` | first defender |
-| `enemy_1` | `(2.28, 1.32)` | `pi` | second defender / marker |
+| ball | `(0.65, 2.80)` | n/a | stationary ball, 0.20 m inside upper touchline |
+| `friendly_0` | `(0.20, 2.86)` | `-1.10` | touchline-side kicker |
+| `friendly_1` | `(1.45, 0.55)` | `0.0` | infield receiver |
+| `enemy_0` | `(1.10, 2.05)` | `-1.10` | near defender / passing-lane pressure |
+| `enemy_1` | `(2.15, 0.75)` | `pi` | receiver marker / second defender |
 | `enemy_2` | `(4.08, 0.0)` | `pi` | goalkeeper |
 
 Before the first friendly contact, defenders hold this formation and are also
 subject to the enemy exclusion radius. They do not walk toward the ball while
-waiting for the free kick.
+waiting for the sideline restart.
 
 If `kick` is true while the ball newly contacts the kick-capable segment, the
 simulator applies a forward kick. There is no time-based cooldown. A continuous
