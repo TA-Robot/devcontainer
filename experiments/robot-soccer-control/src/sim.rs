@@ -38,6 +38,15 @@ struct Ball {
 }
 
 #[derive(Clone, Copy, Debug)]
+struct OpponentIntent {
+    position: Vec2,
+    face: Vec2,
+    feedforward_velocity: Vec2,
+    speed_limit: f64,
+    kick: bool,
+}
+
+#[derive(Clone, Copy, Debug)]
 struct HiddenDynamics {
     robot_velocity_response: f64,
     robot_angular_response: f64,
@@ -130,6 +139,8 @@ pub struct Simulator {
     observation_sequence: u64,
     delayed_observations: VecDeque<DelayedObservation>,
     latest_released: Option<Observation>,
+    primary_defender: usize,
+    last_role_switch_s: f64,
     rng: Rng64,
 }
 
@@ -194,6 +205,8 @@ impl Simulator {
             observation_sequence: 0,
             delayed_observations: VecDeque::new(),
             latest_released: None,
+            primary_defender: FRIENDLY_IDS.len(),
+            last_role_switch_s: 0.0,
             rng,
         }
     }
@@ -272,83 +285,287 @@ impl Simulator {
         self.terminal == Terminal::Running
     }
 
+    fn predict_ball_position(&self, time_s: f64) -> Vec2 {
+        let drag = self.hidden.ball_linear_drag;
+        if drag <= 1e-9 {
+            return self.ball.position + self.ball.velocity * time_s;
+        }
+        let travel = (1.0 - (-drag * time_s).exp()) / drag;
+        self.ball.position + self.ball.velocity * travel
+    }
+
+    fn maximum_reachable_distance(&self, robot_index: usize, time_s: f64) -> f64 {
+        let speed = self.robots[robot_index]
+            .velocity
+            .length()
+            .min(self.hidden.robot_max_velocity);
+        let acceleration = self.hidden.robot_max_acceleration;
+        let time_to_limit = ((self.hidden.robot_max_velocity - speed) / acceleration).max(0.0);
+        if time_s <= time_to_limit {
+            speed * time_s + 0.5 * acceleration * time_s * time_s
+        } else {
+            let accelerating = speed * time_to_limit
+                + 0.5 * acceleration * time_to_limit * time_to_limit;
+            accelerating + self.hidden.robot_max_velocity * (time_s - time_to_limit)
+        }
+    }
+
+    fn interception_solution(&self, robot_index: usize) -> (f64, Vec2) {
+        let robot_position = self.robots[robot_index].position;
+        for sample in 1..=40 {
+            let time_s = sample as f64 * 0.05;
+            let ball = self.predict_ball_position(time_s);
+            let turn = (ball - robot_position).y.atan2((ball - robot_position).x);
+            let turn_cost = wrap_angle(turn - self.robots[robot_index].heading).abs()
+                / self.hidden.robot_max_angular_velocity;
+            let available = (time_s - turn_cost * 0.25).max(0.0);
+            let reach = self.maximum_reachable_distance(robot_index, available)
+                + self.public.robot.radius_m
+                + self.public.ball_radius_m;
+            if (ball - robot_position).length() <= reach {
+                return (time_s, ball);
+            }
+        }
+        (2.0, self.predict_ball_position(2.0))
+    }
+
+    fn update_defender_assignment(&mut self) {
+        if !self.play_started {
+            return;
+        }
+        let first = FRIENDLY_IDS.len();
+        let candidates = [first, first + 1];
+        let current = self.primary_defender;
+        let challenger = if current == candidates[0] {
+            candidates[1]
+        } else {
+            candidates[0]
+        };
+        let current_cost = self.interception_solution(current).0;
+        let challenger_cost = self.interception_solution(challenger).0;
+        if self.elapsed_s - self.last_role_switch_s >= 0.30
+            && challenger_cost + 0.12 < current_cost
+        {
+            self.primary_defender = challenger;
+            self.last_role_switch_s = self.elapsed_s;
+        }
+    }
+
+    fn project_outside_exclusion(&self, target: Vec2, fallback: Vec2) -> Vec2 {
+        let minimum = self.public.prestart_enemy_exclusion_radius_m + 0.08;
+        let delta = target - self.ball.position;
+        if delta.length() >= minimum {
+            target
+        } else {
+            self.ball.position + delta.normalized_or(fallback) * minimum
+        }
+    }
+
+    fn clearance_intent(&self, robot_index: usize) -> OpponentIntent {
+        let (intercept_time, intercept_ball) = self.interception_solution(robot_index);
+        let robot = &self.robots[robot_index];
+        let nearest_friendly = self.robots[..FRIENDLY_IDS.len()]
+            .iter()
+            .min_by(|left, right| {
+                (left.position - intercept_ball)
+                    .length()
+                    .total_cmp(&(right.position - intercept_ball).length())
+            })
+            .expect("friendly robots");
+        let away_from_friendly = if nearest_friendly.position.y <= intercept_ball.y {
+            0.32
+        } else {
+            -0.32
+        };
+        let toward_center = (-intercept_ball.y * 0.16).clamp(-0.45, 0.45);
+        let clearance = Vec2::new(-1.0, away_from_friendly + toward_center)
+            .normalized_or(Vec2::new(-1.0, 0.0));
+        let striking_pose = intercept_ball - clearance * 0.14;
+        let relative = robot.position - intercept_ball;
+        let side = if relative.y >= 0.0 { 1.0 } else { -1.0 };
+        let target = if relative.x < 0.10 && relative.y.abs() < 0.24 {
+            Vec2::new(robot.position.x, intercept_ball.y + side * 0.34)
+        } else if relative.x < 0.10 {
+            intercept_ball + Vec2::new(0.20, side * 0.30)
+        } else {
+            striking_pose
+        };
+        let can_clear = robot.position.x > self.ball.position.x + 0.05;
+        OpponentIntent {
+            position: target,
+            face: intercept_ball,
+            feedforward_velocity: self.ball.velocity * (0.35 + intercept_time.min(0.5)),
+            speed_limit: self.hidden.robot_max_velocity,
+            kick: can_clear,
+        }
+    }
+
+    fn cover_intent(&self, robot_index: usize) -> OpponentIntent {
+        let robot = &self.robots[robot_index];
+        let receiver = &self.robots[1];
+        if (self.ball.position - robot.position).length() < 0.72
+            || (self.ball.position.x > 2.2 && self.ball.velocity.x > 0.2)
+        {
+            return self.clearance_intent(robot_index);
+        }
+        let lane = self.ball.position + (receiver.position - self.ball.position) * 0.58;
+        let goal = Vec2::new(self.public.field.length_m / 2.0, 0.0);
+        let goal_side = (goal - receiver.position).normalized_or(Vec2::new(1.0, 0.0));
+        let target = lane + goal_side * 0.18;
+        OpponentIntent {
+            position: target,
+            face: self.ball.position,
+            feedforward_velocity: receiver.velocity * 0.45,
+            speed_limit: self.hidden.robot_max_velocity * 0.92,
+            kick: robot.position.x > self.ball.position.x + 0.05,
+        }
+    }
+
+    fn ball_crossing_at_x(&self, target_x: f64) -> Option<(f64, f64)> {
+        if self.ball.velocity.x <= 0.05 || target_x <= self.ball.position.x {
+            return None;
+        }
+        let drag = self.hidden.ball_linear_drag;
+        let ratio = (target_x - self.ball.position.x) * drag / self.ball.velocity.x;
+        if ratio >= 1.0 {
+            return None;
+        }
+        let time_s = -(1.0 - ratio).ln() / drag;
+        let position = self.predict_ball_position(time_s);
+        Some((time_s, position.y))
+    }
+
+    fn goalkeeper_intent(&self, robot_index: usize) -> OpponentIntent {
+        let robot = &self.robots[robot_index];
+        let goal_x = self.public.field.length_m / 2.0;
+        let fast_shot = self.ball.velocity.x > 0.6;
+        let guard_x = if fast_shot { 4.02 } else { 3.82 };
+        let intercept_limit = self.public.field.attacking_goal_width_m / 2.0 + 0.62;
+        let (target_y, feedforward_y) = if let Some((time_s, crossing_y)) =
+            self.ball_crossing_at_x(guard_x)
+        {
+            let target_y = crossing_y.clamp(-intercept_limit, intercept_limit);
+            let feedforward = ((target_y - robot.position.y) / time_s.max(0.08))
+                .clamp(-self.hidden.robot_max_velocity, self.hidden.robot_max_velocity);
+            (target_y, feedforward)
+        } else {
+            let receiver = self.robots[1].position;
+            let source = if self.ball.velocity.length() > 0.4 {
+                self.ball.position
+            } else {
+                receiver
+            };
+            let denominator = (goal_x - source.x).max(0.20);
+            let fraction = ((goal_x - guard_x) / denominator).clamp(0.0, 1.0);
+            ((source.y * fraction).clamp(-intercept_limit, intercept_limit), 0.0)
+        };
+        OpponentIntent {
+            position: Vec2::new(guard_x, target_y),
+            face: self.ball.position,
+            feedforward_velocity: Vec2::new(0.0, feedforward_y),
+            speed_limit: self.hidden.robot_max_velocity,
+            kick: robot.position.x > self.ball.position.x + 0.04,
+        }
+    }
+
+    fn prestart_intents(&self) -> [OpponentIntent; 3] {
+        let receiver = &self.robots[1];
+        let goal = Vec2::new(self.public.field.length_m / 2.0, 0.0);
+        let lane_direction = (receiver.position - self.ball.position)
+            .normalized_or(Vec2::new(0.0, -1.0));
+        let block = self.ball.position
+            + lane_direction * (self.public.prestart_enemy_exclusion_radius_m + 0.08);
+        let goal_side = (goal - receiver.position).normalized_or(Vec2::new(1.0, 0.0));
+        let mark = self.project_outside_exclusion(
+            receiver.position + goal_side * 0.40,
+            Vec2::new(1.0, 0.0),
+        );
+        let goalkeeper = self.goalkeeper_intent(FRIENDLY_IDS.len() + 2);
+        [
+            OpponentIntent {
+                position: block,
+                face: self.ball.position,
+                feedforward_velocity: receiver.velocity * 0.35,
+                speed_limit: self.hidden.robot_max_velocity * 0.82,
+                kick: false,
+            },
+            OpponentIntent {
+                position: mark,
+                face: self.ball.position,
+                feedforward_velocity: receiver.velocity * 0.45,
+                speed_limit: self.hidden.robot_max_velocity * 0.88,
+                kick: false,
+            },
+            OpponentIntent {
+                kick: false,
+                ..goalkeeper
+            },
+        ]
+    }
+
+    fn opponent_motion_command(&self, robot_index: usize, intent: OpponentIntent) -> RobotCommand {
+        let robot = &self.robots[robot_index];
+        let half_length = self.public.field.length_m / 2.0 - self.public.robot.radius_m;
+        let half_width = self.public.field.width_m / 2.0 - self.public.robot.radius_m;
+        let bounded_target = Vec2::new(
+            intent.position.x.clamp(-half_length, half_length),
+            intent.position.y.clamp(-half_width, half_width),
+        );
+        let delta = bounded_target - robot.position;
+        let distance = delta.length();
+        let direction = delta.normalized_or(Vec2::ZERO);
+        let arrival_speed = intent.feedforward_velocity.dot(direction).max(0.0);
+        let braking_speed = (arrival_speed * arrival_speed
+            + 2.0 * self.hidden.robot_max_acceleration * distance)
+            .sqrt();
+        let mut desired_global = direction * braking_speed.min(intent.speed_limit)
+            + intent.feedforward_velocity * 0.35;
+        for (other_index, other) in self.robots.iter().enumerate() {
+            if other_index == robot_index {
+                continue;
+            }
+            let separation = robot.position - other.position;
+            let separation_distance = separation.length();
+            if separation_distance < 0.42 {
+                desired_global += separation.normalized_or(Vec2::new(0.0, 1.0))
+                    * ((0.42 - separation_distance) * 4.5);
+            }
+        }
+        desired_global = desired_global.clamp_length(intent.speed_limit);
+        let face_delta = intent.face - robot.position;
+        let heading_target = face_delta.y.atan2(face_delta.x);
+        let heading_error = wrap_angle(heading_target - robot.heading);
+        let desired_angular = heading_error.signum()
+            * (2.0 * self.hidden.robot_max_angular_acceleration * heading_error.abs())
+                .sqrt()
+                .min(self.hidden.robot_max_angular_velocity);
+        RobotCommand {
+            local_velocity: desired_global.rotate(-robot.heading),
+            angular_velocity: desired_angular,
+            kick: self.play_started && intent.kick,
+        }
+    }
+
     fn update_enemy_commands(&mut self) {
-        let receiver_position = self.robots[1].position;
-        let ball_position = self.ball.position;
-        let goal_position = Vec2::new(self.public.field.length_m / 2.0, 0.0);
-        let exclusion = self.public.prestart_enemy_exclusion_radius_m + 0.08;
-        let predicted_ball = ball_position + (self.ball.velocity * 0.18).clamp_length(0.35);
-        let outside_exclusion = |target: Vec2, fallback: Vec2| {
-            let delta = target - ball_position;
-            if delta.length() >= exclusion {
-                target
+        self.update_defender_assignment();
+        let first = FRIENDLY_IDS.len();
+        let intents = if !self.play_started {
+            self.prestart_intents()
+        } else {
+            let secondary = if self.primary_defender == first {
+                first + 1
             } else {
-                ball_position + delta.normalized_or(fallback) * exclusion
-            }
-        };
-        let clearing_position = |robot_position: Vec2| {
-            let relative = robot_position - predicted_ball;
-            let side = if relative.y >= 0.0 { 1.0 } else { -1.0 };
-            if relative.x < 0.10 && relative.y.abs() < 0.22 {
-                Vec2::new(robot_position.x, predicted_ball.y + side * 0.30)
-            } else if relative.x < 0.10 {
-                predicted_ball + Vec2::new(0.18, side * 0.28)
-            } else {
-                predicted_ball + Vec2::new(0.14, 0.0)
-            }
-        };
-        for index in FRIENDLY_IDS.len()..self.robots.len() {
-            let robot_position = self.robots[index].position;
-            let target = if !self.play_started {
-                match self.robots[index].id {
-                    "enemy_0" => {
-                        let passing_lane = (receiver_position - ball_position)
-                            .normalized_or(Vec2::new(0.0, -1.0));
-                        ball_position + passing_lane * exclusion
-                    }
-                    "enemy_1" => {
-                        let goal_side = (goal_position - receiver_position)
-                            .normalized_or(Vec2::new(1.0, 0.0));
-                        outside_exclusion(
-                            receiver_position + goal_side * 0.42,
-                            Vec2::new(1.0, 0.0),
-                        )
-                    }
-                    _ => Vec2::new(4.02, (receiver_position.y * 0.55).clamp(-0.62, 0.62)),
-                }
-            } else if self.robots[index].id == "enemy_0" {
-                clearing_position(robot_position)
-            } else if self.robots[index].id == "enemy_1" {
-                if (ball_position - robot_position).length() < 0.65 {
-                    clearing_position(robot_position)
-                } else {
-                    let mark = receiver_position + (ball_position - receiver_position) * 0.28;
-                    Vec2::new(mark.x.clamp(-3.8, 3.8), mark.y.clamp(-2.6, 2.6))
-                }
-            } else {
-                let goal_guard_x = 4.02;
-                let intercept_limit = self.public.field.attacking_goal_width_m / 2.0 + 0.55;
-                let intercept_time = if self.ball.velocity.x > 0.2 {
-                    ((goal_guard_x - ball_position.x) / self.ball.velocity.x).clamp(0.0, 0.9)
-                } else {
-                    0.35
-                };
-                let projected_y = (ball_position.y + self.ball.velocity.y * intercept_time)
-                    .clamp(-intercept_limit, intercept_limit);
-                Vec2::new(goal_guard_x, projected_y)
+                first
             };
-            let delta = target - robot_position;
-            let maximum_speed = if self.play_started { 1.55 } else { 1.30 };
-            let desired_global = delta.clamp_length(maximum_speed);
-            let face_ball = ball_position - robot_position;
-            let heading_target = face_ball.y.atan2(face_ball.x);
-            let heading_error = wrap_angle(heading_target - self.robots[index].heading);
-            let can_clear_away_from_goal = robot_position.x > ball_position.x + 0.06;
-            self.robots[index].command = RobotCommand {
-                local_velocity: desired_global.rotate(-self.robots[index].heading),
-                angular_velocity: (heading_error * 4.0).clamp(-4.5, 4.5),
-                kick: self.play_started && can_clear_away_from_goal,
-            };
+            let mut intents = [self.cover_intent(first); 3];
+            intents[self.primary_defender - first] = self.clearance_intent(self.primary_defender);
+            intents[secondary - first] = self.cover_intent(secondary);
+            intents[2] = self.goalkeeper_intent(first + 2);
+            intents
+        };
+        for (offset, intent) in intents.into_iter().enumerate() {
+            let index = first + offset;
+            self.robots[index].command = self.opponent_motion_command(index, intent);
         }
     }
 
@@ -928,9 +1145,10 @@ mod tests {
         let goalkeeper = simulator.robots.len() - 1;
         simulator.play_started = true;
         simulator.ball.position = Vec2::new(0.0, 2.0);
-        simulator.ball.velocity = Vec2::new(1.0, -0.3);
+        simulator.ball.velocity = Vec2::new(4.0, -1.2);
+        simulator.robots[goalkeeper].position.y = 0.62;
 
-        advance_for(&mut simulator, 1.5);
+        advance_for(&mut simulator, 0.5);
 
         let goal_mouth_center_limit = simulator.public.field.attacking_goal_width_m / 2.0
             - simulator.public.robot.radius_m;
@@ -967,6 +1185,73 @@ mod tests {
             .rotate(simulator.robots[defender].heading);
         assert!(clear_command.kick);
         assert!(clear_global.x < 0.0);
+    }
+
+    #[test]
+    fn ball_prediction_integrates_linear_drag() {
+        let mut simulator = Simulator::new(35);
+        simulator.ball.position = Vec2::new(0.4, -0.2);
+        simulator.ball.velocity = Vec2::new(2.0, 0.5);
+
+        let predicted = simulator.predict_ball_position(1.0);
+        let travel = (1.0 - (-simulator.hidden.ball_linear_drag).exp())
+            / simulator.hidden.ball_linear_drag;
+
+        assert_eq!(predicted, simulator.ball.position + simulator.ball.velocity * travel);
+        assert!(predicted.x < simulator.ball.position.x + simulator.ball.velocity.x);
+    }
+
+    #[test]
+    fn defender_assignment_switches_to_materially_faster_interceptor() {
+        let mut simulator = Simulator::new(37);
+        let first = FRIENDLY_IDS.len();
+        simulator.play_started = true;
+        simulator.elapsed_s = 1.0;
+        simulator.primary_defender = first;
+        simulator.last_role_switch_s = 0.0;
+        simulator.ball.position = Vec2::ZERO;
+        simulator.ball.velocity = Vec2::ZERO;
+        simulator.robots[first].position = Vec2::new(3.0, 2.0);
+        simulator.robots[first + 1].position = Vec2::new(0.3, 0.0);
+
+        simulator.update_defender_assignment();
+
+        assert_eq!(simulator.primary_defender, first + 1);
+        assert_eq!(simulator.last_role_switch_s, simulator.elapsed_s);
+    }
+
+    #[test]
+    fn opponent_motion_uses_braking_distance_instead_of_unit_position_gain() {
+        let simulator = Simulator::new(39);
+        let defender = FRIENDLY_IDS.len();
+        let robot = &simulator.robots[defender];
+        let intent = OpponentIntent {
+            position: robot.position + Vec2::new(0.5, 0.0),
+            face: simulator.ball.position,
+            feedforward_velocity: Vec2::ZERO,
+            speed_limit: simulator.hidden.robot_max_velocity,
+            kick: false,
+        };
+
+        let command = simulator.opponent_motion_command(defender, intent);
+        let desired_global = command.local_velocity.rotate(robot.heading);
+
+        assert!(desired_global.length() > 1.0);
+        assert!(desired_global.length() <= simulator.hidden.robot_max_velocity + 1e-9);
+    }
+
+    #[test]
+    fn goalkeeper_solves_drag_aware_crossing_point() {
+        let mut simulator = Simulator::new(41);
+        simulator.ball.position = Vec2::new(0.0, 2.0);
+        simulator.ball.velocity = Vec2::new(4.0, -1.2);
+
+        let (time_s, crossing_y) = simulator.ball_crossing_at_x(4.02).expect("crossing");
+        let predicted = simulator.predict_ball_position(time_s);
+
+        assert!((predicted.x - 4.02).abs() < 1e-9);
+        assert!((crossing_y - predicted.y).abs() < 1e-9);
+        assert!(crossing_y < simulator.ball.position.y);
     }
 
     #[test]
