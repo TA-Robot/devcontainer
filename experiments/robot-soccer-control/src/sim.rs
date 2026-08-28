@@ -51,6 +51,7 @@ struct OpponentIntent {
 enum DefensivePhase {
     Restart,
     ShotEmergency,
+    ReboundEmergency,
     FriendlyControl,
     LooseBall,
     Clearance,
@@ -161,6 +162,7 @@ pub struct Simulator {
     last_role_switch_s: f64,
     defensive_phase: DefensivePhase,
     last_phase_switch_s: f64,
+    rebound_emergency_until_s: f64,
     previous_ball_velocity: Vec2,
     next_opponent_control_s: f64,
     rng: Rng64,
@@ -231,6 +233,7 @@ impl Simulator {
             last_role_switch_s: 0.0,
             defensive_phase: DefensivePhase::Restart,
             last_phase_switch_s: 0.0,
+            rebound_emergency_until_s: 0.0,
             previous_ball_velocity: Vec2::ZERO,
             next_opponent_control_s: 0.0,
             rng,
@@ -368,8 +371,18 @@ impl Simulator {
             .map(|robot| (robot.position - self.ball.position).length())
             .fold(f64::INFINITY, f64::min);
         let velocity_jump = (self.ball.velocity - self.previous_ball_velocity).length();
+        let dangerous_reversal = self.play_started
+            && self.ball.position.x > 2.35
+            && self.previous_ball_velocity.x > 0.55
+            && self.ball.velocity.x < -0.45
+            && velocity_jump > 1.4;
+        if dangerous_reversal {
+            self.rebound_emergency_until_s = self.elapsed_s + 1.10;
+        }
         let requested = if !self.play_started {
             DefensivePhase::Restart
+        } else if self.elapsed_s < self.rebound_emergency_until_s {
+            DefensivePhase::ReboundEmergency
         } else if self.ball.velocity.x > 0.75
             && (self.ball.position.x > 1.2 || velocity_jump > 1.2)
         {
@@ -381,7 +394,10 @@ impl Simulator {
         } else {
             DefensivePhase::LooseBall
         };
-        let urgent = requested == DefensivePhase::ShotEmergency;
+        let urgent = matches!(
+            requested,
+            DefensivePhase::ShotEmergency | DefensivePhase::ReboundEmergency
+        );
         if requested != self.defensive_phase
             && (urgent || self.elapsed_s - self.last_phase_switch_s >= 0.10)
         {
@@ -737,6 +753,61 @@ impl Simulator {
         }
     }
 
+    fn compact_wall_intent(&self, robot_index: usize) -> OpponentIntent {
+        let goal = Vec2::new(self.public.field.length_m / 2.0, 0.0);
+        let predicted_ball = self.predict_ball_position(0.16);
+        let guard_x = (predicted_ball.x + 0.62).clamp(1.08, 2.45);
+        let goal_span = (goal.x - predicted_ball.x).max(0.20);
+        let fraction = ((guard_x - predicted_ball.x) / goal_span).clamp(0.0, 1.0);
+        let centre_line_y = predicted_ball.y + (goal.y - predicted_ball.y) * fraction;
+        let primary = &self.robots[self.primary_defender];
+        let primary_side = (primary.position.y - centre_line_y).signum();
+        let alternate_side = if primary_side.abs() < 0.5 {
+            if robot_index % 2 == 0 { -1.0 } else { 1.0 }
+        } else {
+            -primary_side
+        };
+        let target = Vec2::new(guard_x, centre_line_y + alternate_side * 0.18);
+        OpponentIntent {
+            position: target,
+            face: predicted_ball,
+            feedforward_velocity: self.ball.velocity * 0.18,
+            speed_limit: self.hidden.robot_max_velocity,
+            kick: self.robots[robot_index].position.x > self.ball.position.x + 0.04,
+        }
+    }
+
+    fn rebound_backstop_intent(&self, robot_index: usize) -> OpponentIntent {
+        let predicted_ball = self.predict_ball_position(0.20);
+        if (predicted_ball - self.robots[robot_index].position).length() < 0.52 {
+            return self.clearance_intent(robot_index);
+        }
+        let goal = Vec2::new(self.public.field.length_m / 2.0, 0.0);
+        let goal_side = (goal - predicted_ball).normalized_or(Vec2::new(1.0, 0.0));
+        let nearest_attacker = (0..FRIENDLY_IDS.len())
+            .min_by(|left, right| {
+                let left_distance =
+                    (self.robots[*left].position - predicted_ball).length_squared();
+                let right_distance =
+                    (self.robots[*right].position - predicted_ball).length_squared();
+                left_distance.total_cmp(&right_distance)
+            })
+            .unwrap_or(0);
+        let attacker = &self.robots[nearest_attacker];
+        let attacker_lead = attacker.position + attacker.velocity * 0.22;
+        let shot_side = (attacker_lead.y - predicted_ball.y).signum();
+        let lateral = Vec2::new(-goal_side.y, goal_side.x)
+            * if shot_side.abs() < 0.5 { 0.0 } else { shot_side * 0.10 };
+        let target = predicted_ball + goal_side * 0.34 + lateral;
+        OpponentIntent {
+            position: target,
+            face: predicted_ball,
+            feedforward_velocity: self.ball.velocity * 0.42,
+            speed_limit: self.hidden.robot_max_velocity,
+            kick: self.robots[robot_index].position.x > self.ball.position.x + 0.04,
+        }
+    }
+
     fn ball_crossing_at_x(&self, target_x: f64) -> Option<(f64, f64)> {
         if self.ball.velocity.x <= 0.05 || target_x <= self.ball.position.x {
             return None;
@@ -1028,7 +1099,15 @@ impl Simulator {
             };
             let mut intents = [self.cover_intent(first); 3];
             intents[self.primary_defender - first] = self.clearance_intent(self.primary_defender);
-            intents[secondary - first] = self.cover_intent(secondary);
+            intents[secondary - first] = if self.defensive_phase
+                == DefensivePhase::ReboundEmergency
+            {
+                self.rebound_backstop_intent(secondary)
+            } else if self.ball.position.x < 1.85 {
+                self.compact_wall_intent(secondary)
+            } else {
+                self.cover_intent(secondary)
+            };
             intents[2] = self.goalkeeper_intent(first + 2);
             intents
         };
@@ -1768,6 +1847,71 @@ mod tests {
         simulator.update_defensive_phase();
 
         assert_eq!(simulator.defensive_phase, DefensivePhase::ShotEmergency);
+    }
+
+    #[test]
+    fn dangerous_rebound_is_latched_as_an_emergency() {
+        let mut simulator = Simulator::new(44);
+        simulator.play_started = true;
+        simulator.elapsed_s = 2.0;
+        simulator.defensive_phase = DefensivePhase::ShotEmergency;
+        simulator.previous_ball_velocity = Vec2::new(3.4, -0.2);
+        simulator.ball.position = Vec2::new(3.35, 0.45);
+        simulator.ball.velocity = Vec2::new(-3.1, 0.8);
+
+        simulator.update_defensive_phase();
+
+        assert_eq!(
+            simulator.defensive_phase,
+            DefensivePhase::ReboundEmergency
+        );
+        let latched_until = simulator.rebound_emergency_until_s;
+        assert!(latched_until >= 3.09);
+
+        simulator.elapsed_s = 2.6;
+        simulator.ball.position = Vec2::new(1.9, 0.8);
+        simulator.ball.velocity = Vec2::new(-1.2, 0.2);
+        simulator.update_defensive_phase();
+
+        assert_eq!(
+            simulator.defensive_phase,
+            DefensivePhase::ReboundEmergency
+        );
+        assert_eq!(simulator.rebound_emergency_until_s, latched_until);
+    }
+
+    #[test]
+    fn compact_wall_stays_goal_side_instead_of_following_a_high_decoy() {
+        let mut simulator = Simulator::new(46);
+        let secondary = FRIENDLY_IDS.len() + 1;
+        simulator.play_started = true;
+        simulator.ball.position = Vec2::new(0.85, 2.35);
+        simulator.ball.velocity = Vec2::new(0.25, -0.1);
+        simulator.robots[1].position = Vec2::new(1.9, 2.82);
+        simulator.robots[simulator.primary_defender].position =
+            Vec2::new(1.15, 2.20);
+
+        let intent = simulator.compact_wall_intent(secondary);
+
+        assert!(intent.position.x > simulator.ball.position.x + 0.20);
+        assert!(intent.position.x < 2.5);
+        assert!(intent.position.y < simulator.robots[1].position.y - 0.20);
+    }
+
+    #[test]
+    fn rebound_backstop_is_goal_side_of_the_predicted_ball() {
+        let mut simulator = Simulator::new(48);
+        let secondary = FRIENDLY_IDS.len() + 1;
+        simulator.play_started = true;
+        simulator.ball.position = Vec2::new(3.25, 0.55);
+        simulator.ball.velocity = Vec2::new(-3.0, 0.7);
+        simulator.robots[secondary].position = Vec2::new(4.0, -0.4);
+
+        let predicted = simulator.predict_ball_position(0.20);
+        let intent = simulator.rebound_backstop_intent(secondary);
+
+        assert!(intent.position.x > predicted.x);
+        assert!(intent.speed_limit >= simulator.hidden.robot_max_velocity - 1e-9);
     }
 
     #[test]
