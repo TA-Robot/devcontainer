@@ -37,6 +37,7 @@ laneは実行境界、roleは責務、relationはagent同士の関係、lifecycl
 - primaryがplanとsynthesisを通常作業中に生成する。ユーザーへformやepisode logの記入を求めず、自動観測できないfieldは`unknown`とする。
 
 relation / lifecycle選択、brief、result、continuation / stop conditionの正本は`docs/agents/collaboration-playbook.md`です。
+計画を機械相関する時は`docs/agents/collaboration-evidence-contracts.md`に従い、decision packetのcontent-free projectionだけをtaskへ入れます。project-local evidenceの確認には`$review-collaboration-evidence`を使います。
 
 ## Lane and workspace
 
@@ -60,6 +61,8 @@ role詳細は`.agent/roles/`を正本とします。
 
 - input: `.agent/schemas/task.schema.json`
 - output: `.agent/schemas/result.schema.json`
+- collaboration plan: `.agent/schemas/collaboration-decision.schema.json`
+- collaboration outcome: `.agent/schemas/collaboration-outcome.schema.json`
 - examples: `.agent/examples/`
 - pathはproject-relative。絶対path、`..`、backslashは禁止。
 - `completed` resultはfull head SHAとclean working treeを必要とする。

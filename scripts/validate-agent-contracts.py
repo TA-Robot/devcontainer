@@ -125,6 +125,7 @@ def validate_operating_docs(root: Path) -> None:
     required = (
         "docs/agents/runbook.md",
         "docs/agents/collaboration-playbook.md",
+        "docs/agents/collaboration-evidence-contracts.md",
         "docs/agents/tickets/task-ticket.template.md",
         "docs/agents/tickets/collaboration-plan.template.md",
     )
@@ -136,6 +137,14 @@ def validate_operating_docs(root: Path) -> None:
     require(
         "docs/agents/collaboration-playbook.md" in agents,
         "AGENTS.md must reference the collaboration playbook",
+    )
+    require(
+        "docs/agents/collaboration-evidence-contracts.md" in agents,
+        "AGENTS.md must reference the collaboration evidence contracts",
+    )
+    require(
+        (root / ".codex/skills/review-collaboration-evidence/SKILL.md").is_file(),
+        "missing project-local collaboration evidence review skill",
     )
     for relative, phrases in ADAPTIVE_GUIDANCE_REQUIREMENTS.items():
         path = root / relative

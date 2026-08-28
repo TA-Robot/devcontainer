@@ -49,7 +49,7 @@ hook topologyだけでは次を正しく判定できません。
 - correctness、maintainability、user value
 - 実際に人間がreviewへ使った時間
 
-そのため`semantics`はannotation sourceがない限り`unknown`、`expectedMechanisms`は空配列です。agent数やevent列から意味を捏造しません。primaryが通常作業中に持つplan / synthesisはagent-owned artifactへ残せますが、ユーザーへ記入を求めません。利用可能なmachine annotation surfaceができるまでは欠測を欠測のまま扱います。
+そのため`semantics`はvalidated task projectionがない限り`unknown`、`expectedMechanisms`は空配列です。agent数やevent列から意味を捏造しません。primaryが通常作業中に作るdecision packetのうち、`agentctl` taskへ添付されたcontent-free categoryだけを相関します。自由文のrationaleはepisodeへ入りません。
 
 ## Human-review proxy
 
@@ -119,7 +119,13 @@ direct providerのparent episodeでworker start / stopが揃った場合だけ�
         "bindingConstraint": "unknown",
         "relation": "unknown",
         "lifecycle": "unknown",
-        "annotationSource": "none"
+        "annotationSource": "none",
+        "correlation": {
+          "available": false,
+          "plan": null,
+          "candidate": null,
+          "decisionDigest": null
+        }
       },
       "coverage": {
         "startObserved": true,
@@ -138,6 +144,12 @@ direct providerのparent episodeでworker start / stopが揃った場合だけ�
 - `managed-job`: `agentctl` outer lifecycle
 
 `solo-observed`は「内部delegationが絶対になかった」ことを証明しません。coverageとprovider hook capabilityを合わせて読みます。
+
+## Decision correlation and report
+
+task schemaのoptional `collaboration` projectionがある`agentctl` jobでは、plan / candidate IDをprocess内でopaque keyへ変換し、allowlist済みrelation、lifecycle、expected mechanism、binding constraint、decision digestをepisodeへ保存します。不正または欠けたannotationは全体を拒否して`unknown`へ戻します。
+
+`report-agent-collaboration-evidence`はledgerを変更せず、boundedなaggregateだけをJSONまたはMarkdownで返します。episode body、opaque workspace / plan / candidate / session IDは出力しません。missing ledgerはerrorではなく`unmeasured`です。target projectのprimaryは`$review-collaboration-evidence`を使うとcurrent workspace filterを自動適用できます。
 
 ## Retention and opt-out
 
@@ -179,5 +191,6 @@ workspace pathと各IDはprocess内でopaque hashへ変換します。state dire
 - proxyから因果効果を断定しない。soloとの比較にはtask class、acceptance、risk、execution surfaceを揃えた実験が要る。
 - event countやworker countをproductivity KPIにしない。
 - semanticsが`unknown`のepisodeを後付けで都合よく分類しない。
+- observed min / median / maxを予測区間、因果効果、routing recommendationとして扱わない。
 
 episode ledgerで観測可能性は作れますが、global optimumは作れません。project-localなrouting判断を変えるだけのevidenceが得られた時だけplanning priorを更新します。

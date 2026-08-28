@@ -55,7 +55,7 @@ execution laneはworkspace / permission境界、roleは責務、relationはagent
 - primaryがcontinuation、synthesis、winner、integration、external side effectを所有し、human review / integration costも結果へ記録する。
 - primaryがcollaboration planとsynthesisを通常作業中に生成する。ユーザーへformやlogの記入を求めず、自動観測できないfieldは`unknown`とする。
 
-詳細は`docs/agents/collaboration-playbook.md`を参照します。`project/` copy sourceを使う場合は同fileも一緒に導入してください。
+詳細は`docs/agents/collaboration-playbook.md`を参照します。機械相関するplan / outcome contractは`docs/agents/collaboration-evidence-contracts.md`、project-local観測の短い確認手順は`$review-collaboration-evidence`を使います。`project/` copy sourceを使う場合はdocsとskillも一緒に導入してください。
 
 ## Execution lanes
 
@@ -80,9 +80,10 @@ execution laneはworkspace / permission境界、roleは責務、relationはagent
 
 詳細は`.agent/roles/`を参照します。role名は実行instance IDではありません。同じroleの並列jobを識別する時はjob IDを使います。
 
-## Task and result contract
+## Task, result, and evidence contract
 
 - taskは`.agent/schemas/task.schema.json`、resultは`.agent/schemas/result.schema.json`に従う。
+- collaboration decision / outcomeは`.agent/schemas/collaboration-decision.schema.json`と`.agent/schemas/collaboration-outcome.schema.json`に従う。
 - `base_sha`はfull SHAで固定し、branch名や「最新main」で代用しない。
 - pathはproject-relativeにし、絶対path、`..`、backslashを使わない。
 - acceptanceは実行command、生成file、manual確認のいずれかとして客観的に書く。
