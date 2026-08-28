@@ -168,6 +168,16 @@ RUN chmod 0555 /usr/local/bin/query-agent-duration-atlas \
       /usr/local/share/mira-duration-atlas/current.json \
       /usr/local/share/mira-duration-atlas/current-validity.json
 
+# Provider-free, read-only aggregation of the local Mira episode ledger.
+COPY scripts/devcontainer-report-agent-collaboration-evidence \
+    /usr/local/bin/report-agent-collaboration-evidence
+COPY scripts/report-agent-collaboration-evidence \
+    scripts/collaboration_evidence.py \
+    /usr/local/lib/mira-collaboration-evidence/
+RUN chmod 0555 /usr/local/bin/report-agent-collaboration-evidence \
+      /usr/local/lib/mira-collaboration-evidence/report-agent-collaboration-evidence \
+    && chmod 0444 /usr/local/lib/mira-collaboration-evidence/collaboration_evidence.py
+
 COPY .devcontainer/codex-requirements.toml /etc/codex/requirements.toml
 COPY .devcontainer/claude-mira-managed-settings.json /etc/claude-code/managed-settings.d/50-mira-companion.json
 COPY .devcontainer/grok-mira-managed-config.toml /etc/grok/managed_config.toml

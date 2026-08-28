@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+runtime_root=/usr/local/lib/mira-collaboration-evidence
+entrypoint="$runtime_root/report-agent-collaboration-evidence"
+
+if [[ ! -r "$entrypoint" ]]; then
+  echo "error: collaboration evidence report runtime is incomplete: $entrypoint" >&2
+  exit 127
+fi
+
+unset PYTHONHOME
+export PYTHONPATH="$runtime_root"
+
+exec /usr/bin/python3 "$entrypoint" "$@"
