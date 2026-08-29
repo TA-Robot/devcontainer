@@ -1,0 +1,221 @@
+#!/usr/bin/env python3
+"""Summarize robot-soccer traces into bounded controller-development evidence."""
+
+from __future__ import annotations
+
+import argparse
+import json
+import math
+from pathlib import Path
+import re
+from typing import Any
+
+
+SEED_PATTERN = re.compile(r"seed-(\d+)\.jsonl$")
+
+
+def vector(value: object) -> tuple[float, float]:
+    if not isinstance(value, dict):
+        return (0.0, 0.0)
+    return (float(value.get("x", 0.0)), float(value.get("y", 0.0)))
+
+
+def rounded_vector(value: object) -> list[float]:
+    x, y = vector(value)
+    return [round(x, 3), round(y, 3)]
+
+
+def observation_point(
+    event: dict[str, Any], started_ms: int | None
+) -> dict[str, Any] | None:
+    payload = event.get("payload")
+    if not isinstance(payload, dict) or not isinstance(payload.get("ball"), dict):
+        return None
+    ball = payload["ball"]
+    position = vector(ball.get("position"))
+    velocity = vector(ball.get("velocity"))
+    at_ms = event.get("at_unix_ms")
+    elapsed_ms = (
+        at_ms - started_ms
+        if isinstance(at_ms, int) and isinstance(started_ms, int)
+        else None
+    )
+    robots = payload.get("robots")
+    return {
+        "sequence": payload.get("sequence"),
+        "elapsed_ms": elapsed_ms,
+        "position": position,
+        "velocity": velocity,
+        "speed": math.hypot(*velocity),
+        "robots": robots if isinstance(robots, list) else [],
+    }
+
+
+def nearest_robot(
+    point: dict[str, Any], team: str
+) -> dict[str, object] | None:
+    nearest: tuple[float, str] | None = None
+    for robot in point["robots"]:
+        if not isinstance(robot, dict) or robot.get("team") != team:
+            continue
+        identifier = robot.get("id")
+        if not isinstance(identifier, str):
+            continue
+        distance = math.dist(point["position"], vector(robot.get("position")))
+        if nearest is None or distance < nearest[0]:
+            nearest = (distance, identifier)
+    if nearest is None:
+        return None
+    return {"id": nearest[1], "distance": round(nearest[0], 3)}
+
+
+def point_summary(point: dict[str, Any]) -> dict[str, object]:
+    return {
+        "sequence": point["sequence"],
+        "elapsed_ms": point["elapsed_ms"],
+        "ball_position": [round(value, 3) for value in point["position"]],
+        "ball_velocity": [round(value, 3) for value in point["velocity"]],
+        "ball_speed": round(point["speed"], 3),
+        "nearest_friendly": nearest_robot(point, "friendly"),
+        "nearest_enemy": nearest_robot(point, "enemy"),
+    }
+
+
+def analyze_trace(
+    path: Path, *, motion_speed: float = 0.15, impulse_delta: float = 1.2
+) -> dict[str, object]:
+    events: list[dict[str, Any]] = []
+    for line_number, raw_line in enumerate(
+        path.read_text(encoding="utf-8").splitlines(), 1
+    ):
+        try:
+            event = json.loads(raw_line)
+        except json.JSONDecodeError as error:
+            raise ValueError(f"{path}:{line_number}: invalid JSON: {error}") from error
+        if isinstance(event, dict):
+            events.append(event)
+
+    started_ms = next(
+        (
+            event.get("at_unix_ms")
+            for event in events
+            if event.get("event") == "episode_started"
+            and isinstance(event.get("at_unix_ms"), int)
+        ),
+        None,
+    )
+    observations = [
+        point
+        for event in events
+        if event.get("event") == "observation_delivered"
+        and (point := observation_point(event, started_ms)) is not None
+    ]
+    terminal_event = next(
+        (event for event in reversed(events) if event.get("event") == "episode_terminal"),
+        {},
+    )
+    terminal = terminal_event.get("payload")
+    if not isinstance(terminal, dict):
+        terminal = {}
+
+    kick_commands: dict[str, int] = {}
+    command_batches = 0
+    for event in events:
+        if event.get("event") != "command_received":
+            continue
+        payload = event.get("payload")
+        if not isinstance(payload, list):
+            continue
+        command_batches += 1
+        for command in payload:
+            if not isinstance(command, dict) or command.get("kick") is not True:
+                continue
+            identifier = command.get("id")
+            if isinstance(identifier, str):
+                kick_commands[identifier] = kick_commands.get(identifier, 0) + 1
+
+    first_motion = next(
+        (point_summary(point) for point in observations if point["speed"] >= motion_speed),
+        None,
+    )
+    impulses: list[dict[str, object]] = []
+    previous_velocity = (0.0, 0.0)
+    for point in observations:
+        delta = math.dist(point["velocity"], previous_velocity)
+        if delta >= impulse_delta:
+            item = point_summary(point)
+            item["velocity_delta"] = round(delta, 3)
+            impulses.append(item)
+        previous_velocity = point["velocity"]
+    impulses.sort(key=lambda item: float(item["velocity_delta"]), reverse=True)
+
+    seed_match = SEED_PATTERN.search(path.name)
+    max_progress = max(observations, key=lambda point: point["position"][0], default=None)
+    strongest_forward = max(
+        observations, key=lambda point: point["velocity"][0], default=None
+    )
+    return {
+        "trace": str(path),
+        "seed": int(seed_match.group(1)) if seed_match else None,
+        "terminal": {
+            "status": terminal.get("status"),
+            "reason": terminal.get("reason"),
+            "elapsed_ms": terminal.get("elapsed_ms"),
+        },
+        "observation_count": len(observations),
+        "command_batches": command_batches,
+        "kick_true_commands": dict(sorted(kick_commands.items())),
+        "first_ball_motion": first_motion,
+        "strongest_forward_motion": (
+            point_summary(strongest_forward) if strongest_forward else None
+        ),
+        "maximum_x_progress": point_summary(max_progress) if max_progress else None,
+        "largest_velocity_changes": impulses[:4],
+    }
+
+
+def resolve_traces(inputs: list[Path]) -> list[Path]:
+    traces: set[Path] = set()
+    for path in inputs:
+        path = path.resolve()
+        if path.is_dir():
+            traces.update(path.rglob("seed-*.jsonl"))
+        elif path.name == "summary.json":
+            summary = json.loads(path.read_text(encoding="utf-8"))
+            for run in summary.get("runs", []):
+                if isinstance(run, dict) and isinstance(run.get("trace"), str):
+                    trace = Path(run["trace"])
+                    if trace.is_absolute() and not trace.exists():
+                        # Summaries may cross a devcontainer bind-mount boundary
+                        # (`/workspace/...` inside, host path outside). Runner
+                        # traces are siblings of summary.json, so remap safely.
+                        trace = path.parent / trace.name
+                    elif not trace.is_absolute():
+                        trace = path.parent / trace
+                    traces.add(trace)
+        elif path.is_file():
+            traces.add(path)
+        else:
+            raise FileNotFoundError(f"trace input does not exist: {path}")
+    return sorted(traces, key=lambda path: (path.parent.as_posix(), path.name))
+
+
+def main() -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("inputs", nargs="+", type=Path)
+    parser.add_argument("--pretty", action="store_true")
+    args = parser.parse_args()
+    reports = [analyze_trace(path) for path in resolve_traces(args.inputs)]
+    print(
+        json.dumps(
+            {"trace_count": len(reports), "traces": reports},
+            ensure_ascii=False,
+            indent=2 if args.pretty else None,
+            sort_keys=True,
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

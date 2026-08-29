@@ -99,6 +99,14 @@ docker build -f .devcontainer/Dockerfile -t devcontainer-smoke:latest .
 scripts/test-mira-container-hook.sh devcontainer-smoke:latest
 ```
 
+robot soccer simulator / controller development toolsを触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile scripts/develop-robot-soccer-controller scripts/analyze-robot-soccer-traces
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-robot-soccer-development-runner.py scripts/test-robot-soccer-trace-analysis.py scripts/test-robot-soccer-seed-gate.py
+scripts/test-robot-soccer-simulator.sh
+```
+
 Featureの追加・更新時は、通常checkに加えてofficial CLIのfrozen buildを実行します。
 
 ```bash

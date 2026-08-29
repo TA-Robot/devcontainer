@@ -123,6 +123,20 @@ scripts/develop-robot-soccer-controller \
 The streaming runner is for rapid exploration. The three-seed acceptance gate
 above remains the final pass/fail policy and uses fresh simulator containers.
 
+For bounded comparison evidence across a revision, summarize its trace files
+instead of rebuilding long ad-hoc `jq` pipelines:
+
+```bash
+scripts/analyze-robot-soccer-traces \
+  temp/robot-soccer-development/session-001/r0001-*/summary.json \
+  --pretty
+```
+
+The report includes the authoritative terminal result, first ball motion,
+largest velocity changes with the nearest friendly/enemy, maximum forward
+progress, command counts, and `kick=true` counts. It is diagnostic evidence;
+only the simulator terminal result decides success.
+
 The simulator writes a content-bearing development trace inside the runtime at
 `/tmp/robot-soccer-simulator.jsonl`. Mount that exact file or its parent only
 for private experiment diagnostics. It is not part of Mira's general telemetry.
