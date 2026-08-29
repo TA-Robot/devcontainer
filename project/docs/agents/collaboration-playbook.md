@@ -209,8 +209,8 @@ agent数、message数、token量を成果として報告しません。観測を
 
 ## Current tooling boundary
 
-- provider-native layer: interactive consultation、delegation、peer UX。
-- `agentctl`: finite job / attempt、worktree、process、resource、structured result。
+- provider-native layer: 同一providerのinteractive consultation、delegation、peer UX。
+- `agentctl`: Codex / Claude / Grokのfinite safe read job、write job / attempt、worktree、process、resource、structured result。
 - primary / integrator: relation選択、continuation、synthesis、winner、integration。
 - evidence contract: primary-owned decision / outcome packet、taskへのbounded projection、content-free episode correlation。
 - future trigger layer: trigger、dedupe、budget、audit、finite job emission。

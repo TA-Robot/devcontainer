@@ -1,6 +1,6 @@
 # `agentctl` job fabric
 
-`agentctl` is the provider-neutral execution boundary for write jobs. It does not plan tasks or normalize provider conversations. Version 0.7 implements the Phase 3a–3e job fabric and Codex / Claude / Grok adapters: stable project identity, immutable jobs, attempts, worktree leases, foreground or detached provider execution, broker-owned commits, result validation, explicit retry, cancellation, heartbeat, orphan reconciliation, bounded resource-class capacity, a durable priority queue, per-job Compose/port namespaces, read-only integration collection, bounded/redacted operational log views, provider / runner terminal-log retention, live supervisor-log rotation, and conservative dry-run GC inventory.
+`agentctl` is the provider-neutral execution boundary for finite structured jobs. It does not plan tasks or normalize provider conversations. Safe Lane R jobs run in the registered checkout without a worktree and provide a cross-provider Codex / Claude / Grok consultation or verification path; Lane W jobs use broker-owned worktrees and commits. Version 0.7 implements the Phase 3a–3e job fabric and all three provider adapters: stable project identity, immutable jobs, attempts, worktree leases, foreground or detached provider execution, broker-owned commits, result validation, explicit retry, cancellation, heartbeat, orphan reconciliation, bounded resource-class capacity, a durable priority queue, per-job Compose/port namespaces, read-only integration collection, bounded/redacted operational log views, provider / runner terminal-log retention, live supervisor-log rotation, and conservative dry-run GC inventory.
 
 ## Persistent state
 
@@ -17,7 +17,7 @@ The UUID is shared by linked worktrees through the Git common config, survives a
 
 ## Create one job
 
-Create a task JSON inside the target project. It must satisfy `.agent/schemas/task.schema.json`; use `agentctl job id` and a full commit SHA rather than a branch name.
+Create a task JSON for the target project. It must satisfy `.agent/schemas/task.schema.json`; use `agentctl job id` and a full commit SHA rather than a branch name. If the task file is inside the registered checkout, commit it before fixing the job base. This is required for Lane R because the provider runs in that checkout and validation rejects unrelated dirty state. An operator-generated task may instead live outside the checkout; `job create` copies the validated envelope into private state.
 
 ```bash
 agentctl job id
@@ -43,7 +43,7 @@ agentctl job show <job-id> --json
 agentctl job validate <job-id>
 ```
 
-For Lane W, the runner creates:
+Lane R uses the registered workspace with the `safe` profile: Codex receives `read-only`, Claude receives `plan`, and Grok receives its read-only sandbox. This is the structured path when a primary needs cross-provider research / review, including from a trusted interactive parent; it does not inherit the parent's live native-child override. The result must report `completed` with no Git changes. Lane W creates:
 
 ```text
 1 job

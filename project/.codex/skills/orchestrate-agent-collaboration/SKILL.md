@@ -23,6 +23,7 @@ Read `AGENTS.md` and `docs/agents/collaboration-playbook.md`. Keep the primary r
 ## Preserve the permission claim
 
 - Use native Lane R only when the parent is safe.
+- Use an `agentctl` safe read job when cross-provider Codex / Claude / Grok consultation or a durable structured result is valuable. It runs in the registered checkout without a worktree and does not inherit a trusted interactive parent's native-child override.
 - If the whole session or workspace is explicitly authorized for `trusted-fast`, bounded consult / verify children may run as `trusted advisory`. State that their read-only instruction is behavioral, not enforced isolation. Do not ask them to edit files or perform external side effects.
 - Do not extend permission granted to one write job to unrelated children.
 - Use a dedicated worktree for each write agent. Use isolation when credentials, untrusted code, Docker state, or destructive actions require a real boundary.

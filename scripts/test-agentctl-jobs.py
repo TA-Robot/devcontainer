@@ -57,7 +57,13 @@ else:
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
     if mode == "head-mismatch":
         head = "0" * 40
-    status = "blocked" if mode == "blocked" else "ready_for_commit"
+    status = (
+        "blocked"
+        if mode == "blocked"
+        else "completed"
+        if mode == "read-success"
+        else "ready_for_commit"
+    )
     result = {
         "schema_version": 1,
         "job_id": job_id,
@@ -87,7 +93,7 @@ if kind == "codex":
     output_path.write_text(json.dumps(result), encoding="utf-8")
     print(json.dumps({"argv": arguments}))
 elif kind == "claude":
-    print(json.dumps({"structured_output": result}))
+    print(json.dumps({"structured_output": result, "argv": sys.argv[1:]}))
 else:
     if mode == "grok-duplicate":
         encoded = json.dumps(result)
@@ -230,12 +236,14 @@ class AgentctlJobTests(unittest.TestCase):
         resource_class: str = "write",
         priority: str | None = None,
         collaboration: dict[str, object] | None = None,
+        lane: str = "write",
+        role: str = "implementer",
     ) -> Path:
         task = {
             "schema_version": 1,
             "objective": "Create one deterministic result file.",
-            "role": "implementer",
-            "lane": "write",
+            "role": role,
+            "lane": lane,
             "permission_profile": permission_profile,
             "resource_class": resource_class,
             "scope": {
@@ -379,6 +387,70 @@ class AgentctlJobTests(unittest.TestCase):
         validation_path = Path(validated_payload["validations"][0]["report_path"])
         self.assertTrue(validation_path.is_file())
         self.assertEqual(validation_path.stat().st_mode & 0o777, 0o600)
+
+    def test_safe_read_jobs_are_structured_across_all_providers(self) -> None:
+        expected_arguments = {
+            "codex": ("--sandbox", "read-only"),
+            "claude": ("--permission-mode", "plan"),
+            "grok": ("--sandbox", "read-only"),
+        }
+        for provider, expected in expected_arguments.items():
+            with self.subTest(provider=provider):
+                task = self.write_task(
+                    f"read-{provider}.json",
+                    lane="read",
+                    role="researcher",
+                    resource_class="light",
+                )
+                subprocess.run(
+                    ["git", "-C", str(self.workspace), "add", task.name], check=True
+                )
+                subprocess.run(
+                    [
+                        "git",
+                        "-C",
+                        str(self.workspace),
+                        "commit",
+                        "-qm",
+                        f"add {provider} read task",
+                    ],
+                    check=True,
+                )
+                created = self.invoke(
+                    "job",
+                    "create",
+                    "--workspace",
+                    str(self.workspace),
+                    "--task",
+                    str(task),
+                    "--base",
+                    "HEAD",
+                    "--json",
+                )
+                self.assertEqual(created.returncode, 0, created.stdout + created.stderr)
+                job = json.loads(created.stdout)
+                result = self.invoke(
+                    "job",
+                    "run",
+                    str(job["job_id"]),
+                    "--provider",
+                    provider,
+                    "--json",
+                    mode="read-success",
+                )
+                self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+                payload = json.loads(result.stdout)
+                self.assertEqual(payload["state"], "succeeded")
+                attempt = payload["attempts"][0]
+                self.assertEqual(Path(attempt["workspace_path"]), self.workspace)
+                self.assertIsNone(attempt["branch_name"])
+                self.assertFalse((self.workspace / "result.txt").exists())
+                process_log = json.loads(
+                    Path(attempt["log_path"]).read_text(encoding="utf-8")
+                )
+                arguments = process_log["argv"]
+                index = arguments.index(expected[0])
+                self.assertEqual(arguments[index + 1], expected[1])
 
     def test_two_jobs_from_one_base_can_run_concurrently_without_checkout_contamination(self) -> None:
         first = self.create("parallel-1.json")
