@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -281,6 +282,17 @@ class AgentctlJobTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         return json.loads(result.stdout)
 
+    def write_collaboration_decision(self, name: str = "collaboration-decision.json") -> Path:
+        decision = json.loads(
+            (ROOT / "project/.agent/examples/collaboration-decision.example.json").read_text(
+                encoding="utf-8"
+            )
+        )
+        decision["base_sha"] = self.base_sha
+        path = self.workspace / name
+        path.write_text(json.dumps(decision, indent=2) + "\n", encoding="utf-8")
+        return path
+
     def test_project_identity_is_stable_and_job_base_is_immutable(self) -> None:
         first = self.invoke("project", "register", "--workspace", str(self.workspace), "--json")
         second = self.invoke("project", "register", "--workspace", str(self.workspace), "--json")
@@ -342,6 +354,58 @@ class AgentctlJobTests(unittest.TestCase):
         self.assertEqual(version, 2)
         self.assertTrue({"priority", "queue_reason", "queued_at"} <= columns)
         self.assertIn("validations", tables)
+
+    def test_job_create_derives_collaboration_projection_from_validated_decision(self) -> None:
+        task = self.write_task("derived-collaboration-task.json")
+        decision = self.write_collaboration_decision()
+        result = self.invoke(
+            "job",
+            "create",
+            "--workspace",
+            str(self.workspace),
+            "--task",
+            str(task),
+            "--base",
+            "HEAD",
+            "--collaboration-decision",
+            str(decision),
+            "--json",
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        job = json.loads(result.stdout)
+        self.assertTrue(job["collaboration_correlated"])
+        stored = json.loads(Path(job["task_path"]).read_text(encoding="utf-8"))
+        annotation = stored["collaboration"]
+        self.assertEqual(annotation["plan_id"], "plan-parser-regression-001")
+        self.assertEqual(annotation["candidate_id"], "delegate-tests")
+        self.assertEqual(annotation["relation"], "delegate")
+        self.assertEqual(annotation["expected_mechanisms"], ["latency-overlap", "context-partitioning"])
+        self.assertEqual(
+            annotation["decision_digest"],
+            "sha256:" + hashlib.sha256(decision.read_bytes()).hexdigest(),
+        )
+
+    def test_job_create_rejects_decision_for_another_base(self) -> None:
+        task = self.write_task("wrong-base-collaboration-task.json")
+        decision = self.write_collaboration_decision("wrong-base-decision.json")
+        payload = json.loads(decision.read_text(encoding="utf-8"))
+        payload["base_sha"] = "0" * 40
+        decision.write_text(json.dumps(payload), encoding="utf-8")
+        result = self.invoke(
+            "job",
+            "create",
+            "--workspace",
+            str(self.workspace),
+            "--task",
+            str(task),
+            "--base",
+            "HEAD",
+            "--collaboration-decision",
+            str(decision),
+            "--json",
+        )
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("base_sha does not match", result.stderr)
 
     def test_codex_foreground_job_uses_separate_worktree_and_validates(self) -> None:
         job = self.create()

@@ -747,6 +747,7 @@ def run_job_create(args: argparse.Namespace) -> int:
             args.task,
             requested_job_id=args.job_id,
             base_revision=args.base,
+            collaboration_decision_source=args.collaboration_decision,
         )
     print_payload(
         job,
@@ -1016,6 +1017,10 @@ def parser() -> argparse.ArgumentParser:
     job_create.add_argument("--workspace", default=os.getcwd())
     job_create.add_argument("--job-id")
     job_create.add_argument("--base", help="explicit Git revision; must match task base_sha when present")
+    job_create.add_argument(
+        "--collaboration-decision",
+        help="validated project-local decision packet; derives digest and task projection",
+    )
     job_create.add_argument("--json", action="store_true")
     job_create.set_defaults(handler=run_job_create)
 

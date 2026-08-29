@@ -886,6 +886,7 @@ def _copy_and_validate_task(
     *,
     requested_job_id: str | None,
     base_revision: str | None,
+    collaboration_decision_source: Path | None,
 ) -> dict[str, Any]:
     source = task_source.expanduser().resolve()
     if not _inside(source, workspace):
@@ -913,6 +914,19 @@ def _copy_and_validate_task(
     task.setdefault("priority", "normal")
 
     config = _load_project_config(workspace)
+    if collaboration_decision_source is not None:
+        annotation = collaboration_annotation_from_decision(
+            workspace,
+            collaboration_decision_source,
+            expected_base_sha=full_base,
+            config=config,
+        )
+        existing_annotation = task.get("collaboration")
+        if existing_annotation is not None and existing_annotation != annotation:
+            raise AgentctlJobError(
+                "task collaboration projection conflicts with --collaboration-decision"
+            )
+        task["collaboration"] = annotation
     schema_relative = config.get("contracts", {}).get("task")
     if not isinstance(schema_relative, str):
         raise AgentctlJobError("project config does not declare the task schema")
@@ -935,6 +949,63 @@ def _copy_and_validate_task(
     return task
 
 
+def collaboration_annotation_from_decision(
+    workspace: Path,
+    decision_source: Path,
+    *,
+    expected_base_sha: str,
+    config: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    """Validate a decision packet and derive its content-free task projection."""
+
+    source = decision_source.expanduser().resolve()
+    if not _inside(source, workspace):
+        raise AgentctlJobError("collaboration decision JSON must be inside the registered project")
+    try:
+        raw_bytes = source.read_bytes()
+    except OSError as exc:
+        raise AgentctlJobError(f"cannot read collaboration decision: {exc}") from exc
+    decision = load_json(source)
+    if not isinstance(decision, dict):
+        raise AgentctlJobError("collaboration decision root must be a JSON object")
+    project_config = config or _load_project_config(workspace)
+    schema_relative = project_config.get("contracts", {}).get("collaboration_decision")
+    if not isinstance(schema_relative, str):
+        raise AgentctlJobError("project config does not declare the collaboration decision schema")
+    schema = load_json(_project_contract_path(workspace, schema_relative))
+    try:
+        validate(decision, schema)
+    except ContractValidationError as exc:
+        raise AgentctlJobError(
+            f"collaboration decision does not satisfy {schema_relative}: {exc}"
+        ) from exc
+    if str(decision["base_sha"]).lower() != expected_base_sha:
+        raise AgentctlJobError(
+            "collaboration decision base_sha does not match the immutable task base_sha"
+        )
+    candidate_id = decision["selected_candidate_id"]
+    candidates = [
+        candidate
+        for candidate in decision["candidates"]
+        if candidate.get("candidate_id") == candidate_id
+    ]
+    if len(candidates) != 1:
+        raise AgentctlJobError(
+            "collaboration decision selected_candidate_id must identify exactly one candidate"
+        )
+    candidate = candidates[0]
+    return {
+        "plan_id": decision["plan_id"],
+        "candidate_id": candidate_id,
+        "decision_digest": "sha256:" + hashlib.sha256(raw_bytes).hexdigest(),
+        "relation": candidate["relation"],
+        "lifecycle": candidate["lifecycle"],
+        "expected_mechanisms": candidate["expected_mechanisms"],
+        "binding_constraint": candidate["binding_constraint"],
+        "annotation_source": "primary-plan",
+    }
+
+
 def create_job(
     store: Store,
     workspace_value: str | Path,
@@ -942,6 +1013,7 @@ def create_job(
     *,
     requested_job_id: str | None = None,
     base_revision: str | None = None,
+    collaboration_decision_source: str | Path | None = None,
 ) -> dict[str, Any]:
     workspace = resolve_git_workspace(workspace_value)
     project = register_project(store, workspace)
@@ -950,6 +1022,11 @@ def create_job(
         Path(task_source),
         requested_job_id=requested_job_id,
         base_revision=base_revision,
+        collaboration_decision_source=(
+            Path(collaboration_decision_source)
+            if collaboration_decision_source is not None
+            else None
+        ),
     )
     job_id = task["job_id"]
     stored_task_path = store.paths.job_dir(project["project_id"], job_id) / "task.json"
@@ -1569,6 +1646,8 @@ def show_job(store: Store, job_id: str) -> dict[str, Any]:
             }
     return {
         **job,
+        "collaboration_correlated": _mira_collaboration_annotation(job["task_path"])
+        is not None,
         "attempts": attempts,
         "leases": leases,
         "dependency_job_ids": dependencies,
