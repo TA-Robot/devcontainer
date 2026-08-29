@@ -12,11 +12,19 @@ const FRIENDLY_STARTS: [(f64, f64, f64); 2] =
 const ENEMY_STARTS: [(f64, f64, f64); 3] =
     [(1.10, 2.05, -1.10), (2.15, 0.75, PI), (4.08, 0.0, PI)];
 const GOALKEEPER_COVERAGE_MARGIN_M: f64 = 0.035;
+const FRIENDLY_MAX_VELOCITY_MULTIPLIER: f64 = 2.0;
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 enum Team {
     Friendly,
     Enemy,
+}
+
+fn maximum_velocity_for_team(enemy_maximum: f64, team: Team) -> f64 {
+    match team {
+        Team::Friendly => enemy_maximum * FRIENDLY_MAX_VELOCITY_MULTIPLIER,
+        Team::Enemy => enemy_maximum,
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -1122,13 +1130,15 @@ impl Simulator {
         let half_width = self.public.field.width_m / 2.0;
         let radius = self.public.robot.radius_m;
         for robot in &mut self.robots {
+            let maximum_velocity =
+                maximum_velocity_for_team(self.hidden.robot_max_velocity, robot.team);
             let mut desired_global = robot.command.local_velocity.rotate(robot.heading);
             let forward = Vec2::new(robot.heading.cos(), robot.heading.sin());
             let lateral = Vec2::new(-forward.y, forward.x);
             let forward_component = desired_global.dot(forward);
             let lateral_component = desired_global.dot(lateral) * self.hidden.lateral_slip;
             desired_global = forward * forward_component + lateral * lateral_component;
-            desired_global = desired_global.clamp_length(self.hidden.robot_max_velocity);
+            desired_global = desired_global.clamp_length(maximum_velocity);
             let acceleration = ((desired_global - robot.velocity)
                 * self.hidden.robot_velocity_response)
                 .clamp_length(self.hidden.robot_max_acceleration);
@@ -1488,7 +1498,25 @@ mod tests {
         assert!(speed > 0.0);
         assert!(speed < 0.1);
         advance_for(&mut simulator, 1.0);
-        assert!(simulator.robots[0].velocity.length() < 2.0);
+        assert!(simulator.robots[0].velocity.length() > simulator.hidden.robot_max_velocity);
+        assert!(
+            simulator.robots[0].velocity.length()
+                < simulator.hidden.robot_max_velocity * FRIENDLY_MAX_VELOCITY_MULTIPLIER
+        );
+    }
+
+    #[test]
+    fn friendly_maximum_velocity_is_twice_the_enemy_limit() {
+        let simulator = Simulator::new(18);
+        let enemy_maximum = simulator.hidden.robot_max_velocity;
+        assert_eq!(
+            maximum_velocity_for_team(enemy_maximum, Team::Friendly),
+            enemy_maximum * 2.0
+        );
+        assert_eq!(
+            maximum_velocity_for_team(enemy_maximum, Team::Enemy),
+            enemy_maximum
+        );
     }
 
     #[test]
