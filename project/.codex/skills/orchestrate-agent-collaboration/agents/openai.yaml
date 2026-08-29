@@ -1,0 +1,4 @@
+interface:
+  display_name: "Orchestrate Agent Collaboration"
+  short_description: "Adapt multi-agent work to the current bottleneck"
+  default_prompt: "Use $orchestrate-agent-collaboration to plan and adapt collaboration for this development goal."

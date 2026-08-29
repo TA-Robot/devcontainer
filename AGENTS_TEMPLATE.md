@@ -56,7 +56,7 @@ execution laneはworkspace / permission境界、roleは責務、relationはagent
 - primaryがcontinuation、synthesis、winner、integration、external side effectを所有し、human review / integration costも結果へ記録する。
 - primaryがcollaboration planとsynthesisを通常作業中に生成する。ユーザーへformやlogの記入を求めず、自動観測できないfieldは`unknown`とする。
 
-詳細は`docs/agents/collaboration-playbook.md`を参照します。機械相関するplan / outcome contractは`docs/agents/collaboration-evidence-contracts.md`、project-local観測の短い確認手順は`$review-collaboration-evidence`を使います。`project/` copy sourceを使う場合はdocsとskillも一緒に導入してください。
+非自明なgoalの開始時と上記の再評価triggerでは`$orchestrate-agent-collaboration`を使います。詳細は`docs/agents/collaboration-playbook.md`を参照します。機械相関するplan / outcome contractは`docs/agents/collaboration-evidence-contracts.md`、project-local観測の短い確認手順は`$review-collaboration-evidence`を使います。`project/` copy sourceを使う場合はdocsとskillも一緒に導入してください。
 
 ## Execution lanes
 
