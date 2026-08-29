@@ -1,0 +1,3 @@
+# The image pins Codex and the host/container sync policy owns upgrades.
+# Avoid an interactive updater prompt before automation can submit its goal.
+check_for_update_on_startup = false

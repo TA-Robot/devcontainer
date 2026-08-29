@@ -179,6 +179,7 @@ RUN chmod 0555 /usr/local/bin/report-agent-collaboration-evidence \
     && chmod 0444 /usr/local/lib/mira-collaboration-evidence/collaboration_evidence.py
 
 COPY .devcontainer/codex-requirements.toml /etc/codex/requirements.toml
+COPY .devcontainer/codex-managed-config.toml /etc/codex/config.toml
 COPY .devcontainer/claude-mira-managed-settings.json /etc/claude-code/managed-settings.d/50-mira-companion.json
 COPY .devcontainer/grok-mira-managed-config.toml /etc/grok/managed_config.toml
 COPY scripts/mira-codex-hook.py /usr/local/lib/mira-companion/mira-codex-hook.py
@@ -187,7 +188,7 @@ RUN chmod +x /usr/local/bin/codex /usr/local/bin/claude /usr/local/bin/grok \
     /usr/local/bin/agentctl \
     /usr/local/lib/mira-companion/mira-codex-hook.py \
     && chmod 0444 /usr/local/lib/agentctl/agentctl_jobs.py /usr/local/lib/agentctl/agentctl_supervisor.py /usr/local/lib/agentctl/agent_contracts.py \
-    && chmod 0444 /etc/codex/requirements.toml \
+    && chmod 0444 /etc/codex/requirements.toml /etc/codex/config.toml \
       /etc/claude-code/managed-settings.d/50-mira-companion.json \
       /etc/grok/managed_config.toml \
     && ln -s /usr/local/lib/mira-companion/mira-codex-hook.py /usr/local/bin/mira-codex-hook \

@@ -48,10 +48,22 @@ DEVCONTAINER_CODEX_DANGEROUS_DEFAULT=1 \
 
 CAPTURE_PATH="$capture" DEVCONTAINER_CODEX_REAL_BIN="$codex_real" \
 DEVCONTAINER_CODEX_WRAPPER_BIN="$script_dir/devcontainer-codex" \
+DEVCONTAINER_CODEX_TRUSTED_PROJECT_DIR="/workspace/trusted fixture" \
   "$script_dir/devcontainer-codex-trusted" exec trusted
 [[ "$(count_exact "$capture" '--dangerously-bypass-approvals-and-sandbox')" == "1" ]] \
   || fail "codex-trusted must inject the dangerous flag"
+[[ "$(count_exact "$capture" '--config')" == "1" ]] \
+  || fail "codex-trusted must inject one scoped project trust override"
+grep -Fqx 'projects."/workspace/trusted fixture".trust_level="trusted"' "$capture" \
+  || fail "codex-trusted must trust only the selected project path"
 grep -qx 'PROFILE=trusted-fast' "$capture" || fail "codex-trusted must identify the profile"
+
+if CAPTURE_PATH="$capture" DEVCONTAINER_CODEX_REAL_BIN="$codex_real" \
+  DEVCONTAINER_CODEX_WRAPPER_BIN="$script_dir/devcontainer-codex" \
+  DEVCONTAINER_CODEX_TRUSTED_PROJECT_DIR="relative/path" \
+  "$script_dir/devcontainer-codex-trusted" exec invalid >/dev/null 2>&1; then
+  fail "codex-trusted must reject a relative trust target"
+fi
 
 CAPTURE_PATH="$capture" DEVCONTAINER_CLAUDE_REAL_BIN="$claude_real" \
   "$script_dir/devcontainer-claude" safe

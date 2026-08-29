@@ -56,6 +56,10 @@ fi
 echo "ok - stable image ENV contains no API key variables"
 
 docker run --rm --network none "$image_name" bash -lc \
+  'grep -Fx "check_for_update_on_startup = false" /etc/codex/config.toml >/dev/null; test "$(stat -c %a /etc/codex/config.toml)" = 444'
+echo "ok - centrally pinned Codex disables interactive startup update checks"
+
+docker run --rm --network none "$image_name" bash -lc \
   'test ! -e /usr/bin/bwrap; test ! -e /usr/local/bin/bwrap; test -x /usr/local/lib/provider-sandbox/bwrap; /usr/local/lib/provider-sandbox/bwrap --version >/dev/null; command -v socat >/dev/null; socat -V >/dev/null'
 echo "ok - provider sandbox runtime: bubblewrap + socat"
 

@@ -80,6 +80,8 @@ agentctl doctor
 agentctl doctor --json
 ```
 
+image内Codexはversion pin / stable-edge同期をこのrepositoryが所有するため、system configでstartup update checkを無効化しています。通常の`codex`はproject trustを自動変更しません。明示的な`codex-trusted`だけは、full-access opt-inと同じscopeで起動時のcurrent working directoryをそのinvocation中だけtrusted projectとして渡し、headless goal投入前のonboarding promptを避けます。別directoryを対象にする場合は、起動前に移動するか`DEVCONTAINER_CODEX_TRUSTED_PROJECT_DIR`へabsolute pathを指定します。
+
 ### 4. Native multi-agent contractをprojectへ導入する
 
 新規projectでは独自wrapperから始めず、このrepositoryの`project/`をcopy sourceとして使います。既存の`AGENTS.md`やprovider設定を上書きしないよう差分を確認し、`<<...>>`をproject固有値へ置き換えてください。`AGENTS_TEMPLATE.md`は同じcontractをmanager向け説明込みで展開した版です。
@@ -135,7 +137,7 @@ Lane Iはまだstable runtimeを持たず、同一containerへfallbackしませ�
 
 devcontainerにeditorがattachした後、local VSIXをpackageしてremote側のVS Code / Cursorへ自動導入します。専用のActivity Barやsidebarは作らず、VS Code下部に短い`Mira World` panelを1つ追加します。workspace初回とremote runtimeのrebuild直後だけ自動で復帰し、同じruntimeでのreload以後はVS Codeが記憶するpanelの開閉状態を尊重します。status bar右側の小さなMiraはworldを再度開くtoggleです。
 
-Codex / Claude / Grok連携はimage内のcontainer-managed hookで行います。配置先はそれぞれ`/etc/codex/requirements.toml`、`/etc/claude-code/managed-settings.d/50-mira-companion.json`、`/etc/grok/managed_config.toml`です。Claude / Grok側も既存hookへ加算され、bind mountした`~/.claude` / `~/.grok`、認証、permission、sandboxを変更しません。対象projectへhookをコピーしたり、projectごとに信頼したりする必要もありません。さらに`agentctl`経由のCodex / Claude / Grok jobは共通brokerから同じbridgeへ接続され、provider別人数とresearcher / reviewer / implementerのrole spriteとして表示されます。調査なら資料庫、planningなら作戦卓、編集やshellなら工房、testならsignal gate、delegationならdispatch dockへミラが自動で歩き、到着後に状態別animationへ変わります。idle中も低頻度でmap内を散歩します。
+Codex / Claude / Grok連携はimage内のcontainer-managed hookで行います。配置先はそれぞれ`/etc/codex/requirements.toml`、`/etc/claude-code/managed-settings.d/50-mira-companion.json`、`/etc/grok/managed_config.toml`です。Codexのcentrally managed lifecycle defaultは`/etc/codex/config.toml`へ分離しています。Claude / Grok側も既存hookへ加算され、bind mountした`~/.claude` / `~/.grok`、認証、permission、sandboxを変更しません。対象projectへhookをコピーしたり、projectごとに信頼したりする必要もありません。さらに`agentctl`経由のCodex / Claude / Grok jobは共通brokerから同じbridgeへ接続され、provider別人数とresearcher / reviewer / implementerのrole spriteとして表示されます。調査なら資料庫、planningなら作戦卓、編集やshellなら工房、testならsignal gate、delegationならdispatch dockへミラが自動で歩き、到着後に状態別animationへ変わります。idle中も低頻度でmap内を散歩します。
 
 状態ファイルをまだ一度も受信していない場合は、HUDへ`activity未接続`と表示します。imageを更新した直後はeditorをreloadし、新しいCodex / Claude / Grok sessionを開始してください。正常に接続され、active workがなければ`待機中`になります。direct CLIではprovider自身のlifecycleとnative subagent、`agentctl`ではdurable job transitionを観測します。
 

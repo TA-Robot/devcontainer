@@ -9,4 +9,17 @@ if [[ ! -x "$codex_wrapper" ]]; then
 fi
 
 export AGENTCTL_PERMISSION_PROFILE=trusted-fast
-exec "$codex_wrapper" --dangerously-bypass-approvals-and-sandbox "$@"
+trusted_project="${DEVCONTAINER_CODEX_TRUSTED_PROJECT_DIR:-$PWD}"
+if [[ "$trusted_project" != /* ]]; then
+  echo "error: trusted Codex project path must be absolute: $trusted_project" >&2
+  exit 2
+fi
+trusted_project_json="$(python3 -c 'import json,sys; print(json.dumps(sys.argv[1]))' "$trusted_project")"
+
+# `codex-trusted` is already an explicit full-access opt-in. Trust only this
+# invocation's current project so automation is not stopped by the separate
+# onboarding prompt. The normal `codex` wrapper never injects project trust.
+exec "$codex_wrapper" \
+  --dangerously-bypass-approvals-and-sandbox \
+  --config "projects.${trusted_project_json}.trust_level=\"trusted\"" \
+  "$@"
