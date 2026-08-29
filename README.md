@@ -132,6 +132,8 @@ write providerはGit common metadataへ直接commitせず、`ready_for_commit`�
 
 Lane Iはまだstable runtimeを持たず、同一containerへfallbackしません。optional runtimeの導入前probeと、model request/image pullなしのprivate-daemon比較は`python3 scripts/benchmark-isolated-runtime-pilot.py --probe-only` / `--repetitions 5`で実行できます。現時点の結果と「privileged DinDをsecurity boundaryにはしない」という判断は[`docs/agents/isolated-runtime-pilot-2026-08-12.md`](docs/agents/isolated-runtime-pilot-2026-08-12.md)にあります。
 
+長時間のオーケストレーション評価は、専用のnested-Docker volumeとauth readiness検査を固定する`scripts/benchmark-devcontainer.py`で起動できます。普段どおり`tmux`から`/goal`を投入し、独自schedulerは挟みません。手順とevidence境界は[`docs/agents/orchestration-benchmark-runbook.md`](docs/agents/orchestration-benchmark-runbook.md)を参照してください。
+
 設計判断は[`ADR-0001`](docs/adr/0001-native-first-multi-agent-execution.md)、target contractの全体像は[`AGENTS_TEMPLATE.md`](AGENTS_TEMPLATE.md)、実行fabricは[`docs/agentctl.md`](docs/agentctl.md)、失敗時の正本は[`project/docs/agents/runbook.md`](project/docs/agents/runbook.md)です。
 
 ### 5. Mira Companionを有効にする
