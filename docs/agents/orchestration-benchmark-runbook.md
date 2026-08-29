@@ -26,6 +26,8 @@ The launcher creates three container-name-scoped volumes:
 
 The dedicated `/var/lib/docker` volume is mandatory. Omitting it can put Docker overlay storage on an incompatible outer overlay filesystem and make simulator containers fail with `invalid argument`. The launcher waits for the nested daemon and runs `agentctl doctor --json`; a stale image that lacks the current provider-auth contract is rejected. A failed readiness check leaves the named container intact for inspection.
 
+Target projects do not need to copy this infrastructure repository's `.devcontainer/devcontainer-lock.json`. Its exact absence is reported as `not_applicable_checks`; a present-but-invalid lock, provider capability mismatch, stale auth contract, or Docker failure remains a readiness failure.
+
 Host Codex, Claude, and Grok credential directories are bind-mounted when present. API-key variables are forwarded by name only when set; their values are not embedded in the Docker command. This remains a trusted local benchmark profile with a privileged container and shared credentials, not a security boundary.
 
 If the simulator is distributed as an image archive, stream it into the private daemon after startup:
