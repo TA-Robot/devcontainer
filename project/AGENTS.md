@@ -39,7 +39,7 @@ laneは実行境界、roleは責務、relationはagent同士の関係、lifecycl
 
 非自明なgoalの開始時と上記の再評価triggerでは`$orchestrate-agent-collaboration`を使います。relation / lifecycle選択、brief、result、continuation / stop conditionの正本は`docs/agents/collaboration-playbook.md`です。
 安い反復評価、seed / scenario差、定量scoreを持つ最適化開発では`$develop-evaluated-optimization`も使い、広いbaseline、診断用coverage、confirmation、held-out acceptanceを分離します。
-計画を機械相関する時は`docs/agents/collaboration-evidence-contracts.md`に従い、decision packetのcontent-free projectionだけをtaskへ入れます。project-local evidenceの確認には`$review-collaboration-evidence`を使います。
+`agentctl`をcollaboration participantとして使う時は、primaryがdecision packetを生成し、`agentctl job create --collaboration-decision <path>`へ渡します。brokerにdigestとcontent-free projectionを導出させ、手書き転記やユーザー入力を要求しません。packetがないjobはsemantic relationを推測せず、明示的にuncorrelatedのまま扱います。詳細は`docs/agents/collaboration-evidence-contracts.md`、project-local evidenceの確認は`$review-collaboration-evidence`を使います。
 
 ## Lane and workspace
 

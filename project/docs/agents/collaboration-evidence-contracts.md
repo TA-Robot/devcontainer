@@ -27,16 +27,19 @@ examplesは`.agent/examples/collaboration-*.example.json`にあります。
 2. solo alternativeを必ず比較可能な候補として残す。他の候補数はexpected mechanismと識別可能な差から導く。
 3. 各候補へrelation、lifecycle、participant basis、independence policy、prediction evidence、stop conditionを付ける。
 4. 一つを選び、primaryがdecision packetを保存する。保存場所とretentionはproject policyで決め、secretやprivate reasoningを入れない。
-5. packet fileの実byte列をSHA-256で固定する。
+5. `agentctl` participantではpacketを`job create`へ直接渡す。brokerがschema、selected candidate、taskのimmutable baseを照合し、packet fileの実byte列からSHA-256 digestとprojectionを生成する。
 
 ```bash
 python3 scripts/validate-agent-contracts.py \
   --schema project/.agent/schemas/collaboration-decision.schema.json \
   --instance path/to/decision.json
-sha256sum path/to/decision.json
+agentctl job create \
+  --task path/to/task.json \
+  --base HEAD \
+  --collaboration-decision path/to/decision.json
 ```
 
-6. 選択したjobのtaskへ次だけを添付する。
+6. broker以外のexecution surfaceへ投影する場合だけ、選択したjobのtaskへ次だけを添付する。`agentctl`では手書きしない。
 
 ```json
 {
@@ -67,6 +70,8 @@ task projectionはallowlist済みcategoryだけです。詳細なrationale、obj
 - bridge failureはjob correctness pathへ影響しない。
 
 projectionがないdirect provider turnや旧taskは、semanticsを`unknown`、correlationを`available: false`として記録します。topologyからrelationを推測しません。
+
+`agentctl job show --json`の`collaboration_correlated`は、stored taskに有効なbounded projectionがあるかだけを示します。packetの質やcollaborationの有効性を意味しません。`false`は隠さず、benchmark分析でdecision/result linkageの欠測として数えます。
 
 ## Read-only review
 

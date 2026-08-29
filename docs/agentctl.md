@@ -32,6 +32,15 @@ agentctl job create --task docs/agents/tasks/task-0001.json
 agentctl job list
 ```
 
+Collaboration participantを作る場合は、primaryが生成したproject-local decision packetを同時に渡します。brokerがpacket schema、selected candidate、immutable baseを検証し、digestとcontent-free task projectionを導出します。source taskへの手書き転記は不要です。
+
+```bash
+agentctl job create \
+  --task docs/agents/tasks/task-0001.json \
+  --collaboration-decision docs/agents/decisions/plan-0001.json
+agentctl job show <job-id> --json  # collaboration_correlatedを確認
+```
+
 `job create` copies a validated, immutable envelope into private state. It verifies the full base commit exists, the role/lane pair is declared in `.agent/config.json`, dependencies belong to the same project, and project-relative paths do not escape the contract.
 
 The input file may omit `job_id`; `job create` then generates a canonical ULID. `--job-id` can supply it explicitly, and `--base` can supply the revision when the task omits `base_sha`. The stored envelope always contains a canonical ULID and full SHA. For reproducible review, committing those values in the source task JSON is preferred.

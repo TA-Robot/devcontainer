@@ -56,7 +56,7 @@ execution laneはworkspace / permission境界、roleは責務、relationはagent
 - primaryがcontinuation、synthesis、winner、integration、external side effectを所有し、human review / integration costも結果へ記録する。
 - primaryがcollaboration planとsynthesisを通常作業中に生成する。ユーザーへformやlogの記入を求めず、自動観測できないfieldは`unknown`とする。
 
-非自明なgoalの開始時と上記の再評価triggerでは`$orchestrate-agent-collaboration`を使います。安い反復評価、seed / scenario差、定量scoreを持つ最適化開発では`$develop-evaluated-optimization`も使い、広いbaseline、診断用coverage、confirmation、held-out acceptanceを分離します。詳細は`docs/agents/collaboration-playbook.md`を参照します。機械相関するplan / outcome contractは`docs/agents/collaboration-evidence-contracts.md`、project-local観測の短い確認手順は`$review-collaboration-evidence`を使います。`project/` copy sourceを使う場合はdocsとskillも一緒に導入してください。
+非自明なgoalの開始時と上記の再評価triggerでは`$orchestrate-agent-collaboration`を使います。安い反復評価、seed / scenario差、定量scoreを持つ最適化開発では`$develop-evaluated-optimization`も使い、広いbaseline、診断用coverage、confirmation、held-out acceptanceを分離します。詳細は`docs/agents/collaboration-playbook.md`を参照します。`agentctl` participantを作る時はprimaryがdecision packetを生成し、`agentctl job create --collaboration-decision <path>`へ渡してdigestとcontent-free projectionをbrokerに導出させます。ユーザー入力や手書き転記を要求せず、packetがなければsemantic relationを推測せずuncorrelatedとして残します。plan / outcome contractは`docs/agents/collaboration-evidence-contracts.md`、project-local観測の短い確認手順は`$review-collaboration-evidence`を使います。`project/` copy sourceを使う場合はdocsとskillも一緒に導入してください。
 
 ## Execution lanes
 
