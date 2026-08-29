@@ -19,6 +19,10 @@ import urllib.request
 
 
 DEFAULT_SEEDS = tuple(range(1, 9))
+SNAPSHOT_IGNORED_DIRECTORIES = frozenset(
+    {".git", ".mypy_cache", ".pytest_cache", ".ruff_cache", "__pycache__"}
+)
+SNAPSHOT_IGNORED_SUFFIXES = frozenset({".pyc", ".pyo"})
 
 
 def parse_seeds(raw: str) -> tuple[int, ...]:
@@ -33,8 +37,34 @@ def parse_seeds(raw: str) -> tuple[int, ...]:
     return seeds
 
 
-def file_digest(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+def controller_files(root: Path) -> tuple[Path, ...]:
+    """Return a stable, cache-free list of files in one controller source tree."""
+    root = root.resolve()
+    files: list[Path] = []
+    for path in root.rglob("*"):
+        relative = path.relative_to(root)
+        if any(part in SNAPSHOT_IGNORED_DIRECTORIES for part in relative.parts):
+            continue
+        if path.is_symlink():
+            raise ValueError(f"controller source tree cannot contain symlinks: {path}")
+        if path.is_file() and path.suffix not in SNAPSHOT_IGNORED_SUFFIXES:
+            files.append(path)
+    return tuple(sorted(files, key=lambda path: path.relative_to(root).as_posix()))
+
+
+def controller_digest(root: Path) -> str:
+    """Hash relative paths, executable bits, and contents for watch-mode revisions."""
+    root = root.resolve()
+    digest = hashlib.sha256()
+    for path in controller_files(root):
+        relative = path.relative_to(root).as_posix().encode("utf-8")
+        digest.update(len(relative).to_bytes(4, "big"))
+        digest.update(relative)
+        digest.update(b"\1" if path.stat().st_mode & 0o111 else b"\0")
+        payload = path.read_bytes()
+        digest.update(len(payload).to_bytes(8, "big"))
+        digest.update(payload)
+    return digest.hexdigest()[:12]
 
 
 def controller_command(
@@ -78,14 +108,32 @@ def wait_for_health(base_url: str, timeout_s: float) -> None:
     raise RuntimeError(f"simulator health timeout: {last_error}")
 
 
-def snapshot_controller(source: Path, revision_dir: Path) -> tuple[Path, str]:
+def snapshot_controller(
+    source: Path, revision_dir: Path, controller_root: Path | None = None
+) -> tuple[Path, str]:
     source = source.resolve()
     if not source.is_file():
         raise FileNotFoundError(f"controller does not exist: {source}")
-    digest = file_digest(source)
-    snapshot = revision_dir / source.name
-    shutil.copy2(source, snapshot)
-    snapshot.chmod(source.stat().st_mode & 0o777)
+    root = source.parent if controller_root is None else controller_root.resolve()
+    if not root.is_dir():
+        raise NotADirectoryError(f"controller root does not exist: {root}")
+    try:
+        entrypoint = source.relative_to(root)
+    except ValueError as error:
+        raise ValueError(
+            f"controller must be inside controller root: {root}"
+        ) from error
+    files = controller_files(root)
+    if source not in files:
+        raise ValueError(f"controller entry point is not snapshot-eligible: {source}")
+    digest = controller_digest(root)
+    snapshot_root = revision_dir / "controller-src"
+    for path in files:
+        destination = snapshot_root / path.relative_to(root)
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, destination)
+        destination.chmod(path.stat().st_mode & 0o777)
+    snapshot = snapshot_root / entrypoint
     return snapshot, digest
 
 
@@ -325,11 +373,11 @@ def summarize_runs(
 def run_revision(
     args: argparse.Namespace, source: Path, revision_number: int
 ) -> dict[str, object]:
-    digest = file_digest(source)
+    digest = controller_digest(args.controller_root)
     revision = f"r{revision_number:04d}-{digest}"
     revision_dir = args.output_dir / revision
     revision_dir.mkdir(parents=True, exist_ok=False)
-    snapshot, digest = snapshot_controller(source, revision_dir)
+    snapshot, digest = snapshot_controller(source, revision_dir, args.controller_root)
     slots: queue.Queue[int] = queue.Queue()
     for slot in range(args.parallel):
         slots.put(slot)
@@ -391,6 +439,14 @@ def run_revision(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--controller", type=Path, required=True)
+    parser.add_argument(
+        "--controller-root",
+        type=Path,
+        help=(
+            "source tree copied for each revision "
+            "(default: controller parent directory)"
+        ),
+    )
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--image", default="robot-soccer-simulator:dev")
     parser.add_argument("--parallel", type=int, default=8)
@@ -424,7 +480,23 @@ def main() -> int:
     source = args.controller.resolve()
     if not source.is_file():
         parser.error(f"controller does not exist: {source}")
+    args.controller_root = (
+        source.parent
+        if args.controller_root is None
+        else args.controller_root.resolve()
+    )
+    if not args.controller_root.is_dir():
+        parser.error(f"controller root does not exist: {args.controller_root}")
+    try:
+        source.relative_to(args.controller_root)
+    except ValueError:
+        parser.error("--controller must be inside --controller-root")
     args.output_dir = args.output_dir.resolve()
+    if (
+        args.output_dir == args.controller_root
+        or args.controller_root in args.output_dir.parents
+    ):
+        parser.error("--output-dir must be outside --controller-root")
     args.output_dir.mkdir(parents=True, exist_ok=True)
 
     revision_number = next_revision_number(args.output_dir)
@@ -432,7 +504,7 @@ def main() -> int:
     args.workers = start_workers(args)
     try:
         while True:
-            digest = file_digest(source)
+            digest = controller_digest(args.controller_root)
             if digest != last_digest:
                 run_revision(args, source, revision_number)
                 revision_number += 1

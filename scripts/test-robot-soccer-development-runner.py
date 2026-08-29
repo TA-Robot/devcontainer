@@ -42,17 +42,55 @@ class DevelopmentRunnerTest(unittest.TestCase):
             command,
         )
 
-    def test_snapshot_is_immutable_copy_with_digest(self) -> None:
+    def test_snapshot_is_immutable_tree_with_importable_siblings(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            source_root = root / "controller"
+            source_root.mkdir()
+            source = source_root / "controller.py"
+            helper = source_root / "logic.py"
+            revision = root / "revision"
+            revision.mkdir()
+            source.write_text("from logic import value\nprint(value)\n", encoding="utf-8")
+            helper.write_text("value = 'one'\n", encoding="utf-8")
+            snapshot, digest = MODULE.snapshot_controller(source, revision, source_root)
+            source.write_text("print('two')\n", encoding="utf-8")
+            helper.write_text("value = 'two'\n", encoding="utf-8")
+            self.assertEqual(
+                "from logic import value\nprint(value)\n",
+                snapshot.read_text(encoding="utf-8"),
+            )
+            self.assertEqual(
+                "value = 'one'\n",
+                (snapshot.parent / "logic.py").read_text(encoding="utf-8"),
+            )
+            self.assertEqual(12, len(digest))
+
+    def test_tree_digest_tracks_imported_modules_but_ignores_caches(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw)
+            (root / "controller.py").write_text("from logic import value\n")
+            logic = root / "logic.py"
+            logic.write_text("value = 1\n")
+            first = MODULE.controller_digest(root)
+            logic.write_text("value = 2\n")
+            second = MODULE.controller_digest(root)
+            self.assertNotEqual(first, second)
+            cache = root / "__pycache__"
+            cache.mkdir()
+            (cache / "logic.pyc").write_bytes(b"volatile")
+            self.assertEqual(second, MODULE.controller_digest(root))
+
+    def test_snapshot_rejects_symlinks(self) -> None:
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw)
             source = root / "controller.py"
-            revision = root / "revision"
-            revision.mkdir()
-            source.write_text("print('one')\n", encoding="utf-8")
-            snapshot, digest = MODULE.snapshot_controller(source, revision)
-            source.write_text("print('two')\n", encoding="utf-8")
-            self.assertEqual("print('one')\n", snapshot.read_text(encoding="utf-8"))
-            self.assertEqual(12, len(digest))
+            source.write_text("print('ok')\n", encoding="utf-8")
+            (root / "external.py").symlink_to(Path("/tmp/external.py"))
+            with tempfile.TemporaryDirectory() as revision_raw:
+                revision = Path(revision_raw)
+                with self.assertRaisesRegex(ValueError, "cannot contain symlinks"):
+                    MODULE.snapshot_controller(source, revision, root)
 
     def test_revision_number_continues_across_runner_restarts(self) -> None:
         with tempfile.TemporaryDirectory() as raw:

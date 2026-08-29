@@ -63,9 +63,9 @@ extra rule inside an individual 30-second episode.
 ## Streaming controller development
 
 Use the development runner to evaluate each saved controller revision on eight
-seeds concurrently. The runner copies the controller into an immutable revision
-directory before starting any episode, so an editor save cannot change a
-controller that is already running:
+seeds concurrently. The runner copies the controller source tree into an
+immutable revision directory before starting any episode, so an editor save
+cannot change a controller that is already running:
 
 ```bash
 scripts/develop-robot-soccer-controller \
@@ -82,10 +82,18 @@ success count, authoritative results, and average/worst wall-to-simulator time
 ratio. Traces, stdout, stderr, the exact controller snapshot, and `summary.json`
 are retained under `rNNNN-<digest>/`.
 
-If the controller changes while a revision is running, the active immutable
-snapshot finishes and the newest saved content runs next. Intermediate saves
-are intentionally coalesced so rapid editor writes do not create an unbounded
-backlog. Stop watch mode with Ctrl-C. A one-shot eight-seed run omits `--watch`:
+The entry point's parent directory is the default source tree. This preserves
+local module imports, and edits to imported files trigger a new revision. Use
+`--controller-root /path/to/source-tree` when the entry point is nested below
+the desired root. Cache directories and bytecode are excluded; symlinks are
+rejected so a saved revision cannot change through an external target. The
+output directory must be outside the controller source tree.
+
+If any snapshotted controller file changes while a revision is running, the
+active immutable snapshot finishes and the newest saved content runs next.
+Intermediate saves are intentionally coalesced so rapid editor writes do not
+create an unbounded backlog. Stop watch mode with Ctrl-C. A one-shot eight-seed
+run omits `--watch`:
 
 ```bash
 scripts/develop-robot-soccer-controller \
