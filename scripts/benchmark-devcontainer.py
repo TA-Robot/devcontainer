@@ -185,19 +185,29 @@ def summarize_doctor_payload(payload: dict[str, Any], returncode: int) -> dict[s
         for provider in ("codex", "claude", "grok")
     }
     auth_contract_ready = all(isinstance(value, dict) for value in provider_auth.values())
-    failed_checks = [
-        check.get("id")
+    failed = [
+        check
         for check in payload.get("checks", [])
-        if check.get("status") == "fail"
+        if isinstance(check, dict) and check.get("status") == "fail"
+    ]
+    not_applicable = [
+        check.get("id")
+        for check in failed
+        if check.get("id") == "toolchain.feature_lock"
+        and check.get("summary") == "Dev Container Feature lockfile is missing"
+    ]
+    failed_checks = [
+        check.get("id") for check in failed if check.get("id") not in not_applicable
     ]
     if not auth_contract_ready:
         failed_checks.append("provider.auth-contract")
     return {
-        "ok": payload.get("ok") is True and auth_contract_ready,
+        "ok": not failed_checks and auth_contract_ready,
         "returncode": returncode,
         "auth_contract_ready": auth_contract_ready,
         "provider_auth": provider_auth,
         "failed_checks": failed_checks,
+        "not_applicable_checks": not_applicable,
     }
 
 

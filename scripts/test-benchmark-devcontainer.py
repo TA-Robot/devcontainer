@@ -73,6 +73,49 @@ class BenchmarkDevcontainerTests(unittest.TestCase):
         self.assertFalse(summary["auth_contract_ready"])
         self.assertIn("provider.auth-contract", summary["failed_checks"])
 
+    def test_target_project_without_devcontainer_lock_is_still_ready(self) -> None:
+        summary = benchmark.summarize_doctor_payload(
+            {
+                "ok": False,
+                "checks": [
+                    {
+                        "id": "toolchain.feature_lock",
+                        "status": "fail",
+                        "summary": "Dev Container Feature lockfile is missing",
+                    }
+                ],
+                "capabilities": {
+                    provider: {"auth": {"ready": True}}
+                    for provider in ("codex", "claude", "grok")
+                },
+            },
+            1,
+        )
+        self.assertTrue(summary["ok"])
+        self.assertEqual(summary["failed_checks"], [])
+        self.assertEqual(summary["not_applicable_checks"], ["toolchain.feature_lock"])
+
+    def test_feature_lock_mismatch_remains_a_failure(self) -> None:
+        summary = benchmark.summarize_doctor_payload(
+            {
+                "ok": False,
+                "checks": [
+                    {
+                        "id": "toolchain.feature_lock",
+                        "status": "fail",
+                        "summary": "Dev Container Feature lock does not match",
+                    }
+                ],
+                "capabilities": {
+                    provider: {"auth": {"ready": True}}
+                    for provider in ("codex", "claude", "grok")
+                },
+            },
+            1,
+        )
+        self.assertFalse(summary["ok"])
+        self.assertEqual(summary["failed_checks"], ["toolchain.feature_lock"])
+
 
 if __name__ == "__main__":
     unittest.main()
