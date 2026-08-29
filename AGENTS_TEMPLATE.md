@@ -50,6 +50,7 @@ execution laneはworkspace / permission境界、roleは責務、relationはagent
 - participantは独立artifact、固有のperspective / evidence source、意味のあるapproach、検査したいfailure modeから導く。人数、exchange数、candidate数をglobal defaultにしない。
 - independence policyはanchoring回避、coverage、artifact review、interface coordinationなど今回の目的に合わせて選び、理由を書く。
 - interactionはnew evidence、test、claim transition、useful artifactが増える間だけ継続し、acceptance、authority、safety、cost cap、期待利益で停止する。
+- collaboration判断は開始時だけで固定しない。strategyが棄却された、同じfailure classでnew evidenceが増えない、比較可能なcandidateが生まれた、independent verificationが価値を持った時に再評価する。revision数や経過時間だけのglobal thresholdにはしない。
 - numeric / boolean parameterは`hard guard / cost cap / planning prior / hypothesis`へ分類し、scope、rationale、invalidation evidence、update ownerを持つ。
 - scheduled workは無期限agentにせずfinite jobにする。runtime availabilityを確認するまでscheduleの存在を仮定せず、deterministic CIや通常cronで足りるならagent schedulerを作らない。
 - primaryがcontinuation、synthesis、winner、integration、external side effectを所有し、human review / integration costも結果へ記録する。
@@ -98,8 +99,9 @@ execution laneはworkspace / permission境界、roleは責務、relationはagent
 ## Permission and safety
 
 - `safe`が既定。通常の`codex` / `claude` / `grok` commandを使う。
-- native childはparent sessionのlive permission overrideを継承し得る。read-only role fileだけを境界とみなさず、fan-out前にparentをsafe modeへ戻す。
-- `trusted-fast`はtrusted codeのLane Wだけで、ユーザーまたはprimaryが明示した時に限る。
+- native childはparent sessionのlive permission overrideを継承し得る。read-only role fileだけをsecurity boundaryとみなさない。
+- Lane Rとしてsafeなfan-outを主張するならparentもsafeにする。session / workspace全体へ`trusted-fast`が明示許可されている場合は、boundedなconsult / verifyをnative childへ渡してよいが、それはLane Rではなく同じtrusted permissionを持つ**trusted advisory**として記録する。file変更や外部作用を依頼せず、read-onlyはbehavioral constraintであって強制隔離ではないと扱う。明示許可が一つのwrite jobだけならadvisory childへ拡張しない。
+- `trusted-fast`はtrusted code / workspaceだけで、ユーザーまたはprimaryがscopeを明示した時に限る。
 - `isolated-autonomous`はLane Iの境界を確認した後だけ使う。
 - 同一privileged container内のprocessやworktreeをsecurity boundaryとみなさない。
 - secret、token、`.env`内容をprompt、result、log、commitへ書かない。

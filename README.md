@@ -102,7 +102,7 @@ agent同士の関係はlane、role、時間上のlifecycleとは別に設計し�
 
 Controlled corpusの所要時間は別のduration atlasへ保存します。36 caseの存在はmodel/provider/relationの全組合せを測定済みという意味ではなく、単一観測、quality-fail、requested-only effort、timeoutを分離したままexact条件で参照します。Dev Container内では`query-agent-duration-atlas`、target projectでは`project/.codex/skills/lookup-agent-duration/`を利用できます。計測、有限batch、resume、欠測の読み方は[`duration atlas operator guide`](docs/agents/duration-atlas/README.md)が正本です。
 
-native childはparent sessionのlive permissionを継承し得ます。read-only agent fileを置いただけで強いruntime overrideが弱まるとはみなさず、Lane Rをfan-outする前にparentもsafe modeであることを確認してください。
+native childはparent sessionのlive permissionを継承し得ます。read-only agent fileを置いただけで強いruntime overrideが弱まるとはみなしません。safe Lane Rならparentもsafeにします。session / workspace全体へ`trusted-fast`を明示許可した場合だけ、boundedなconsult / verify childを同じtrusted permissionで動かせます。この場合はLane Rや強制read-onlyと呼ばず、`trusted advisory`として記録します。
 
 templateとschemaの整合性確認:
 

@@ -18,7 +18,7 @@ Phase 3a–3eでは`agentctl`のjob、attempt、worktree lease、broker commit�
 1. current HEADをfull SHAで取得し、taskの`base_sha`へ固定する。
 2. roleとlaneを選ぶ。write不要ならLane Rを使う。
 3. allowed / forbidden pathsとacceptanceをtask envelopeへ書く。
-4. parent sessionのlive permissionを確認する。native childはparentの強いoverrideを継承し得るため、safe profileで不足する理由が無ければpermissionを強くしない。
+4. parent sessionのlive permissionを確認する。native childはparentの強いoverrideを継承し得る。safe Lane Rならparentもsafeにする。session / workspace全体へ`trusted-fast`が明示許可済みならboundedなconsult / verify childを同じpermissionで動かせるが、Lane Rや強制read-onlyとは記録しない。許可scopeが一つのwrite jobだけならchildへ拡張しない。
 5. Lane Wではjob IDに対応するbranch / worktreeを一つだけ割り当てる。
 6. Lane Iではcredential、network、Docker daemon、成果回収方法を実行前に確認する。
 

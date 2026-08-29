@@ -54,6 +54,10 @@ relation名は説明を短くするaliasで、closed enumではありません�
 
 旧来の`dispatch`、`panel`、`deliberation`、`variants`、`maker-checker`などはidea catalogや対応aliasとして使えます。pipelineはdependency graph、scheduled / event-triggeredはlifecycleであり、relationと同じ分類表へ混ぜません。
 
+### Permission inheritance is part of the lane decision
+
+provider-native childはparent sessionのlive permissionを継承し得ます。safeなLane Rとして扱うならparentもsafeでなければなりません。session / workspace全体へ`trusted-fast`が明示許可されている場合は、boundedなconsult / verify childを同じtrusted permissionで動かせますが、これはLane Rではなく`trusted advisory`です。read-only roleはbehavioral constraintであり強制隔離ではありません。file変更、外部作用、permission escalationを依頼せず、許可scopeが一つのwrite jobだけならchildへ拡張しません。強制的なread-onlyやcredential分離が必要ならsafe sessionまたはLane Iを使います。
+
 ## Derive participants instead of choosing a count
 
 - delegate: non-overlapping shard、stage、artifactから導く。
@@ -124,6 +128,8 @@ provider diversityは品質の代理指標ではありません。generatorとev
 継続回数は結果として観測します。全文transcriptやprivate reasoningを連鎖させず、必要ならopen claim、evidence pointer、未解決questionだけを渡します。budget到達時はfalse successにせず、partial resultと次に必要なevidenceを返します。
 
 primaryがbudget、authority、synthesisを所有します。provider-native peer messagingを使う場合も、topic、authority、cost cap、interrupt owner、result contractを先に固定します。winner、risk acceptance、permission escalationをpeer agreementへ委ねません。
+
+collaboration planは開始時だけの一回判定ではありません。strategyの棄却、同じfailure classでnew evidenceが増えない状態、比較可能なcandidateの出現、artifact固定後のverification需要を再評価triggerにします。revision数、agent数、経過時間だけをglobal triggerにせず、何が変わればsolo / consult / compete / verifyの期待利益が変わるかをplanへ残します。
 
 ## Keep exchange artifacts small
 

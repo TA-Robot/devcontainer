@@ -31,6 +31,7 @@ laneは実行境界、roleは責務、relationはagent同士の関係、lifecycl
 - participantは独立artifact、固有のperspective / evidence source、意味のあるapproach、検査したいfailure modeから導く。人数、exchange数、candidate数をglobal defaultにしない。
 - independence / blindnessは目的に応じて選び、多数決ではなくevidenceを比較する。
 - interactionはnew evidence、test、claim transition、useful artifactが増える間だけ継続し、acceptance、authority、safety、cost cap、期待利益で止める。
+- collaboration判断は開始時だけで固定しない。strategyが棄却された、同じfailure classでnew evidenceが増えない、比較可能なcandidateが生まれた、independent verificationが価値を持った時に再評価する。revision数や経過時間だけのglobal thresholdにはしない。
 - numeric / boolean parameterは`hard guard / cost cap / planning prior / hypothesis`へ分類し、scope、rationale、invalidation evidence、update ownerを持つ。
 - scheduled / event-driven workは無期限sessionにせずfinite jobへ限定する。runtime availabilityを確認するまで存在を仮定せず、非agent手段で足りるなら作らない。
 - primaryがcontinuation、synthesis、winner、integration、external side effectを所有し、human review / integration costも結果へ記録する。
@@ -74,8 +75,9 @@ role詳細は`.agent/roles/`を正本とします。
 
 - defaultは`safe`。
 - 通常の`codex` / `claude` / `grok` commandはproviderのpermission / sandboxを維持する。
-- native childはparent sessionのlive permission overrideを継承し得るため、read fan-out前にparentもsafeであることを確認する。
-- `trusted-fast`はtrusted Lane Wで明示された時だけ使う。
+- native childはparent sessionのlive permission overrideを継承し得る。read-only role定義だけをsecurity boundaryとみなさない。
+- safeな`read` laneとしてfan-outするならparentもsafeにする。session / workspace全体へ`trusted-fast`が明示許可されている場合は、boundedなconsult / verifyをnative childへ渡してよいが、同じtrusted permissionを持つ`trusted advisory`として記録する。file変更や外部作用を依頼せず、read-onlyはbehavioral constraintに過ぎないと扱う。許可が一つのwrite jobだけならchildへ拡張しない。
+- `trusted-fast`はtrusted code / workspaceでscopeが明示された時だけ使う。
 - `isolated-autonomous`は検証済みLane Iだけで使う。
 - same-container worktreeはsecurity boundaryではない。
 - secretをprompt、log、result、commitへ書かない。
