@@ -1,0 +1,38 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+attach_mode="${MIRA_COMPANION_ATTACH_MODE:-auto}"
+
+case "$attach_mode" in
+  auto|editor|headless) ;;
+  *)
+    echo "mira-companion: MIRA_COMPANION_ATTACH_MODE must be auto, editor, or headless" >&2
+    exit 2
+    ;;
+esac
+
+editor_attached=0
+if [[ "$attach_mode" == "editor" ]]; then
+  editor_attached=1
+elif [[ "$attach_mode" == "auto" ]]; then
+  if [[ -n "${VSCODE_IPC_HOOK_CLI:-}${VSCODE_CLIENT_COMMAND:-}${CURSOR_TRACE_ID:-}" ]]; then
+    editor_attached=1
+  elif ps -eo args= 2>/dev/null | grep -Eq '/bin/(code|cursor)-server([[:space:]]|$)'; then
+    editor_attached=1
+  fi
+fi
+
+if (( editor_attached == 1 )); then
+  : "${MIRA_COMPANION_EDITOR_CLI_WAIT_SECONDS:=30}"
+  : "${MIRA_COMPANION_REQUIRE_EDITOR_CLI:=1}"
+else
+  # `devcontainer up` may execute postAttachCommand without an editor process.
+  # That is a valid headless orchestration runtime, not a failed Mira install.
+  : "${MIRA_COMPANION_EDITOR_CLI_WAIT_SECONDS:=0}"
+  : "${MIRA_COMPANION_REQUIRE_EDITOR_CLI:=0}"
+fi
+
+export MIRA_COMPANION_EDITOR_CLI_WAIT_SECONDS
+export MIRA_COMPANION_REQUIRE_EDITOR_CLI
+exec "$script_dir/install-mira-vscode-extension"

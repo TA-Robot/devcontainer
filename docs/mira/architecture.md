@@ -203,7 +203,7 @@ webviewはstrict CSPを設定し、extension mediaとMira runtime assetsだけ�
 
 ## Install and lifecycle
 
-devcontainerの`postStartCommand`はhostとAI CLI versionを同期します。Mira VSIXはremote editor CLIが利用可能になる`postAttachCommand`で導入します。installerはPATH上のremote `code` / `cursor` / `codium`を優先し、必要なら`code-server` / `cursor-server`を検出します。同じversionが未導入の場合だけbuildし、install後のextension一覧まで検証します。
+devcontainerの`postStartCommand`はhostとAI CLI versionを同期します。Mira VSIXはremote editor CLIが利用可能になる`postAttachCommand`で導入します。`devcontainer-post-attach`はeditor signal / server processを検出し、editor attachではCLIを最大30秒待って欠損をerrorにします。headless `devcontainer up`では待機せずvalid skipにするため、UI不在をcontainer起動失敗と混同しません。`MIRA_COMPANION_ATTACH_MODE=editor|headless`で判定を上書きできます。installerはPATH上のremote `code` / `cursor` / `codium`を優先し、必要なら`code-server` / `cursor-server`を検出します。同じversionが未導入の場合だけbuildし、install後のextension一覧まで検証します。
 
 ```bash
 # packageだけ作る

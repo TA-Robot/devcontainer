@@ -169,7 +169,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate-mira-assets.py
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-mira-codex-hook.py
 node --test extensions/mira-companion/test/*.test.js
 scripts/test-mira-vsix.sh
-bash -n scripts/install-mira-vscode-extension scripts/devcontainer-post-start scripts/test-mira-vsix.sh scripts/test-mira-container-hook.sh
+bash -n scripts/install-mira-vscode-extension scripts/devcontainer-post-start scripts/devcontainer-post-attach scripts/test-mira-vsix.sh scripts/test-mira-container-hook.sh
 node --check extensions/mira-companion/src/extension.js
 node --check extensions/mira-companion/src/game.js
 node --check extensions/mira-companion/src/state.js

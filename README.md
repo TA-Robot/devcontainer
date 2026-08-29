@@ -147,7 +147,7 @@ Codex / Claude / Grok連携はimage内のcontainer-managed hookで行います�
 scripts/install-mira-vscode-extension
 ```
 
-新規containerでremote editor CLIが準備される前に導入処理が走らないよう、AI CLI同期は`postStartCommand`、Mira導入は`postAttachCommand`に分離しています。PATH上にremote CLIがないlifecycle shellでは`code-server` / `cursor-server`を直接使い、install後に期待versionが一覧へ現れたことまで確認します。30秒以内にどのCLIも見つからなければ、黙ってskipせずlifecycle errorとして通知します。
+新規containerでremote editor CLIが準備される前に導入処理が走らないよう、AI CLI同期は`postStartCommand`、Mira導入は`postAttachCommand`に分離しています。PATH上にremote CLIがないlifecycle shellでは`code-server` / `cursor-server`を直接使い、install後に期待versionが一覧へ現れたことまで確認します。editor attach中は30秒以内にCLIが見つからなければlifecycle errorにします。一方、CLIだけで行うheadless `devcontainer up`は正しいorchestration runtimeなので、待機せずMira導入だけをskipして成功します。判定を明示したい時は`MIRA_COMPANION_ATTACH_MODE=editor|headless`を使えます。
 
 Command Paletteの`ミラ: Mira Worldを開く`でも再表示できます。Mira全体を止める場合は、devcontainerを開く前にホスト側で`MIRA_COMPANION_ENABLED=0`を設定します。hookは残して拡張の自動導入だけを止める場合は`MIRA_COMPANION_INSTALL=0`を使います。
 

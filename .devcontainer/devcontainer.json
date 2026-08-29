@@ -109,8 +109,8 @@
   "postCreateCommand": "echo '✅ Dev Container is ready!' && git --version && node --version 2>/dev/null || true",
   "postStartCommand": "bash /workspace/scripts/devcontainer-post-start",
   // local VSIXの導入はremote editor CLIが準備されたattach後に行う。
-  // CLIが見つからない場合は黙ってskipせず、lifecycle errorとして見えるようにする。
-  "postAttachCommand": "MIRA_COMPANION_EDITOR_CLI_WAIT_SECONDS=30 MIRA_COMPANION_REQUIRE_EDITOR_CLI=1 bash /workspace/scripts/install-mira-vscode-extension",
+  // editor attachではCLI欠損をerrorにし、headless `devcontainer up`ではvalid skipにする。
+  "postAttachCommand": "bash /workspace/scripts/devcontainer-post-attach",
   
   // 追加のrunArgs（必要に応じて調整）
   "runArgs": [

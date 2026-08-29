@@ -92,18 +92,28 @@ import sys
 config = Path(sys.argv[1]).read_text(encoding="utf-8")
 post_start = Path(sys.argv[2]).read_text(encoding="utf-8")
 
-required_attach = (
-    '"postAttachCommand": '
-    '"MIRA_COMPANION_EDITOR_CLI_WAIT_SECONDS=30 '
-    'MIRA_COMPANION_REQUIRE_EDITOR_CLI=1 '
-    'bash /workspace/scripts/install-mira-vscode-extension"'
-)
+required_attach = '"postAttachCommand": "bash /workspace/scripts/devcontainer-post-attach"'
 if required_attach not in config:
     raise SystemExit("Mira VSIX must be installed from postAttachCommand")
 if "install-mira-vscode-extension" in post_start:
     raise SystemExit("postStartCommand must not race the remote editor CLI")
 print("Mira lifecycle OK: CLI sync on start, VSIX install after editor attach")
 PY
+
+if ! MIRA_COMPANION_ATTACH_MODE=headless \
+  MIRA_COMPANION_EDITOR_CLI=mira-editor-cli-that-does-not-exist \
+  "$script_dir/devcontainer-post-attach" >/dev/null 2>&1; then
+  echo "Mira post-attach rejected a valid headless runtime" >&2
+  exit 1
+fi
+
+if MIRA_COMPANION_ATTACH_MODE=editor \
+  MIRA_COMPANION_EDITOR_CLI=mira-editor-cli-that-does-not-exist \
+  MIRA_COMPANION_EDITOR_CLI_WAIT_SECONDS=0 \
+  "$script_dir/devcontainer-post-attach" >/dev/null 2>&1; then
+  echo "Mira post-attach accepted a missing CLI during editor attach" >&2
+  exit 1
+fi
 
 if MIRA_COMPANION_EDITOR_CLI=mira-editor-cli-that-does-not-exist \
   MIRA_COMPANION_REQUIRE_EDITOR_CLI=1 \
