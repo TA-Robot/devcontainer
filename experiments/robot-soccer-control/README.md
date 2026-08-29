@@ -82,6 +82,12 @@ success count, authoritative results, and average/worst wall-to-simulator time
 ratio. Traces, stdout, stderr, the exact controller snapshot, and `summary.json`
 are retained under `rNNNN-<digest>/`.
 
+Keep one `--watch` process alive during an editing session instead of paying
+worker startup for every revision. Establish broad default-seed coverage when a
+strategy topology changes. Narrow `--seeds` is useful for reproducing a known
+failure, but it is not evidence that a strategy generalizes; return to the broad
+set before adopting or rejecting the candidate.
+
 The entry point's parent directory is the default source tree. This preserves
 local module imports, and edits to imported files trigger a new revision. Use
 `--controller-root /path/to/source-tree` when the entry point is nested below

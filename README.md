@@ -91,12 +91,13 @@ AGENTS.md                         project共通のscope / lane / permission / in
 CLAUDE.md                        Claude CodeからAGENTS.mdをimport
 .agent/                          provider-neutralなrole、task / result schema、examples
 .codex/agents/*.toml             Codex native custom agents
+.codex/skills/                   adaptive orchestration / evidence / duration workflow
 .claude/agents/*.md              Claude Code native subagents
 .grok/agents/*.md                Grok Build native custom agents
 docs/agents/runbook.md           failure recovery / integration / GC
 ```
 
-通常の調査とreviewは`researcher` / `reviewer` native subagentへfan-outします。実装用`implementer`は、primaryがimmutable base SHAから専用worktreeを割り当てた後だけ使います。untrusted codeや破壊的Docker操作は同一containerへ混ぜずisolated laneへ送ります。
+同一providerで通常の調査とreviewを行う時は`researcher` / `reviewer` native subagentへfan-outします。cross-providerまたはdurableなstructured resultが必要なら、`agentctl`のsafe read jobでCodex / Claude / Grokを選びます。実装用`implementer`は、primaryがimmutable base SHAから専用worktreeを割り当てた後だけ使います。untrusted codeや破壊的Docker操作は同一containerへ混ぜずisolated laneへ送ります。
 
 agent同士の関係はlane、role、時間上のlifecycleとは別に設計します。soloより改善するmechanismと今回のbinding constraintを先に確認し、`solo / delegate / consult / compete / verify`を現在のrelation aliasとして必要な協働を組み立てます。人数、interaction、candidate数、blindnessはglobal defaultにせず、独立artifact、固有の観点、識別可能な案、検査したいfailure modeとproject-local evidenceから決めます。定期・event駆動workは無期限sessionではなく有限jobとして扱い、scheduler runtimeが未実装の間は存在を仮定しません。選択手順、parameterの意味、安全なstop conditionは[`collaboration model`](docs/agents/collaboration-model.md)とtarget copyの[`collaboration playbook`](project/docs/agents/collaboration-playbook.md)を参照してください。
 
