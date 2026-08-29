@@ -7,7 +7,7 @@ use serde::Serialize;
 use serde_json::json;
 use std::collections::HashSet;
 use std::fs::{File, OpenOptions};
-use std::io::{Read, Write};
+use std::io::{BufWriter, Read, Write};
 use std::path::PathBuf;
 use std::sync::{Arc, Mutex};
 use std::thread;
@@ -15,8 +15,12 @@ use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tiny_http::{Header, Method, Request, Response, Server, StatusCode};
 
 const PHYSICS_HZ: u32 = 240;
+const MAX_CATCH_UP_STEPS: u32 = 8;
+const CATCH_UP_RESET_LAG: Duration = Duration::from_secs(2);
 const DEFAULT_BIND: &str = "0.0.0.0:8080";
 const DEFAULT_LOG: &str = "/tmp/robot-soccer-simulator.jsonl";
+const TRACE_BUFFER_BYTES: usize = 64 * 1024;
+const TRACE_FLUSH_INTERVAL_EVENTS: usize = 32;
 
 struct Runtime {
     simulator: Option<Simulator>,
@@ -61,27 +65,47 @@ impl Runtime {
 }
 
 struct TraceWriter {
-    file: Mutex<File>,
+    state: Mutex<TraceState>,
+}
+
+struct TraceState {
+    writer: BufWriter<File>,
+    pending_events: usize,
 }
 
 impl TraceWriter {
     fn open(path: PathBuf) -> Result<Self, std::io::Error> {
         let file = OpenOptions::new().create(true).append(true).open(path)?;
         Ok(Self {
-            file: Mutex::new(file),
+            state: Mutex::new(TraceState {
+                writer: BufWriter::with_capacity(TRACE_BUFFER_BYTES, file),
+                pending_events: 0,
+            }),
         })
     }
 
     fn event(&self, kind: &str, payload: serde_json::Value) {
+        self.write_event(kind, payload, false);
+    }
+
+    fn important_event(&self, kind: &str, payload: serde_json::Value) {
+        self.write_event(kind, payload, true);
+    }
+
+    fn write_event(&self, kind: &str, payload: serde_json::Value, force_flush: bool) {
         let record = json!({
             "at_unix_ms": system_millis(),
             "event": kind,
             "payload": payload,
         });
-        if let Ok(mut file) = self.file.lock() {
-            let _ = serde_json::to_writer(&mut *file, &record);
-            let _ = file.write_all(b"\n");
-            let _ = file.flush();
+        if let Ok(mut state) = self.state.lock() {
+            let _ = serde_json::to_writer(&mut state.writer, &record);
+            let _ = state.writer.write_all(b"\n");
+            state.pending_events += 1;
+            if force_flush || state.pending_events >= TRACE_FLUSH_INTERVAL_EVENTS {
+                let _ = state.writer.flush();
+                state.pending_events = 0;
+            }
         }
     }
 }
@@ -94,7 +118,7 @@ fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     spawn_physics_thread(runtime.clone(), trace.clone());
 
     let server = Server::http(&bind)?;
-    trace.event("server_started", json!({ "bind": bind }));
+    trace.important_event("server_started", json!({ "bind": bind }));
     for request in server.incoming_requests() {
         handle_request(request, &runtime, &trace);
     }
@@ -129,10 +153,17 @@ fn spawn_physics_thread(runtime: Arc<Mutex<Runtime>>, trace: Arc<TraceWriter>) {
             if now < next_tick {
                 thread::sleep(next_tick - now);
             }
-            next_tick += step;
-            if Instant::now().duration_since(next_tick) > Duration::from_millis(50) {
-                next_tick = Instant::now() + step;
-            }
+            let woke_at = Instant::now();
+            let lag = woke_at.saturating_duration_since(next_tick);
+            let catch_up_steps = if lag >= CATCH_UP_RESET_LAG {
+                next_tick = woke_at + step;
+                1
+            } else {
+                let overdue_steps = (lag.as_nanos() / step.as_nanos()) as u32;
+                let steps = (overdue_steps + 1).min(MAX_CATCH_UP_STEPS);
+                next_tick += step * steps;
+                steps
+            };
 
             let mut delivered = None;
             let mut terminal = None;
@@ -140,7 +171,9 @@ fn spawn_physics_thread(runtime: Arc<Mutex<Runtime>>, trace: Arc<TraceWriter>) {
                 let capture_terminal = !state.terminal_logged;
                 let (latest, completed, terminal_snapshot) = match state.simulator.as_mut() {
                     Some(simulator) => {
-                        simulator.advance(dt);
+                        for _ in 0..catch_up_steps {
+                            simulator.advance(dt);
+                        }
                         let latest = simulator.latest_observation();
                         let completed = (!simulator.is_running()).then(|| simulator.result());
                         let terminal_snapshot = if completed.is_some() && capture_terminal {
@@ -174,7 +207,7 @@ fn spawn_physics_thread(runtime: Arc<Mutex<Runtime>>, trace: Arc<TraceWriter>) {
                     "terminal_snapshot",
                     serde_json::to_value(snapshot).unwrap_or_else(|_| json!({})),
                 );
-                trace.event(
+                trace.important_event(
                     "episode_terminal",
                     serde_json::to_value(result).unwrap_or_else(|_| json!({})),
                 );
@@ -201,7 +234,7 @@ fn handle_request(mut request: Request, runtime: &Arc<Mutex<Runtime>>, trace: &A
                     if let Ok(mut state) = runtime.lock() {
                         state.start(start.seed);
                     }
-                    trace.event(
+                    trace.important_event(
                         "episode_started",
                         json!({"development_seed_supplied": start.seed.is_some()}),
                     );
