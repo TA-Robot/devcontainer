@@ -60,6 +60,61 @@ Use `--seeds A,B,C` to select another triplet; duplicate seeds or any count
 other than three are rejected. This is an authoring acceptance policy, not an
 extra rule inside an individual 30-second episode.
 
+## Streaming controller development
+
+Use the development runner to evaluate each saved controller revision on eight
+seeds concurrently. The runner copies the controller into an immutable revision
+directory before starting any episode, so an editor save cannot change a
+controller that is already running:
+
+```bash
+scripts/develop-robot-soccer-controller \
+  --controller /path/to/controller.py \
+  --output-dir temp/robot-soccer-development/session-001 \
+  --watch
+```
+
+The defaults are eight warm simulator workers and seeds `1,...,8`. Containers
+start once when the runner session begins and are reused across controller
+revisions; Docker startup is therefore outside episode timing. Each completed
+seed is printed immediately as one JSON event; `revision_completed` includes the
+success count, authoritative results, and average/worst wall-to-simulator time
+ratio. Traces, stdout, stderr, the exact controller snapshot, and `summary.json`
+are retained under `rNNNN-<digest>/`.
+
+If the controller changes while a revision is running, the active immutable
+snapshot finishes and the newest saved content runs next. Intermediate saves
+are intentionally coalesced so rapid editor writes do not create an unbounded
+backlog. Stop watch mode with Ctrl-C. A one-shot eight-seed run omits `--watch`:
+
+```bash
+scripts/develop-robot-soccer-controller \
+  --controller /path/to/controller.py \
+  --output-dir temp/robot-soccer-development/check-001
+```
+
+On Linux the runner assigns simulator workers to separate logical CPUs, using
+one sibling from each physical core before reusing SMT siblings. Controller
+processes are restricted to the remaining logical CPUs. This reduced the local
+14-CPU WSL benchmark from an average/max real-time ratio of `1.123/1.237` to
+`1.046/1.095` at eight concurrent episodes. Use `--no-cpu-pinning` only when an
+external scheduler already owns CPU affinity or the host does not expose usable
+CPU topology.
+
+Custom controller launchers may use `{controller}`, `{base_url}`, and `{seed}`
+placeholders after `--`. When placeholders are omitted, `--base-url` and
+`--seed` are appended automatically:
+
+```bash
+scripts/develop-robot-soccer-controller \
+  --controller /path/to/controller.py \
+  --output-dir temp/robot-soccer-development/session-002 \
+  --watch -- python3 -u '{controller}'
+```
+
+The streaming runner is for rapid exploration. The three-seed acceptance gate
+above remains the final pass/fail policy and uses fresh simulator containers.
+
 The simulator writes a content-bearing development trace inside the runtime at
 `/tmp/robot-soccer-simulator.jsonl`. Mount that exact file or its parent only
 for private experiment diagnostics. It is not part of Mira's general telemetry.
@@ -109,7 +164,8 @@ Rendering does not expose exact contact events.
 ## Deliberate v0 boundary
 
 - One active episode per runtime.
-- Real-time only; no accelerated batch evaluator yet.
+- Real-time only; the development runner parallelizes independent real-time
+  episodes but does not accelerate simulation time within an episode.
 - Dynamics and opponent parameters are compiled into the runtime and absent
   from the public API.
 - The HTTP API exposes no contact, kick-success, game-start, or true-state event.

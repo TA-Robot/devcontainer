@@ -1,0 +1,451 @@
+#!/usr/bin/env python3
+"""Stream immutable controller revisions through a parallel simulator pool."""
+
+from __future__ import annotations
+
+import argparse
+from concurrent.futures import Future, ThreadPoolExecutor, as_completed
+import hashlib
+import json
+import os
+from pathlib import Path
+import queue
+import shutil
+import subprocess
+import sys
+import time
+import urllib.error
+import urllib.request
+
+
+DEFAULT_SEEDS = tuple(range(1, 9))
+
+
+def parse_seeds(raw: str) -> tuple[int, ...]:
+    try:
+        seeds = tuple(int(item.strip()) for item in raw.split(","))
+    except ValueError as error:
+        raise argparse.ArgumentTypeError("seeds must be comma-separated integers") from error
+    if not seeds or len(seeds) > 64 or len(set(seeds)) != len(seeds):
+        raise argparse.ArgumentTypeError("seeds must contain 1-64 distinct values")
+    if any(seed < 0 or seed > 2**64 - 1 for seed in seeds):
+        raise argparse.ArgumentTypeError("seeds must be unsigned 64-bit integers")
+    return seeds
+
+
+def file_digest(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()[:12]
+
+
+def controller_command(
+    template: list[str], snapshot: Path, base_url: str, seed: int
+) -> list[str]:
+    replacements = {
+        "{controller}": str(snapshot),
+        "{base_url}": base_url,
+        "{seed}": str(seed),
+    }
+    expanded = []
+    for item in template:
+        for token, value in replacements.items():
+            item = item.replace(token, value)
+        expanded.append(item)
+    if not any("{base_url}" in item for item in template):
+        expanded.extend(("--base-url", base_url))
+    if not any("{seed}" in item for item in template):
+        expanded.extend(("--seed", str(seed)))
+    return expanded
+
+
+def get_json(url: str, timeout: float = 1.0) -> dict[str, object]:
+    with urllib.request.urlopen(url, timeout=timeout) as response:
+        payload = json.loads(response.read())
+    if not isinstance(payload, dict):
+        raise RuntimeError(f"expected JSON object from {url}")
+    return payload
+
+
+def wait_for_health(base_url: str, timeout_s: float) -> None:
+    deadline = time.monotonic() + timeout_s
+    last_error: BaseException | None = None
+    while time.monotonic() < deadline:
+        try:
+            if get_json(f"{base_url}/health", 0.4).get("ok") is True:
+                return
+        except (OSError, urllib.error.URLError, ValueError) as error:
+            last_error = error
+        time.sleep(0.05)
+    raise RuntimeError(f"simulator health timeout: {last_error}")
+
+
+def snapshot_controller(source: Path, revision_dir: Path) -> tuple[Path, str]:
+    source = source.resolve()
+    if not source.is_file():
+        raise FileNotFoundError(f"controller does not exist: {source}")
+    digest = file_digest(source)
+    snapshot = revision_dir / source.name
+    shutil.copy2(source, snapshot)
+    snapshot.chmod(source.stat().st_mode & 0o777)
+    return snapshot, digest
+
+
+def next_revision_number(output_dir: Path) -> int:
+    numbers: list[int] = []
+    for path in output_dir.glob("r[0-9][0-9][0-9][0-9]-*"):
+        try:
+            numbers.append(int(path.name[1:5]))
+        except ValueError:
+            continue
+    return max(numbers, default=0) + 1
+
+
+def order_cpus_by_core(cpu_core_pairs: list[tuple[int, int]]) -> list[int]:
+    by_core: dict[int, list[int]] = {}
+    for cpu, core in sorted(cpu_core_pairs):
+        by_core.setdefault(core, []).append(cpu)
+    first_siblings = [cpus[0] for _, cpus in sorted(by_core.items())]
+    remaining = [cpu for _, cpus in sorted(by_core.items()) for cpu in cpus[1:]]
+    return first_siblings + remaining
+
+
+def preferred_worker_cpus() -> list[int]:
+    allowed = sorted(os.sched_getaffinity(0))
+    pairs: list[tuple[int, int]] = []
+    for cpu in allowed:
+        topology = Path(f"/sys/devices/system/cpu/cpu{cpu}/topology/core_id")
+        try:
+            core = int(topology.read_text(encoding="utf-8").strip())
+        except (OSError, ValueError):
+            core = cpu
+        pairs.append((cpu, core))
+    return order_cpus_by_core(pairs)
+
+
+def start_workers(args: argparse.Namespace) -> list[dict[str, object]]:
+    worker_dir = args.output_dir / ".workers" / f"session-{os.getpid()}"
+    worker_dir.mkdir(parents=True, exist_ok=False)
+    workers: list[dict[str, object]] = []
+    worker_cpus = preferred_worker_cpus() if args.cpu_pinning else []
+    selected_worker_cpus = set(worker_cpus[: args.parallel])
+    controller_cpus = sorted(os.sched_getaffinity(0) - selected_worker_cpus)
+    args.controller_cpuset = ",".join(str(cpu) for cpu in controller_cpus)
+    started_at = time.monotonic()
+    try:
+        for slot in range(args.parallel):
+            trace = worker_dir / f"worker-{slot}.jsonl"
+            trace.touch()
+            trace.chmod(0o666)
+            name = f"robot-soccer-dev-{os.getpid()}-{slot}"
+            base_url = f"http://127.0.0.1:{args.port + slot}"
+            docker_command = [
+                "docker",
+                "run",
+                "--rm",
+                "-d",
+                "--name",
+                name,
+                "--user",
+                f"{os.getuid()}:{os.getgid()}",
+                "-p",
+                f"127.0.0.1:{args.port + slot}:8080",
+                "-v",
+                f"{trace}:/tmp/robot-soccer-simulator.jsonl",
+                args.image,
+            ]
+            assigned_cpu = worker_cpus[slot] if slot < len(worker_cpus) else None
+            if assigned_cpu is not None:
+                docker_command[2:2] = ["--cpuset-cpus", str(assigned_cpu)]
+            subprocess.run(
+                docker_command,
+                check=True,
+                capture_output=True,
+                text=True,
+            )
+            wait_for_health(base_url, args.startup_timeout)
+            workers.append(
+                {
+                    "slot": slot,
+                    "name": name,
+                    "base_url": base_url,
+                    "trace": trace,
+                    "cpu": assigned_cpu,
+                }
+            )
+    except BaseException:
+        stop_workers(workers)
+        raise
+    print(
+        json.dumps(
+            {
+                "event": "worker_pool_ready",
+                "workers": len(workers),
+                "worker_cpus": [worker["cpu"] for worker in workers],
+                "controller_cpus": controller_cpus,
+                "startup_wall_s": round(time.monotonic() - started_at, 3),
+                "trace_dir": str(worker_dir),
+            },
+            sort_keys=True,
+        ),
+        flush=True,
+    )
+    return workers
+
+
+def stop_workers(workers: list[dict[str, object]]) -> None:
+    for worker in workers:
+        subprocess.run(
+            ["docker", "kill", str(worker["name"])],
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+
+
+def copy_trace_suffix(source: Path, offset: int, destination: Path) -> None:
+    with source.open("rb") as source_handle:
+        source_handle.seek(offset)
+        payload = source_handle.read()
+    destination.write_bytes(payload)
+
+
+def trace_episode_timing(path: Path) -> tuple[float | None, float | None]:
+    started_ms: int | None = None
+    terminal_ms: int | None = None
+    simulator_elapsed_ms: int | None = None
+    for raw_line in path.read_text(encoding="utf-8").splitlines():
+        try:
+            event = json.loads(raw_line)
+        except json.JSONDecodeError:
+            continue
+        if event.get("event") == "episode_started":
+            started_ms = event.get("at_unix_ms")
+        elif event.get("event") == "episode_terminal" and started_ms is not None:
+            terminal_ms = event.get("at_unix_ms")
+            payload = event.get("payload")
+            if isinstance(payload, dict):
+                simulator_elapsed_ms = payload.get("elapsed_ms")
+    if not all(isinstance(value, int) for value in (started_ms, terminal_ms)):
+        return None, None
+    episode_wall_s = (terminal_ms - started_ms) / 1000.0
+    if not isinstance(simulator_elapsed_ms, int) or simulator_elapsed_ms <= 0:
+        return episode_wall_s, None
+    return episode_wall_s, episode_wall_s / (simulator_elapsed_ms / 1000.0)
+
+
+def run_seed(
+    *,
+    args: argparse.Namespace,
+    revision: str,
+    revision_dir: Path,
+    snapshot: Path,
+    seed: int,
+    slots: queue.Queue[int],
+) -> dict[str, object]:
+    slot = slots.get()
+    worker = args.workers[slot]
+    trace = revision_dir / f"seed-{seed}.jsonl"
+    stdout_path = revision_dir / f"seed-{seed}.stdout.log"
+    stderr_path = revision_dir / f"seed-{seed}.stderr.log"
+    worker_trace = Path(worker["trace"])
+    trace_offset = worker_trace.stat().st_size
+    base_url = str(worker["base_url"])
+    started_at = time.monotonic()
+    controller_result: subprocess.CompletedProcess[str] | None = None
+    simulator_result: dict[str, object] = {
+        "status": "infrastructure_error",
+        "reason": "simulator_not_started",
+    }
+    infrastructure_error: str | None = None
+    try:
+        command = controller_command(args.controller_command, snapshot, base_url, seed)
+        if args.controller_cpuset:
+            command = ["taskset", "-c", args.controller_cpuset, *command]
+        controller_result = subprocess.run(
+            command,
+            capture_output=True,
+            text=True,
+            timeout=args.episode_timeout,
+        )
+        stdout_path.write_text(controller_result.stdout, encoding="utf-8")
+        stderr_path.write_text(controller_result.stderr, encoding="utf-8")
+        simulator_result = get_json(f"{base_url}/v1/result")
+    except (OSError, RuntimeError, subprocess.SubprocessError) as error:
+        infrastructure_error = str(error)
+    finally:
+        copy_trace_suffix(worker_trace, trace_offset, trace)
+        slots.put(slot)
+    process_wall_time_s = round(time.monotonic() - started_at, 3)
+    elapsed_ms = simulator_result.get("elapsed_ms")
+    episode_wall_time_s, realtime_ratio = trace_episode_timing(trace)
+    return {
+        "seed": seed,
+        "simulator_status": simulator_result.get("status"),
+        "simulator_reason": simulator_result.get("reason"),
+        "simulator_elapsed_ms": elapsed_ms,
+        "controller_exit_code": (
+            None if controller_result is None else controller_result.returncode
+        ),
+        "process_wall_time_s": process_wall_time_s,
+        "episode_wall_time_s": (
+            None if episode_wall_time_s is None else round(episode_wall_time_s, 3)
+        ),
+        "realtime_ratio": None if realtime_ratio is None else round(realtime_ratio, 3),
+        "trace": str(trace),
+        "stdout": str(stdout_path),
+        "stderr": str(stderr_path),
+        "infrastructure_error": infrastructure_error,
+    }
+
+
+def summarize_runs(
+    revision: str, digest: str, snapshot: Path, runs: list[dict[str, object]]
+) -> dict[str, object]:
+    ordered = sorted(runs, key=lambda run: int(run["seed"]))
+    ratios = [
+        float(run["realtime_ratio"])
+        for run in ordered
+        if isinstance(run.get("realtime_ratio"), (int, float))
+    ]
+    return {
+        "revision": revision,
+        "controller_sha256_prefix": digest,
+        "snapshot": str(snapshot),
+        "accepted": bool(ordered)
+        and all(run.get("simulator_status") == "success" for run in ordered),
+        "successes": sum(run.get("simulator_status") == "success" for run in ordered),
+        "total": len(ordered),
+        "realtime_ratio_average": (
+            None if not ratios else round(sum(ratios) / len(ratios), 3)
+        ),
+        "realtime_ratio_max": None if not ratios else round(max(ratios), 3),
+        "runs": ordered,
+    }
+
+
+def run_revision(
+    args: argparse.Namespace, source: Path, revision_number: int
+) -> dict[str, object]:
+    digest = file_digest(source)
+    revision = f"r{revision_number:04d}-{digest}"
+    revision_dir = args.output_dir / revision
+    revision_dir.mkdir(parents=True, exist_ok=False)
+    snapshot, digest = snapshot_controller(source, revision_dir)
+    slots: queue.Queue[int] = queue.Queue()
+    for slot in range(args.parallel):
+        slots.put(slot)
+    print(
+        json.dumps(
+            {
+                "event": "revision_started",
+                "revision": revision,
+                "snapshot": str(snapshot),
+                "seeds": list(args.seeds),
+                "parallel": args.parallel,
+            },
+            ensure_ascii=False,
+            sort_keys=True,
+        ),
+        flush=True,
+    )
+    runs: list[dict[str, object]] = []
+    with ThreadPoolExecutor(max_workers=args.parallel) as executor:
+        futures: dict[Future[dict[str, object]], int] = {
+            executor.submit(
+                run_seed,
+                args=args,
+                revision=revision,
+                revision_dir=revision_dir,
+                snapshot=snapshot,
+                seed=seed,
+                slots=slots,
+            ): seed
+            for seed in args.seeds
+        }
+        for future in as_completed(futures):
+            run = future.result()
+            runs.append(run)
+            print(
+                json.dumps(
+                    {"event": "seed_completed", "revision": revision, **run},
+                    ensure_ascii=False,
+                    sort_keys=True,
+                ),
+                flush=True,
+            )
+    summary = summarize_runs(revision, digest, snapshot, runs)
+    (revision_dir / "summary.json").write_text(
+        json.dumps(summary, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+    print(
+        json.dumps(
+            {"event": "revision_completed", **summary},
+            ensure_ascii=False,
+            sort_keys=True,
+        ),
+        flush=True,
+    )
+    return summary
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--controller", type=Path, required=True)
+    parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--image", default="robot-soccer-simulator:dev")
+    parser.add_argument("--parallel", type=int, default=8)
+    parser.add_argument(
+        "--seeds", type=parse_seeds, default=DEFAULT_SEEDS, help="default: 1,...,8"
+    )
+    parser.add_argument("--port", type=int, default=19000)
+    parser.add_argument("--startup-timeout", type=float, default=5.0)
+    parser.add_argument("--episode-timeout", type=float, default=40.0)
+    parser.add_argument("--watch", action="store_true")
+    parser.add_argument("--no-cpu-pinning", dest="cpu_pinning", action="store_false")
+    parser.set_defaults(cpu_pinning=True)
+    parser.add_argument("--poll-seconds", type=float, default=0.25)
+    parser.add_argument("controller_command", nargs=argparse.REMAINDER)
+    return parser
+
+
+def main() -> int:
+    parser = build_parser()
+    args = parser.parse_args()
+    if args.controller_command[:1] == ["--"]:
+        args.controller_command = args.controller_command[1:]
+    if not args.controller_command:
+        args.controller_command = [sys.executable, "{controller}"]
+    if not 1 <= args.parallel <= 32:
+        parser.error("--parallel must be between 1 and 32")
+    if not 1 <= args.port <= 65535 or args.port + args.parallel - 1 > 65535:
+        parser.error("worker port range is outside 1..65535")
+    if args.poll_seconds < 0.05:
+        parser.error("--poll-seconds must be at least 0.05")
+    source = args.controller.resolve()
+    if not source.is_file():
+        parser.error(f"controller does not exist: {source}")
+    args.output_dir = args.output_dir.resolve()
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    revision_number = next_revision_number(args.output_dir)
+    last_digest: str | None = None
+    args.workers = start_workers(args)
+    try:
+        while True:
+            digest = file_digest(source)
+            if digest != last_digest:
+                run_revision(args, source, revision_number)
+                revision_number += 1
+                last_digest = digest
+            if not args.watch:
+                break
+            time.sleep(args.poll_seconds)
+    except KeyboardInterrupt:
+        print(json.dumps({"event": "watch_stopped"}), flush=True)
+    finally:
+        stop_workers(args.workers)
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
