@@ -75,7 +75,7 @@ grok-trusted -p "テストを書いて"
 # 旧aliasは移行互換として残る
 grok-yolo -p "テストを書いて"
 
-# stable toolchain / provider capability / legacy stateを診断
+# stable toolchain / provider capability / auth readiness / legacy stateを診断
 agentctl doctor
 agentctl doctor --json
 ```

@@ -63,6 +63,8 @@ agentの`changed_paths`と`head_sha`はヒントであり、Gitの再計算結�
 
 failure classを混ぜないでください。たとえばtest failureはprovider crashではなく、通常はjob resultの`failed`です。
 
+実行前の`agentctl doctor --json`では、CLI capabilityと認証準備を別々に確認します。`capabilities.<provider>.auth`を見て、Codex / Claudeは`ready: true`を要求してください。Grokは非通信のstatus APIがないため、credential設定だけを確認した`verification: configuration-only`とlive request成功を区別します。認証不足は他providerの利用を妨げないwarningですが、そのproviderへ投入すれば即時失敗するため、unattended batchでは対象providerをqueueへ入れません。agentがlogin flowを勝手に開始してはいけません。
+
 ## Logs and retained evidence
 
 通常の確認ではraw fileを直接開かず、bounded viewを使います。
