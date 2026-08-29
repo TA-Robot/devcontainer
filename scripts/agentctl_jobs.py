@@ -1857,6 +1857,114 @@ def _result_schema(workspace: Path) -> tuple[Path, dict[str, Any]]:
     return path, schema
 
 
+TRANSPORT_SCHEMA_OMITTED_KEYWORDS = frozenset(
+    {
+        "$schema",
+        "$id",
+        "title",
+        "description",
+        "uniqueItems",
+        "minLength",
+        "maxLength",
+        "pattern",
+        "minimum",
+        "maximum",
+        "minItems",
+        "maxItems",
+        "allOf",
+        "if",
+        "then",
+        "else",
+    }
+)
+
+
+def provider_transport_schema(value: Any) -> Any:
+    """Return the common structured-output subset accepted by pinned providers.
+
+    The project schema remains the authoritative validator after the provider
+    exits.  This projection only constrains transport shape; keywords used for
+    uniqueness, conditional invariants, bounds, and canonical identifiers are
+    deliberately enforced by the broker instead of provider-specific schema
+    implementations.
+    """
+
+    if isinstance(value, list):
+        return [provider_transport_schema(item) for item in value]
+    if not isinstance(value, dict):
+        return value
+    projected: dict[str, Any] = {}
+    for key, item in value.items():
+        if key in TRANSPORT_SCHEMA_OMITTED_KEYWORDS:
+            continue
+        projected["anyOf" if key == "oneOf" else key] = provider_transport_schema(
+            item
+        )
+    if "type" not in projected:
+        candidates: list[Any] = []
+        if "const" in projected:
+            candidates = [projected["const"]]
+        elif isinstance(projected.get("enum"), list) and projected["enum"]:
+            candidates = projected["enum"]
+        inferred = {_json_schema_primitive_type(item) for item in candidates}
+        inferred.discard(None)
+        if len(inferred) == 1:
+            projected["type"] = inferred.pop()
+    properties = projected.get("properties")
+    if isinstance(properties, dict):
+        canonical_required = {
+            item for item in value.get("required", []) if isinstance(item, str)
+        }
+        for name in properties.keys() - canonical_required:
+            property_schema = properties[name]
+            properties[name] = {
+                "anyOf": [property_schema, {"type": "null"}]
+            }
+        projected["required"] = list(properties)
+    return projected
+
+
+def _json_schema_primitive_type(value: Any) -> str | None:
+    if value is None:
+        return "null"
+    if isinstance(value, bool):
+        return "boolean"
+    if isinstance(value, int):
+        return "integer"
+    if isinstance(value, float):
+        return "number"
+    if isinstance(value, str):
+        return "string"
+    return None
+
+
+def normalize_transport_result(value: Any, canonical_schema: Any) -> Any:
+    """Drop only transport-added nulls for canonically optional properties."""
+
+    if isinstance(value, list):
+        item_schema = (
+            canonical_schema.get("items")
+            if isinstance(canonical_schema, dict)
+            else None
+        )
+        return [normalize_transport_result(item, item_schema) for item in value]
+    if not isinstance(value, dict) or not isinstance(canonical_schema, dict):
+        return value
+    properties = canonical_schema.get("properties")
+    if not isinstance(properties, dict):
+        return value
+    required = {
+        item for item in canonical_schema.get("required", []) if isinstance(item, str)
+    }
+    normalized: dict[str, Any] = {}
+    for key, item in value.items():
+        property_schema = properties.get(key)
+        if key not in required and item is None:
+            continue
+        normalized[key] = normalize_transport_result(item, property_schema)
+    return normalized
+
+
 def _build_prompt(workspace: Path, job: dict[str, Any]) -> str:
     task = load_json(Path(job["task_path"]))
     config = _load_project_config(workspace)
@@ -1913,11 +2021,14 @@ def prepare_provider_invocation(
         raise AgentctlJobError(f"unsupported same-container permission profile: {permission_profile}")
 
     workspace = Path(attempt["workspace_path"]).resolve()
-    schema_path, schema = _result_schema(workspace)
+    _schema_path, schema = _result_schema(workspace)
+    transport_schema = provider_transport_schema(schema)
     prompt = _build_prompt(workspace, job)
     binary = _provider_binary(attempt["provider"], permission_profile)
     result_path = Path(attempt["result_path"])
     raw_output_path = Path(attempt["log_path"])
+    transport_schema_path = result_path.parent / "provider-output-schema.json"
+    write_json_private(transport_schema_path, transport_schema)
 
     if attempt["provider"] == "codex":
         sandbox = "read-only" if job["lane"] == "read" else "workspace-write"
@@ -1933,7 +2044,7 @@ def prepare_provider_invocation(
                 "--color",
                 "never",
                 "--output-schema",
-                str(schema_path),
+                str(transport_schema_path),
                 "--output-last-message",
                 str(result_path),
                 "--cd",
@@ -1950,7 +2061,7 @@ def prepare_provider_invocation(
             "--output-format",
             "json",
             "--json-schema",
-            json.dumps(schema, separators=(",", ":"), sort_keys=True),
+            json.dumps(transport_schema, separators=(",", ":"), sort_keys=True),
             "--no-session-persistence",
         ]
         if permission_profile == "safe":
@@ -1970,7 +2081,7 @@ def prepare_provider_invocation(
             "--output-format",
             "json",
             "--json-schema",
-            json.dumps(schema, separators=(",", ":"), sort_keys=True),
+            json.dumps(transport_schema, separators=(",", ":"), sort_keys=True),
             "--prompt-file",
             "/dev/stdin",
             "--no-auto-update",
@@ -2660,6 +2771,12 @@ def run_prepared_attempt(
                 raise AgentctlJobError("Codex did not write the required final result file")
         else:
             raise AgentctlJobError(f"unsupported provider: {provider}")
+        transported_result = load_json(invocation.result_path)
+        normalized_result = normalize_transport_result(
+            transported_result, invocation.result_schema
+        )
+        if normalized_result != transported_result:
+            write_json_private(invocation.result_path, normalized_result)
         refreshed_attempt = get_attempt(store, attempt["attempt_id"])
         verified = verify_result(job, refreshed_attempt, invocation.result_schema)
         write_json_private(

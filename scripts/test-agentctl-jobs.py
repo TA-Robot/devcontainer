@@ -81,7 +81,10 @@ else:
             }
         ],
         "risks": [],
-        "followups": []
+        "followups": [],
+        "artifacts": None,
+        "blocked_reason": None,
+        "error": None
     }
     if status == "blocked":
         result["blocked_reason"] = "Synthetic blocker."
@@ -451,6 +454,47 @@ class AgentctlJobTests(unittest.TestCase):
                 arguments = process_log["argv"]
                 index = arguments.index(expected[0])
                 self.assertEqual(arguments[index + 1], expected[1])
+                if provider == "codex":
+                    schema_index = arguments.index("--output-schema")
+                    transport_schema = json.loads(
+                        Path(arguments[schema_index + 1]).read_text(encoding="utf-8")
+                    )
+                else:
+                    schema_index = arguments.index("--json-schema")
+                    transport_schema = json.loads(arguments[schema_index + 1])
+                encoded_schema = json.dumps(transport_schema)
+                for omitted in (
+                    "$schema",
+                    "$id",
+                    "uniqueItems",
+                    "allOf",
+                    "if",
+                    "then",
+                ):
+                    self.assertNotIn(f'"{omitted}"', encoded_schema)
+                self.assertNotIn('"oneOf"', encoded_schema)
+                self.assertIn('"anyOf"', encoded_schema)
+                self.assertEqual(
+                    transport_schema["properties"]["schema_version"]["type"],
+                    "integer",
+                )
+                self.assertEqual(
+                    transport_schema["properties"]["status"]["type"], "string"
+                )
+                self.assertEqual(
+                    set(transport_schema["required"]),
+                    set(transport_schema["properties"]),
+                )
+                self.assertIn(
+                    {"type": "null"},
+                    transport_schema["properties"]["artifacts"]["anyOf"],
+                )
+                canonical_schema = (
+                    Path(attempt["workspace_path"])
+                    / ".agent/schemas/result.schema.json"
+                ).read_text(encoding="utf-8")
+                self.assertIn('"uniqueItems"', canonical_schema)
+                self.assertIn('"$schema"', canonical_schema)
 
     def test_two_jobs_from_one_base_can_run_concurrently_without_checkout_contamination(self) -> None:
         first = self.create("parallel-1.json")
