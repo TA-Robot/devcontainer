@@ -145,6 +145,120 @@ def provider_capability(
     }
 
 
+def _first_json_object(text: str) -> dict[str, Any] | None:
+    """Return a JSON object from a provider status command, if present."""
+
+    try:
+        value = json.loads(text)
+    except json.JSONDecodeError:
+        return None
+    return value if isinstance(value, dict) else None
+
+
+def provider_auth_readiness(
+    checks: list[dict[str, Any]],
+    *,
+    name: str,
+    binary: str | None,
+) -> dict[str, Any]:
+    """Probe provider auth without sending a model request or exposing secrets.
+
+    Codex and Claude expose local status commands. Grok currently does not, so
+    its result intentionally distinguishes credential configuration from a
+    provider-verified session.
+    """
+
+    check_id = f"provider.{name}.auth"
+    if not binary:
+        result = {
+            "ready": False,
+            "verification": "unavailable",
+            "credential_source": "none",
+        }
+        add_check(
+            checks,
+            check_id,
+            "warn",
+            f"{name} authentication cannot be checked because the executable is missing",
+            **result,
+        )
+        return result
+
+    if name == "codex":
+        rc, output = probe([binary, "login", "status"])
+        normalized = output.strip().lower()
+        ready = rc == 0 and "logged in" in normalized and "not logged in" not in normalized
+        result = {
+            "ready": ready,
+            "verification": "local-status-command",
+            "credential_source": "codex-login" if ready else "none",
+        }
+        add_check(
+            checks,
+            check_id,
+            "pass" if ready else "warn",
+            "Codex authentication is ready"
+            if ready
+            else "Codex is installed but not authenticated; run `codex login`",
+            **result,
+        )
+        return result
+
+    if name == "claude":
+        rc, output = probe([binary, "auth", "status"])
+        payload = _first_json_object(output)
+        ready = bool(rc == 0 and payload and payload.get("loggedIn") is True)
+        auth_method = payload.get("authMethod") if payload else None
+        result = {
+            "ready": ready,
+            "verification": "local-status-command",
+            "credential_source": str(auth_method) if ready and auth_method else "none",
+        }
+        add_check(
+            checks,
+            check_id,
+            "pass" if ready else "warn",
+            "Claude authentication is ready"
+            if ready
+            else "Claude is installed but not authenticated; run `claude auth login`",
+            **result,
+        )
+        return result
+
+    if name == "grok":
+        configured_source = "none"
+        if os.environ.get("XAI_API_KEY"):
+            configured_source = "environment"
+        else:
+            grok_home = Path(os.environ.get("GROK_HOME") or (Path.home() / ".grok"))
+            auth_path = grok_home / "auth.json"
+            try:
+                if auth_path.is_file() and auth_path.stat().st_size > 0:
+                    configured_source = "credential-file"
+            except OSError:
+                pass
+            if configured_source == "none" and os.environ.get("GROK_AUTH_PROVIDER_COMMAND"):
+                configured_source = "external-provider"
+        configured = configured_source != "none"
+        result = {
+            "ready": None if configured else False,
+            "verification": "configuration-only" if configured else "unavailable",
+            "credential_source": configured_source,
+        }
+        add_check(
+            checks,
+            check_id,
+            "pass" if configured else "warn",
+            "Grok credentials are configured; validity is checked on first request"
+            if configured
+            else "Grok is installed but no credentials are configured; run `grok login --device-auth` or set XAI_API_KEY",
+            **result,
+        )
+        return result
+
+    raise ValueError(f"unsupported provider auth probe: {name}")
+
+
 def pinned_command_versions(checks: list[dict[str, Any]], channel: str) -> None:
     if channel != "stable":
         return
@@ -437,6 +551,13 @@ def run_doctor(args: argparse.Namespace) -> int:
         ],
         expected_version=os.environ.get("DEVCONTAINER_GROK_CLI_VERSION") if channel == "stable" else None,
     )
+    for provider_name in ("codex", "claude", "grok"):
+        auth = provider_auth_readiness(
+            checks,
+            name=provider_name,
+            binary=capabilities[provider_name].get("path"),
+        )
+        capabilities[provider_name]["auth"] = auth
 
     expected_gh = os.environ.get("DEVCONTAINER_GITHUB_CLI_VERSION") if channel == "stable" else None
     gh = command_path("AGENTCTL_GH_BIN", "gh")

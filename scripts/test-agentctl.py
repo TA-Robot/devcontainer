@@ -63,13 +63,28 @@ class AgentctlTest(unittest.TestCase):
     def tearDown(self) -> None:
         self.temp.cleanup()
 
-    def make_provider(self, name: str, version: str, help_text: str) -> Path:
+    def make_provider(
+        self,
+        name: str,
+        version: str,
+        help_text: str,
+        *,
+        auth_ready: bool = True,
+    ) -> Path:
         path = self.bin_dir / name
         path.write_text(
             "#!/usr/bin/env python3\n"
+            "import json\n"
             "import sys\n"
             f"version = {version!r}\n"
             f"help_text = {help_text!r}\n"
+            f"auth_ready = {auth_ready!r}\n"
+            "if 'codex' in sys.argv[0] and sys.argv[1:] == ['login', 'status']:\n"
+            "    print('Logged in using test' if auth_ready else 'Not logged in')\n"
+            "    raise SystemExit(0 if auth_ready else 1)\n"
+            "if 'claude' in sys.argv[0] and sys.argv[1:] == ['auth', 'status']:\n"
+            "    print(json.dumps({'loggedIn': auth_ready, 'authMethod': 'test' if auth_ready else 'none'}))\n"
+            "    raise SystemExit(0 if auth_ready else 1)\n"
             "print(version if '--version' in sys.argv else help_text)\n",
             encoding="utf-8",
         )
@@ -79,19 +94,21 @@ class AgentctlTest(unittest.TestCase):
     def invoke(
         self,
         *arguments: str,
+        codex: Path | None = None,
         claude: Path | None = None,
         grok: Path | None = None,
     ) -> subprocess.CompletedProcess[str]:
         env = os.environ.copy()
         env.update(
             {
-                "AGENTCTL_CODEX_BIN": str(self.codex),
+                "AGENTCTL_CODEX_BIN": str(codex or self.codex),
                 "AGENTCTL_CLAUDE_BIN": str(claude or self.claude),
                 "AGENTCTL_GROK_BIN": str(grok or self.grok),
                 "DEVCONTAINER_AI_CLI_CHANNEL": "stable",
                 "DEVCONTAINER_CODEX_CLI_VERSION": "1.2.3",
                 "DEVCONTAINER_CLAUDE_CODE_VERSION": "4.5.6",
                 "DEVCONTAINER_GROK_CLI_VERSION": "1.0.3",
+                "XAI_API_KEY": "test-only-placeholder",
             }
         )
         return subprocess.run(
@@ -112,6 +129,13 @@ class AgentctlTest(unittest.TestCase):
         self.assertEqual(payload["capabilities"]["codex"]["missing"], [])
         self.assertEqual(payload["capabilities"]["claude"]["missing"], [])
         self.assertEqual(payload["capabilities"]["grok"]["missing"], [])
+        self.assertTrue(payload["capabilities"]["codex"]["auth"]["ready"])
+        self.assertTrue(payload["capabilities"]["claude"]["auth"]["ready"])
+        self.assertIsNone(payload["capabilities"]["grok"]["auth"]["ready"])
+        self.assertEqual(
+            payload["capabilities"]["grok"]["auth"]["verification"],
+            "configuration-only",
+        )
         scheduler = next(
             check for check in payload["checks"] if check["id"] == "scheduler.config"
         )
@@ -140,6 +164,26 @@ class AgentctlTest(unittest.TestCase):
         payload = json.loads(result.stdout)
         self.assertFalse(payload["ok"])
         self.assertIn("--json-schema", payload["capabilities"]["grok"]["missing"])
+
+    def test_doctor_warns_without_failing_when_optional_provider_auth_is_missing(self) -> None:
+        unauthenticated = self.make_provider(
+            "unauthenticated-claude",
+            "4.5.6 (Claude Code)",
+            CLAUDE_HELP,
+            auth_ready=False,
+        )
+        result = self.invoke(
+            "doctor", "--json", "--workspace", str(self.workspace), claude=unauthenticated
+        )
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        payload = json.loads(result.stdout)
+        self.assertTrue(payload["ok"])
+        auth = payload["capabilities"]["claude"]["auth"]
+        self.assertFalse(auth["ready"])
+        check = next(
+            item for item in payload["checks"] if item["id"] == "provider.claude.auth"
+        )
+        self.assertEqual(check["status"], "warn")
 
     def test_legacy_inventory_is_read_only_and_lists_evidence(self) -> None:
         session = self.workspace / ".codex-second-agent" / "key" / "agents" / "reviewer" / "session_id"
