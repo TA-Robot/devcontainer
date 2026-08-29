@@ -86,6 +86,14 @@ report-agent-collaboration-evidence \
 
 reportはepisode bodyやopaque IDを出さず、exact semantic groupごとの件数、observed durationのmin / median / max、terminal outcome、worker / review / rework proxy、coverageだけを返します。上限はcontext / storage safety capであり、推奨sample数ではありません。
 
+通常のcontainer内reportは、terminal hook前または強制停止でledgerへ確定していない
+sanitized session observationも`active-snapshot`としてread-onlyに合成します。これは
+最後に観測したeventで右側打ち切りされた観測です。terminal success / failureへ数えず、
+`input.activeSnapshots`と`completion: active-snapshot`を確認します。
+`workerLifecycleEventsObserved`は実際のstart / stop観測、
+`workerLifecycleComplete`は対応関係のcoverageです。旧`workerStartsObserved`をworker数の
+証拠として解釈しません。
+
 ## Outcome and learning
 
 primaryはartifactとacceptance checksを確認してからoutcome packetを作ります。自動観測できない値は`null`または`unknown`にし、terminal successからqualityを補完しません。

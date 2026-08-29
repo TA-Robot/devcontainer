@@ -749,6 +749,13 @@ def finalize_observation(
         "coverage": {
             "startObserved": bool(observation.get("startObserved")),
             "terminalObserved": terminal_observed,
+            "workerLifecycleEventsObserved": worker_starts > 0
+            or int(observation.get("workerStops") or 0) > 0,
+            "workerLifecycleComplete": bool(
+                observation.get("workerStartCoverage", True)
+            ),
+            # Retained for schema-v1 readers. Historically this meant lifecycle
+            # coverage completeness, not that a start event actually occurred.
             "workerStartsObserved": bool(
                 observation.get("workerStartCoverage", True)
             ),

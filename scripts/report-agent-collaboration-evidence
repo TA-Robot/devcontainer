@@ -14,8 +14,10 @@ from collaboration_evidence import (
     EvidenceReportError,
     bounded_output,
     build_report,
+    load_active_episodes,
     load_ledger,
     render_markdown,
+    with_active_episodes,
 )
 
 
@@ -26,9 +28,28 @@ def default_ledger() -> Path:
     return Path("/var/lib/mira-observations/collaboration-episodes.json")
 
 
+def default_sessions() -> Path:
+    configured = os.environ.get("MIRA_COMPANION_STATE_DIR")
+    if configured:
+        return Path(configured).expanduser() / "sessions.json"
+    xdg_state = os.environ.get("XDG_STATE_HOME")
+    base = Path(xdg_state).expanduser() if xdg_state else Path.home() / ".local" / "state"
+    return base / "mira-companion" / "sessions.json"
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--ledger", type=Path, default=default_ledger())
+    parser.add_argument(
+        "--sessions",
+        type=Path,
+        help="Optional sanitized active session state to include as censored snapshots",
+    )
+    parser.add_argument(
+        "--no-active",
+        action="store_true",
+        help="Do not include active snapshots from the default Mira state",
+    )
     parser.add_argument("--format", choices=("json", "markdown"), default="json")
     parser.add_argument("--workspace", help="Optional opaque workspace key; never emitted in the report")
     parser.add_argument("--max-episodes", type=int, default=512)
@@ -37,8 +58,14 @@ def main() -> int:
     parser.add_argument("--max-output-bytes", type=int, default=DEFAULT_MAX_OUTPUT_BYTES)
     args = parser.parse_args()
     try:
+        ledger = load_ledger(args.ledger)
+        sessions = args.sessions
+        if sessions is None and not args.no_active and args.ledger == default_ledger():
+            sessions = default_sessions()
+        if sessions is not None and not args.no_active:
+            ledger = with_active_episodes(ledger, load_active_episodes(sessions))
         report = build_report(
-            load_ledger(args.ledger),
+            ledger,
             max_episodes=args.max_episodes,
             max_groups=args.max_groups,
             min_group_size=args.min_group_size,

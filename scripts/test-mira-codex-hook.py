@@ -266,6 +266,8 @@ class MiraCodexHookTest(unittest.TestCase):
             episode["delegation"]["roleCounts"], {"researcher": 1}
         )
         self.assertTrue(episode["reviewProxy"]["available"])
+        self.assertTrue(episode["coverage"]["workerLifecycleEventsObserved"])
+        self.assertTrue(episode["coverage"]["workerLifecycleComplete"])
         self.assertGreaterEqual(episode["reviewProxy"]["elapsedMs"], 0)
         self.assertEqual(
             episode["reviewProxy"]["categoryCounts"], {"edit": 1}

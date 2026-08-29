@@ -130,6 +130,8 @@ direct providerのparent episodeでworker start / stopが揃った場合だけ�
       "coverage": {
         "startObserved": true,
         "terminalObserved": true,
+        "workerLifecycleEventsObserved": true,
+        "workerLifecycleComplete": true,
         "workerStartsObserved": true
       }
     }
@@ -145,11 +147,16 @@ direct providerのparent episodeでworker start / stopが揃った場合だけ�
 
 `solo-observed`は「内部delegationが絶対になかった」ことを証明しません。coverageとprovider hook capabilityを合わせて読みます。
 
+`workerLifecycleEventsObserved`は実際にworker start / stopを一件以上観測したか、
+`workerLifecycleComplete`は観測したworkerの対応関係が欠けていないかを表します。
+schema v1の`workerStartsObserved`は後方互換fieldで、名前に反して後者の意味でした。
+新しいreaderはこのfieldからworkerの存在を推論しません。
+
 ## Decision correlation and report
 
 task schemaのoptional `collaboration` projectionがある`agentctl` jobでは、plan / candidate IDをprocess内でopaque keyへ変換し、allowlist済みrelation、lifecycle、expected mechanism、binding constraint、decision digestをepisodeへ保存します。不正または欠けたannotationは全体を拒否して`unknown`へ戻します。
 
-`report-agent-collaboration-evidence`はledgerを変更せず、boundedなaggregateだけをJSONまたはMarkdownで返します。episode body、opaque workspace / plan / candidate / session IDは出力しません。missing ledgerはerrorではなく`unmeasured`です。target projectのprimaryは`$review-collaboration-evidence`を使うとcurrent workspace filterを自動適用できます。
+`report-agent-collaboration-evidence`はledgerを変更せず、boundedなaggregateだけをJSONまたはMarkdownで返します。通常のcontainer内実行では、sanitizedなactive sessionも`active-snapshot`としてread-onlyに合成します。これは最後に観測したeventで右側打ち切りされた観測であり、terminal outcomeを持ちません。report時刻まで無条件に時間を加算しないため、強制終了したstale sessionが成長し続けることもありません。`--no-active`で除外でき、custom ledgerでは`--sessions`を明示しない限り自動合成しません。episode body、opaque workspace / plan / candidate / session IDは出力しません。missing ledgerはerrorではなく`unmeasured`です。target projectのprimaryは`$review-collaboration-evidence`を使うとcurrent workspace filterを自動適用できます。
 
 ## Retention and opt-out
 

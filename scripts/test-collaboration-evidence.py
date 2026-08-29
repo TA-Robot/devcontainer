@@ -12,7 +12,12 @@ from pathlib import Path
 SCRIPT_DIR = Path(__file__).resolve().parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from collaboration_evidence import EvidenceReportError, build_report  # noqa: E402
+from collaboration_evidence import (  # noqa: E402
+    EvidenceReportError,
+    build_report,
+    load_active_episodes,
+    with_active_episodes,
+)
 
 
 CLI = SCRIPT_DIR / "report-agent-collaboration-evidence"
@@ -69,6 +74,57 @@ class CollaborationEvidenceTests(unittest.TestCase):
         self.assertEqual(group["dimensions"]["relation"], "consult")
         self.assertEqual(group["durationMs"], {"observations": 2, "min": 1000, "median": 2000, "max": 3000})
         self.assertEqual(group["terminalOutcomes"], {"success": 2})
+
+    def test_active_worker_observation_is_included_as_censored_snapshot(self) -> None:
+        with tempfile.TemporaryDirectory() as raw_temp:
+            sessions = Path(raw_temp) / "sessions.json"
+            sessions.write_text(
+                json.dumps(
+                    {
+                        "opaque-session": {
+                            "workspace": "0123456789abcdef",
+                            "source": "codex",
+                            "provider": "codex",
+                            "subagents": [],
+                            "updatedEpoch": 109.0,
+                            "observation": {
+                                "startedEpoch": 100.0,
+                                "startObserved": False,
+                                "testOutcomes": {
+                                    "success": 2,
+                                    "failure": 1,
+                                    "unknown": 0,
+                                },
+                                "testRecoveries": 1,
+                                "editEventsAfterTestFailure": 2,
+                                "workerStarts": 3,
+                                "workerStops": 3,
+                                "peakConcurrentWorkers": 3,
+                                "workerActiveMs": 1200,
+                                "workerActiveStartedEpoch": {},
+                                "workerStartCoverage": True,
+                                "lastWorkerStoppedEpoch": 105.0,
+                                "collaboration": None,
+                            },
+                        }
+                    }
+                ),
+                encoding="utf-8",
+            )
+            active = load_active_episodes(sessions, now_epoch=110.0)
+
+        report = build_report(
+            with_active_episodes({"schemaVersion": 1, "episodes": []}, active)
+        )
+        self.assertEqual(report["input"]["activeSnapshots"], 1)
+        group = report["groups"][0]
+        self.assertEqual(group["completions"], {"active-snapshot": 1})
+        self.assertEqual(group["terminalOutcomes"], {"unknown": 1})
+        self.assertEqual(group["workerStarts"]["max"], 3)
+        self.assertEqual(group["durationMs"]["max"], 9000)
+        self.assertEqual(group["coverage"]["workerLifecycleEventsObserved"], 1)
+        self.assertEqual(group["coverage"]["workerLifecycleComplete"], 1)
+        self.assertEqual(group["coverage"]["terminalObserved"], 0)
 
     def test_untrusted_free_text_is_not_emitted(self) -> None:
         secret = "private-customer-semantic"

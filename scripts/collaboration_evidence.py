@@ -7,6 +7,7 @@ from collections import Counter, defaultdict
 from datetime import datetime, timezone
 import json
 from pathlib import Path
+import time
 from typing import Any, Iterable
 
 
@@ -45,7 +46,8 @@ CONSTRAINTS = {
     "unknown",
 }
 TERMINAL_OUTCOMES = {"success", "failure", "unknown"}
-COMPLETIONS = {"observed-terminal", "superseded", "expired"}
+COMPLETIONS = {"observed-terminal", "superseded", "expired", "active-snapshot"}
+MAX_ACTIVE_SESSIONS = 256
 
 
 class EvidenceReportError(ValueError):
@@ -142,7 +144,16 @@ def _safe_episode(raw: Any) -> dict[str, Any] | None:
         "testOutcomes": _counter(raw.get("testOutcomes"), TERMINAL_OUTCOMES),
         "startObserved": coverage.get("startObserved") is True,
         "terminalObserved": coverage.get("terminalObserved") is True,
-        "workerStartsObserved": coverage.get("workerStartsObserved") is True,
+        "workerLifecycleEventsObserved": (
+            coverage.get("workerLifecycleEventsObserved") is True
+            or (_bounded_integer(delegation.get("starts")) or 0) > 0
+            or (_bounded_integer(delegation.get("stops")) or 0) > 0
+        ),
+        "workerLifecycleComplete": (
+            coverage.get("workerLifecycleComplete") is True
+            if "workerLifecycleComplete" in coverage
+            else coverage.get("workerStartsObserved") is True
+        ),
         "relation": _enum(semantics.get("relation"), RELATIONS),
         "lifecycle": _enum(semantics.get("lifecycle"), LIFECYCLES),
         "bindingConstraint": _enum(semantics.get("bindingConstraint"), CONSTRAINTS),
@@ -195,7 +206,12 @@ def _group_summary(key: tuple[Any, ...], episodes: list[dict[str, Any]]) -> dict
         "coverage": {
             "startObserved": sum(item["startObserved"] for item in episodes),
             "terminalObserved": sum(item["terminalObserved"] for item in episodes),
-            "workerStartsObserved": sum(item["workerStartsObserved"] for item in episodes),
+            "workerLifecycleEventsObserved": sum(
+                item["workerLifecycleEventsObserved"] for item in episodes
+            ),
+            "workerLifecycleComplete": sum(
+                item["workerLifecycleComplete"] for item in episodes
+            ),
             "decisionCorrelated": sum(item["correlated"] for item in episodes),
         },
     }
@@ -249,6 +265,15 @@ def build_report(
     ]
     if valid and not correlated:
         limitations.append("No episode has a machine-correlated collaboration decision; semantic dimensions remain unknown.")
+    active_snapshots = (
+        ledger.get("activeSnapshots", 0) if isinstance(ledger, dict) else 0
+    )
+    if isinstance(active_snapshots, bool) or not isinstance(active_snapshots, int):
+        active_snapshots = 0
+    if active_snapshots:
+        limitations.append(
+            "Active snapshots are right-censored at their last observed event and do not imply a terminal outcome."
+        )
     return {
         "schemaVersion": REPORT_SCHEMA_VERSION,
         "reportKind": "bounded-collaboration-evidence",
@@ -257,6 +282,7 @@ def build_report(
         "input": {
             "ledgerSchemaVersion": ledger.get("schemaVersion") if isinstance(ledger, dict) else None,
             "availableEpisodes": len(raw_episodes),
+            "activeSnapshots": max(0, active_snapshots),
             "consideredEpisodes": len(considered),
             "validEpisodes": len(valid),
             "invalidEpisodes": sum(item is None for item in parsed),
@@ -289,6 +315,153 @@ def load_ledger(path: Path) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise EvidenceReportError("episode ledger root must be an object")
     return value
+
+
+def _active_episode(record: Any, now_epoch: float) -> dict[str, Any] | None:
+    """Project one sanitized in-progress hook observation into report input."""
+    if not isinstance(record, dict):
+        return None
+    observation = record.get("observation")
+    if not isinstance(observation, dict):
+        return None
+    try:
+        started_epoch = float(observation.get("startedEpoch"))
+    except (TypeError, ValueError):
+        return None
+    try:
+        updated_epoch = float(record.get("updatedEpoch"))
+    except (TypeError, ValueError):
+        updated_epoch = now_epoch
+    observed_through = min(now_epoch, max(started_epoch, updated_epoch))
+    if started_epoch <= 0 or started_epoch > now_epoch:
+        return None
+
+    active_starts = observation.get("workerActiveStartedEpoch")
+    active_starts = active_starts if isinstance(active_starts, dict) else {}
+    worker_active_ms = _bounded_integer(observation.get("workerActiveMs")) or 0
+    lifecycle_complete = observation.get("workerStartCoverage") is not False
+    for raw_started in list(active_starts.values())[:64]:
+        try:
+            worker_active_ms += max(
+                0, round((observed_through - float(raw_started)) * 1000)
+            )
+        except (TypeError, ValueError):
+            lifecycle_complete = False
+
+    subagents = record.get("subagents")
+    active_workers = len(subagents[:64]) if isinstance(subagents, list) else 0
+    starts = _bounded_integer(observation.get("workerStarts")) or 0
+    stops = _bounded_integer(observation.get("workerStops")) or 0
+    peak = _bounded_integer(observation.get("peakConcurrentWorkers")) or 0
+    source = _enum(record.get("source"), SOURCES)
+    topology = (
+        "managed-job"
+        if source == "agentctl"
+        else "delegated"
+        if starts > 0 or stops > 0 or peak > 0 or active_workers > 0
+        else "solo-observed"
+    )
+    collaboration = observation.get("collaboration")
+    collaboration = collaboration if isinstance(collaboration, dict) else {}
+    correlation_available = all(
+        collaboration.get(field) is not None
+        for field in ("plan", "candidate", "decisionDigest")
+    )
+    last_worker_stopped = observation.get("lastWorkerStoppedEpoch")
+    review_available = (
+        source in PROVIDERS
+        and starts > 0
+        and active_workers == 0
+        and isinstance(last_worker_stopped, (int, float))
+    )
+    return {
+        "schemaVersion": 1,
+        "workspace": record.get("workspace"),
+        "source": source,
+        "provider": record.get("provider"),
+        "durationMs": max(0, round((observed_through - started_epoch) * 1000)),
+        "terminalOutcome": "unknown",
+        "completion": "active-snapshot",
+        "topology": topology,
+        "testOutcomes": observation.get("testOutcomes"),
+        "delegation": {
+            "starts": starts,
+            "stops": stops,
+            "peakConcurrent": max(peak, active_workers),
+            "workerActiveMs": worker_active_ms,
+            "unfinishedAtTerminal": active_workers,
+        },
+        "reviewProxy": {
+            "available": review_available,
+            "elapsedMs": (
+                max(
+                    0,
+                    round((observed_through - float(last_worker_stopped)) * 1000),
+                )
+                if review_available
+                else None
+            ),
+        },
+        "reworkProxy": {
+            "testRecoveries": observation.get("testRecoveries"),
+            "editEventsAfterTestFailure": observation.get(
+                "editEventsAfterTestFailure"
+            ),
+        },
+        "semantics": {
+            "expectedMechanisms": collaboration.get("expectedMechanisms", []),
+            "bindingConstraint": collaboration.get("bindingConstraint", "unknown"),
+            "relation": collaboration.get("relation", "unknown"),
+            "lifecycle": collaboration.get("lifecycle", "unknown"),
+            "annotationSource": collaboration.get("annotationSource", "none"),
+            "correlation": {
+                "available": correlation_available,
+                "plan": collaboration.get("plan"),
+                "candidate": collaboration.get("candidate"),
+                "decisionDigest": collaboration.get("decisionDigest"),
+            },
+        },
+        "coverage": {
+            "startObserved": bool(observation.get("startObserved")),
+            "terminalObserved": False,
+            "workerLifecycleEventsObserved": starts > 0 or stops > 0,
+            "workerLifecycleComplete": lifecycle_complete,
+        },
+    }
+
+
+def load_active_episodes(
+    path: Path, *, now_epoch: float | None = None
+) -> list[dict[str, Any]]:
+    """Load bounded, content-free snapshots without mutating the hook state."""
+    try:
+        sessions = json.loads(path.read_text(encoding="utf-8"))
+    except FileNotFoundError:
+        return []
+    except (OSError, json.JSONDecodeError) as exc:
+        raise EvidenceReportError(f"cannot read active session state: {exc}") from exc
+    if not isinstance(sessions, dict):
+        raise EvidenceReportError("active session state root must be an object")
+    current = time.time() if now_epoch is None else now_epoch
+    snapshots = [
+        snapshot
+        for _, record in list(sorted(sessions.items()))[-MAX_ACTIVE_SESSIONS:]
+        if (snapshot := _active_episode(record, current)) is not None
+    ]
+    return snapshots
+
+
+def with_active_episodes(
+    ledger: dict[str, Any], active_episodes: list[dict[str, Any]]
+) -> dict[str, Any]:
+    merged = dict(ledger)
+    raw_episodes = ledger.get("episodes", [])
+    merged["episodes"] = [
+        *(raw_episodes if isinstance(raw_episodes, list) else []),
+        *active_episodes,
+    ]
+    merged["activeSnapshots"] = len(active_episodes)
+    return merged
 
 
 def render_markdown(report: dict[str, Any]) -> str:
