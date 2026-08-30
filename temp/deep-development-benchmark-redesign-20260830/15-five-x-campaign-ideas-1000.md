@@ -1,5 +1,10 @@
 # Five-times-harder campaign inventory — 1,000 ideas
 
+> **Scope note:** this inventory explores alternative inner development
+> campaigns. It was produced from a misreading and is not the inventory for
+> making the human-and-AI chat development system itself five times deeper. The
+> chat-system-specific inventory is `17-chat-development-system-five-x-ideas-1000.md`.
+
 H1-r2がsingle Codexに583.677秒で飽和した結果を受けた、次期benchmark用の探索母集団。単なる機能数ではなく、複数の妥当解、実験による選択、専門的review、反復で伸びる測定品質を重視する。各項目は単独課題とは限らず、campaign題材・難化mechanism・評価方法のseedを含む。
 
 ## A. 複数解が競合する問題構造（0001–0050）
