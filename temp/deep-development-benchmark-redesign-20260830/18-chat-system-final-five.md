@@ -1,5 +1,9 @@
 # From 1,000 chat-system ideas to five product directions
 
+> This document selects the five directions. Their concrete five-times-hard
+> scenario packs, time curves, mutants, and proof gates are defined in
+> `19-five-directions-five-x-concrete-plan.md`.
+
 ## 1. Decision
 
 The chat-development-system inventory is reduced to five coherent product
