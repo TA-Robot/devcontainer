@@ -1,5 +1,9 @@
 # Making each of the five chat-system directions genuinely five-times harder
 
+> This document deepens the five source directions. The final consolidation
+> into three buildable challenge plans is in
+> `20-three-five-x-chat-system-plans.md`.
+
 ## 1. Baseline being multiplied
 
 DevRelay v1 was completed in 2,036 seconds (33:56) and scored 100/100. That
