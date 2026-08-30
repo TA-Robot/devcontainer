@@ -1,5 +1,8 @@
 # Final consolidation: three five-times-hard chat-development-system plans
 
+> The final adoption decision selects Evidence Forge. Its frozen scope and proof
+> protocol are defined in `21-selected-evidence-forge.md`.
+
 ## 1. Decision
 
 The five deepened directions are consolidated into three buildable challenge
