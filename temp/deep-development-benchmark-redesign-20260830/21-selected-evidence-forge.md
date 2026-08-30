@@ -1,5 +1,8 @@
 # Selected direction: Evidence Forge
 
+> This is the adoption record. The critical review and tightened v2 design are
+> in `22-evidence-forge-v2-critical-design.md`.
+
 ## 1. Adoption decision
 
 **Evidence Forge is the single adopted direction for the five-times-harder chat
