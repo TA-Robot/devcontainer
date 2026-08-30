@@ -1,5 +1,10 @@
 # From 1,000 ideas to five high-ceiling campaigns
 
+> **Scope note:** these are alternative inner development campaigns produced
+> during the earlier scope misunderstanding. They are not the five directions
+> for deepening the chat development system itself. The corrected synthesis is
+> `18-chat-system-final-five.md`.
+
 ## 1. Decision
 
 The 1,000-entry inventory was reduced to five campaign concepts:
