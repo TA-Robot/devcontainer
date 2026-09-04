@@ -101,3 +101,19 @@ SHA-256 digests. No scenario, requirement, score or feedback policy changed.
 The initial missing-implementation probe keeps its original evaluator identity;
 candidate evaluations use the new identity, recorded in provenance. An added
 provider-free regression checks that changing source changes that digest.
+
+## Release verification across actual earlier deliveries
+
+Before control phase 3, `evaluate_upgrade.py` was added as a separate release
+check for the already-required old-state compatibility. It creates ownership
+state with each condition's saved phase-1 and phase-2 CLI, then updates, rolls
+back and updates again using its phase-3 CLI while preserving a local edit.
+The fixed 35-scenario suite is unchanged. Its success alone cannot prove legacy
+state compatibility, installed-image behavior, or release acceptance. Both
+conditions receive the same supplementary release check, with all source and
+evaluator identities recorded. No test details are sent to the development agent.
+The legacy scenario changes an upstream file that has no local edits and keeps
+a separate locally edited file. Phase-1 ownership legitimately stored only
+hashes/modes; it did not promise historical bytes for an unannounced future merge
+feature. The release check must not require reconstructing missing information.
+Three-way merge remains covered against newly created state in the fixed suite.
