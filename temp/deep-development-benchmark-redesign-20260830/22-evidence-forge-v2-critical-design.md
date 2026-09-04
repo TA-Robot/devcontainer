@@ -1,5 +1,12 @@
 # Evidence Forge v2 — critical review and tightened design
 
+Planning update, 2026-09-05: this document retains the historical v2 proposal.
+Its immediate build order and expected-winner/five-times gates have been revised
+by the [project review](../../docs/project-review-2026-09-05.md) and
+[current plan](../../docs/project-plan.md). Read those before starting another
+live cell or expanding the product. Existing pilot observations remain evidence,
+with the evaluator limitations documented in the review.
+
 ## 1. Outcome of the additional review
 
 Evidence Forge remains the selected direction, but the v1 proposal was still too

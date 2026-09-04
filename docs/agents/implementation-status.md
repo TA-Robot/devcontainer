@@ -1,6 +1,14 @@
 # Native-first multi-agent refresh status
 
-Updated: 2026-08-26
+Implementation inventory updated: 2026-08-26. Planning review: 2026-09-05.
+
+The current cross-project priorities are in [`../project-plan.md`](../project-plan.md),
+with findings and reproduction evidence in the
+[`2026-09-05 project review`](../project-review-2026-09-05.md).
+The completed phases below remain an implementation inventory. The Phase 4b and
+collaboration R2 follow-ups below are conditional backlog, not the immediate
+execution order. The next benchmark work is evaluator integrity and reproducible
+source preservation, before more G3 live comparisons or outer ForgeRoom builds.
 
 The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-roadmap.md`. This file records implementation state; design changes belong in the ADR or architecture docs.
 
