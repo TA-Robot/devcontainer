@@ -145,7 +145,10 @@ class AgentctlSupervisorTests(unittest.TestCase):
                 "AGENTCTL_GROK_TRUSTED_BIN": str(self.grok),
                 "FAKE_PROVIDER_MODE": mode,
                 "AGENTCTL_HEARTBEAT_SECONDS": "0.1",
-                "AGENTCTL_ORPHAN_AFTER_SECONDS": "0.4",
+                # Ordinary queue tests use the production ownership window.
+                # The recovery test explicitly ages a dead attempt instead of
+                # making every healthy attempt subject to a 400 ms deadline.
+                "AGENTCTL_ORPHAN_AFTER_SECONDS": "30",
                 "AGENTCTL_CAPACITY_WRITE": self.capacity_write,
                 "AGENTCTL_CAPACITY_INTEGRATION": self.capacity_integration,
                 "AGENTCTL_RUNNER_LOG_MAX_BYTES": self.runner_log_max_bytes,
@@ -431,12 +434,20 @@ class AgentctlSupervisorTests(unittest.TestCase):
         self.assertIsNotNone(supervisor_marker)
         self.assertTrue(wait_process_gone(supervisor_pid, str(supervisor_marker)))
 
-        for pid in (runner_pid, provider_pid):
+        for pid, marker in (
+            (runner_pid, runtime_parts[2]),
+            (provider_pid, attempt["process_started_at"]),
+        ):
             try:
                 os.killpg(pid, signal.SIGKILL)
             except ProcessLookupError:
                 pass
-        time.sleep(0.6)
+            self.assertTrue(wait_process_gone(pid, str(marker)))
+        with sqlite3.connect(self.state_dir / "state.db") as connection:
+            connection.execute(
+                "UPDATE attempts SET heartbeat_at = ? WHERE attempt_id = ?",
+                ("2000-01-01T00:00:00.000Z", attempt["attempt_id"]),
+            )
 
         reconciled = self.invoke("supervisor", "reconcile", "--json", mode="hang")
         self.assertEqual(reconciled.returncode, 0, reconciled.stdout + reconciled.stderr)
