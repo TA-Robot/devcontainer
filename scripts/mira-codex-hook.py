@@ -175,7 +175,7 @@ TRANSIENT_SECONDS = {
 }
 
 TEST_COMMAND_PATTERN = re.compile(
-    r"(?:^|[;&|]\s*)(?:"
+    r"(?:^|[;&|]\s*)(?:env\s+)?(?:[A-Za-z_][A-Za-z0-9_]*=\S+\s+)*(?:"
     r"pytest|python(?:3)?\s+-m\s+(?:pytest|unittest)|"
     r"npm\s+(?:run\s+)?test|pnpm\s+(?:run\s+)?test|yarn\s+(?:run\s+)?test|"
     r"cargo\s+test|go\s+test|dotnet\s+test|mvn\s+test|gradle\s+test|"
@@ -447,6 +447,7 @@ def tool_state(payload: dict[str, Any]) -> tuple[str, str]:
         return "typing", "edit"
     if normalized in {
         "bash",
+        "exec_command",
         "execute_command",
         "run_shell_command",
         "run_terminal_command",

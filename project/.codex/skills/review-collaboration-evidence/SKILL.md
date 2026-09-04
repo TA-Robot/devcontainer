@@ -9,7 +9,7 @@ Query the local Mira episode ledger before changing project orchestration. Keep 
 
 ## Workflow
 
-1. Run the bundled wrapper with `--format markdown --max-groups 20 --max-output-bytes 32768`. It filters to the current workspace by default.
+1. Run the bundled wrapper with `--format markdown --max-groups 20 --max-output-bytes 32768`. It resolves the nearest copied project root containing `.agent/config.json` and filters to that workspace by default, even when invoked from this skill directory.
 2. Check `status`, valid/invalid episode counts, decision-correlation coverage, exact semantic dimensions, terminal outcomes, coverage and observed duration ranges.
    Treat `activeSnapshots` / `active-snapshot` as right-censored in-progress evidence. Use `workerLifecycleEventsObserved` for actual worker evidence and `workerLifecycleComplete` for lifecycle coverage; do not infer worker use from the legacy `workerStartsObserved` field.
 3. Compare groups only when task fingerprint, execution surface, oracle and risk are independently known to be comparable. The report does not establish those controls.

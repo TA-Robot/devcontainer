@@ -77,6 +77,8 @@ permissionを明示したnative advisoryか、別に用意したsnapshotを使�
 
 その後、capacity、quota、wall-clock、human review、integration costで実行可能な同時数とwaveを調整します。追加participantが固有の価値を説明できなければ増やしません。
 
+native Codexのfull-history forkはparentのagent type / model / effortを継承します。roleはbounded briefへ書き、互換性のないoverrideを同時指定しません。overrideが必要なら、必要contextを明示してreduced-context forkを選びます。
+
 ## Prepare a collaboration brief
 
 複数agentを開始する前に、`docs/agents/tickets/collaboration-plan.template.md`を埋めるか、同じ情報をtask planへ持ちます。

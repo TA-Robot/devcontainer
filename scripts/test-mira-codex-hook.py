@@ -101,6 +101,45 @@ class MiraCodexHookTest(unittest.TestCase):
         self.assertEqual(state["status"], "typing")
         self.assertEqual(state["toolCategory"], "edit")
 
+    def test_codex_exec_command_with_environment_prefix_is_a_test(self) -> None:
+        command = (
+            "PYTHONDONTWRITEBYTECODE=1 "
+            "python3 -m unittest discover -s private-tests -v"
+        )
+        self.emit(
+            {
+                "session_id": "session-a",
+                "hook_event_name": "UserPromptSubmit",
+                "cwd": "/workspace",
+            }
+        )
+        state = self.emit(
+            {
+                "session_id": "session-a",
+                "hook_event_name": "PreToolUse",
+                "tool_name": "exec_command",
+                "tool_input": {"cmd": command},
+            }
+        )
+        self.assertEqual(state["status"], "testing")
+        self.assertEqual(state["toolCategory"], "test")
+        self.emit(
+            {
+                "session_id": "session-a",
+                "hook_event_name": "PostToolUse",
+                "tool_name": "exec_command",
+                "tool_input": {"cmd": command},
+                "tool_response": {"exit_code": 0, "output": "private output"},
+            }
+        )
+        self.emit({"session_id": "session-a", "hook_event_name": "Stop"})
+
+        episode = self.observation_ledger()["episodes"][0]
+        self.assertEqual(episode["testOutcomes"]["success"], 1)
+        persisted = self.all_persisted_json()
+        self.assertNotIn(command, persisted)
+        self.assertNotIn("private output", persisted)
+
     def test_structured_test_outcomes_are_kept_without_tool_output(self) -> None:
         command = "pytest tests/private-customer-name"
         response_secret = "customer-output-must-not-persist"

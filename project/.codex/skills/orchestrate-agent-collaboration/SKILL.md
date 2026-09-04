@@ -20,6 +20,12 @@ Read `AGENTS.md` and `docs/agents/collaboration-playbook.md`. Keep the primary r
 4. Derive each participant from its unique artifact, perspective, approach, or error mode. Do not duplicate the same prompt merely to increase votes.
 5. Give every participant a bounded brief: context paths, allowed actions, expected evidence or artifact, acceptance, and stop condition. Keep the primary on integration-critical work.
 
+For native Codex collaboration, follow the active tool contract when selecting
+fork context and overrides. A full-history fork inherits the parent's agent type,
+model, and effort; put the worker role in the bounded brief and omit incompatible
+overrides. Use a reduced-context fork only when an explicit override is required
+and the retained context is sufficient for the task.
+
 ## Preserve the permission claim
 
 - Use native Lane R only when the parent is safe.

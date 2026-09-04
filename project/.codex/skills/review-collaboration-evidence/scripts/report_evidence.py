@@ -39,6 +39,16 @@ def workspace_key(path: Path) -> str:
     ).hexdigest()[:16]
 
 
+def current_workspace() -> Path:
+    """Resolve the copied project's root even when run from the skill folder."""
+
+    current = Path.cwd().expanduser().resolve(strict=False)
+    for candidate in (current, *current.parents):
+        if (candidate / ".agent" / "config.json").is_file():
+            return candidate
+    return current
+
+
 def main(argv: list[str] | None = None) -> int:
     forwarded = list(sys.argv[1:] if argv is None else argv)
     all_workspaces = "--all-workspaces" in forwarded
@@ -48,7 +58,7 @@ def main(argv: list[str] | None = None) -> int:
         for item in forwarded
     )
     if not all_workspaces and not has_workspace:
-        forwarded = ["--workspace", workspace_key(Path.cwd()), *forwarded]
+        forwarded = ["--workspace", workspace_key(current_workspace()), *forwarded]
     try:
         return subprocess.run([str(discover_command()), *forwarded], check=False).returncode
     except (OSError, ValueError) as exc:

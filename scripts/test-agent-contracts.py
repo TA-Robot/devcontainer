@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import json
 import sys
+import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
 
 SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
@@ -18,6 +20,18 @@ from importlib.util import module_from_spec, spec_from_file_location  # noqa: E4
 def load_template_validator():
     path = SCRIPT_DIR / "validate-agent-contracts.py"
     spec = spec_from_file_location("validate_agent_contracts", path)
+    assert spec is not None and spec.loader is not None
+    module = module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def load_collaboration_report_wrapper():
+    path = (
+        REPO_ROOT
+        / "project/.codex/skills/review-collaboration-evidence/scripts/report_evidence.py"
+    )
+    spec = spec_from_file_location("collaboration_report_wrapper", path)
     assert spec is not None and spec.loader is not None
     module = module_from_spec(spec)
     spec.loader.exec_module(module)
@@ -59,6 +73,28 @@ class AgentContractTests(unittest.TestCase):
             self.assertIn("clean", text)
             self.assertIn("checkpoint", text)
             self.assertIn("uncommitted diff", text)
+
+    def test_native_full_history_fork_guidance_avoids_incompatible_override(self) -> None:
+        skill = (
+            self.template / ".codex/skills/orchestrate-agent-collaboration/SKILL.md"
+        ).read_text(encoding="utf-8")
+        playbook = (
+            self.template / "docs/agents/collaboration-playbook.md"
+        ).read_text(encoding="utf-8")
+        for text in (skill, playbook):
+            self.assertIn("full-history", text)
+            self.assertIn("override", text)
+
+    def test_collaboration_report_resolves_project_root_from_skill_directory(self) -> None:
+        wrapper = load_collaboration_report_wrapper()
+        with tempfile.TemporaryDirectory() as raw:
+            project = Path(raw) / "target"
+            skill_directory = project / ".codex/skills/review-collaboration-evidence"
+            skill_directory.mkdir(parents=True)
+            (project / ".agent").mkdir()
+            (project / ".agent/config.json").write_text("{}\n", encoding="utf-8")
+            with mock.patch.object(Path, "cwd", return_value=skill_directory):
+                self.assertEqual(project.resolve(), wrapper.current_workspace())
 
     def test_collaboration_guidance_rejects_unsupported_global_defaults(self) -> None:
         validator = load_template_validator()
