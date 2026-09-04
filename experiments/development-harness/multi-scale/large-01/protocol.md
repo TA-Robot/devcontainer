@@ -117,3 +117,27 @@ a separate locally edited file. Phase-1 ownership legitimately stored only
 hashes/modes; it did not promise historical bytes for an unannounced future merge
 feature. The release check must not require reconstructing missing information.
 Three-way merge remains covered against newly created state in the fixed suite.
+
+## Selected intervention before the improved run
+
+Commit `09ef4e4` supplies the only source differences in the improved starting
+checkout: `.devcontainer/Dockerfile`, `scripts/test-devcontainer-lock.sh`,
+`scripts/test-devcontainer-build-preflight.py`, and `docs/toolchain.md`.
+It bundles the already-required official Dev Container CLI 0.88.0, checks Docker
+readiness in the calling context before an npm bootstrap, and places development
+user/AI-tool ownership setup before repository source copies. The control's
+ownership layer was approximately 1.23 GB and previously invalidated by edits.
+An external source-only rebuild verified reuse of both tool preparation layers
+while copying the changed source again. Authority and live task prompts remain
+unchanged; the control implementation is not copied into the improved workspace.
+
+Plain/frozen builds, runtime hook/doctor, offline CLI availability, mandatory
+shell checks and four prerequisite regressions passed. The prerequisite tests
+also passed on the image's Python. The new frozen image is
+`sha256:1b1bfa89533d8b8f3bda78d565a52b3eda2f5a31a4b18140fbeed2dddbb0c831`.
+Its dpkg package/version inventory matches the original control image.
+
+This is a bundled intervention selected adaptively after control observations,
+not an ablation identifying each change's causal effect. It grants no additional
+network or Docker access. Feature retrieval still needs the registry, and an
+outside release check does not count as completed inside the development run.
