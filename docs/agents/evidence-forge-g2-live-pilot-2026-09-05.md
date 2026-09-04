@@ -129,7 +129,8 @@ task names or topology.
   49,476 output, and 19,056 reasoning;
 - a checkpointed `agentctl` G2 cell would compare durable semantic correlation
   against native low-latency coordination;
-- G3 should test maker/verifier attribution on a non-optimization artifact;
+- a redesigned G3 mutant bank should retest maker/verifier attribution after the
+  first live G3 fixture saturated;
 - native decision correlation and accurate test telemetry should be verified in
   the next rebuilt-image live run.
 
@@ -178,7 +179,7 @@ The supported project-local conclusion is therefore conditional:
   completion-aggressive policy and stronger failure-surface evidence when that
   gain is worth the coordination cost;
 - do not convert this one pair into a provider, participant-count, or round-count
-  default. Repeat on G3 and on a less optimization-shaped artifact before
+  default. Repeat on a redesigned, non-saturated G3 and another artifact before
   changing broader planning priors.
 
 Detailed solo evidence is under

@@ -97,7 +97,7 @@ same task, model, evaluator, and execution surface.
 
 - matched G1 solo versus checkpointed-verify run;
 - repeated G2 matched pairs to estimate run-to-run variance;
-- G3 maker/verifier attribution;
+- redesigned G3 mutant-bank attribution after the first live fixture saturated;
 - parent-to-managed-job campaign correlation and structured test observation;
 - Grok participation under a task where its distinct evidence source has a
   stated expected mechanism.
