@@ -96,7 +96,7 @@ same task, model, evaluator, and execution surface.
 ## Remaining experiments
 
 - matched G1 solo versus checkpointed-verify run;
-- G2 candidate search with measured selection;
+- matched G2 solo run after the measured multi-agent G2 pilot;
 - G3 maker/verifier attribution;
 - parent-to-managed-job campaign correlation and structured test observation;
 - Grok participation under a task where its distinct evidence source has a
@@ -106,3 +106,6 @@ Detailed raw evidence remains under
 `temp/evidence-forge-live-runs/g1-live-01/` and the target fixture under
 `temp/evidence-forge-g1-live-20260905-01/`. Raw provider JSONL is intentionally
 not copied into this durable documentation.
+
+The completed G2 follow-up is documented in
+[`evidence-forge-g2-live-pilot-2026-09-05.md`](evidence-forge-g2-live-pilot-2026-09-05.md).
