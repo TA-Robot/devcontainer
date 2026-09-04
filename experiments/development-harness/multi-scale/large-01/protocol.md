@@ -91,3 +91,13 @@ the campaign. Source Git bundles and dirty/ignored files are retained together.
 Completion needs external scenario acceptance, relevant regressions, real
 installed-container verification, reviewed integration, and separate small/large
 results. No live run or feature is declared complete by this protocol alone.
+
+## Evidence amendment before the first candidate evaluation
+
+While the control's first development stage was running, the primary noticed
+that the acceptance JSON reported source immutability but did not embed source
+identity. The evaluator now also records the candidate tree and evaluator
+SHA-256 digests. No scenario, requirement, score or feedback policy changed.
+The initial missing-implementation probe keeps its original evaluator identity;
+candidate evaluations use the new identity, recorded in provenance. An added
+provider-free regression checks that changing source changes that digest.

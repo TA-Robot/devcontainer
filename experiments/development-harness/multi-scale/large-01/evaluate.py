@@ -430,6 +430,8 @@ def evaluate(candidate, phase):
                        'wall_seconds': round(time.monotonic() - began, 3)})
     unchanged = initial == tree(candidate)
     return {'schema_version': 1, 'phase': phase, 'source_unchanged': unchanged,
+            'candidate_tree_sha256': hashlib.sha256(json.dumps(initial, sort_keys=True, separators=(',', ':')).encode()).hexdigest(),
+            'evaluator_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
             'semantic_checks_passed': sum(c['passed'] for c in checks), 'semantic_checks_total': len(checks),
             'semantic_checks_accepted': unchanged and all(c['passed'] for c in checks),
             'release_accepted': None, 'checks': checks}

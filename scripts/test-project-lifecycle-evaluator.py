@@ -80,6 +80,14 @@ class EvaluatorTests(unittest.TestCase):
         self.assertTrue(first < second < third)
         self.assertEqual(len(third), len(evaluator.scenarios(3)))
 
+    def test_acceptance_record_identifies_the_actual_input_source(self):
+        before = evaluator.evaluate(self.candidate, 1)
+        (self.candidate / 'source-change.txt').write_text('changed source')
+        after = evaluator.evaluate(self.candidate, 1)
+        self.assertNotEqual(before['candidate_tree_sha256'], after['candidate_tree_sha256'])
+        self.assertEqual(before['evaluator_sha256'], after['evaluator_sha256'])
+        self.assertEqual(len(after['candidate_tree_sha256']), 64)
+
 
 if __name__ == '__main__':
     unittest.main()
