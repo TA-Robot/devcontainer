@@ -25,6 +25,7 @@ from pathlib import Path
 import subprocess
 import sys
 
+sys.stdin.read()  # Consume the prompt before reporting a synthetic result.
 kind = __PROVIDER_KIND__
 mode = os.environ.get("FAKE_PROVIDER_MODE", "success")
 if mode == "exit":
@@ -630,6 +631,8 @@ class AgentctlJobTests(unittest.TestCase):
                 "AGENTCTL_MIRA_BRIDGE_BIN": str(ROOT / "scripts/mira-codex-hook.py"),
                 "MIRA_COMPANION_ENABLED": "1",
                 "MIRA_COMPANION_STATE_DIR": str(mira_state),
+                "MIRA_COMPANION_EPISODE_DIR": str(mira_state),
+                "MIRA_COMPANION_EPISODES_ENABLED": "1",
             }
         )
         job = self.create("mira-grok-task.json")
@@ -706,6 +709,8 @@ class AgentctlJobTests(unittest.TestCase):
                 "AGENTCTL_MIRA_BRIDGE_BIN": str(ROOT / "scripts/mira-codex-hook.py"),
                 "MIRA_COMPANION_ENABLED": "1",
                 "MIRA_COMPANION_STATE_DIR": str(mira_state),
+                "MIRA_COMPANION_EPISODE_DIR": str(mira_state),
+                "MIRA_COMPANION_EPISODES_ENABLED": "1",
             }
         )
         raw_plan_id = "private-plan-parser-001"
@@ -1093,6 +1098,13 @@ class AgentctlJobTests(unittest.TestCase):
         )
         self.assertTrue(worktree.is_dir())
 
+        # A same-parent cherry-pick within the same timestamp second may have
+        # exactly the worker commit's SHA. Give integration a distinct parent
+        # so this test really exercises patch-ID recognition, not ancestry.
+        subprocess.run(
+            ["git", "-C", str(self.workspace), "commit", "--allow-empty", "-m", "integration checkpoint"],
+            check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+        )
         cherry_pick = subprocess.run(
             ["git", "-C", str(self.workspace), "cherry-pick", str(head_sha)],
             text=True,

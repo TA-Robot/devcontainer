@@ -27,6 +27,7 @@ import subprocess
 import sys
 import time
 
+sys.stdin.read()  # Keep the fixture alive until the broker supplies its input.
 mode = os.environ.get("FAKE_PROVIDER_MODE", "success")
 if mode == "hang":
     time.sleep(60)
@@ -334,7 +335,7 @@ class AgentctlSupervisorTests(unittest.TestCase):
             )
         )
         retention = json.loads(
-            (self.state_dir / "agentd-log-retention.json").read_text(encoding="utf-8")
+            self.wait_file(self.state_dir / "agentd-log-retention.json").read_text(encoding="utf-8")
         )
         self.assertEqual(retention["policy"], "supervisor_live_tail")
         self.assertTrue(retention["truncated"])

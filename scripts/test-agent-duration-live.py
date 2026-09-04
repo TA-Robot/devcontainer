@@ -40,6 +40,47 @@ from agent_duration_study import DurationStudyError, validate_run_record  # noqa
 
 
 class AgentDurationLiveTests(unittest.TestCase):
+    def assert_repository_not_mounted(self, arguments: list[str], repository: Path = ROOT) -> None:
+        # Compare actual source path boundaries. A disposable path ending in
+        # /fixture/workspace is not the repository mounted at /workspace.
+        repository = repository.resolve()
+        mounts = []
+        for index, argument in enumerate(arguments):
+            if argument == "--mount":
+                mounts.append(arguments[index + 1])
+            elif argument.startswith("--mount="):
+                mounts.append(argument.split("=", 1)[1])
+            elif argument in {"-v", "--volume"}:
+                mounts.append("type=bind,src=" + arguments[index + 1].split(":", 1)[0])
+            elif argument.startswith("--volume="):
+                mounts.append("type=bind,src=" + argument.split("=", 1)[1].split(":", 1)[0])
+        for mount in mounts:
+            fields = dict(part.split("=", 1) for part in mount.split(",") if "=" in part)
+            if fields.get("type") != "bind":
+                continue
+            source = Path(fields.get("src", fields.get("source", ""))).resolve()
+            self.assertFalse(
+                source.is_relative_to(repository) or repository.is_relative_to(source),
+                f"repository content exposed by bind source {source}",
+            )
+
+    def test_mount_boundary_accepts_a_similarly_named_owned_fixture(self) -> None:
+        self.assert_repository_not_mounted(
+            ["run", "--mount", "type=bind,src=/tmp/task/fixture/workspace,dst=/case"],
+            repository=Path("/workspace"),
+        )
+
+    def test_mount_boundary_rejects_repository_children_and_ancestors(self) -> None:
+        for source in ("/workspace", "/workspace/scripts", "/"):
+            for mount in (
+                ["--mount", f"type=bind,src={source},dst=/case"],
+                [f"--mount=type=bind,source={source},dst=/case"],
+                ["-v", f"{source}:/case:ro"],
+                [f"--volume={source}:/case:ro"],
+            ):
+                with self.subTest(source=source, mount=mount), self.assertRaises(AssertionError):
+                    self.assert_repository_not_mounted(["run", *mount], repository=Path("/workspace"))
+
     def make_fake_docker(
         self,
         directory: Path,
@@ -314,7 +355,7 @@ raise SystemExit(125)
             self.assertIn("/case", serialized)
             self.assertIn("/agent-home", serialized)
             self.assertNotIn("auth.json", serialized)
-            self.assertNotIn(str(ROOT), serialized)
+            self.assert_repository_not_mounted(run)
 
     def test_live_codex_runner_is_explicit_bounded_and_content_free(self) -> None:
         with tempfile.TemporaryDirectory(prefix="duration-live-run-") as raw_temp:
@@ -374,7 +415,7 @@ raise SystemExit(125)
             self.assertIn("--ignore-rules", run)
             self.assertIn("PYTHONDONTWRITEBYTECODE=1", run)
             self.assertIn("readonly", json.dumps(run))
-            self.assertNotIn(str(ROOT), json.dumps(run))
+            self.assert_repository_not_mounted(run)
 
     def test_claude_runner_keeps_xhigh_request_isolated_and_content_free(self) -> None:
         with tempfile.TemporaryDirectory(prefix="duration-live-claude-") as raw_temp:
@@ -440,7 +481,7 @@ raise SystemExit(125)
                 serialized_run,
             )
             self.assertNotIn(".claude.json", serialized_run)
-            self.assertNotIn(str(ROOT), serialized_run)
+            self.assert_repository_not_mounted(run)
 
     def test_grok_runner_observes_max_effort_from_ephemeral_metadata(self) -> None:
         with tempfile.TemporaryDirectory(prefix="duration-live-grok-") as raw_temp:
@@ -500,7 +541,7 @@ raise SystemExit(125)
                 serialized_run,
             )
             self.assertIn("dst=/provider-bin/grok,readonly", serialized_run)
-            self.assertNotIn(str(ROOT), serialized_run)
+            self.assert_repository_not_mounted(run)
 
     def test_grok_rejection_wins_over_pre_run_session_default(self) -> None:
         with tempfile.TemporaryDirectory(prefix="duration-live-grok-reject-") as raw_temp:
