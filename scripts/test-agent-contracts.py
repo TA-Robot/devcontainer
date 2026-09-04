@@ -85,6 +85,29 @@ class AgentContractTests(unittest.TestCase):
             self.assertIn("full-history", text)
             self.assertIn("override", text)
 
+    def test_read_lane_packets_and_checks_preserve_clean_result_contract(self) -> None:
+        agents = (self.template / "AGENTS.md").read_text(encoding="utf-8")
+        playbook = (
+            self.template / "docs/agents/collaboration-playbook.md"
+        ).read_text(encoding="utf-8")
+        researcher = (
+            self.template / ".agent/roles/researcher.md"
+        ).read_text(encoding="utf-8")
+        reviewer = (
+            self.template / ".agent/roles/reviewer.md"
+        ).read_text(encoding="utf-8")
+        template = (REPO_ROOT / "AGENTS_TEMPLATE.md").read_text(encoding="utf-8")
+        for text in (agents, playbook, template):
+            self.assertIn(".git/agentctl-inputs", text)
+        for text in (agents, playbook, researcher, reviewer, template):
+            self.assertIn("py_compile", text)
+            self.assertIn("checks", text)
+        self.assertIn("exit_code: null", playbook)
+        self.assertIn(
+            "Commands actually executed",
+            json.dumps(self.result_schema),
+        )
+
     def test_collaboration_report_resolves_project_root_from_skill_directory(self) -> None:
         wrapper = load_collaboration_report_wrapper()
         with tempfile.TemporaryDirectory() as raw:

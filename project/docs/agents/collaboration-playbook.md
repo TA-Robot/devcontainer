@@ -68,6 +68,19 @@ permissionを明示したnative advisoryか、別に用意したsnapshotを使�
 既存dirty pathを単に無視する仕組みは、workerによる変更との区別を失うため
 採用しません。
 
+controllerが実行時に生成するtask / decision packetはregistered project内に
+必要です。main checkoutでは`.git/agentctl-inputs/<run>/`のようなbounded spoolを
+使うとworktreeをdirtyにせず作成できます。`.git`がlinked-worktreeのpointer file
+ならこの経路を仮定せず、tracked checkpointか別のcontroller-owned stagingを
+選びます。spoolは一般artifact storeや無期限retentionにしません。
+
+Lane Rのacceptance commandはread-safeでなければなりません。
+`python -m py_compile`は`PYTHONDONTWRITEBYTECODE=1`でも`__pycache__`を書き込むため、
+AST / `compile()` parse、disposable snapshot、またはprimary側のlintへ置き換えます。
+resultの`checks`は実行したcommandだけを記録し、`passed`はinteger exit code 0を
+必要とします。manual review evidenceはsummary / risks / followupsへ置き、
+`exit_code: null`のpassed command checkへ変換しません。
+
 ## Derive participants instead of choosing a count
 
 - delegate: non-overlapping shard、stage、artifactから導く。

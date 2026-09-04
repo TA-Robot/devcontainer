@@ -52,6 +52,11 @@ laneは実行境界、roleは責務、relationはagent同士の関係、lifecycl
   使わず、明示的に許可されたnative advisoryまたは別snapshotを使う。
 - write agentは専用worktreeが割り当てられていなければ開始しない。
 - 実行中にlaneやpermission profileを暗黙変更しない。
+- main checkoutでcontroller-generated task / decision packetを一時配置するなら
+  `.git/agentctl-inputs/<run>/`のbounded spoolを使い、worktreeをdirtyにしない。
+  `.git`がdirectoryでないlinked worktreeではこの経路を仮定しない。
+- Lane Rへ`py_compile`など書き込みを伴うacceptanceを要求しない。manual review
+  evidenceはresult summary / risks / followupsへ置き、command `checks`へ偽装しない。
 
 ## Role boundaries
 

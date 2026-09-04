@@ -23,7 +23,7 @@ The UUID is shared by linked worktrees through the Git common config, survives a
 
 ## Create one job
 
-Create a task JSON for the target project. It must satisfy `.agent/schemas/task.schema.json`; use `agentctl job id` and a full commit SHA rather than a branch name. If the task file is inside the registered checkout, commit it before fixing the job base. This is required for Lane R because the provider runs in that checkout and validation rejects unrelated dirty state. An operator-generated task may instead live outside the checkout; `job create` copies the validated envelope into private state.
+Create a task JSON for the target project. It must satisfy `.agent/schemas/task.schema.json`; use `agentctl job id` and a full commit SHA rather than a branch name. `job create` accepts task and collaboration-decision inputs only from inside the registered project, then copies their validated envelopes into private state. For controller-generated transient packets in a main checkout, use a bounded directory such as `.git/agentctl-inputs/<run>/`: it remains inside the project boundary without dirtying the worktree. Do not use this convention when `.git` is a worktree pointer file, and do not treat repository metadata as a general artifact store. A tracked packet must be committed before fixing a Lane R base because the provider shares that checkout and validation rejects unrelated dirty state.
 
 ```bash
 agentctl job id
@@ -69,6 +69,14 @@ agentctl job validate <job-id>
 ```
 
 Lane R uses the registered workspace with the `safe` profile: Codex receives `read-only`, Claude receives `plan`, and Grok receives its read-only sandbox. This is the structured path when a primary needs cross-provider research / review, including from a trusted interactive parent; it does not inherit the parent's live native-child override. The result must report `completed` with no Git changes. Lane W creates:
+
+Lane R acceptance commands must themselves be read-safe. In particular,
+`python -m py_compile` writes `__pycache__` even when
+`PYTHONDONTWRITEBYTECODE=1`; use an AST/`compile()` parse, a disposable snapshot,
+or leave compilation to the primary. Result `checks` represent commands that
+actually ran: `passed` requires integer exit code `0`. Put manual review evidence
+in the summary, risks, or follow-ups instead of inventing a command check with a
+null exit code.
 
 ```text
 1 job

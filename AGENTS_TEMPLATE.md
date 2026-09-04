@@ -75,6 +75,11 @@ execution laneはworkspace / permission境界、roleは責務、relationはagent
 - Lane Wのagentは、primaryが専用worktreeを割り当てるまで開始しない。
 - Docker daemon、volume、port、credentialの共有が問題ならLane Wを選ばずLane Iへ送る。
 - 実行中に暗黙でlaneやpermissionを強くしない。変更が必要なら停止して再作成する。
+- main checkoutでcontroller-generated task / decision packetを一時配置するなら
+  `.git/agentctl-inputs/<run>/`のbounded spoolを使い、worktreeをdirtyにしない。
+  `.git`がdirectoryでないlinked worktreeではこの経路を仮定しない。
+- Lane Rへ`py_compile`など書き込みを伴うacceptanceを要求しない。manual review
+  evidenceはresult summary / risks / followupsへ置き、command `checks`へ偽装しない。
 
 ## Roles
 

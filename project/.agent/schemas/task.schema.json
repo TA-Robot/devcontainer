@@ -222,6 +222,7 @@
         },
         {
           "type": "object",
+          "description": "A reviewed condition whose evidence belongs in result summary, risks, or followups rather than a fabricated command check.",
           "additionalProperties": false,
           "required": ["kind", "value"],
           "properties": {

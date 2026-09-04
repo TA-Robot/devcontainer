@@ -103,6 +103,7 @@
       ]
     },
     "checks": {
+      "description": "Commands actually executed by the worker. Manual acceptance evidence belongs in summary, risks, or followups; a passed command check requires exit_code 0.",
       "type": "array",
       "items": {
         "$ref": "#/$defs/check"
@@ -247,6 +248,7 @@
     },
     "check": {
       "type": "object",
+      "description": "One actually executed command and its observed process exit status.",
       "additionalProperties": false,
       "required": ["command", "status", "exit_code", "summary"],
       "properties": {
