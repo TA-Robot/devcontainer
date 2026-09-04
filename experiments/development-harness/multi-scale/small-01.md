@@ -35,3 +35,11 @@ validation family. It therefore checks small-task overhead and regression of
 the chosen harness intervention, not broad task diversity. Report it separately
 from the sustained project lifecycle campaign. The outer evaluator and hashes
 must be fixed before these live runs.
+
+The [outer evaluator](evaluate_small.py) checks 21 default/finite/invalid input
+cases directly against the actual Supervisor constructor in an isolated process.
+It verifies the candidate module path, file digests, useful configuration errors
+and absence of created runtime state. The fixed starting source passed 16/21;
+all five misses were accepted non-finite positive/NaN inputs. This probe is not a
+live development result and does not resolve the earlier intermittent startup
+failures. Use an immutable source mount in the target image for final acceptance.
