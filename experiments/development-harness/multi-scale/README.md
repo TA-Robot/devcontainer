@@ -39,10 +39,13 @@ phase 2/3にはそれ以前の検証も含まれる。CLIのJSONに加え、実�
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
-  scripts/test-development-campaign.py scripts/test-project-lifecycle-evaluator.py
+  scripts/test-development-campaign.py scripts/test-project-lifecycle-evaluator.py \
+  scripts/test-small-development-evaluator.py
 DEVELOPMENT_CAMPAIGN_IMAGE=devcontainer-frozen-smoke:latest \
   PYTHONDONTWRITEBYTECODE=1 python3 -m unittest \
   scripts.test-development-campaign.DockerCampaignTests
 ```
 
 実Dockerのtestもfake providerのみを使い、networkなしで実行する。copyだけの不完全な実装を用いて、正しい初回copyは検査を通る一方、既存fileの上書き・独自設定の消失・成功の自己申告だけを受け入れないことを検証する。これは全仕様のreference実装やlive成功を意味しない。
+
+小規模01の評価器は、非有限値を受け入れるparser、正しい有限値guard、入力を無視して既定値を返すparserで校正する。制御用parserは一時directoryだけに作り、liveの出発点へは入れない。初期source自体の16/21という観測は、これらの校正testとは別の証拠として保持する。
