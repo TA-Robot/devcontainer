@@ -26,6 +26,49 @@ GROK_HELP = """--agent --allow --cwd --deny --json-schema --max-turns --no-subag
 """
 
 
+class AgentctlImportTests(unittest.TestCase):
+    def run_layout(self, *, checkout: bool) -> subprocess.CompletedProcess[str]:
+        """Execute the actual CLI with distinct local/installed/CWD sentinels."""
+        with tempfile.TemporaryDirectory(prefix="agentctl-import-") as raw:
+            root = Path(raw)
+            entry_dir = root / "bin"
+            installed = root / "installed"
+            working = root / "working"
+            for directory in (entry_dir, installed, working):
+                directory.mkdir()
+            source = AGENTCTL.read_text(encoding="utf-8")
+            # Relocate only the installation prefix for host and image tests.
+            source = source.replace(
+                'INSTALLED_LIBRARY = Path("/usr/local/lib/agentctl")',
+                f"INSTALLED_LIBRARY = Path({str(installed)!r})",
+            )
+            entry = entry_dir / "agentctl"
+            entry.write_text(source, encoding="utf-8")
+            for directory, label in ((installed, "installed"), (working, "wrong-cwd")):
+                (directory / "agentctl_jobs.py").write_text(
+                    f"raise SystemExit('selected-{label}')\n", encoding="utf-8"
+                )
+            if checkout:
+                (entry_dir / "agentctl_jobs.py").write_text(
+                    "raise SystemExit('selected-checkout')\n", encoding="utf-8"
+                )
+            return subprocess.run(
+                [sys.executable, str(entry), "--version"], cwd=working,
+                env={**os.environ, "PYTHONPATH": str(working), "PYTHONDONTWRITEBYTECODE": "1"},
+                text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=10,
+            )
+
+    def test_checkout_library_wins_over_installed_and_working_directory(self) -> None:
+        result = self.run_layout(checkout=True)
+        self.assertEqual(1, result.returncode)
+        self.assertEqual("selected-checkout", result.stderr.strip())
+
+    def test_installed_cli_uses_bundle_not_working_directory(self) -> None:
+        result = self.run_layout(checkout=False)
+        self.assertEqual(1, result.returncode)
+        self.assertEqual("selected-installed", result.stderr.strip())
+
+
 class AgentctlTest(unittest.TestCase):
     def setUp(self) -> None:
         self.temp = tempfile.TemporaryDirectory(prefix="agentctl-test-")

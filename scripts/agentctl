@@ -17,10 +17,13 @@ from typing import Any
 
 SCRIPT_DIRECTORY = Path(__file__).resolve().parent
 INSTALLED_LIBRARY = Path("/usr/local/lib/agentctl")
-if (INSTALLED_LIBRARY / "agentctl_jobs.py").is_file():
-    sys.path.insert(0, str(INSTALLED_LIBRARY))
-elif str(SCRIPT_DIRECTORY) not in sys.path:
+# Repository execution must test the source being edited, even inside an image
+# that already contains an older installed agentctl. Installed execution keeps
+# its root-owned bundle; the current working directory is never a selector.
+if (SCRIPT_DIRECTORY / "agentctl_jobs.py").is_file():
     sys.path.insert(0, str(SCRIPT_DIRECTORY))
+elif (INSTALLED_LIBRARY / "agentctl_jobs.py").is_file():
+    sys.path.insert(0, str(INSTALLED_LIBRARY))
 
 from agentctl_jobs import (  # noqa: E402
     AgentctlJobError,
