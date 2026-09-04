@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 import sys
 import tempfile
 import unittest
@@ -36,6 +37,97 @@ def load_collaboration_report_wrapper():
     module = module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+class JsonNumberTests(unittest.TestCase):
+    def test_load_json_rejects_non_finite_numbers(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "numbers.json"
+            for token in ("NaN", "Infinity", "-Infinity", "1e309", "-1e309"):
+                for document in (
+                    token,
+                    f'[{{"extra": [{token}]}}]',
+                    f'{{"extra": {token}, "extra": 0}}',
+                ):
+                    with self.subTest(document=document):
+                        path.write_text(document, encoding="utf-8")
+                        with self.assertRaises(ContractValidationError) as raised:
+                            load_json(path)
+                        self.assertIn(str(path), str(raised.exception))
+                        self.assertIn("non-finite", str(raised.exception))
+                        self.assertIn(token, str(raised.exception))
+
+    def test_validate_rejects_non_finite_numbers_in_unconstrained_values(self) -> None:
+        for value in (float("nan"), float("inf"), float("-inf")):
+            for instance, schemas, path in (
+                (value, ({}, {"type": "number", "minimum": 0}), "$"),
+                ([{"extra": [value]}], ({}, {"type": "array"}, {"items": {}}), "$[0].extra[0]"),
+                (
+                    {"extra": [{"value": value}]},
+                    ({}, {"type": "object"}, {"properties": {"known": {"type": "string"}}}),
+                    "$.extra[0].value",
+                ),
+            ):
+                for schema in schemas:
+                    with self.subTest(value=value, schema=schema, path=path):
+                        with self.assertRaisesRegex(
+                            ContractValidationError, re.escape(path) + ": .*non-finite"
+                        ):
+                            validate(instance, schema)
+
+    def test_schema_branches_cannot_accept_non_finite_values(self) -> None:
+        for schema in (
+            {"$ref": "#/$defs/anything", "$defs": {"anything": {}}},
+            {"allOf": [{}]},
+            {"anyOf": [{"type": "string"}, {}]},
+            {"oneOf": [{"type": "string"}, {}]},
+            {"if": {"type": "number"}, "then": {}, "else": {}},
+        ):
+            with self.subTest(schema=schema):
+                with self.assertRaisesRegex(
+                    ContractValidationError, r"packet\.extra\[0\]: .*non-finite"
+                ):
+                    validate({"extra": [float("nan")]}, schema, root=schema, path="packet")
+
+    def test_finite_numbers_large_integers_and_booleans_remain_supported(self) -> None:
+        integers = (0, 1, -1, 10**400, -(10**400))
+        numbers = (*integers, 0.0, -0.0, 1.25, -1.25, 1e308, -1e308, 5e-324)
+        for value in numbers:
+            with self.subTest(value=value):
+                validate(value, {"type": "number"})
+                validate([{"extra": value}], {})
+        for value in integers:
+            validate(value, {"type": "integer"})
+        for value in (True, False):
+            validate(value, {"type": "boolean", "minimum": 2})
+            validate(value, {"type": ["number", "boolean"]})
+            for numeric_type in ("number", "integer"):
+                with self.subTest(value=value, numeric_type=numeric_type):
+                    with self.assertRaisesRegex(ContractValidationError, "got bool"):
+                        validate(value, {"type": numeric_type})
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "finite.json"
+            document = {"values": [*numbers, True, False, None, "NaN", "Infinity", "1e309"]}
+            path.write_text(json.dumps(document, allow_nan=False), encoding="utf-8")
+            loaded = load_json(path)
+            self.assertEqual(document, loaded)
+            self.assertIs(type(loaded["values"][3]), int)
+            self.assertIs(type(loaded["values"][len(numbers)]), bool)
+            validate(loaded, {})
+
+    def test_load_json_preserves_syntax_and_io_diagnostics(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "invalid.json"
+            with self.assertRaises(ContractValidationError) as raised:
+                load_json(path)
+            self.assertIn(str(path), str(raised.exception))
+            self.assertIsInstance(raised.exception.__cause__, OSError)
+            path.write_text('{"value": }', encoding="utf-8")
+            with self.assertRaises(ContractValidationError) as raised:
+                load_json(path)
+            self.assertIn(str(path), str(raised.exception))
+            self.assertIn("line 1 column", str(raised.exception))
+            self.assertIsInstance(raised.exception.__cause__, json.JSONDecodeError)
 
 
 class AgentContractTests(unittest.TestCase):

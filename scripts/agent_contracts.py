@@ -10,6 +10,7 @@ an explicit runtime dependency.
 from __future__ import annotations
 
 import json
+import math
 import re
 from pathlib import Path
 from typing import Any
@@ -53,10 +54,23 @@ def _resolve_ref(root: dict[str, Any], ref: str) -> dict[str, Any]:
 
 def _is_valid(instance: Any, schema: dict[str, Any], root: dict[str, Any]) -> bool:
     try:
-        validate(instance, schema, root=root)
+        _validate_schema(instance, schema, root=root)
     except ContractValidationError:
         return False
     return True
+
+
+def _validate_finite_numbers(instance: Any, path: str) -> None:
+    # Inspect all JSON values, including children without schema constraints.
+    # Restrict isfinite to floats: converting an arbitrary-size int can overflow.
+    if isinstance(instance, float) and not math.isfinite(instance):
+        raise ContractValidationError(f"{path}: non-finite JSON number: {instance!r}")
+    if isinstance(instance, list):
+        for index, item in enumerate(instance):
+            _validate_finite_numbers(item, f"{path}[{index}]")
+    elif isinstance(instance, dict):
+        for key, item in instance.items():
+            _validate_finite_numbers(item, f"{path}.{key}")
 
 
 def validate(
@@ -66,12 +80,23 @@ def validate(
     root: dict[str, Any] | None = None,
     path: str = "$",
 ) -> None:
-    """Validate one instance against the supported v1 JSON Schema subset."""
+    """Reject non-finite JSON numbers and validate the v1 JSON Schema subset."""
 
+    _validate_finite_numbers(instance, path)
+    _validate_schema(instance, schema, root=root, path=path)
+
+
+def _validate_schema(
+    instance: Any,
+    schema: dict[str, Any],
+    *,
+    root: dict[str, Any] | None = None,
+    path: str = "$",
+) -> None:
     root = schema if root is None else root
 
     if "$ref" in schema:
-        validate(instance, _resolve_ref(root, schema["$ref"]), root=root, path=path)
+        _validate_schema(instance, _resolve_ref(root, schema["$ref"]), root=root, path=path)
 
     if "type" in schema:
         expected = schema["type"]
@@ -116,7 +141,7 @@ def validate(
                 raise ContractValidationError(f"{path}: array items must be unique")
         if "items" in schema:
             for index, item in enumerate(instance):
-                validate(item, schema["items"], root=root, path=f"{path}[{index}]")
+                _validate_schema(item, schema["items"], root=root, path=f"{path}[{index}]")
 
     if isinstance(instance, dict):
         required = schema.get("required", [])
@@ -130,11 +155,11 @@ def validate(
                 raise ContractValidationError(f"{path}: unexpected properties: {', '.join(extras)}")
         for key, child_schema in properties.items():
             if key in instance:
-                validate(instance[key], child_schema, root=root, path=f"{path}.{key}")
+                _validate_schema(instance[key], child_schema, root=root, path=f"{path}.{key}")
 
     if "allOf" in schema:
         for child_schema in schema["allOf"]:
-            validate(instance, child_schema, root=root, path=path)
+            _validate_schema(instance, child_schema, root=root, path=path)
 
     if "anyOf" in schema:
         matches = sum(_is_valid(instance, item, root) for item in schema["anyOf"])
@@ -149,13 +174,25 @@ def validate(
     if "if" in schema:
         branch = "then" if _is_valid(instance, schema["if"], root) else "else"
         if branch in schema:
-            validate(instance, schema[branch], root=root, path=path)
+            _validate_schema(instance, schema[branch], root=root, path=path)
+
+
+def _parse_finite_float(token: str) -> float:
+    value = float(token)
+    if not math.isfinite(value):
+        raise ContractValidationError(f"non-finite JSON number: {token}")
+    return value
 
 
 def load_json(path: Path) -> Any:
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        # Hooks also reject values later overwritten by duplicate object keys.
+        return json.loads(
+            path.read_text(encoding="utf-8"),
+            parse_constant=_parse_finite_float,
+            parse_float=_parse_finite_float,
+        )
+    except (OSError, json.JSONDecodeError, ContractValidationError) as exc:
         raise ContractValidationError(f"cannot load JSON {path}: {exc}") from exc
 
 
