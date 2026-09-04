@@ -8,6 +8,9 @@ ENV DEBIAN_FRONTEND=noninteractive \
     SHELL=/bin/bash
 
 # 基本パッケージのインストール
+# tmux is the bounded, inspectable terminal owner used by the documented
+# long-running benchmark workflow. Keeping it in the base image avoids falling
+# back to unowned nohup processes when an operator disconnects.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-transport-https \
     bubblewrap \
@@ -26,6 +29,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     python3-venv \
     ripgrep \
     sudo \
+    tmux \
     unzip \
     vim \
     wget \

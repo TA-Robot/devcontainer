@@ -28,6 +28,14 @@ The dedicated `/var/lib/docker` volume is mandatory. Omitting it can put Docker 
 
 Target projects do not need to copy this infrastructure repository's `.devcontainer/devcontainer-lock.json`. Its exact absence is reported as `not_applicable_checks`; a present-but-invalid lock, provider capability mismatch, stale auth contract, or Docker failure remains a readiness failure.
 
+The frozen image includes `tmux` because the normal benchmark path needs one
+inspectable terminal owner that survives an operator disconnect. Its impact is
+one small distro package in the base image. A detached `codex exec` plus an
+explicit terminal marker is a diagnostic fallback, but it is a different
+execution surface and must be recorded as such. If interactive benchmark
+operation is retired, remove `tmux` from `.devcontainer/Dockerfile`, remove its
+image smoke assertion, and update this runbook together.
+
 Host Codex, Claude, and Grok credential directories are bind-mounted when present. API-key variables are forwarded by name only when set; their values are not embedded in the Docker command. This remains a trusted local benchmark profile with a privileged container and shared credentials, not a security boundary.
 
 If the simulator is distributed as an image archive, stream it into the private daemon after startup:
@@ -44,6 +52,7 @@ Open a shell, then use ordinary `tmux` and the orchestrator's normal goal comman
 
 ```bash
 scripts/benchmark-devcontainer.py shell --name robot-soccer-bench-03
+command -v tmux && tmux -V  # fail before the run if a stale image lacks it
 tmux new -s benchmark
 codex
 # submit the benchmark through /goal
