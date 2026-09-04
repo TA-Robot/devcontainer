@@ -7,8 +7,11 @@ with findings and reproduction evidence in the
 [`2026-09-05 project review`](../project-review-2026-09-05.md).
 The completed phases below remain an implementation inventory. The Phase 4b and
 collaboration R2 follow-ups below are conditional backlog, not the immediate
-execution order. The next benchmark work is evaluator integrity and reproducible
-source preservation, before more G3 live comparisons or outer ForgeRoom builds.
+execution order. The first real repository maintenance cycle is
+[complete](development-harness-cycle-001.md): environment blockers were repaired,
+the same task was re-evaluated, and the accepted fix was integrated. The next
+cycle should use a different real task. G3 expansion and outer ForgeRoom builds
+are deferred.
 
 The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-roadmap.md`. This file records implementation state; design changes belong in the ADR or architecture docs.
 

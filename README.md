@@ -18,6 +18,8 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 
 ミラのpersonaは `AGENTS.md`、再利用templateは `AGENTS_TEMPLATE.md`、companion architectureは [`docs/mira/architecture.md`](docs/mira/architecture.md)、visual asset contractは [`docs/mira/assets.md`](docs/mira/assets.md) を参照してください。
 
+この基盤自身の改良は、実際の開発作業で品質・時間・復旧負担を測り、改良後に再評価するサイクルで進めます。[現行計画](docs/project-plan.md)、[最初の測定条件](experiments/development-harness/cycle-001/protocol.md)、[結果報告](docs/agents/development-harness-cycle-001.md)を参照してください。
+
 ## クイックスタート
 
 ### 1. 前提条件

@@ -1,6 +1,8 @@
 # Cycle 001 — real maintenance under the devcontainer
 
-Status: preregistered before the live development trials, 2026-09-05.
+Status: initial protocol recorded before the live development trials, 2026-09-05;
+adaptive amendments are recorded below. See the [cycle report](../../../docs/agents/development-harness-cycle-001.md)
+for results and final validation.
 
 ## Purpose and unit
 
@@ -38,3 +40,101 @@ Hypothesis: removing these environment defects improves mandatory-check completi
 Adopt parity fixes when objective checks pass and normal installed/runtime behavior is preserved. Interpret live efficiency only alongside accepted quality; if task acceptance differs, report that difference rather than computing a misleading speed ratio. Retain a null or negative result. Complete the cycle only after an implemented intervention has actually been tried, external re-evaluation is recorded, useful task output is reviewed, and the next decision is written.
 
 CLI output/usage semantics were checked against the [official non-interactive documentation](https://learn.chatgpt.com/docs/non-interactive-mode) and the actual frozen binary's help. Official current documentation is not a claim that every new flag exists in the pinned binary.
+
+## Amendment A — model readiness before any development
+
+The first baseline invocation terminated after 27.680 seconds with an explicit
+provider error that GPT-6 Astra requires a newer Codex. It made zero tool calls
+and no source changes; the failed observation is retained as infrastructure
+readiness evidence. CLI 0.146.0 is therefore not a valid cell for this model.
+
+Keep GPT-6 Astra/high. Use CLI **0.153.0**, the locally installed version, in
+both development conditions. npm's current latest was 0.153.3, but latest is
+not the selection criterion. For the control container, install exactly
+`@openai/codex@0.153.0` into `/opt/devcontainer-ai-cli` and pass the corresponding
+`DEVCONTAINER_CODEX_CLI_VERSION` to the run. The amended control is the original
+image plus this explicit compatibility overlay, not an untouched frozen image.
+The improved image pins that same CLI. Preserve both observations and count this
+as the one allowed infrastructure launch retry, not an additional development
+sample. Changing model silently would answer a different question.
+
+## Amendment B — baseline-discovered false mount failures
+
+The live control completed the semantic task (33/33 external checks), but its
+mandatory duration regression run had four failures. Reproduction with the
+original validator confirmed that these are unrelated to the task: tests reject
+`/workspace` anywhere in the Docker argument JSON, including the allowed source
+`/tmp/.../fixture/workspace`. The improved condition additionally replaces these
+substring assertions with exact bind-source ancestry checks and adversarial
+regressions (repository root, descendant and ancestor mounts must still fail).
+This is an explicit treatment revision prompted by the baseline, not a change
+to task acceptance or a weaker security requirement. Do not interpret this
+single sequential pair as a preregistered causal estimate.
+
+## Amendment C — deterministic test fixtures during release checks
+
+Host release checks exposed two more fixture races: fake providers could exit
+without consuming stdin while the broker was still writing the prompt, and a
+same-parent/same-second cherry-pick could retain the worker SHA while a test
+expected patch-ID recognition. Make fake providers consume their prompt and give
+the patch-ID test a distinct integration parent. These changes preserve broker
+runtime behavior and strengthen which branch the tests actually exercise. Retain
+initial failures and rerun the affected suites; do not label them product fixes
+or silently omit the failing checks.
+
+The container release check also showed that Mira tests inherited the image's
+persistent episode directory while expecting a private test directory. The
+fixtures now set both UI state and episode paths, and explicitly enable episode
+collection when testing correlation. This isolates test state without changing
+production telemetry. After the fixes, the affected container subsets passed
+83 tests; the other full-suite tests had already passed. Both initial failures
+and reruns are retained.
+
+## Post-comparison release verification
+
+The integrated host suite exposed a bounded-cleanup calibration failure in
+F06-L-PYBASH-001; a serial rerun passed that case but failed two supervisor queue
+tests, one reporting that the local supervisor did not become ready. These
+failures are preserved. A successful later run cannot establish their root
+cause or justify a general reliability claim.
+
+Separately, inspection found every supervisor fixture used a 400 ms orphan
+window to accelerate one recovery test. Ordinary fixtures now use the production
+30-second window; the recovery test kills and verifies its owned processes and
+explicitly ages the dead attempt's heartbeat in its private database. The
+orphan-state and cleanup assertions remain intact. This removes a real-time
+sleep dependency from fault setup, but is not claimed to fix the observed
+supervisor startup failure. It is a test-only release refinement made **after**
+both live cells and is not part of the measured intervention.
+
+Final validation uses the integrated frozen image and current repository tests
+serially. Preserve the first failures and report the final target result
+separately from host verification and from the development pair.
+
+## Reproduction and interpretation
+
+The committed source revision plus the explicit `intervention_paths` in the
+published result identifies the treatment. Reconstruct each task checkout from
+`git archive 5ca8a988efb74491cef0fa670d9137f85f855f82`, initialize a local Git
+snapshot, and apply only that revision's diff for the listed paths in the
+improved condition. Do not include the finite-number task fix or this evaluator
+in either initial checkout. Keep candidate directories outside this repository.
+
+Use `scripts/benchmark-devcontainer.py` to prepare the named container, then
+`python3 experiments/development-harness/cycle-001/measure.py --container NAME --output PRIVATE_NEW_DIRECTORY`. This starts a real
+provider invocation with the stated 900-second cap. Run `evaluate_task.py`
+with `python3` and `--candidate CHECKOUT --output RESULT_JSON` against the
+terminal candidate only; its exit code and `accepted` field are
+semantic evidence, not a claim that every repository check was completed.
+`python3 probe_environment.py` runs provider-free inside the tested image with immutable
+source at `/workspace`. The five retention samples are a diagnostic repetition
+cap, not a statistical reliability guarantee; primary owns that cap and any
+revision if scheduling conditions change.
+
+The CLI command counts include only surfaced completed `command_execution`
+items. Nonzero command exits include search commands with no matches; they are
+not a count of independent defects. Raw reasoning is discarded by the recorder.
+Private commands/final messages are kept outside the repository; published
+reports contain aggregates and artifact identities. One-time primary
+implementation, review, build and evaluation effort is excluded from the live
+cell clock, so this cycle does not establish net ROI or an amortization period.
