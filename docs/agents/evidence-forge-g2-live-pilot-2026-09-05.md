@@ -9,9 +9,11 @@ algorithm and its correctness/performance envelope: consultation introduced a
 global resource-assignment mechanism, and fresh verification found a fractional
 correctness defect plus a wide-frontier performance defect before delivery.
 
-This is one observed run. It supports the usefulness of bounded consultation
-and verification for this task, but does not establish a global routing rule or
-the causal value of any participant against a matched solo run.
+This run was followed by a matched solo cell from the same starting commit and
+image. Together they show a measured Pareto shift rather than an overall
+multi-agent winner: collaboration favored successful completion and deeper
+independent verification, while solo finished faster and produced a
+blocker-oriented, lower-consumption planner.
 
 ## Fixed input and delivery
 
@@ -125,7 +127,6 @@ task names or topology.
 
 - cumulative primary report: 5,255,451 input tokens, 5,143,296 cached input,
   49,476 output, and 19,056 reasoning;
-- matched solo G2 remains necessary to estimate collaboration's causal benefit;
 - a checkpointed `agentctl` G2 cell would compare durable semantic correlation
   against native low-latency coordination;
 - G3 should test maker/verifier attribution on a non-optimization artifact;
@@ -135,3 +136,51 @@ task names or topology.
 Detailed evaluator output and raw local evidence remain under
 `temp/evidence-forge-live-runs/g2-live-01/`. Raw transcripts are not copied into
 this durable documentation.
+
+## Matched solo follow-up
+
+The solo cell used the same immutable baseline, image digest, 45-minute cap,
+prompt contract, and external evaluator. The only intended treatment difference
+was an explicit prohibition on native subagents and `agentctl` participants.
+
+| Observation | Multi-agent | Solo |
+|---|---:|---:|
+| outer wall time | 901 s | **460 s** |
+| reported input tokens | 5,255,451 | **1,797,350** |
+| reported output tokens | 49,476 | **30,384** |
+| project tests | **11** | 8 |
+| heldout completion p50 | **69** | 77 |
+| heldout completion p95 | **89** | 92 |
+| heldout blocker p50 | 42 | **39** |
+| heldout blocker p95 | 78 | **72** |
+| heldout mean worker-seconds | 126.125 | **124.417** |
+| heldout planner p95 | 1.773 ms | **1.156 ms** |
+
+Both passed every hard gate and both beat the FIFO calibration on successful
+completion and worker consumption. Multi-agent improved heldout completion p50
+by eight relative to solo, at an added 441 seconds and roughly 3.46 million
+reported input tokens. Solo matched FIFO's blocker median while still reducing
+worker consumption. Neither dominates the other.
+
+The qualitative coverage difference matters alongside the evaluator vector.
+Solo compared six policy families and checked 500 bounded matching graphs. The
+multi-agent cell added deep-DAG, fractional-precision, and wide-frontier
+regressions after a fresh verifier found actual defects in its intermediate
+implementation. A post-run outer diagnostic measured the solo Hungarian matcher
+at about 0.315 / 0.837 / 3.191 seconds for 500 jobs and 50 / 100 / 200 workers,
+so its thinner test suite did not mask the same wide-frontier slowdown.
+
+The supported project-local conclusion is therefore conditional:
+
+- use solo as a credible first path when early blocker discovery, model/wall
+  cost, and modest worker consumption dominate;
+- bounded consultation plus fresh verification can buy a materially more
+  completion-aggressive policy and stronger failure-surface evidence when that
+  gain is worth the coordination cost;
+- do not convert this one pair into a provider, participant-count, or round-count
+  default. Repeat on G3 and on a less optimization-shaped artifact before
+  changing broader planning priors.
+
+Detailed solo evidence is under
+`temp/evidence-forge-live-runs/g2-solo-01/`; its clean target fixture is under
+`temp/evidence-forge-g2-solo-20260905-01/`.

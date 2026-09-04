@@ -96,7 +96,7 @@ same task, model, evaluator, and execution surface.
 ## Remaining experiments
 
 - matched G1 solo versus checkpointed-verify run;
-- matched G2 solo run after the measured multi-agent G2 pilot;
+- repeated G2 matched pairs to estimate run-to-run variance;
 - G3 maker/verifier attribution;
 - parent-to-managed-job campaign correlation and structured test observation;
 - Grok participation under a task where its distinct evidence source has a
