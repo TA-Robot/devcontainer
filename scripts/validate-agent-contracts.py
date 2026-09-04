@@ -6,9 +6,15 @@ from __future__ import annotations
 import argparse
 import re
 import sys
-import tomllib
 from pathlib import Path
 from typing import Any
+
+try:
+    import tomllib
+except ModuleNotFoundError:
+    # The stable Ubuntu 22.04 image uses Python 3.10. Use its distro-packaged
+    # TOML reader; Python >= 3.11 needs no compatibility dependency.
+    import tomli as tomllib
 
 from agent_contracts import ContractValidationError, load_json, validate_file
 

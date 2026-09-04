@@ -43,13 +43,19 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN apt-get update && apt-get install -y --no-install-recommends socat \
     && rm -rf /var/lib/apt/lists/*
 
+# Repository template validation needs a TOML reader on Ubuntu's Python 3.10.
+# Prefer stdlib tomllib on newer Python; remove this compatibility package when
+# the stable Python floor reaches 3.11. No startup pip installation is needed.
+RUN apt-get update && apt-get install -y --no-install-recommends python3-tomli \
+    && rm -rf /var/lib/apt/lists/*
+
 # ロケール設定
 RUN locale-gen en_US.UTF-8
 
 # Node.js 22.x インストール
 ENV NODE_VERSION=22.22.3
 ARG NODE_LINUX_X64_SHA256=2e5d13569282d016861fae7c8f935e741693c269101a5bebcf761a5376d1f99f
-ARG CODEX_CLI_VERSION=0.146.0
+ARG CODEX_CLI_VERSION=0.153.0
 ARG GEMINI_CLI_VERSION=0.45.2
 ARG CLAUDE_CODE_VERSION=2.1.220
 ARG GROK_CLI_VERSION=1.0.3

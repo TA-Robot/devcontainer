@@ -8,6 +8,12 @@ Run `agentctl doctor --json` before a benchmark or unattended batch. Provider ca
 
 Missing authentication is a provider-specific warning rather than a global doctor failure because another configured provider can still execute jobs. Automation should inspect `capabilities.<provider>.auth`: require `ready: true` for Codex / Claude, and for Grok distinguish `verification: configuration-only` from a completed live canary. Authentication repair remains an explicit human action; the broker never starts an interactive login flow.
 
+Doctor does not make model requests and does not prove that a particular model
+accepts the pinned CLI version. Before comparing development runs, verify the
+requested model with a bounded invocation and retain any pre-task rejection as
+readiness evidence. If a newer CLI is required, update and verify both comparison
+conditions explicitly; do not silently substitute an older model.
+
 ## Persistent state
 
 The devcontainer mounts a named volume at `/var/lib/agentctl` and sets `AGENTCTL_STATE_DIR` to that path. The directory and SQLite database are owner-only. Rebuilding the container preserves metadata, attempt evidence, and job worktrees.

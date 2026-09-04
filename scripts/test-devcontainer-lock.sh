@@ -63,6 +63,12 @@ docker run --rm --network none "$image_name" bash -lc \
   'test ! -e /usr/bin/bwrap; test ! -e /usr/local/bin/bwrap; test -x /usr/local/lib/provider-sandbox/bwrap; /usr/local/lib/provider-sandbox/bwrap --version >/dev/null; command -v socat >/dev/null; socat -V >/dev/null; command -v tmux >/dev/null; tmux -V >/dev/null'
 echo "ok - provider sandbox and durable terminal runtime: bubblewrap + socat + tmux"
 
+# Verify development checks on the shipped Python, not only installed runtime.
+docker run --rm --network none -v "$repo_root:/workspace:ro" -w /workspace \
+  "$image_name" bash -lc \
+    'PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate-agent-contracts.py && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts.test-agentctl.AgentctlImportTests'
+echo "ok - repository template validation and checkout library selection"
+
 if [[ "${DEVCONTAINER_FROZEN_RUN_SMOKE:-1}" == "1" ]]; then
   # Feature entrypoints are runtime metadata and are not written into the image
   # Config by `devcontainer build`, so invoke docker-init explicitly here.

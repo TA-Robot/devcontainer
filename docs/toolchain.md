@@ -14,6 +14,7 @@ Current direct pins:
 | Component | Version/source |
 |---|---|
 | Ubuntu | `22.04` image digest in `Dockerfile` |
+| Python / TOML validation | Ubuntu Python 3.10 + `python3-tomli`; stdlib `tomllib` on Python >= 3.11 |
 | Provider sandbox helpers | Ubuntu `bubblewrap` and `socat` packages from the pinned base distribution |
 | Node | `22.22.3` plus archive SHA-256 |
 | TypeScript | `5.9.3` |
@@ -24,7 +25,7 @@ Current direct pins:
 | Docker Buildx | `0.36.1` Feature option |
 | Docker Compose | `2.40.3` plus binary SHA-256 |
 | GitHub CLI | `2.97.0` Feature option |
-| Codex CLI | `0.146.0` |
+| Codex CLI | `0.153.0` |
 | Gemini CLI | `0.45.2` |
 | Claude Code | `2.1.220` |
 | Grok Build | `1.0.3` official Linux x86_64 binary, SHA-256 `2a7d46dea3fbed067e4072258b835d401e017d6848dc996279f0fb3d668a0961` |
@@ -130,3 +131,25 @@ Normal `codex`, `claude`, and `grok` preserve provider approvals/sandboxing. Use
 `codex-trusted`, `claude-trusted`, or `grok-trusted` only for trusted local code
 when the speed tradeoff is intentional. The current privileged container and
 credential mounts remain outside any strong security boundary in either profile.
+
+## Repository development compatibility
+
+`python3-tomli` supports the native-agent template validator on Ubuntu 22.04's
+Python 3.10. Python's standard-library
+[`tomllib` starts at 3.11](https://docs.python.org/3/library/tomllib.html);
+the [Jammy package](https://packages.ubuntu.com/jammy/python3-tomli) supplies the
+compatible reader without startup installs. This adds one development-time OS
+package, not an agentctl or extension runtime dependency. It follows the same
+distro-package update policy as base Python, with the resulting image digest as
+the reproducible distribution unit. Alternatives were upgrading the OS/Python,
+repeatedly installing a user package, or maintaining our own TOML parser; each
+adds unnecessary work for this compatibility gap. When the stable Python floor
+reaches 3.11, remove the package layer and fallback import, then rerun template
+validation and frozen-image smoke. An external Python 3.10 virtualenv needs its
+own Tomli installation; Python >= 3.11 does not.
+
+When developing this repository, use `scripts/agentctl`: it loads sibling
+checkout libraries before the installed bundle. `/usr/local/bin/agentctl`
+continues to load its installed bundle. The current working directory must not
+choose the implementation. Frozen-image smoke now verifies template validation
+and this import boundary against the shipped Python.
