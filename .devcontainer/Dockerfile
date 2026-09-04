@@ -135,6 +135,29 @@ RUN install -d -m 0755 "${DEVCONTAINER_AI_CLI_PREFIX}/bin" \
     && rm /tmp/grok \
     && "${DEVCONTAINER_AI_CLI_PREFIX}/bin/grok" --no-auto-update --version | grep -F "${GROK_CLI_VERSION}"
 
+# The repository's frozen build already requires this CLI. Installing it in the
+# image avoids a hidden npx bootstrap during a sandboxed development check.
+# Place it after AI CLI installation and before repository COPY instructions,
+# so project edits reuse both tool-installation layers.
+ARG DEVCONTAINER_CLI_VERSION=0.88.0
+RUN npm install -g "@devcontainers/cli@${DEVCONTAINER_CLI_VERSION}" \
+    && npm cache clean --force
+ENV DEVCONTAINER_CLI_VERSION=${DEVCONTAINER_CLI_VERSION}
+
+# Keep the large AI-tool ownership layer independent of repository edits.
+# USER changes only after the root-owned runtime files are installed below.
+ARG USERNAME=devuser
+ARG USER_UID=1000
+ARG USER_GID=$USER_UID
+
+RUN groupadd --gid $USER_GID $USERNAME \
+    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -s /bin/bash \
+    && install -d -m 0700 -o $USERNAME -g $USERNAME /var/lib/agentctl \
+    && install -d -m 0700 -o $USERNAME -g $USERNAME /var/lib/mira-observations \
+    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
+    && chmod 0440 /etc/sudoers.d/$USERNAME \
+    && chown -R $USERNAME:$USERNAME "${DEVCONTAINER_AI_CLI_PREFIX}"
+
 # Normal Codex / Claude / Grok commands preserve provider approvals and sandboxing.
 # Explicit `*-trusted` commands expose the legacy-equivalent bypass profile.
 COPY scripts/devcontainer-codex /usr/local/bin/codex
@@ -215,19 +238,6 @@ COPY scripts/fugu /usr/local/lib/devcontainer/fugu
 COPY scripts/codex-second-agent-filter.py /usr/local/lib/second-agent/codex-second-agent-filter.py
 COPY scripts/claude-second-agent-filter.py /usr/local/lib/second-agent/claude-second-agent-filter.py
 RUN chmod +x /usr/local/bin/second-agent /usr/local/bin/codex-second-agent /usr/local/bin/claude-second-agent /usr/local/bin/fugu /usr/local/lib/devcontainer/fugu
-
-# 開発ユーザー作成
-ARG USERNAME=devuser
-ARG USER_UID=1000
-ARG USER_GID=$USER_UID
-
-RUN groupadd --gid $USER_GID $USERNAME \
-    && useradd --uid $USER_UID --gid $USER_GID -m $USERNAME -s /bin/bash \
-    && install -d -m 0700 -o $USERNAME -g $USERNAME /var/lib/agentctl \
-    && install -d -m 0700 -o $USERNAME -g $USERNAME /var/lib/mira-observations \
-    && echo "$USERNAME ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/$USERNAME \
-    && chmod 0440 /etc/sudoers.d/$USERNAME \
-    && chown -R $USERNAME:$USERNAME "${DEVCONTAINER_AI_CLI_PREFIX}"
 
 # AI CLI aliases. `*-auto` / `*-yolo` remain compatibility spellings, while
 # new automation should use the explicit `*-trusted` executable names.

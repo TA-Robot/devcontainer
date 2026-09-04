@@ -25,6 +25,28 @@ if [[ $build -eq 0 ]]; then
   exit 0
 fi
 
+# Probe the required daemon from this execution context before an npx bootstrap.
+# A host-side doctor result does not establish a sandboxed command's access.
+PYTHONDONTWRITEBYTECODE=1 python3 - <<'PY'
+import shutil
+import subprocess
+import sys
+
+if shutil.which("docker") is None:
+    sys.exit("error: frozen build requires the Docker CLI in this execution context")
+try:
+    result = subprocess.run(
+        ["docker", "info", "--format", "{{.ServerVersion}}"],
+        stdout=subprocess.DEVNULL, stderr=subprocess.PIPE, text=True, timeout=10,
+    )
+except subprocess.TimeoutExpired:
+    sys.exit("error: Docker readiness probe exceeded 10 seconds; frozen build was not run")
+if result.returncode:
+    if result.stderr.strip():
+        print(result.stderr.strip(), file=sys.stderr)
+    sys.exit("error: Docker is unavailable in this execution context; frozen build was not run")
+PY
+
 image_name="${DEVCONTAINER_FROZEN_IMAGE:-devcontainer-frozen-smoke:latest}"
 cli_version="${DEVCONTAINER_CLI_VERSION:-0.88.0}"
 
@@ -62,6 +84,10 @@ echo "ok - centrally pinned Codex disables interactive startup update checks"
 docker run --rm --network none "$image_name" bash -lc \
   'test ! -e /usr/bin/bwrap; test ! -e /usr/local/bin/bwrap; test -x /usr/local/lib/provider-sandbox/bwrap; /usr/local/lib/provider-sandbox/bwrap --version >/dev/null; command -v socat >/dev/null; socat -V >/dev/null; command -v tmux >/dev/null; tmux -V >/dev/null'
 echo "ok - provider sandbox and durable terminal runtime: bubblewrap + socat + tmux"
+
+docker run --rm --network none "$image_name" bash -lc \
+  'test "$(devcontainer --version)" = "$DEVCONTAINER_CLI_VERSION"'
+echo "ok - pinned Dev Container CLI is available without npm bootstrap or network"
 
 # Verify development checks on the shipped Python, not only installed runtime.
 docker run --rm --network none -v "$repo_root:/workspace:ro" -w /workspace \

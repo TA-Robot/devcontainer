@@ -29,7 +29,7 @@ Current direct pins:
 | Gemini CLI | `0.45.2` |
 | Claude Code | `2.1.220` |
 | Grok Build | `1.0.3` official Linux x86_64 binary, SHA-256 `2a7d46dea3fbed067e4072258b835d401e017d6848dc996279f0fb3d668a0961` |
-| Dev Container CLI used by frozen smoke | `0.88.0` |
+| Dev Container CLI shipped in image and used by frozen smoke | `0.88.0` |
 
 The Feature OCI digest alone does not freeze option defaults. In particular,
 Docker-in-Docker and GitHub CLI default to `latest`; stable therefore pins engine,
@@ -113,6 +113,49 @@ The build command uses `devcontainer build --frozen-lockfile`; if no global
 `devcontainer` command exists, it uses `npx --yes @devcontainers/cli@0.88.0`.
 The smoke also rejects API key variables in the built image ENV and starts the
 Feature-provided DinD entrypoint before running `agentctl doctor`.
+
+Before invoking or bootstrapping that CLI, the script probes `docker info` in
+the calling execution context. A missing/inaccessible daemon or a probe timeout
+stops the check with a nonzero exit and an explicit unexecuted-build diagnostic.
+The 10-second probe deadline is a local cost cap for detecting an unavailable
+daemon, owned by repository maintainers; revisit it only with evidence of a
+healthy daemon needing more time. An outer host's successful doctor result does
+not establish access from a provider sandbox. The check neither changes sandbox
+permissions nor marks a blocked build successful.
+
+The provider-free preflight regressions run with
+`PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-devcontainer-build-preflight.py`.
+They cover an absent, inaccessible and unresponsive daemon, plus propagation of
+the real frozen CLI command after a successful probe.
+
+The image includes this already-required CLI at build time. In a fresh image,
+`devcontainer --version` must work with networking disabled and match
+`DEVCONTAINER_CLI_VERSION`; frozen smoke checks that condition. This removes the
+implicit npm installation from normal repository checks. It does **not** make
+the frozen build offline: the pinned CLI still retrieves Feature manifests and
+blobs from OCI registries. The distinction is visible in the
+[CLI's versioned OCI implementation](https://github.com/devcontainers/cli/blob/v0.88.0/src/spec-configuration/containerCollectionsOCI.ts).
+Network-denied agent commands may therefore still need a separately authorized
+release-check environment. Report that limitation instead of weakening the
+provider's sandbox or claiming the build passed.
+
+The dependency adds the official CLI and its npm dependencies to the development
+image; it changes neither agentctl nor the editor extension's runtime API.
+Alternatives are the existing on-demand npx bootstrap, which fails before the
+check when registry access is unavailable, or a custom Feature cache/build
+implementation, which adds maintenance and does not solve permission parity.
+To remove the bundled CLI, delete its Dockerfile ARG/RUN/ENV block and the
+offline availability smoke, update this table, rebuild, and provide the same
+pinned CLI externally through `DEVCONTAINER_CLI_BIN` or the documented host
+fallback. Its installation layer precedes repository source copies, so editing project
+scripts does not reinstall the CLI. No package installation is added to
+container startup.
+
+Development-user creation and AI-tool ownership also precede repository source
+copies. The control image had a roughly 1.23 GB ownership-change layer after
+those copies, so ordinary source edits invalidated it. This ordering change
+keeps the same ownership and user behavior while allowing that layer to be
+reused. It does not remove the layer or promise a smaller initial image.
 
 ## Stable update flow
 
