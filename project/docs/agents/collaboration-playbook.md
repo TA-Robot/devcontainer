@@ -58,6 +58,16 @@ relation名は説明を短くするaliasで、closed enumではありません�
 
 provider-native childはparent sessionのlive permissionを継承し得ます。safeなLane Rとして扱うならparentもsafeでなければなりません。session / workspace全体へ`trusted-fast`が明示許可されている場合は、boundedなconsult / verify childを同じtrusted permissionで動かせますが、これはLane Rではなく`trusted advisory`です。read-only roleはbehavioral constraintであり強制隔離ではありません。file変更、外部作用、permission escalationを依頼せず、許可scopeが一つのwrite jobだけならchildへ拡張しません。強制的なread-onlyやcredential分離が必要ならsafe sessionまたはLane Iを使います。
 
+`agentctl` Lane Rはregistered checkoutを共有し、completed resultはcleanな
+workspaceを要求します。consultは原則としてprimaryが編集を始める前に
+行います。実装artifactのverifyはprimaryがcontroller-ownedなcheckpoint
+commitを作り、そのfull SHAへtaskを固定してから行います。uncommitted diffを
+共有checkoutでreviewさせると、内容が有益でもjobはdirty-state failureに
+なるため、成功へ読み替えません。その状態をどうしてもreviewする場合は、
+permissionを明示したnative advisoryか、別に用意したsnapshotを使います。
+既存dirty pathを単に無視する仕組みは、workerによる変更との区別を失うため
+採用しません。
+
 ## Derive participants instead of choosing a count
 
 - delegate: non-overlapping shard、stage、artifactから導く。

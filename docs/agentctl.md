@@ -43,6 +43,16 @@ agentctl job show <job-id> --json  # collaboration_correlatedを確認
 
 `job create` copies a validated, immutable envelope into private state. It verifies the full base commit exists, the role/lane pair is declared in `.agent/config.json`, dependencies belong to the same project, and project-relative paths do not escape the contract.
 
+Lane R additionally assumes that the registered checkout is clean from job
+creation through result validation. This is part of the evidence contract:
+without a clean baseline, the broker cannot attribute a shared-checkout change
+to the user, primary, provider, or another process. Run consultation before the
+primary edits. To verify an implementation, first create a controller-owned
+checkpoint commit and use its full SHA as the review job's base. Reviewing an
+uncommitted diff requires an explicitly permitted native advisory child or a
+separately prepared snapshot; a useful report from a dirty Lane R attempt still
+has terminal state `failed` or `blocked` and must not be relabelled successful.
+
 The input file may omit `job_id`; `job create` then generates a canonical ULID. `--job-id` can supply it explicitly, and `--base` can supply the revision when the task omits `base_sha`. The stored envelope always contains a canonical ULID and full SHA. For reproducible review, committing those values in the source task JSON is preferred.
 
 ## Run in foreground

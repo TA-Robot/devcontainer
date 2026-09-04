@@ -46,6 +46,10 @@ laneは実行境界、roleは責務、relationはagent同士の関係、lifecycl
 - `read`: researcher / reviewer用。同一checkoutでよい。file変更は禁止。
 - `write`: implementer用。immutable `base_sha`から作られたjob専用worktreeが必須。
 - `isolated`: untrusted code、破壊的Docker操作、credential分離が必要なtask用。
+- `agentctl` read jobはcleanなregistered checkoutでだけ開始する。consultは
+  編集前、実装reviewはprimaryのcheckpoint commit後に行い、taskの
+  `base_sha`をそのcommitへ固定する。uncommitted diffのreviewにはLane Rを
+  使わず、明示的に許可されたnative advisoryまたは別snapshotを使う。
 - write agentは専用worktreeが割り当てられていなければ開始しない。
 - 実行中にlaneやpermission profileを暗黙変更しない。
 

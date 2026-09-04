@@ -67,6 +67,10 @@ execution laneはworkspace / permission境界、roleは責務、relationはagent
 | I / `isolated` | untrusted code、破壊的Docker操作、credential分離 | disposable / private runtime | `safe`。自律実行は明示opt-in |
 
 - read taskを速くfan-outする時はprovider-native subagentを使う。
+- `agentctl` read jobはcleanなregistered checkoutでだけ開始する。consultは
+  編集前、実装reviewはprimaryのcheckpoint commit後に行い、taskの
+  `base_sha`をそのcommitへ固定する。uncommitted diffのreviewにはLane Rを
+  使わず、明示的に許可されたnative advisoryまたは別snapshotを使う。
 - write taskを同じcheckout上の複数subagentへ同時に渡さない。
 - Lane Wのagentは、primaryが専用worktreeを割り当てるまで開始しない。
 - Docker daemon、volume、port、credentialの共有が問題ならLane Wを選ばずLane Iへ送る。

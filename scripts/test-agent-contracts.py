@@ -47,6 +47,19 @@ class AgentContractTests(unittest.TestCase):
         self.assertIn("human review / synthesis budget", template.read_text(encoding="utf-8"))
         self.assertIn("do not ask the user", template.read_text(encoding="utf-8"))
 
+    def test_read_job_guidance_requires_clean_checkpoint_boundary(self) -> None:
+        skill = (self.template / ".codex/skills/orchestrate-agent-collaboration/SKILL.md").read_text(
+            encoding="utf-8"
+        )
+        playbook = (self.template / "docs/agents/collaboration-playbook.md").read_text(
+            encoding="utf-8"
+        )
+        agents = (self.template / "AGENTS.md").read_text(encoding="utf-8")
+        for text in (skill, playbook, agents):
+            self.assertIn("clean", text)
+            self.assertIn("checkpoint", text)
+            self.assertIn("uncommitted diff", text)
+
     def test_collaboration_guidance_rejects_unsupported_global_defaults(self) -> None:
         validator = load_template_validator()
         path = self.template / "docs/agents/collaboration-playbook.md"

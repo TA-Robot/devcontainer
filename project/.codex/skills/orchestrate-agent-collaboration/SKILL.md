@@ -24,6 +24,14 @@ Read `AGENTS.md` and `docs/agents/collaboration-playbook.md`. Keep the primary r
 
 - Use native Lane R only when the parent is safe.
 - Use an `agentctl` safe read job when cross-provider Codex / Claude / Grok consultation or a durable structured result is valuable. It runs in the registered checkout without a worktree and does not inherit a trusted interactive parent's native-child override.
+- Treat a clean registered checkout as a precondition for `agentctl` read jobs,
+  not as a cleanup request to the worker. Run pre-implementation consultation
+  before mutation. For review of an implementation, create a controller-owned
+  checkpoint commit first and bind the review task to that SHA. If an
+  uncommitted diff must be reviewed, use an explicitly permitted native
+  advisory child or a separately prepared snapshot; do not send a shared dirty
+  checkout to Lane R and reinterpret the inevitable dirty-state failure as a
+  successful job.
 - Before creating an `agentctl` participant job, save the primary-owned collaboration decision packet and pass it through `agentctl job create --collaboration-decision <path>`. The broker validates the packet, checks its immutable base, computes the digest, and derives the content-free task projection. Do not hand-copy the projection or ask the user to annotate it. If no packet exists, the job remains visibly uncorrelated rather than receiving inferred semantics.
 - If the whole session or workspace is explicitly authorized for `trusted-fast`, bounded consult / verify children may run as `trusted advisory`. State that their read-only instruction is behavioral, not enforced isolation. Do not ask them to edit files or perform external side effects.
 - Do not extend permission granted to one write job to unrelated children.
