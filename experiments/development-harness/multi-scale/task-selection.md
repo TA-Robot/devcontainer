@@ -1,6 +1,6 @@
 # 規模別評価の課題選定メモ
 
-状態: 候補。大規模task、外部評価器、実行budgetは未固定・未実行。
+状態: 候補Aを[大規模01](large-01/protocol.md)へ具体化し、段階要求・外部検証・pilot上限を固定。比較結果は未取得。小規模の次taskは未選定。
 判断の正本は[規模別評価方針](../../../docs/agents/development-harness-evaluation.md)。
 
 ## 小規模
@@ -12,6 +12,8 @@ cycle-001の非有限JSON数値の修正は、小規模の参照例として保�
 ## 大規模候補A: 別projectへの導入・継続更新を一つの利用経路として完成させる
 
 利用上の根拠: [README](../../../README.md)では`project/`をcopy sourceとして使い、既存の`AGENTS.md`やprovider設定を上書きしないよう利用者が差分確認する手順になっている。導入後のtemplate更新とproject固有変更の維持までを通した作業は、現在の手順だけでは自動検証されていない。自動化が実際に必要かを選定時に確認し、手動手順で十分ならこの候補を採用しない。
+
+選定結果: `project/`は45 tracked fileを含み、直近にもnative contractとrunbookの複数の更新がある。安全な継続更新の機能を実開発の対象として採用する。機能の実装方式や最終採用は受入検証とreviewで判断し、この選定だけで有効性を断定しない。
 
 利用目的の案: 既存projectへnative contractを導入し、そのproject独自の設定を維持しながら基盤更新へ追従できるようにする。開発対象はこの基盤の機能・template・container組込み・利用手順。受入用project snapshotはrepository外の一時checkoutに置き、このrepositoryにdemo appを追加しない。
 

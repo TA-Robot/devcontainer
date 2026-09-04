@@ -1,6 +1,6 @@
 # 開発ハーネスの規模別評価
 
-更新: 2026-09-05。状態: 評価方針と次の実行条件を改訂。小規模の実測はcycle-001にあり、大規模の実測・段階実行runnerはまだない。実行優先順位は[現行計画](../project-plan.md)を正本とする。
+更新: 2026-09-05。状態: 小規模の実測はcycle-001にある。大規模01の課題・外部CLI検証・有限段階実行runnerを実装し、fake providerと実Dockerの事前検証を完了。大規模の比較結果はまだない。実行優先順位は[現行計画](../project-plan.md)を正本とする。
 
 ## 評価したいこと
 
@@ -77,5 +77,7 @@ taskの選定や介入を考える探索用runと、固定した条件で測る�
 cycle-001の[外部評価と測定script](../../experiments/development-harness/cycle-001/)は小規模の再現資産として保持する。そこに固定された900秒・単発session・特定taskの33checkを、大規模へそのまま流用しない。過去のsource hashとraw観測も変更しない。
 
 既存の`scripts/benchmark-devcontainer.py`はcontainerの準備・停止・再開に利用できるが、開発campaignのcheckpointや累積予算を管理する機能ではない。追加する実行機能は、選定taskに必要な段階投入、外側のsnapshot、累積計測、有限停止／再開に限定する。汎用schedulerや別の開発製品を先に作らない。
+
+その範囲の段階実行を`experiments/development-harness/campaign.py`へ実装した。[操作手順と検証](../../experiments/development-harness/multi-scale/README.md)を参照。大規模01では、初期導入、独自編集と更新・移行、中断復旧と配布の順に同じ機能を発展させる。35の外部シナリオと18のprovider-free事前テストを用意したが、これらの件数を大規模な開発成果の証明にはしない。
 
 大規模評価とmulti-agent比較は別の軸。最初の比較では協働条件を固定し、複数agentが必要かどうかを規模の定義にしない。未許可のdelegationを自動的に有効にしない。
