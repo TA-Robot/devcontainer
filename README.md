@@ -20,6 +20,8 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 
 この基盤自身の改良は、実際の開発作業で品質・時間・復旧負担を測り、改良後に再評価するサイクルで進めます。[現行計画](docs/project-plan.md)、[最初の測定条件](experiments/development-harness/cycle-001/protocol.md)、[結果報告](docs/agents/development-harness-cycle-001.md)を参照してください。
 
+評価は[小規模・大規模の両方](docs/agents/development-harness-evaluation.md)を対象とします。最初の実測は小規模の予備評価で、大規模の設計・継続開発・仕様変更・統合は次の評価対象です。
+
 ## クイックスタート
 
 ### 1. 前提条件

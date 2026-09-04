@@ -10,8 +10,11 @@ collaboration R2 follow-ups below are conditional backlog, not the immediate
 execution order. The first real repository maintenance cycle is
 [complete](development-harness-cycle-001.md): environment blockers were repaired,
 the same task was re-evaluated, and the accepted fix was integrated. The next
-cycle should use a different real task. G3 expansion and outer ForgeRoom builds
-are deferred.
+cycle follows the [small- and large-scale evaluation plan](development-harness-evaluation.md).
+Cycle 001 is a small-maintenance pilot; large-scale development is unmeasured.
+The next priority is a sustained development task with intermediate acceptance,
+changed requirements and integration, followed by a small-task check of the same
+intervention. G3 expansion and outer ForgeRoom builds are deferred.
 
 The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-roadmap.md`. This file records implementation state; design changes belong in the ADR or architecture docs.
 

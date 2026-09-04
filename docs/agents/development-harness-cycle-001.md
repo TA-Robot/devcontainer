@@ -4,6 +4,11 @@ Status: first improvement cycle complete, 2026-09-05. Plan, baseline, interventi
 live re-evaluation, accepted maintenance integration and final target checks are
 recorded below; unresolved host-test failures remain explicit.
 
+Scope clarification after review: this is a **small-maintenance pilot**. Running
+the surrounding full test suite does not make the development task large-scale.
+The [revised evaluation plan](development-harness-evaluation.md) requires separate
+small- and large-scale evidence; this result supplies no large-scale observation.
+
 ## Decision
 
 Keep the native-first environment and adopt the observed development-compatibility
