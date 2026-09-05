@@ -217,6 +217,15 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-development-admission
 実Docker確認は検証済みimage IDを`DEVELOPMENT_CAMPAIGN_IMAGE`へ指定して同じsuiteを実行する。
 疑似providerのみを使う。過去の固定runner・評価器・manifestを変更して既存runを再開しない。
 
+自動比較（`experiments/development-harness/automatic/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-automatic-development-comparison.py
+```
+
+`AUTOMATIC_COMPARISON_IMAGE`に検証済みimage IDを指定すると、疑似providerによる両条件の
+実行・外部採点・集計まで実Dockerで確認する。人やLLMによる採点の上書きを追加しない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
