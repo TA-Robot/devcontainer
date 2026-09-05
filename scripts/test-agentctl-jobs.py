@@ -8,6 +8,7 @@ import json
 import math
 import os
 from pathlib import Path
+import shlex
 import shutil
 import signal
 import sqlite3
@@ -2130,6 +2131,94 @@ class AgentctlJobTests(unittest.TestCase):
         viewed = self.invoke("job", "logs", str(job["job_id"]), "--json")
         self.assertEqual(viewed.returncode, 0, viewed.stdout + viewed.stderr)
         self.assertTrue(json.loads(viewed.stdout)["retention"]["truncated"])
+
+    def test_check_gc_waits_for_verification_and_explicit_recovery(self) -> None:
+        gate, marker = self.root / "gc-release", self.root / "gc-check-started"
+        gate.touch()
+        command = (f"if ! test -e {shlex.quote(str(gate))}; then "
+                   f"printf started > {shlex.quote(str(marker))}; "
+                   f"while ! test -e {shlex.quote(str(gate))}; do sleep .02; done; fi")
+        job, worktree = self.check_fixture([command])
+        self.check_report(job)
+        validated = self.invoke("job", "validate", job["job_id"], "--require-checks", "--json")
+        self.assertEqual(validated.returncode, 0, validated.stderr)
+        subprocess.run(["git", "-C", str(self.workspace), "cherry-pick",
+                        job["attempts"][-1]["head_sha"]], check=True, capture_output=True)
+        collected = self.invoke("job", "collect", job["job_id"], "--onto", "HEAD", "--json")
+        self.assertEqual(collected.returncode, 0, collected.stderr)
+
+        def inventory():
+            result = self.bounded_check_invocation(
+                "gc", "--dry-run", "--job", job["job_id"], "--json")
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertTrue(worktree.is_dir())
+            return json.loads(result.stdout)["jobs"][0]
+
+        def start_checker():
+            gate.unlink(missing_ok=True)
+            marker.unlink(missing_ok=True)
+            checker = self.popen("job", "check", job["job_id"], "--timeout", "15", "--json")
+            try:
+                self.wait_for_check_marker(marker, checker)
+                return checker
+            except BaseException:
+                gate.touch()
+                self.stop_checker(checker)
+                raise
+
+        self.assertTrue(inventory()["eligible"])
+        checker = start_checker()
+        try:
+            current = inventory()
+            self.assertFalse(current["eligible"])
+            self.assertEqual(current["candidate_actions"], [])
+            self.assertIn("independent_check_in_progress",
+                          {reason["kind"] for reason in current["reasons"]})
+        finally:
+            gate.touch()
+            try:
+                stdout, stderr = checker.communicate(timeout=8)
+            finally:
+                self.stop_checker(checker)
+        self.assertEqual(checker.returncode, 0, stderr)
+        self.assertTrue(inventory()["eligible"])
+
+        # A stopped process does not complete its durable observation. This
+        # also protects unfinished older checks without an inherited lock.
+        checker = start_checker()
+        try:
+            checker.kill()
+            gate.touch()
+            checker.communicate(timeout=8)
+        finally:
+            gate.touch()
+            self.stop_checker(checker)
+        self.assertFalse(self.checks_view(job)["in_progress"])
+        current = inventory()
+        self.assertFalse(current["eligible"])
+        self.assertEqual(current["candidate_actions"], [])
+        self.assertIn("independent_check_incomplete",
+                      {reason["kind"] for reason in current["reasons"]})
+        self.check_report(job, "--recover-incomplete")
+        self.assertTrue(inventory()["eligible"])
+
+        # Corrupt owned test state must neither block a read indefinitely nor
+        # turn an unknown owner into permission to delete a worktree.
+        lock = self.state_dir / "locks" / f"check-{job['attempts'][-1]['attempt_id']}.lock"
+        original = lock.read_bytes()
+        lock.unlink()
+        os.mkfifo(lock, 0o600)
+        try:
+            current = inventory()
+            self.assertFalse(current["eligible"])
+            self.assertEqual(current["candidate_actions"], [])
+            self.assertIn("independent_check_ownership_unverified",
+                          {reason["kind"] for reason in current["reasons"]})
+        finally:
+            lock.unlink()
+            lock.write_bytes(original)
+            lock.chmod(0o600)
+        self.assertTrue(inventory()["eligible"])
 
     def test_gc_dry_run_requires_explicit_integration_proof_and_never_deletes(self) -> None:
         job = self.create("gc.json")

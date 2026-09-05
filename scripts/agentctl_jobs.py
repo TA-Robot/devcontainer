@@ -586,8 +586,10 @@ def _attempt_check_lock(paths: StatePaths, attempt_id: str, *, shared: bool = Fa
     Incomplete durable evidence additionally requires explicit crash recovery.
     """
     descriptor = os.open(_check_lock_path(paths, attempt_id),
-                         os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+                         os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW | os.O_NONBLOCK, 0o600)
     try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise AgentctlJobError("independent check ownership lock is not a regular file")
         try:
             fcntl.flock(descriptor, (fcntl.LOCK_SH if shared else fcntl.LOCK_EX) | fcntl.LOCK_NB)
         except BlockingIOError as exc:
@@ -600,10 +602,13 @@ def _attempt_check_lock(paths: StatePaths, attempt_id: str, *, shared: bool = Fa
 def _check_in_progress(paths: StatePaths, attempt_id: str) -> bool:
     """Probe existing ownership only; no lock file or observation is created."""
     try:
-        descriptor = os.open(_check_lock_path(paths, attempt_id), os.O_RDONLY | os.O_NOFOLLOW)
+        descriptor = os.open(_check_lock_path(paths, attempt_id),
+                             os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
     except FileNotFoundError:
         return False
     try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise AgentctlJobError("independent check ownership lock is not a regular file")
         try:
             fcntl.flock(descriptor, fcntl.LOCK_SH | fcntl.LOCK_NB)
         except BlockingIOError:
@@ -4472,6 +4477,24 @@ def gc_inventory(store: Store, *, job_id: str | None = None) -> dict[str, Any]:
                 attempt_reasons.append(
                     {"kind": "attempt_not_terminal", "state": attempt["state"]}
                 )
+            try:
+                if _check_in_progress(store.paths, attempt["attempt_id"]):
+                    attempt_reasons.append({"kind": "independent_check_in_progress"})
+            except (AgentctlJobError, OSError) as exc:
+                attempt_reasons.append({
+                    "kind": "independent_check_ownership_unverified", "error": str(exc),
+                })
+            verification = store.connection.execute(
+                "SELECT status, finished_at, report_digest FROM command_verifications "
+                "WHERE attempt_id = ? ORDER BY sequence DESC LIMIT 1",
+                (attempt["attempt_id"],),
+            ).fetchone()
+            if verification and (verification["status"] == "incomplete"
+                                 or not verification["finished_at"]
+                                 or not verification["report_digest"]):
+                # Older checkers did not inherit an ownership descriptor. A
+                # missing/free lock cannot establish their execution stopped.
+                attempt_reasons.append({"kind": "independent_check_incomplete"})
             provider_alive = process_identity_matches(
                 attempt["pid"], attempt["process_started_at"]
             )

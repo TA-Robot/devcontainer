@@ -476,6 +476,9 @@ A job is eligible only when every conservative check passes:
 
 - the job and its latest attempt are explicitly `validated`, and all attempts are terminal;
 - no identity-checked provider/runner process or active runtime lease remains;
+- no independent checker owns an attempt, no unfinished verification remains,
+  and existing ownership markers can be inspected safely; an absent/free lock
+  alone does not resolve an unfinished older check;
 - each write worktree is the exact canonical job/attempt path, uses the recorded Git common directory and generated branch, has the recorded validated HEAD when present, and is clean;
 - `process.log`, `result.json`, and `log-retention.json` exist at their canonical owner-only evidence paths;
 - a no-change result is proven, or an immutable integration collection proves the exact head is still represented in the registered workspace HEAD by ancestry or a rechecked single-commit patch ID;
