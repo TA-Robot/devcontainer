@@ -534,7 +534,11 @@ class AgentctlJobTests(unittest.TestCase):
         deadline = time.monotonic() + 3
         while time.monotonic() < deadline:
             proc = Path(f"/proc/{pid}/stat")
-            if not proc.exists() or proc.read_text().rsplit(")", 1)[1].split()[0] == "Z":
+            try:
+                state = proc.read_text().rsplit(")", 1)[1].split()[0]
+            except (FileNotFoundError, ProcessLookupError):
+                return
+            if state == "Z":
                 return
             time.sleep(0.02)
         self.fail(f"check child {pid} still running")
@@ -782,8 +786,8 @@ class AgentctlJobTests(unittest.TestCase):
         self.assertEqual(artifact.parent.stat().st_mode & 0o777, 0o700)
         self.assertEqual(json.loads(artifact.read_text()), report)
         self.assertRegex(report["verification_id"], r"^[0-9a-f]{32}$")
-        for key in ("task_digest", "source_fingerprint"):
-            self.assertRegex(report[key], r"^sha256:[0-9a-f]{64}$")
+        self.assertRegex(report["task_digest"], r"^sha256:[0-9a-f]{64}$")
+        self.assertRegex(report["source_fingerprint"], r"^sha256-v2:[0-9a-f]{64}$")
         with sqlite3.connect(self.state_dir / "state.db") as connection:
             digest, = connection.execute("SELECT report_digest FROM command_verifications").fetchone()
         self.assertEqual(digest, "sha256:" + hashlib.sha256(artifact.read_bytes()).hexdigest())
