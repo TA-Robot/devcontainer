@@ -159,6 +159,15 @@ reused. It does not remove the layer or promise a smaller initial image.
 
 ## Stable update flow
 
+After CA certificates and the toolchain are installed, the Ubuntu archive URLs
+use HTTPS for Feature installation and later package operations. The archive
+hosts, suites and APT signature verification are unchanged. This addresses HTTP
+retrieval retries observed during cycle-003 release verification; it does not
+avoid rebuilding Feature layers after a base-image change. The first bootstrap
+APT operation still uses the pinned Ubuntu image's initial sources. No new
+dependency is added. Reverting the Dockerfile's archive-transport `RUN` restores
+the prior transport; mirror or cache architecture changes remain separate work.
+
 1. Create a dedicated toolchain update change; do not mix it with product code.
 2. Update exact Dockerfile pins and, when Features change, run the pinned
    `devcontainer build` once without `--frozen-lockfile` to deliberately refresh

@@ -158,6 +158,14 @@ RUN groupadd --gid $USER_GID $USERNAME \
     && chmod 0440 /etc/sudoers.d/$USERNAME \
     && chown -R $USERNAME:$USERNAME "${DEVCONTAINER_AI_CLI_PREFIX}"
 
+# CA certificates are already installed. Use the same signed Ubuntu archives
+# over HTTPS for subsequent Feature installation and user package operations.
+# Keep this after the toolchain layers so a transport-only change reuses them.
+RUN sed -i \
+    -e 's|http://archive.ubuntu.com/ubuntu|https://archive.ubuntu.com/ubuntu|g' \
+    -e 's|http://security.ubuntu.com/ubuntu|https://security.ubuntu.com/ubuntu|g' \
+    /etc/apt/sources.list
+
 # Normal Codex / Claude / Grok commands preserve provider approvals and sandboxing.
 # Explicit `*-trusted` commands expose the legacy-equivalent bypass profile.
 COPY scripts/devcontainer-codex /usr/local/bin/codex
