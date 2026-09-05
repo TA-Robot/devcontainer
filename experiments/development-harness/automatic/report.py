@@ -20,16 +20,29 @@ def render(result):
              '| --- | --- | --- | --- | --- |']
     for key, name in [('control', '対照'), ('improved', '改良')]:
         value = result['conditions'][key]
+        duration = f'{value["development_seconds"] / 60:.2f}分'
+        if value.get('development_seconds_kind') == 'conservative_reservation':
+            duration += '（予約分を計上、実測欠測）'
+        elif value.get('development_seconds_kind') == 'observed_with_shutdown':
+            duration += '（停止処理込み）'
+        usage = (f'{value["output_tokens"]:,}' if value.get('usage_complete', True)
+                 else f'使用量不明（完了sessionの確定分: {value["output_tokens"]:,}）')
         lines.append(f'| {name} | {labels[value["final_quality_accepted"]]} | '
-                     f'{value["development_seconds"] / 60:.2f}分 | {value["output_tokens"]:,} | '
+                     f'{duration} | {usage} | '
                      f'{"はい" if value["submitted_within_observed_budget"] else "いいえ"} |')
     lines += ['', '速度比: ' + (f'{result["speed_ratio"]:.3f}（対照時間÷改良時間）。'
               if result['speed_ratio'] is not None else '算出しない。両条件の品質・予算条件が揃っていない。'), '',
               '人による採点・合否の上書きなし。配布を含む全面的な品質保証とは区別する。', '']
+    if result.get('automatic_execution_completed') is False:
+        lines += ['開発の一括実行は中断。停止確認後、保存済み成果の採点を完了した記録。', '']
     for key, name in [('control', '対照'), ('improved', '改良')]:
+        recovered = result['conditions'][key].get('recovered_artifact')
+        if recovered:
+            lines.append(f'{name}の中断後に保全した成果: {labels[recovered["quality"]["accepted"]]}。'
+                         '提出済み・予算内完了とは扱わず、正確な終了時刻も推定しない。')
         terminal = result['conditions'][key]['terminal']
         if not terminal:
-            lines.append(f'{name}: 最終成果の観測なし。')
+            lines.append(f'{name}: 提出物の観測なし。')
             continue
         quality = terminal['quality']
         failed = [names.get(c['name'], c['name']) for c in quality['checks'] if c['status'] == 'failed']
