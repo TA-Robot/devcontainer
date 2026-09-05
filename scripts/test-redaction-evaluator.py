@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import json
+import os
 from pathlib import Path
 import re
 import runpy
@@ -10,6 +11,21 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import agentctl_jobs as jobs
 EVALUATOR = runpy.run_path(str(ROOT / 'experiments/development-harness/cycle-003/evaluate_redaction.py'))
+
+
+def legacy_reference(text):
+    count = 0
+    patterns = [*jobs.SECRET_TEXT_PATTERNS,
+                re.compile(r'(?i)\b(?:Authorization\s*[:=]\s*)(?:Bearer|Basic)\s+[^\s,;]+'),
+                re.compile(r'(?i)\b[A-Z0-9_]*(?:API[_-]?KEY|TOKEN|SECRET|PASSWORD|PASSWD|CREDENTIAL)[A-Z0-9_]*\s*[:=]\s*[^\s,;]+')]
+    for pattern in patterns:
+        text, n = pattern.subn('[MASKED]', text)
+        count += n
+    for key, value in os.environ.items():
+        if len(value) >= 8 and jobs.SECRET_ENV_NAME.search(key):
+            count += text.count(value)
+            text = text.replace(value, '[MASKED]')
+    return text, count
 
 
 def calibrated_reference(text):
@@ -39,7 +55,7 @@ def calibrated_reference(text):
                 line = line[:start] + json.dumps(visit(value), ensure_ascii=False) + line[start + end:]
             except json.JSONDecodeError:
                 pass
-        redacted, n = jobs._redact_log_text(line)
+        redacted, n = legacy_reference(line)
         count += n
         output.append(redacted)
     return ''.join(output), count
@@ -50,8 +66,8 @@ class RedactionEvaluatorTests(unittest.TestCase):
         results = EVALUATOR['observations'](calibrated_reference)
         self.assertTrue(all(r['status'] == 'passed' for r in results), results)
 
-    def test_current_bug_is_observable_without_invented_success(self):
-        rows = {r['name']: r['status'] for r in EVALUATOR['observations'](jobs._redact_log_text)}
+    def test_assignment_only_mutant_exposes_quoted_json_gap(self):
+        rows = {r['name']: r['status'] for r in EVALUATOR['observations'](legacy_reference)}
         self.assertEqual(rows['json-api_key'], 'failed')
         self.assertEqual(rows['ordinary-json'], 'passed')
         self.assertEqual(rows['assignment'], 'passed')
