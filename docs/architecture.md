@@ -81,6 +81,10 @@ project/
 
 task / resultはJSON Schema draft 2020-12、`schema_version = 1`です。taskはfull `base_sha`、lane、permission profile、relative scope、acceptanceを固定します。resultはstatus、full `head_sha`、changed paths、dirty state、checks、risks、followupsを返します。brokerはprovider申告を信頼せずGitからSHA / path / dirty stateを再計算します。
 
+共有ローダー`scripts/agent_contracts.py:load_json`は、同じJSON object内の重複property名を曖昧な入力として拒否します。配列内を含む全階層が対象で、名前はJSON escapeのdecode後に比較します（`"name"`と`"\u006eame"`は重複）。大文字小文字の同一視やUnicode正規化は行わず、別objectでの同名propertyは許可します。`validate_file`はinstanceとschemaの両方へこの規則を適用します。
+
+重複時は入力ファイルpathと重複による曖昧さを示す`ContractValidationError`を返し、診断へproperty値やdocument本文を含めません。入力ファイルは変更せず、通常のJSON値と型（top-level array / scalarを含む）は保持します。非有限数literal、float overflow、JSON構文エラー、file I/Oエラーの拒否も維持します。
+
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate-agent-contracts.py
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-agent-contracts.py

@@ -184,13 +184,24 @@ def _parse_finite_float(token: str) -> float:
     return value
 
 
+def _parse_unique_object(pairs: list[tuple[str, Any]]) -> dict[str, Any]:
+    # The decoder supplies decoded names, separately for each object at any depth.
+    obj: dict[str, Any] = {}
+    for key, value in pairs:
+        if key in obj:
+            raise ContractValidationError("duplicate JSON object key (ambiguous object)")
+        obj[key] = value
+    return obj
+
+
 def load_json(path: Path) -> Any:
+    """Load JSON, rejecting duplicate decoded names and non-finite numbers."""
     try:
-        # Hooks also reject values later overwritten by duplicate object keys.
         return json.loads(
             path.read_text(encoding="utf-8"),
             parse_constant=_parse_finite_float,
             parse_float=_parse_finite_float,
+            object_pairs_hook=_parse_unique_object,
         )
     except (OSError, json.JSONDecodeError, ContractValidationError) as exc:
         raise ContractValidationError(f"cannot load JSON {path}: {exc}") from exc

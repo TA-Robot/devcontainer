@@ -14,7 +14,7 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 REPO_ROOT = SCRIPT_DIR.parent
 sys.path.insert(0, str(SCRIPT_DIR))
 
-from agent_contracts import ContractValidationError, load_json, validate  # noqa: E402
+from agent_contracts import ContractValidationError, load_json, validate, validate_file  # noqa: E402
 from importlib.util import module_from_spec, spec_from_file_location  # noqa: E402
 
 
@@ -37,6 +37,93 @@ def load_collaboration_report_wrapper():
     module = module_from_spec(spec)
     spec.loader.exec_module(module)
     return module
+
+
+class JsonObjectTests(unittest.TestCase):
+    def test_load_json_rejects_duplicate_decoded_names_at_every_depth(self) -> None:
+        objects = (
+            '{"name": "first-secret", "name": "second-secret"}',
+            '{"name": null, "name": null}',
+            '{"name": false, "other": 0, "name": true}',
+            r'{"name": 1, "\u006eame": 2}',
+            r'{"\u006eame": 1, "n\u0061me": 2}',
+            r'{"": 1, "": 2}',
+            r'{"a/b": 1, "a\/b": 2}',
+            r'{"é": 1, "\u00e9": 2}',
+            r'{"😀": 1, "\ud83d\ude00": 2}',
+        )
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "duplicate.json"
+            for obj in objects:
+                for document in (obj, '{"outer": ' + obj + '}', '[{"outer": [' + obj + ']}]'):
+                    with self.subTest(document=document):
+                        path.write_text(document, encoding="utf-8")
+                        before = path.read_bytes()
+                        with self.assertRaises(ContractValidationError) as raised:
+                            load_json(path)
+                        diagnostic = str(raised.exception)
+                        self.assertIn(str(path), diagnostic)
+                        self.assertIn("duplicate", diagnostic)
+                        self.assertIn("ambiguous", diagnostic)
+                        self.assertNotIn("first-secret", diagnostic)
+                        self.assertNotIn("second-secret", diagnostic)
+                        self.assertNotIn(document, diagnostic)
+                        self.assertEqual(before, path.read_bytes())
+
+    def test_names_are_local_to_each_object_and_are_not_normalized(self) -> None:
+        document = r'''{
+            "left": {"name": 1}, "right": {"name": 2},
+            "items": [{"name": 3}, {"name": 4}],
+            "name": 5, "Name": 6, "é": 7, "e\u0301": 8,
+            "\\u006eame": 9
+        }'''
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "distinct.json"
+            path.write_text(document, encoding="utf-8")
+            self.assertEqual(json.loads(document), load_json(path))
+            self.assertEqual(document, path.read_text(encoding="utf-8"))
+
+    def test_load_json_preserves_values_and_types(self) -> None:
+        values = ({}, [], None, True, False, 0, 10**400, 1.0, -0.0, 5e-324, "text")
+        with tempfile.TemporaryDirectory() as raw:
+            path = Path(raw) / "ordinary.json"
+            for value in values:
+                for document, expected in (
+                    (value, value), ([value], value), ({"value": value}, value),
+                ):
+                    with self.subTest(document=document):
+                        source = json.dumps(document)
+                        path.write_text(source, encoding="utf-8")
+                        loaded = load_json(path)
+                        self.assertIs(type(loaded), type(document))
+                        self.assertEqual(document, loaded)
+                        self.assertEqual(source, json.dumps(loaded))
+                        if isinstance(document, list) and document:
+                            loaded = loaded[0]
+                        elif isinstance(document, dict) and document:
+                            loaded = loaded["value"]
+                        self.assertIs(type(loaded), type(expected))
+                        self.assertEqual(source, path.read_text(encoding="utf-8"))
+
+    def test_validate_file_rejects_duplicates_in_instance_and_schema(self) -> None:
+        with tempfile.TemporaryDirectory() as raw:
+            instance = Path(raw) / "instance.json"
+            schema = Path(raw) / "schema.json"
+            for invalid_path in (instance, schema):
+                for document in (
+                    '{"type": "string", "type": "object"}',
+                    r'{"extra": [{"name": 1, "\u006eame": 2}]}',
+                ):
+                    with self.subTest(path=invalid_path.name, document=document):
+                        instance.write_text("{}", encoding="utf-8")
+                        schema.write_text("{}", encoding="utf-8")
+                        invalid_path.write_text(document, encoding="utf-8")
+                        before = (instance.read_bytes(), schema.read_bytes())
+                        with self.assertRaises(ContractValidationError) as raised:
+                            validate_file(instance, schema)
+                        self.assertIn(str(invalid_path), str(raised.exception))
+                        self.assertIn("duplicate", str(raised.exception))
+                        self.assertEqual(before, (instance.read_bytes(), schema.read_bytes()))
 
 
 class JsonNumberTests(unittest.TestCase):
