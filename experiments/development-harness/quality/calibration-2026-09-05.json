@@ -1,0 +1,590 @@
+{
+  "schema_version": 1,
+  "status": "preflight_and_retrospective_calibration_complete; new_live_comparison_not_started",
+  "image": "sha256:6d77b4bab77a27aafd05a859058c4c12519b4fec9d0d240202a4dcff9c80f14e",
+  "model_invocations": 0,
+  "original_cycle_002_results_modified": false,
+  "evaluator_sha256": "0ce55a4c1f7d0a8f5a619d4afa8d24653c6e840fe8495ad78bf0b7f8bcb71318",
+  "shared_evaluator_sha256": "7c74d6d4e1ab91b3235c2b0433cb0eefec92ac5203113283cee1458e0c6f7ef4",
+  "quality_calibration": [
+    {
+      "candidate": "control",
+      "candidate_tree_sha256": "7209b2a358448b84f67e59fa4a4c4a819c43d7a0661b731309f0d3fddcc1e1b8",
+      "requirements": [
+        {
+          "id": "installation",
+          "dimension": "correctness",
+          "hard_guard": false,
+          "status": "passed",
+          "observations": [
+            "install-bytes-modes-dotpaths",
+            "native-template-validation"
+          ]
+        },
+        {
+          "id": "read-only-and-repeatability",
+          "dimension": "correctness",
+          "hard_guard": false,
+          "status": "passed",
+          "observations": [
+            "repeat-noop",
+            "status-readonly"
+          ]
+        },
+        {
+          "id": "safe-updates",
+          "dimension": "preservation",
+          "hard_guard": true,
+          "status": "passed",
+          "observations": [
+            "existing-unmanaged-conflict",
+            "identical-unmanaged-conflict",
+            "upstream-update",
+            "local-preserved",
+            "overlapping-conflict",
+            "managed-deletion",
+            "dirty-deletion-conflict",
+            "text-merge-and-third-update",
+            "binary-conflict",
+            "unrelated-edit-kept"
+          ]
+        },
+        {
+          "id": "plan-preconditions",
+          "dimension": "preservation",
+          "hard_guard": true,
+          "status": "passed",
+          "observations": [
+            "stale-target",
+            "stale-source",
+            "mode-precondition",
+            "plan-traversal",
+            "plan-absolute",
+            "plan-duplicate"
+          ]
+        },
+        {
+          "id": "path-boundaries",
+          "dimension": "preservation",
+          "hard_guard": true,
+          "status": "failed",
+          "observations": [
+            "reserved-.git",
+            "reserved-.agent-project",
+            "symlink-source",
+            "symlink-target",
+            "symlink-metadata",
+            "overlapping-roots"
+          ]
+        },
+        {
+          "id": "matching-adoption",
+          "dimension": "correctness",
+          "hard_guard": false,
+          "status": "passed",
+          "observations": [
+            "explicit-adoption",
+            "adoption-mismatch",
+            "private-mode-adoption"
+          ]
+        },
+        {
+          "id": "recovery-and-rollback",
+          "dimension": "resilience",
+          "hard_guard": true,
+          "status": "passed",
+          "observations": [
+            "crash-recovery",
+            "post-crash-user-edit",
+            "rollback",
+            "post-update-user-edit",
+            "corrupt-ownership-metadata",
+            "stale-and-unsafe-rollback",
+            "concurrent-apply"
+          ]
+        },
+        {
+          "id": "git-workflow",
+          "dimension": "operability",
+          "hard_guard": false,
+          "status": "failed",
+          "observations": [
+            "target-git-preserved",
+            "private-metadata-exclusion"
+          ]
+        }
+      ],
+      "failed_observations": [
+        {
+          "name": "overlapping-roots",
+          "detail": "planning accepted overlapping source and target roots"
+        },
+        {
+          "name": "private-metadata-exclusion",
+          "detail": "private lifecycle data is visible in ordinary Git changes"
+        }
+      ],
+      "unmeasured": [
+        "guided first-use success and human effort",
+        "controlled follow-up development effort and maintainability",
+        "installed-image behavior; run release checks separately"
+      ],
+      "evidence_sha256": "b93f21a6d1c9e26c6b4fb5da9f1391cfa1e64c5aadb840f60a07758e292265ad"
+    },
+    {
+      "candidate": "improved",
+      "candidate_tree_sha256": "adbdc823ebb2b61af1f42f48671ac1b0529e93b7c0b6aa39a71c6611a3cbed70",
+      "requirements": [
+        {
+          "id": "installation",
+          "dimension": "correctness",
+          "hard_guard": false,
+          "status": "passed",
+          "observations": [
+            "install-bytes-modes-dotpaths",
+            "native-template-validation"
+          ]
+        },
+        {
+          "id": "read-only-and-repeatability",
+          "dimension": "correctness",
+          "hard_guard": false,
+          "status": "passed",
+          "observations": [
+            "repeat-noop",
+            "status-readonly"
+          ]
+        },
+        {
+          "id": "safe-updates",
+          "dimension": "preservation",
+          "hard_guard": true,
+          "status": "passed",
+          "observations": [
+            "existing-unmanaged-conflict",
+            "identical-unmanaged-conflict",
+            "upstream-update",
+            "local-preserved",
+            "overlapping-conflict",
+            "managed-deletion",
+            "dirty-deletion-conflict",
+            "text-merge-and-third-update",
+            "binary-conflict",
+            "unrelated-edit-kept"
+          ]
+        },
+        {
+          "id": "plan-preconditions",
+          "dimension": "preservation",
+          "hard_guard": true,
+          "status": "passed",
+          "observations": [
+            "stale-target",
+            "stale-source",
+            "mode-precondition",
+            "plan-traversal",
+            "plan-absolute",
+            "plan-duplicate"
+          ]
+        },
+        {
+          "id": "path-boundaries",
+          "dimension": "preservation",
+          "hard_guard": true,
+          "status": "failed",
+          "observations": [
+            "reserved-.git",
+            "reserved-.agent-project",
+            "symlink-source",
+            "symlink-target",
+            "symlink-metadata",
+            "overlapping-roots"
+          ]
+        },
+        {
+          "id": "matching-adoption",
+          "dimension": "correctness",
+          "hard_guard": false,
+          "status": "failed",
+          "observations": [
+            "explicit-adoption",
+            "adoption-mismatch",
+            "private-mode-adoption"
+          ]
+        },
+        {
+          "id": "recovery-and-rollback",
+          "dimension": "resilience",
+          "hard_guard": true,
+          "status": "passed",
+          "observations": [
+            "crash-recovery",
+            "post-crash-user-edit",
+            "rollback",
+            "post-update-user-edit",
+            "corrupt-ownership-metadata",
+            "stale-and-unsafe-rollback",
+            "concurrent-apply"
+          ]
+        },
+        {
+          "id": "git-workflow",
+          "dimension": "operability",
+          "hard_guard": false,
+          "status": "failed",
+          "observations": [
+            "target-git-preserved",
+            "private-metadata-exclusion"
+          ]
+        }
+      ],
+      "failed_observations": [
+        {
+          "name": "private-mode-adoption",
+          "detail": "CLI failed: "
+        },
+        {
+          "name": "overlapping-roots",
+          "detail": "planning accepted overlapping source and target roots"
+        },
+        {
+          "name": "private-metadata-exclusion",
+          "detail": "private lifecycle data is visible in ordinary Git changes"
+        }
+      ],
+      "unmeasured": [
+        "guided first-use success and human effort",
+        "controlled follow-up development effort and maintainability",
+        "installed-image behavior; run release checks separately"
+      ],
+      "evidence_sha256": "d11ed1e3e6cc756ca1a9ca00ade8e14bad3848ae2ea76b6d8ee59d4ad3c0d69b"
+    },
+    {
+      "candidate": "integrated",
+      "candidate_tree_sha256": "9c496c9230208ef3d1f64b6918f94e1a962109d6b8acb33c4adc9e5a2a4524d8",
+      "requirements": [
+        {
+          "id": "installation",
+          "dimension": "correctness",
+          "hard_guard": false,
+          "status": "passed",
+          "observations": [
+            "install-bytes-modes-dotpaths",
+            "native-template-validation"
+          ]
+        },
+        {
+          "id": "read-only-and-repeatability",
+          "dimension": "correctness",
+          "hard_guard": false,
+          "status": "passed",
+          "observations": [
+            "repeat-noop",
+            "status-readonly"
+          ]
+        },
+        {
+          "id": "safe-updates",
+          "dimension": "preservation",
+          "hard_guard": true,
+          "status": "passed",
+          "observations": [
+            "existing-unmanaged-conflict",
+            "identical-unmanaged-conflict",
+            "upstream-update",
+            "local-preserved",
+            "overlapping-conflict",
+            "managed-deletion",
+            "dirty-deletion-conflict",
+            "text-merge-and-third-update",
+            "binary-conflict",
+            "unrelated-edit-kept"
+          ]
+        },
+        {
+          "id": "plan-preconditions",
+          "dimension": "preservation",
+          "hard_guard": true,
+          "status": "passed",
+          "observations": [
+            "stale-target",
+            "stale-source",
+            "mode-precondition",
+            "plan-traversal",
+            "plan-absolute",
+            "plan-duplicate"
+          ]
+        },
+        {
+          "id": "path-boundaries",
+          "dimension": "preservation",
+          "hard_guard": true,
+          "status": "passed",
+          "observations": [
+            "reserved-.git",
+            "reserved-.agent-project",
+            "symlink-source",
+            "symlink-target",
+            "symlink-metadata",
+            "overlapping-roots"
+          ]
+        },
+        {
+          "id": "matching-adoption",
+          "dimension": "correctness",
+          "hard_guard": false,
+          "status": "passed",
+          "observations": [
+            "explicit-adoption",
+            "adoption-mismatch",
+            "private-mode-adoption"
+          ]
+        },
+        {
+          "id": "recovery-and-rollback",
+          "dimension": "resilience",
+          "hard_guard": true,
+          "status": "passed",
+          "observations": [
+            "crash-recovery",
+            "post-crash-user-edit",
+            "rollback",
+            "post-update-user-edit",
+            "corrupt-ownership-metadata",
+            "stale-and-unsafe-rollback",
+            "concurrent-apply"
+          ]
+        },
+        {
+          "id": "git-workflow",
+          "dimension": "operability",
+          "hard_guard": false,
+          "status": "passed",
+          "observations": [
+            "target-git-preserved",
+            "private-metadata-exclusion"
+          ]
+        }
+      ],
+      "failed_observations": [],
+      "unmeasured": [
+        "guided first-use success and human effort",
+        "controlled follow-up development effort and maintainability",
+        "installed-image behavior; run release checks separately"
+      ],
+      "evidence_sha256": "7cae86df494c83f0a8f5eff2515b5f8472fa0f2a3e42c6019c509e074c8653a7"
+    }
+  ],
+  "sandbox_capabilities": {
+    "schema_version": 1,
+    "cli_version": "codex-cli 0.153.0",
+    "probe_sha256": "4487b5c23d87996689e7d0ca8052a2bf932ac8c0ae3f3d22ada08f0961fe2203",
+    "model_invocations": 0,
+    "user_configuration_changed": false,
+    "measurement_complete": true,
+    "scope": "local sockets and filesystem only; no outbound connectivity or legacy exec-policy equivalence claim",
+    "observations": [
+      {
+        "case": "direct",
+        "exit_code": 0,
+        "timed_out": false,
+        "capabilities": {
+          "unix_listener": {
+            "allowed": true
+          },
+          "loopback_listener": {
+            "allowed": true
+          },
+          "existing_unix_connection": {
+            "allowed": true
+          },
+          "outside_workspace_write": {
+            "allowed": true
+          }
+        },
+        "diagnostic": ""
+      },
+      {
+        "case": "workspace",
+        "exit_code": 0,
+        "timed_out": false,
+        "capabilities": {
+          "unix_listener": {
+            "allowed": false,
+            "errno": 1
+          },
+          "loopback_listener": {
+            "allowed": false,
+            "errno": 1
+          },
+          "existing_unix_connection": {
+            "allowed": false,
+            "errno": 1
+          },
+          "outside_workspace_write": {
+            "allowed": false,
+            "errno": 30
+          }
+        },
+        "diagnostic": ""
+      },
+      {
+        "case": "workspace-network",
+        "exit_code": 0,
+        "timed_out": false,
+        "capabilities": {
+          "unix_listener": {
+            "allowed": true
+          },
+          "loopback_listener": {
+            "allowed": true
+          },
+          "existing_unix_connection": {
+            "allowed": true
+          },
+          "outside_workspace_write": {
+            "allowed": false,
+            "errno": 30
+          }
+        },
+        "diagnostic": ""
+      },
+      {
+        "case": "workspace-proxy-local",
+        "exit_code": 0,
+        "timed_out": false,
+        "capabilities": {
+          "unix_listener": {
+            "allowed": false,
+            "errno": 1
+          },
+          "loopback_listener": {
+            "allowed": true
+          },
+          "existing_unix_connection": {
+            "allowed": false,
+            "errno": 1
+          },
+          "outside_workspace_write": {
+            "allowed": false,
+            "errno": 30
+          }
+        },
+        "diagnostic": ""
+      }
+    ]
+  },
+  "supervisor_verification": [
+    {
+      "profile": "workspace",
+      "returncode": 1,
+      "seconds": 22.603,
+      "tests_requested": 2,
+      "log": "workspace-owned-workspace-supervisor.log",
+      "script_sources_unchanged": true
+    },
+    {
+      "profile": "workspace-network",
+      "returncode": 0,
+      "seconds": 5.86,
+      "tests_requested": 2,
+      "log": "workspace-network-owned-workspace-supervisor.log",
+      "script_sources_unchanged": true
+    }
+  ],
+  "readiness_before_after": [
+    {
+      "case": "transient",
+      "condition": "before",
+      "budget_seconds": 7,
+      "observed_seconds": 5.008,
+      "status": "failed",
+      "detail": "BenchmarkContainerError",
+      "probe_count": 1
+    },
+    {
+      "case": "transient",
+      "condition": "after",
+      "budget_seconds": 7,
+      "observed_seconds": 5.649,
+      "status": "ready",
+      "detail": "29.0-test",
+      "probe_count": 2
+    },
+    {
+      "case": "short-deadline",
+      "condition": "before",
+      "budget_seconds": 0.15,
+      "observed_seconds": 1.17,
+      "status": "ready",
+      "detail": "29.0-test",
+      "probe_count": 1
+    },
+    {
+      "case": "short-deadline",
+      "condition": "after",
+      "budget_seconds": 0.15,
+      "observed_seconds": 0.153,
+      "status": "failed",
+      "detail": "BenchmarkContainerError",
+      "probe_count": 1
+    }
+  ],
+  "regressions": {
+    "host_quality_tests": 10,
+    "host_readiness_tests": 12,
+    "image_python_combined_tests": 22,
+    "passed": true
+  },
+  "limits": [
+    "calibrated on known defects; does not establish unseen-task quality sensitivity",
+    "no new development speed or quality effect measured",
+    "local network profiles are probes, not deployed policy",
+    "outbound network blocked by outer disposable container; no credentials mounted",
+    "initial read-only export could not create sandbox Git mountpoint; retained as setup failure and repeated with owned writable copy",
+    "maintainability and guided-use quality not measured"
+  ],
+  "readiness_source": {
+    "before_revision": "bef1498e1dc10ce4f94c2996d53b9e2cc19da7bc",
+    "before_sha256": "a8109a26234b24e9fc6f5ecb0efa304a0d74e664398183489d965502d612f299",
+    "after_sha256": "8660c5189cfb6e5edcad62d5535691fa218cf0013228d8d31603c0fe72c6b0bb"
+  },
+  "evidence": [
+    {
+      "file": "quality-calibration-tests.log",
+      "sha256": "119c4a75cf3011145d1d57f18c0c0546657f11778d799b63253b1b2804c5b0b6"
+    },
+    {
+      "file": "readiness-regressions.log",
+      "sha256": "6084b874a4258c3fb3f96b54c3338739f7c443689cfd7f35262327e858ed5d80"
+    },
+    {
+      "file": "shipped-python-regressions.log",
+      "sha256": "d363d0079e9a82ac7b262318c0bc57cc8987ee3ceac7ea8d577388b17457a14e"
+    },
+    {
+      "file": "readiness-before-after.json",
+      "sha256": "966a32afe8779231cc1e6fdd3962b236b727c82673a1d3f5a8bfbd41a29390a6"
+    },
+    {
+      "file": "capability-results/sandbox.json",
+      "sha256": "66601cfbbce8277a41c255dbd1008d68fdf44ca862177812732378483422fa7e"
+    },
+    {
+      "file": "capability-results/workspace-supervisor.log",
+      "sha256": "3439591f075a874a4a7f5782c36354da22d3fea1a43f5c26288f4a31b2299dad"
+    },
+    {
+      "file": "capability-results/workspace-network-supervisor.log",
+      "sha256": "3439591f075a874a4a7f5782c36354da22d3fea1a43f5c26288f4a31b2299dad"
+    },
+    {
+      "file": "capability-results/workspace-owned-workspace-supervisor.log",
+      "sha256": "10cd58f0bbaa4840c93014108cd59fe5b2ba38b6f5b8281290070993924e9b58"
+    },
+    {
+      "file": "capability-results/workspace-network-owned-workspace-supervisor.log",
+      "sha256": "252ce7c86ea0f9ef7680a112de58eb9a93e55777f026efe2abf5856e03b6658d"
+    }
+  ]
+}

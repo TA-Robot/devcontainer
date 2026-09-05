@@ -2,6 +2,9 @@
 
 [評価方針](../../../docs/agents/development-harness-evaluation.md)に従い、小規模と大規模を別に評価する。[大規模01](large-01/protocol.md)の3段階と小規模01で、それぞれ対照・改良のlive実行を完了した。[cycle-002の結果](../../../docs/agents/development-harness-cycle-002.md)に、両規模の比較と限界を記録する。
 
+速度と品質を分ける次の比較に向けた、要求単位の評価・校正・ローカル検証能力probeは
+[qualityの手順](../quality/README.md)へ置く。過去の固定シナリオは変更しない。
+
 ## 有限の段階実行
 
 `../campaign.py`は専用の評価containerで一度に一段階だけを実行する。後続stageの公開はprimaryが行う。自動scheduler、品質判定、自動採用、native session resumeは含まない。

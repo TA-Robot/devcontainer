@@ -89,6 +89,21 @@ build cache、および成果の保守上の価値である。時間差だけで
 次cycleの実装範囲は実際の能力確認に基づいて決める。今回の結果を良く見せるための
 追加live試行は行わない。
 
+### Cycle 003の準備状況
+
+要求単位の[品質評価器](../experiments/development-harness/quality/README.md)を実装し、
+前回の3成果へ同じ検査を実行した。従来の35/35では見えなかった権限・配置境界・
+Git運用の差を識別できた。保守性と案内に沿った利用は未測定として残している。
+
+固定版Codexのローカル能力probeと、同じ既存supervisorテストの比較では、
+workspaceの通信制限によってUnix socketを使う検証が阻害されることを確認した。
+比較用の通信許可profileではテスト2件が通るが、通常運用の設定は変更していない。
+Docker readinessの一時timeoutで早期終了する不具合は修正し、期限・再試行を検証した。
+
+詳細は[準備報告](agents/development-harness-cycle-003.md)。新しいlive比較は未開始。
+次は課題ごとの利用・保守の評価手順と、Dockerまで含む検証経路を具体化し、
+比較条件と予算を固定してから、小規模・継続開発の実試行へ進む。
+
 ## 後順位
 
 ForgeRoom、G3難化、全面的なtelemetry、atlas routing、定期agent、強いLane I、新しい汎用frameworkは、実際の開発に必要な不足が確認されてから再検討する。現在のtrust境界とunknownの扱いは維持する。既存の未追跡実験・raw証跡は削除・一括公開しない。
