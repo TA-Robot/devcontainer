@@ -3440,7 +3440,7 @@ def _check_file_identity(path: Path, *, blob_algorithm: str | None = None) -> tu
     return stat.S_IMODE(info.st_mode), digest.hexdigest()
 
 
-def _check_source_snapshot(workspace: Path) -> dict[str, Any]:
+def _check_source_snapshot(workspace: Path, *, legacy_index: bool = False) -> dict[str, Any]:
     """Inspect bytes even for assume-unchanged/skip-worktree paths; never refresh index.
 
     Deliberately compare raw blobs without invoking clean/smudge filters. Sparse
@@ -3487,8 +3487,17 @@ def _check_source_snapshot(workspace: Path) -> dict[str, Any]:
     index_path = Path(os.fsdecode(_check_git(workspace, "rev-parse", "--git-path", "index").strip()))
     if not index_path.is_absolute():
         index_path = workspace / index_path
+    # Stat-cache timestamps are not submitted source. Preserve the index's
+    # permissions and semantic flags (including assume-unchanged/skip-worktree)
+    # while allowing ordinary Git refreshes of unchanged tracked bytes.
+    index_identity = _check_file_identity(index_path)
+    index_permissions = index_identity[0]
+    index_semantics = hashlib.sha256(
+        _check_git(workspace, "ls-files", "--stage", "-z") + b"\0" +
+        _check_git(workspace, "ls-files", "-v", "-z")
+    ).hexdigest()
     return {"head_sha": head, "files": files,
-            "index": _check_file_identity(index_path),
+            "index": index_identity if legacy_index else (index_permissions, index_semantics),
             "head": _check_file_identity(git_dir / "HEAD")}
 
 
@@ -3574,13 +3583,13 @@ def _stored_task_digest(paths: StatePaths, job: dict[str, Any]) -> str:
     return "sha256:" + _check_file_identity(path)[1]
 
 
-def _source_fingerprint(snapshot: dict[str, Any]) -> str:
+def _source_fingerprint(snapshot: dict[str, Any], *, legacy_index: bool = False) -> str:
     # Git path bytes need a lossless, deterministic JSON representation.
     payload = {**snapshot, "files": [
         [name.hex(), identity] for name, identity in sorted(snapshot["files"].items())
     ]}
     encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
-    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+    return ("sha256:" if legacy_index else "sha256-v2:") + hashlib.sha256(encoded).hexdigest()
 
 
 def _verification_path(store: Store, job: dict[str, Any], verification_id: str) -> Path:
@@ -3799,13 +3808,18 @@ def job_checks(store: Store, job_id: str) -> dict[str, Any]:
         reasons.append(f"independent check evidence is unavailable or corrupted: {exc}")
         return response
     try:
-        attempt, _, task_digest, expected_checks, snapshot = _check_submission(store, job)
+        attempt, workspace, task_digest, expected_checks, snapshot = _check_submission(store, job)
+        # Earlier completed observations retain their original, stricter identity
+        # rule. Do not reinterpret or rewrite evidence produced by an older CLI.
+        legacy_index = metadata["source_fingerprint"].startswith("sha256:")
+        if legacy_index:
+            snapshot = _check_source_snapshot(workspace, legacy_index=True)
         if attempt["attempt_id"] != metadata["attempt_id"]:
             reasons.append("latest attempt differs from verified attempt")
         if task_digest != metadata["task_digest"]:
             reasons.append("stored task digest differs from verified task")
         if (snapshot["head_sha"] != report.get("head_sha")
-                or _source_fingerprint(snapshot) != metadata["source_fingerprint"]):
+                or _source_fingerprint(snapshot, legacy_index=legacy_index) != metadata["source_fingerprint"]):
             reasons.append("current source fingerprint differs from verified source (HEAD/index/bytes/modes)")
         actual = report.get("checks")
         if (not isinstance(actual, list) or len(actual) != len(expected_checks)

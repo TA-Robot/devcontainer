@@ -296,9 +296,13 @@ and `independent_report_path`. Narrative/file acceptance still requires operator
 review; this flag proves only command acceptance.
 
 Freshness includes immutable task bytes, latest attempt identity, submitted HEAD,
-index bytes, and tracked bytes/modes (including paths hidden by index flags).
-New nonignored files invalidate it; ignored test caches do not. Even an index
-refresh that changes index bytes requires a new check. A later retry always needs
+index entries/flags/permissions, and tracked bytes/modes (including paths hidden
+by index flags). New nonignored files invalidate it; ignored test caches do not.
+Git stat-cache refreshes of unchanged source preserve freshness for new
+`sha256-v2:` fingerprints. Earlier `sha256:` evidence retains its original raw
+index identity rule; it remains readable and usable while unchanged, but an
+index refresh requires a new check. No historical evidence is rewritten.
+A later retry always needs
 its own evidence. The retry state machine is unchanged: after editing a succeeded
 delivery, legacy `job validate` can fail post-validation; `job run --clean-retry`
 then creates the next attempt. Strict evidence rejection itself leaves the job

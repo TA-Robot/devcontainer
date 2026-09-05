@@ -1135,6 +1135,27 @@ class AgentctlJobTests(unittest.TestCase):
         self.assertEqual(artifacts, [Path(report["report_path"])])
         self.assertLess(artifacts[0].stat().st_size, 100000)
 
+    def test_check_allows_stat_cache_refresh_without_losing_freshness(self):
+        command = "touch -t 200001010000 tracked.txt; git update-index --refresh"
+        job, workspace = self.check_fixture([command])
+        index = subprocess.check_output(
+            ["git", "-C", str(workspace), "rev-parse", "--git-path", "index"], text=True).strip()
+        index_path = Path(index)
+        if not index_path.is_absolute():
+            index_path = workspace / index_path
+        before = index_path.read_bytes()
+        report = self.check_report(job)
+        self.assertEqual(report["status"], "passed")
+        self.assertNotEqual(before, index_path.read_bytes(), "fixture must change real index bytes")
+        # A read-only evidence query must also survive a later metadata refresh.
+        os.utime(workspace / "tracked.txt", (978307200, 978307200))
+        subprocess.run(["git", "-C", str(workspace), "update-index", "--refresh"], check=True)
+        result = self.invoke("job", "checks", job["job_id"], "--json")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertTrue(json.loads(result.stdout)["fresh"])
+        result = self.invoke("job", "validate", job["job_id"], "--require-checks", "--json")
+        self.assertEqual(result.returncode, 0, result.stderr)
+
     def test_check_source_mutations_invalidate_without_repair(self):
         mutations = [
             "printf changed > tracked.txt",
