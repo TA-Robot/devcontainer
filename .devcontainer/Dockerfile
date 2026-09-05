@@ -229,6 +229,15 @@ RUN chmod +x /usr/local/bin/codex /usr/local/bin/claude /usr/local/bin/grok \
     && ln -s /usr/local/lib/mira-companion/mira-codex-hook.py /usr/local/bin/mira-grok-hook \
     && ln -s "${DEVCONTAINER_AI_CLI_PREFIX}/bin/gemini" /usr/local/bin/gemini
 
+# Self-contained lifecycle CLI and immutable default template; no checkout required.
+COPY scripts/manage-agent-project /usr/local/bin/manage-agent-project
+COPY project/ /usr/local/share/agent-project/template/
+COPY docs/agent-project-lifecycle.md /usr/local/share/agent-project/README.md
+COPY scripts/validate-agent-contracts.py scripts/agent_contracts.py /usr/local/share/agent-project/validation/
+RUN chmod 0755 /usr/local/bin/manage-agent-project \
+    && PYTHONDONTWRITEBYTECODE=1 python3 /usr/local/share/agent-project/validation/validate-agent-contracts.py \
+      --template-root /usr/local/share/agent-project/template
+
 # Legacy frozen second-agent wrapper (kept during the parallel migration).
 COPY scripts/second-agent /usr/local/bin/second-agent
 COPY scripts/codex-second-agent /usr/local/bin/codex-second-agent

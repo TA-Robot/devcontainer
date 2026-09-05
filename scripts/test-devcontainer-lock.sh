@@ -89,11 +89,30 @@ docker run --rm --network none "$image_name" bash -lc \
   'test "$(devcontainer --version)" = "$DEVCONTAINER_CLI_VERSION"'
 echo "ok - pinned Dev Container CLI is available without npm bootstrap or network"
 
+docker run --rm --network none --read-only --interactive \
+  --env PYTHONDONTWRITEBYTECODE=1 --entrypoint python3 "$image_name" - <<'PY'
+import json
+import os
+import runpy
+
+agentctl = runpy.run_path("/usr/local/bin/agentctl")
+checks = []
+agentctl["provider_capability"](
+    checks, name="codex", binary="/usr/local/bin/codex",
+    help_commands=[["exec", "--help"]], required=["--json", "--model", "--sandbox"],
+    expected_version=os.environ["DEVCONTAINER_CODEX_CLI_VERSION"],
+)
+assert checks[0]["status"] == "pass", json.dumps(checks)
+PY
+echo "ok - installed Codex capability probe tolerates read-only PATH-alias warnings"
+
 # Verify development checks on the shipped Python, not only installed runtime.
 docker run --rm --network none -v "$repo_root:/workspace:ro" -w /workspace \
   "$image_name" bash -lc \
     'PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate-agent-contracts.py && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts.test-agentctl.AgentctlImportTests'
 echo "ok - repository template validation and checkout library selection"
+
+"$script_dir/test-agent-project-container.sh" "$image_name"
 
 if [[ "${DEVCONTAINER_FROZEN_RUN_SMOKE:-1}" == "1" ]]; then
   # Feature entrypoints are runtime metadata and are not written into the image
