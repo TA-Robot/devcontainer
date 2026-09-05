@@ -37,6 +37,18 @@ command independently produces its witness and exit 17. It also covers a manual-
 task. These two tests establish the fixture and the missing capability; they are
 not a calibrated evaluator for the future three-stage implementation.
 
+A [draft core execution probe](evaluate_execution.py) now observes four properties:
+actual execution, rejection and stopping after a falsely reported success,
+authority from the original task, and absence of command proof for manual-only
+acceptance. It checks external filesystem witnesses and actual exit status,
+in addition to the JSON report. Calibration executes a small independent shell
+reference against real jobs and rejects fabricated success, overridden failure,
+and result-only command side effects. The expanded fixture/calibration suite has
+six tests. This establishes these core observations only: timeouts, output bounds,
+source identity, freshness, migration, concurrency and installed distribution
+remain outside this draft probe. Its output explicitly leaves sustained-task
+acceptance unknown; it must not be used to launch the full comparison yet.
+
 Draft execution limits are task-local, owned by the primary/integrator. The
 finite positive whole-sequence deadline, no implicit execution on reads, and
 exclusive ownership per attempt are hard guards against false or overlapping
