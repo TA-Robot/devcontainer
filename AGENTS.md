@@ -208,6 +208,15 @@ PYTHONDONTWRITEBYTECODE=1 python3 scripts/build-mira-icon-font.py
 scripts/test-mira-vsix.sh
 ```
 
+開発ハーネスの継続利用入口・復旧観測（`experiments/development-harness/continuation/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-development-admission.py scripts/test-development-campaign.py scripts/test-development-recovery.py
+```
+
+実Docker確認は検証済みimage IDを`DEVELOPMENT_CAMPAIGN_IMAGE`へ指定して同じsuiteを実行する。
+疑似providerのみを使う。過去の固定runner・評価器・manifestを変更して既存runを再開しない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ

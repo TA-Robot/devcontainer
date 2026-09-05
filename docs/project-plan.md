@@ -132,6 +132,20 @@ Docker readinessの一時timeoutで早期終了する不具合は修正し、期
 再起動後のDocker/cache待機を確認した。公式CLIの並行buildの一時ファイル衝突も修正した。
 通常のnetwork権限は変更しない。準備・評価・統合の費用はモデル時間と分ける。
 
+### 継続利用の開始（continuation-001）
+
+この基盤自身を対象とする[継続観測](agents/development-harness-continuation.md)を開始した。
+最初の実変更は、次段階の開始前に残予算と後続段階の最低予算を判定する入口、および
+公開された明示復旧手順を使う外部観測。過去のrunner・評価器・manifestは保存する。
+旧A/Bの診断では、Aの予算内提出とBの12,945 output tokens超過を区別し、
+元記録のhash一致を確認した。新しいモデル比較や速度改善の実績には数えない。
+
+開始判定は実processの疑似providerと実Dockerで、中断復旧は実job・所有processの
+停止確認・同梱CLIで検証する。手順と検証結果は
+[continuation](../experiments/development-harness/continuation/README.md)を参照。
+後続段階の最低予算は課題ごとに凍結するplanning priorで、turn内の課金上限や完成保証を
+意味しない。使用量が不明な場合や予算不足の場合は開始せず、予算をリセットしない。
+
 ### 次に検証する問い
 
 1. **週単位の実projectでの継続利用。** 今回の49〜65分・3段階は結合した機能開発の
