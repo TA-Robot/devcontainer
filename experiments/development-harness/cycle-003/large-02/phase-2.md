@@ -13,8 +13,14 @@ Persist completed check reports under the existing private state, with an opaque
 integrity digest. Preserve prior records on a later failed run. The read-only
 `checks` command returns `schema_version: 1`, `job_id`, `latest` (the latest
 observation or null), `fresh` (boolean), and `stale_reasons` (array of strings).
+When `fresh` is false, give at least one reason, including absent or incomplete evidence.
 With no report, return an explicit absence, not a passing
 empty report. Reading must not create state, execute commands or repair files.
+Here "state" means new verification records or changes to job/source/report
+content; a documented compatible database schema migration on first open is
+allowed. Include `report_path` in a completed observation, pointing to its
+private JSON artifact for inspection. Verify its integrity against separately
+stored metadata; a file's own claim to have passed is insufficient.
 
 `validate --require-checks` must accept only complete passing independent evidence
 for the current stored task, latest attempt and exact current source. Model
@@ -35,3 +41,6 @@ native task/result contracts and legacy validation compatibility. Tests must use
 an actual earlier database/state and verify both successful upgrade and absence
 of fabricated evidence, plus successful recheck after a legitimate source update
 through the existing job workflow. Use synthetic credentials only.
+For retries preserve the existing state machine: a succeeded delivery can fail
+legacy post-validation after a source change, then use `job run --clean-retry`.
+Do not add unrestricted retries for already validated jobs.

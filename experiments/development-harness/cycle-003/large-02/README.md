@@ -1,9 +1,10 @@
-# Independent acceptance execution: staged task draft
+# Independent acceptance execution: staged study
 
-Status: selected real development need; public stages drafted, external evaluator
-and execution budgets not yet frozen. Do not launch this campaign from these
-drafts alone. Small-02's separately frozen comparison has finished; see its
-[results](../small-result.json).
+Status: source/installed observers and finite execution protocol are calibrated.
+The [protocol](protocol.md) fixes the three-stage comparison; exact tasks, runtime,
+source, image, cache and manifests are sealed in private provenance before launch.
+Small-02's separately frozen comparison has finished; see its
+[results](../small-result.json). This page does not claim a completed large trial.
 
 The current broker verifies Git and the shape of the provider result, but does
 not independently execute the original task's command acceptance. This affects
@@ -22,40 +23,20 @@ independent replicate. Later-stage correctness, regressions and change effort
 provide evidence about maintaining this implementation, with the same developer
 model and limits in both conditions. They do not measure all forms of maintainability.
 
-Before launch, enumerate the externally observable cases and calibrate the
-evaluator with missing, fabricated-success and executable positive fixtures.
-Freeze commands, schemas, timing tolerances, the stage-release rule, common
-requirements for timepoint comparisons, model/CLI/permissions and finite caps.
-All disposable projects, processes, Docker resources and state belong outside
-the repository. No live model is needed for evaluator calibration.
+The [staged evaluator](evaluate_staged.py) contains 24 / 37 / 41 source
+observations through the respective stages. The [installed evaluator](evaluate_installed.py)
+contains 13 observations using shipped paths in a real final image, with no
+candidate checkout mounted. Counts describe coverage; acceptance also requires
+complete measurement, unchanged source, fixed regressions and source review.
 
-The [real-job fixture](fixture.py) creates an actual submitted job through a fake
-provider, counts provider invocations and allows a deliberately false success
-claim. `scripts/test-independent-check-fixture.py` verifies that legacy validation
-does not execute acceptance or result-only commands, while executing the original
-command independently produces its witness and exit 17. It also covers a manual-only
-task. These two tests establish the fixture and the missing capability; they are
-not a calibrated evaluator for the future three-stage implementation.
+The original [core probe](evaluate_execution.py) and its six-test calibration
+remain as earlier evidence. The new eight-test staged calibration exercises all
+41 observations with executable reference behavior and rejects identity,
+integrity and deadline mutants. Two runtime tests verify readiness and cache
+identity before any model call. See [calibration evidence](calibration.json) and
+[protocol limitations](protocol.md), including the reference's in-memory index.
 
-A [draft core execution probe](evaluate_execution.py) now observes four properties:
-actual execution, rejection and stopping after a falsely reported success,
-authority from the original task, and absence of command proof for manual-only
-acceptance. It checks external filesystem witnesses and actual exit status,
-in addition to the JSON report. Calibration executes a small independent shell
-reference against real jobs and rejects fabricated success, overridden failure,
-and result-only command side effects. The expanded fixture/calibration suite has
-six tests. This establishes these core observations only: timeouts, output bounds,
-source identity, freshness, migration, concurrency and installed distribution
-remain outside this draft probe. Its output explicitly leaves sustained-task
-acceptance unknown; it must not be used to launch the full comparison yet.
-
-Draft execution limits are task-local, owned by the primary/integrator. The
-finite positive whole-sequence deadline, no implicit execution on reads, and
-exclusive ownership per attempt are hard guards against false or overlapping
-verification. The 64 KiB combined retained output is a resource cap aligned with
-the existing default log view; it is not a quality score. The 60-second default
-deadline is a planning prior for short acceptance checks, explicitly overridable
-by the caller. Real checks that exceed it, required diagnostics lost to the cap,
-or failures to terminate owned processes invalidate these assumptions and must be
-resolved before freezing the study. The fixture's subprocess deadlines bound
-provider-free setup; a setup timeout is an observer failure, not a fast candidate.
+Tasks, hidden evaluators and reference code are absent from the developer
+checkout. Each condition receives later stages only after its recorded earlier
+session completes; external findings are withheld. Disposable projects, provider
+logs, Docker resources and all raw evidence remain outside this repository.

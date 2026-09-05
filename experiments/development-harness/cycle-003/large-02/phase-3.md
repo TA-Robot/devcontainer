@@ -6,6 +6,9 @@ command side effect; a second checker must fail promptly without executing its
 commands or publishing a successful report. Different attempts can be checked
 independently. `checks` must make in-progress/incomplete verification visible and
 `validate --require-checks` must refuse it.
+Expose `in_progress: true` in `job checks --json` while a checker owns execution;
+return false when no checker is active. A previous passing report cannot override
+this marker. Interrupted observations may use status `interrupted` or `incomplete`.
 
 Handle ordinary interruption such as SIGTERM: terminate the command process group,
 preserve bounded evidence and leave verification incomplete/failed, never passed.

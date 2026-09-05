@@ -38,6 +38,10 @@ unavailable), `elapsed_seconds`, and `stdout_tail` / `stderr_tail` strings. Use 
 both streams per command; drain large output without unbounded memory or disk.
 Use the existing best-effort log redaction for returned tails. Synthetic secrets
 only in tests; no new raw unbounded output files.
+`head_sha` identifies the submitted HEAD captured before execution, even if a
+command later changes HEAD. Each check's `cwd` is its validated absolute working
+directory. Unexecuted commands have null exit code, zero elapsed seconds and
+empty output tails. Elapsed seconds must be finite and nonnegative.
 
 Check submitted source identity before and after execution. A changed tracked
 file, changed HEAD/index, or newly introduced nonignored source file invalidates
