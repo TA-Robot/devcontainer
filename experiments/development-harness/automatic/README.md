@@ -46,7 +46,7 @@ containerに備える。この比較コマンドは新しい環境や権限を�
 | --- | --- |
 | `schema_version` | `1` |
 | `mode` | 新しい比較は `prospective`。既存成果の校正は `retrospective` |
-| `task` | `redaction-v2` または `acceptance-v2` |
+| `task` | `redaction-v2`、`acceptance-v2`、`duplicates-v1` |
 | `conditions` | 実行順の配列。`id: control/improved` と各初期化済み `state` directory |
 | `image` | 外部評価containerの固定 `sha256:…` image ID |
 | `legacy` | acceptanceの旧jobを作る固定source。redactionではnull |
@@ -54,6 +54,7 @@ containerに備える。この比較コマンドは新しい環境や権限を�
 | `observer_seconds` | 観測1回の秒数cost cap |
 | `observer_slots` | 外部観測の同時実行数。ローカルresource cost capとして1または2 |
 | `intervention_fields` | 異なってよいmanifest項目。通常は `command_network_access` のみ |
+| `startup` | 共通cacheを使う場合は `kind: common-cache-v1` と `cache_index_sha256`。既存の検証済みstartupでDocker/cacheを待ち、準備時間を別記録 |
 
 予算のscope・rationale・owner・update_whenも設定に記録する。数値を成果点にしない。
 source bytes/mode、初期image、課題、上限が介入以外で異なる設定は拒否する。
@@ -110,6 +111,8 @@ AUTOMATIC_COMPARISON_IMAGE=sha256:検証済みimageのID \
 
 この試験の開発者は疑似providerで、認証情報やモデル呼び出しを使わない。
 image指定がなければDocker試験はskipとして明示する。
+新課題`duplicates-v1`は[cycle-004](../cycle-004/protocol.md)を参照。
+追加の校正は`python3 -m unittest scripts/test-duplicate-json-evaluator.py`で実行する。
 追加の依存はない。host Pythonには安全なartifact展開用の `tarfile.data_filter` が必要。
 この入口を戻す場合はdirectoryと専用testを除去し、旧runnerが段階公開・外部評価・比較を
 一括実行しないことを記録する。

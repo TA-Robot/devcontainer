@@ -42,7 +42,7 @@ def tree_hash(path):
 def validate(config, states):
     if config.get('schema_version') != 1 or config.get('mode') not in ('prospective', 'retrospective'):
         raise ValueError('unsupported comparison mode/schema')
-    if config.get('task') not in ('redaction-v2', 'acceptance-v2'):
+    if config.get('task') not in ('redaction-v2', 'acceptance-v2', 'duplicates-v1'):
         raise ValueError('unsupported task')
     if len(config['conditions']) != 2 or {r['id'] for r in config['conditions']} != {'control', 'improved'}:
         raise ValueError('exactly one control and one improved condition required')
@@ -54,6 +54,11 @@ def validate(config, states):
     if type(config['include_checkpoints']) is not bool:
         raise ValueError('checkpoint selection must be explicit')
     allowed = set(config['intervention_fields'])
+    startup = config.get('startup')
+    if startup is not None and (not isinstance(startup, dict)
+            or startup.get('kind') != 'common-cache-v1'
+            or not re.fullmatch(r'[0-9a-f]{64}', startup.get('cache_index_sha256', ''))):
+        raise ValueError('unsupported startup contract')
     if not allowed <= {'command_network_access', 'temporary_docker_config', 'model', 'effort', 'cli_version'}:
         raise ValueError('intervention cannot change task, source, or budgets')
     manifests = []
@@ -67,7 +72,7 @@ def validate(config, states):
             raise ValueError('active/interrupted run cannot be compared or restarted')
         if config['mode'] == 'prospective' and (state['sessions'] or not admission.assess(state)['admitted']):
             raise ValueError('prospective sealing requires admitted, never-started states')
-        expected_scale = 'small' if config['task'] == 'redaction-v2' else 'large'
+        expected_scale = 'large' if config['task'] == 'acceptance-v2' else 'small'
         if state['manifest']['scale'] != expected_scale:
             raise ValueError('task scale mismatch')
         if len(state['manifest']['phases']) != (1 if expected_scale == 'small' else 3):
@@ -93,6 +98,8 @@ def seal(config_path, output):
                HARNESS / 'continuation/admission.py', HARNESS / 'continuation/recovery.py',
                HARNESS / 'cycle-003/evaluate_redaction.py',
                *sorted((HARNESS / 'cycle-003/large-02').glob('*.py'))]
+    if config['task'] == 'duplicates-v1':
+        sources.append(HARNESS / 'cycle-004/duplicates.py')
     # Bind the actual initial source bytes/modes, not just the advertised Git HEAD.
     initial_sources = []
     for condition, state in zip(config['conditions'], states):
@@ -188,8 +195,26 @@ def execute_all(record, output):
         state = campaign.read(path / 'state.json')
         for _ in range(state['manifest']['max_sessions']):
             before = campaign.read(path / 'state.json')
-            decision = admission.run(path, lambda current: campaign.Docker(
-                current['container_id'], Path(current['workspace']), current['container_id']))
+            transports = []
+            def prepare(current):
+                startup = record['config'].get('startup')
+                if startup:
+                    spec = importlib.util.spec_from_file_location('common_cache_runtime',
+                            HARNESS / 'cycle-003/large-02/runtime.py')
+                    runtime = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(runtime)
+                    transport = runtime.StudyDocker(current['container_id'], Path(current['workspace']),
+                                current['container_id'], cache_index_sha256=startup['cache_index_sha256'])
+                else:
+                    transport = campaign.Docker(current['container_id'], Path(current['workspace']), current['container_id'])
+                transports.append(transport)
+                return transport
+            try:
+                decision = admission.run(path, prepare)
+            finally:
+                if transports and hasattr(transports[0], 'preparation'):
+                    campaign.save(output / f'preparation-{row["id"]}-{len(before["sessions"]):02d}.json',
+                                  transports[0].preparation or {'status': 'unknown'})
             print(json.dumps({'condition': row['id'], 'admission': decision}), flush=True)
             after = campaign.read(path / 'state.json')
             if not decision['stage_started'] or after['next_phase'] <= before['next_phase'] or not decision['admitted']:

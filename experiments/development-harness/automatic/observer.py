@@ -130,6 +130,8 @@ def small(candidate):
 
 
 def catalog(task):
+    if task == 'duplicates-v1':
+        return load('duplicates_catalog', HARNESS / 'cycle-004/duplicates.py').catalog()
     if task == 'acceptance-v2':
         return [{'name': name, 'phase': phase, 'dimension': dimension}
                 for name, phase, dimension, _ in acceptance_cases()]
@@ -144,7 +146,7 @@ def catalog(task):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--task', required=True, choices=('redaction-v2', 'acceptance-v2'))
+    parser.add_argument('--task', required=True, choices=('redaction-v2', 'acceptance-v2', 'duplicates-v1'))
     parser.add_argument('--candidate', required=True, type=Path)
     parser.add_argument('--legacy', type=Path)
     parser.add_argument('--previous', type=Path)
@@ -152,7 +154,9 @@ def main():
     parser.add_argument('--output', required=True, type=Path)
     args = parser.parse_args()
     before = staged.inventory(args.candidate)
-    if args.task == 'redaction-v2':
+    if args.task == 'duplicates-v1':
+        result = load('duplicates_observer', HARNESS / 'cycle-004/duplicates.py').evaluate(args.candidate)
+    elif args.task == 'redaction-v2':
         result = small(args.candidate)
     else:
         if args.legacy is None:
