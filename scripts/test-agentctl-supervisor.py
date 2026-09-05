@@ -13,10 +13,75 @@ import sys
 import tempfile
 import time
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parent.parent
 AGENTCTL = ROOT / "scripts/agentctl"
+sys.path.insert(0, str(ROOT / "scripts"))
+
+from agentctl_jobs import AgentctlJobError, StatePaths
+from agentctl_supervisor import Supervisor, serve_supervisor
+
+
+class SupervisorConfigurationTests(unittest.TestCase):
+    def setUp(self) -> None:
+        self.environment = patch.dict(os.environ, {}, clear=True)
+        self.environment.start()
+        self.addCleanup(self.environment.stop)
+        self.temp = tempfile.TemporaryDirectory(prefix="agentctl-supervisor-config-")
+        self.addCleanup(self.temp.cleanup)
+        self.paths = StatePaths(root=Path(self.temp.name))
+
+    def assert_invalid_threshold(self, raw: str, message: str) -> None:
+        with patch.dict(os.environ, {"AGENTCTL_ORPHAN_AFTER_SECONDS": raw}):
+            # Startup must fail before serving requests or reconciling queued work.
+            with patch.object(Supervisor, "serve") as serve:
+                with self.assertRaises(AgentctlJobError) as error:
+                    serve_supervisor(self.paths, AGENTCTL)
+                serve.assert_not_called()
+        self.assertIn("AGENTCTL_ORPHAN_AFTER_SECONDS", str(error.exception))
+        self.assertIn(message, str(error.exception))
+        self.assertEqual(list(self.paths.root.iterdir()), [])
+
+    def test_default_orphan_threshold(self) -> None:
+        supervisor = Supervisor(self.paths, AGENTCTL)
+        self.assertEqual(supervisor.orphan_after_seconds, 30.0)
+        self.assertEqual(supervisor.reconcile_interval, 5.0)
+
+    def test_finite_orphan_thresholds_at_or_above_bound(self) -> None:
+        for raw, expected, interval in (
+            ("0.1", 0.1, 0.1),
+            ("0.10000000000000002", 0.10000000000000002, 0.1),
+            ("2.5", 2.5, 1.25),
+            (" +3e1 ", 30.0, 5.0),
+            ("1.7976931348623157e308", sys.float_info.max, 5.0),
+        ):
+            with self.subTest(raw=raw), patch.dict(
+                os.environ, {"AGENTCTL_ORPHAN_AFTER_SECONDS": raw}
+            ):
+                supervisor = Supervisor(self.paths, AGENTCTL)
+                self.assertEqual(supervisor.orphan_after_seconds, expected)
+                self.assertEqual(supervisor.reconcile_interval, interval)
+
+    def test_nonfinite_orphan_thresholds_fail_before_serving(self) -> None:
+        for raw in (
+            "nan", "NaN", "+nan", "-NaN", "inf", "+inf", "-inf",
+            "Infinity", "+Infinity", "-Infinity", "  iNfInItY  ",
+            "1e309", "-1e309", "1.7976931348623159e308",
+        ):
+            with self.subTest(raw=raw):
+                self.assert_invalid_threshold(raw, "finite")
+
+    def test_below_bound_orphan_thresholds_still_fail(self) -> None:
+        for raw in ("0.09999999999999999", "0", "-0", "-1", "1e-999"):
+            with self.subTest(raw=raw):
+                self.assert_invalid_threshold(raw, "at least 0.1")
+
+    def test_malformed_orphan_thresholds_still_fail(self) -> None:
+        for raw in ("", " ", "not-a-number", "30s", "1.2.3"):
+            with self.subTest(raw=raw):
+                self.assert_invalid_threshold(raw, repr(raw))
 
 
 FAKE_CODEX = r'''#!/usr/bin/env python3

@@ -8,6 +8,7 @@ conversation state, and task decomposition deliberately remain outside it.
 from __future__ import annotations
 
 import json
+import math
 import os
 from pathlib import Path
 import signal
@@ -283,6 +284,11 @@ class Supervisor:
             raise AgentctlJobError(
                 f"invalid AGENTCTL_ORPHAN_AFTER_SECONDS: {raw_threshold!r}"
             ) from exc
+        if not math.isfinite(self.orphan_after_seconds):
+            raise AgentctlJobError(
+                f"invalid AGENTCTL_ORPHAN_AFTER_SECONDS: {raw_threshold!r}; "
+                "expected a finite number"
+            )
         if self.orphan_after_seconds < 0.1:
             raise AgentctlJobError("AGENTCTL_ORPHAN_AFTER_SECONDS must be at least 0.1")
         self.reconcile_interval = min(5.0, max(0.1, self.orphan_after_seconds / 2))
