@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
 import os
 from pathlib import Path
 import re
@@ -30,6 +31,7 @@ from agentctl_jobs import (  # noqa: E402
     StatePaths,
     Store,
     capacity_limits,
+    check_job,
     collect_job,
     create_job,
     gc_inventory,
@@ -939,6 +941,27 @@ def run_job_validate(args: argparse.Namespace) -> int:
     return 0
 
 
+def positive_finite_seconds(value: str) -> float:
+    try:
+        seconds = float(value)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError("timeout must be a finite positive number") from exc
+    if not math.isfinite(seconds) or seconds <= 0:
+        raise argparse.ArgumentTypeError("timeout must be a finite positive number")
+    return seconds
+
+
+def run_job_check(args: argparse.Namespace) -> int:
+    with Store(state_paths(args)) as store:
+        report = check_job(store, args.job_id, timeout=args.timeout)
+    print_payload(
+        report,
+        as_json=args.json,
+        summary=f"job {report['job_id']} checks {report['status']} at {report['head_sha']}",
+    )
+    return 0 if report["status"] == "passed" else 1
+
+
 def run_job_collect(args: argparse.Namespace) -> int:
     with Store(state_paths(args)) as store:
         report = collect_job(
@@ -1078,6 +1101,15 @@ def parser() -> argparse.ArgumentParser:
     job_validate.add_argument("job_id")
     job_validate.add_argument("--json", action="store_true")
     job_validate.set_defaults(handler=run_job_validate)
+
+    job_check = job_commands.add_parser(
+        "check", help="execute immutable task acceptance commands on the submitted attempt"
+    )
+    job_check.add_argument("job_id")
+    job_check.add_argument("--timeout", type=positive_finite_seconds, default=60.0,
+                           help="complete command sequence budget in seconds (default: 60)")
+    job_check.add_argument("--json", action="store_true")
+    job_check.set_defaults(handler=run_job_check)
 
     job_collect = job_commands.add_parser(
         "collect", help="write a read-only single-writer integration handoff report"

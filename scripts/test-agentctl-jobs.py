@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
 import os
 from pathlib import Path
 import shutil
@@ -11,6 +12,7 @@ import sqlite3
 import subprocess
 import sys
 import tempfile
+import time
 import unittest
 from unittest.mock import patch
 
@@ -91,6 +93,12 @@ else:
         "blocked_reason": None,
         "error": None
     }
+    if os.environ.get("FAKE_ACCEPTANCE_COMMANDS"):
+        result["checks"] = [
+            {"command": command, "status": "passed", "exit_code": 0,
+             "summary": "Synthetic claim only; command was never executed."}
+            for command in json.loads(os.environ["FAKE_ACCEPTANCE_COMMANDS"])
+        ]
     if status == "blocked":
         result["blocked_reason"] = "Synthetic blocker."
 
@@ -394,6 +402,7 @@ class AgentctlJobTests(unittest.TestCase):
         collaboration: dict[str, object] | None = None,
         lane: str = "write",
         role: str = "implementer",
+        acceptance: list[dict[str, str]] | None = None,
     ) -> Path:
         task = {
             "schema_version": 1,
@@ -406,7 +415,7 @@ class AgentctlJobTests(unittest.TestCase):
                 "allowed_paths": ["result.txt"],
                 "forbidden_paths": ["forbidden.txt", ".devcontainer/"],
             },
-            "acceptance": [{"kind": "command", "value": "fake-provider"}],
+            "acceptance": acceptance if acceptance is not None else [{"kind": "command", "value": "fake-provider"}],
             "constraints": ["Do not push or merge."],
             "dependency_job_ids": dependency_job_ids or [],
         }
@@ -433,6 +442,315 @@ class AgentctlJobTests(unittest.TestCase):
         )
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         return json.loads(result.stdout)
+
+    def check_fixture(self, commands: list[str], *, acceptance=None, **options):
+        entries = acceptance if acceptance is not None else [
+            {"kind": "command", "value": command} for command in commands
+        ]
+        self.extra_environment["FAKE_ACCEPTANCE_COMMANDS"] = json.dumps(commands)
+        job = self.create(acceptance=entries, **options)
+        # Lane R shares the checkout; remove the caller's transient input packet.
+        (self.workspace / "task.json").unlink()
+        result = self.invoke("job", "run", job["job_id"], "--provider", "codex", "--json",
+                             mode="read-success" if options.get("lane") == "read" else "success")
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        job = json.loads(result.stdout)
+        return job, Path(job["attempts"][-1]["workspace_path"])
+
+    def check_report(self, job, *arguments):
+        result = self.invoke("job", "check", job["job_id"], "--json", *arguments, mode="exit")
+        self.assertTrue(result.stdout, result.stderr)
+        report = json.loads(result.stdout)
+        self.assertEqual(result.returncode, 0 if report["status"] == "passed" else 1, result.stderr)
+        self.assertEqual(report["schema_version"], 1)
+        self.assertEqual(report["job_id"], job["job_id"])
+        self.assertEqual(report["attempt_id"], job["attempts"][-1]["attempt_id"])
+        self.assertEqual(report["head_sha"], job["attempts"][-1]["head_sha"])
+        for check in report["checks"]:
+            self.assertTrue(math.isfinite(check["elapsed_seconds"]))
+            self.assertGreaterEqual(check["elapsed_seconds"], 0)
+            self.assertLessEqual(len(check["stdout_tail"].encode()) +
+                                 len(check["stderr_tail"].encode()), 65536)
+            if check["status"] == "unexecuted":
+                self.assertIsNone(check["exit_code"])
+                self.assertEqual(check["elapsed_seconds"], 0)
+                self.assertEqual(check["stdout_tail"], "")
+                self.assertEqual(check["stderr_tail"], "")
+        return report
+
+    def test_check_runs_original_task_in_attempt_and_does_not_validate_job(self):
+        commands = ["test -f result.txt && printf 'submitted\\n'", "pwd"]
+        acceptance = [{"kind": "manual", "value": "Must be reviewed by an operator"},
+                      {"kind": "command", "value": commands[0]},
+                      {"kind": "file", "value": "result.txt"},
+                      {"kind": "command", "value": commands[1], "cwd": ".agent"}]
+        job, workspace = self.check_fixture(commands, acceptance=acceptance)
+        attempt = job["attempts"][-1]
+        # Result evidence is provider-owned; a substituted command must never run.
+        result_path = Path(attempt["result_path"])
+        result = json.loads(result_path.read_text())
+        result["checks"] = [{"command": "touch wrong-result-command", "status": "passed", "exit_code": 0}]
+        result_path.write_text(json.dumps(result))
+        # Editing the caller input also cannot replace the immutable command list.
+        (self.workspace / "task.json").write_text('{"acceptance": []}')
+        task_path = Path(job["task_path"])
+        original_task = task_path.read_bytes()
+        report = self.check_report(job)
+        self.assertEqual(report["status"], "passed")
+        self.assertEqual([c["command"] for c in report["checks"]], commands)
+        self.assertEqual(report["checks"][0]["stdout_tail"], "submitted\n")
+        self.assertEqual(report["checks"][0]["cwd"], str(workspace))
+        self.assertEqual(report["checks"][1]["cwd"], str(workspace / ".agent"))
+        self.assertEqual(report["checks"][1]["stdout_tail"].strip(), str(workspace / ".agent"))
+        self.assertFalse((workspace / "wrong-result-command").exists())
+        self.assertEqual(task_path.read_bytes(), original_task)
+        shown = json.loads(self.invoke("job", "show", job["job_id"], "--json").stdout)
+        self.assertEqual(shown["state"], "succeeded")
+        self.assertIsNone(shown.get("validation"))
+        self.assertFalse(result_path.with_name("validation.json").exists())
+
+    def test_check_failing_command_overrules_provider_pass_claim_and_stops(self):
+        job, workspace = self.check_fixture(["printf passed; printf problem >&2; exit 7", "touch later"])
+        report = self.check_report(job)
+        self.assertEqual(report["status"], "failed")
+        self.assertEqual(report["checks"][0]["exit_code"], 7)
+        self.assertEqual(report["checks"][0]["stdout_tail"], "passed")
+        self.assertEqual(report["checks"][0]["stderr_tail"], "problem")
+        self.assertEqual(report["checks"][1]["status"], "unexecuted")
+        self.assertFalse((workspace / "later").exists())
+
+    def test_check_read_lane_and_validated_attempt(self):
+        job, workspace = self.check_fixture(["test -f tracked.txt"], lane="read", role="reviewer", resource_class="light")
+        self.assertEqual(workspace, self.workspace)
+        validated = self.invoke("job", "validate", job["job_id"], "--json")
+        self.assertEqual(validated.returncode, 0, validated.stderr)
+        report = self.check_report(job)
+        self.assertEqual(report["status"], "passed")
+
+    def test_check_no_commands_is_not_verification(self):
+        job, _ = self.check_fixture([], acceptance=[{"kind": "manual", "value": "Review behavior"}])
+        report = self.check_report(job)
+        self.assertEqual(report["status"], "no-checks")
+        self.assertEqual(report["checks"], [])
+
+    def test_check_timeout_is_one_budget_and_kills_children(self):
+        pid_path = self.root / "child.pid"
+        command = ("python3 -c 'import os,signal,time; "
+                   "signal.signal(signal.SIGTERM, signal.SIG_IGN); "
+                   f"open(\"{pid_path}\",\"w\").write(str(os.getpid())); time.sleep(30)' & wait")
+        job, _ = self.check_fixture(["sleep 0.6", command, "echo later"])
+        started = time.monotonic()
+        report = self.check_report(job, "--timeout", "1")
+        self.assertLess(time.monotonic() - started, 3)
+        self.assertEqual(report["status"], "timed-out")
+        self.assertEqual(report["checks"][0]["status"], "passed")
+        self.assertEqual(report["checks"][1]["status"], "timed-out")
+        self.assertLess(report["checks"][1]["elapsed_seconds"], 0.8)
+        self.assertEqual(report["checks"][1]["exit_code"], -9)
+        self.assertEqual(report["checks"][2]["status"], "unexecuted")
+        pid = int(pid_path.read_text())
+        for _ in range(50):
+            proc = Path(f"/proc/{pid}/stat")
+            if not proc.exists() or proc.read_text().rsplit(")", 1)[1].split()[0] == "Z":
+                break
+            time.sleep(0.02)
+        else:
+            self.fail(f"timed-out child {pid} remains running")
+
+    def test_check_timeout_with_exited_shell_and_inherited_pipes(self):
+        job, _ = self.check_fixture(["sleep 30 & exit 0"])
+        report = self.check_report(job, "--timeout", "0.2")
+        self.assertEqual(report["status"], "timed-out")
+        self.assertEqual(report["checks"][0]["exit_code"], 0)
+
+    def test_check_large_output_is_drained_bounded_and_redacted(self):
+        secret = "sk-" + "s" * 24
+        command = ("python3 -c 'import os; "
+                   "[(os.write(1,b\"x\"*65536),os.write(2,b\"y\"*65536)) for _ in range(160)]; "
+                   f"os.write(1,b\"\\n{secret}\\nstdout-end\\n\"); "
+                   "os.write(2,b\"\\nPASSWORD=fixture-password\\nstderr-end\\n\")'")
+        job, _ = self.check_fixture([command])
+        report = self.check_report(job, "--timeout", "10")
+        self.assertEqual(report["status"], "passed")
+        check = report["checks"][0]
+        self.assertNotIn(secret, check["stdout_tail"])
+        self.assertNotIn("fixture-password", check["stderr_tail"])
+        self.assertIn("[REDACTED]", check["stdout_tail"])
+        self.assertTrue(check["stdout_tail"].endswith("stdout-end\n"))
+        self.assertTrue(check["stderr_tail"].endswith("stderr-end\n"))
+        self.assertFalse(any(p.name.startswith("check") for p in self.state_dir.rglob("*")))
+
+    def test_check_source_mutations_invalidate_without_repair(self):
+        mutations = [
+            "printf changed > tracked.txt",
+            "chmod +x tracked.txt",
+            "touch introduced.py",
+            "git update-index --assume-unchanged tracked.txt; printf hidden > tracked.txt",
+            "git update-index --skip-worktree tracked.txt; printf hidden > tracked.txt",
+            "git update-index --assume-unchanged tracked.txt",
+            "git -c user.name=test -c user.email=test@example.invalid commit --allow-empty -qm changed",
+        ]
+        for number, command in enumerate(mutations):
+            with self.subTest(command=command):
+                # Each fixture is a real independent job from the same clean base.
+                self.extra_environment["FAKE_ACCEPTANCE_COMMANDS"] = json.dumps([command, "echo later"])
+                job = self.create(name=f"mutate-{number}.json", acceptance=[
+                    {"kind": "command", "value": command}, {"kind": "command", "value": "echo later"}])
+                run = self.invoke("job", "run", job["job_id"], "--provider", "codex", "--json")
+                self.assertEqual(run.returncode, 0, run.stderr)
+                job = json.loads(run.stdout)
+                report = self.check_report(job)
+                self.assertEqual(report["status"], "source-changed")
+                self.assertTrue(report["source_changed"])
+                self.assertEqual(report["checks"][0]["exit_code"], 0)
+                self.assertEqual(report["checks"][1]["status"], "unexecuted")
+                workspace = Path(job["attempts"][-1]["workspace_path"])
+                if "printf" in command:
+                    self.assertNotEqual((workspace / "tracked.txt").read_text(), "base\n")
+
+    def test_check_failure_with_source_change_stays_failed(self):
+        job, workspace = self.check_fixture(["printf changed > tracked.txt; exit 4"])
+        report = self.check_report(job)
+        self.assertEqual(report["status"], "failed")
+        self.assertTrue(report["source_changed"])
+        self.assertEqual((workspace / "tracked.txt").read_text(), "changed")
+
+    def test_check_detects_byte_changes_under_existing_index_flags(self):
+        for number, flag in enumerate(("--assume-unchanged", "--skip-worktree")):
+            with self.subTest(flag=flag):
+                command = "printf hidden > tracked.txt"
+                self.extra_environment["FAKE_ACCEPTANCE_COMMANDS"] = json.dumps([command])
+                job = self.create(name=f"hidden-{number}.json", acceptance=[
+                    {"kind": "command", "value": command}])
+                run = self.invoke("job", "run", job["job_id"], "--provider", "codex", "--json")
+                self.assertEqual(run.returncode, 0, run.stderr)
+                job = json.loads(run.stdout)
+                workspace = Path(job["attempts"][-1]["workspace_path"])
+                subprocess.run(["git", "-C", str(workspace), "update-index", flag, "tracked.txt"], check=True)
+                report = self.check_report(job)
+                self.assertEqual(report["status"], "source-changed")
+                self.assertEqual(report["checks"][0]["status"], "passed")
+
+    def test_check_rejects_symlinked_workspace_and_foreign_repository(self):
+        marker = self.root / "ran"
+        job, workspace = self.check_fixture([f"touch {marker}"])
+        moved = workspace.with_name("moved")
+        workspace.rename(moved)
+        workspace.symlink_to(moved, target_is_directory=True)
+        result = self.invoke("job", "check", job["job_id"], "--json")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("symlinked", result.stderr)
+        workspace.unlink()
+        workspace.mkdir()
+        subprocess.run(["git", "init", "-q", str(workspace)], check=True)
+        result = self.invoke("job", "check", job["job_id"], "--json")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("Git identity", result.stderr)
+        self.assertFalse(marker.exists())
+
+    def test_check_revalidates_later_cwd_after_trusted_command(self):
+        (self.workspace / ".gitignore").write_text(".cache/\n")
+        subprocess.run(["git", "-C", str(self.workspace), "add", ".gitignore"], check=True)
+        subprocess.run(["git", "-C", str(self.workspace), "commit", "-qm", "ignore cache"], check=True)
+        marker = self.root / "ran"
+        commands = [f"rmdir .cache/work; ln -s {self.root} .cache/work", f"touch {marker}"]
+        job, workspace = self.check_fixture(commands, acceptance=[
+            {"kind": "command", "value": commands[0]},
+            {"kind": "command", "value": commands[1], "cwd": ".cache/work"}])
+        (workspace / ".cache/work").mkdir(parents=True)
+        report = self.check_report(job)
+        self.assertEqual(report["status"], "source-changed")
+        self.assertEqual(report["checks"][1]["status"], "unexecuted")
+        self.assertFalse(marker.exists())
+
+    def test_check_rejects_escaping_cwd_at_job_creation(self):
+        marker = self.root / "ran"
+        for cwd in ("../outside", str(self.root), "nested/../../outside"):
+            path = self.write_task("bad-cwd.json", acceptance=[
+                {"kind": "command", "value": f"touch {marker}", "cwd": cwd}])
+            result = self.invoke("job", "create", "--workspace", str(self.workspace),
+                                 "--task", str(path), "--base", "HEAD", "--json")
+            self.assertEqual(result.returncode, 2)
+            self.assertFalse(marker.exists())
+
+    def test_check_ignored_cache_is_allowed(self):
+        (self.workspace / ".gitignore").write_text(".cache/\n")
+        subprocess.run(["git", "-C", str(self.workspace), "add", ".gitignore"], check=True)
+        subprocess.run(["git", "-C", str(self.workspace), "commit", "-qm", "ignore cache"], check=True)
+        job, workspace = self.check_fixture(["mkdir -p .cache; echo cache > .cache/test"])
+        report = self.check_report(job)
+        self.assertEqual(report["status"], "passed")
+        self.assertTrue((workspace / ".cache/test").exists())
+
+    def test_check_rejects_bad_options_before_execution(self):
+        marker = self.root / "ran"
+        job, _ = self.check_fixture([f"touch {marker}"])
+        for value in ("0", "-1", "nan", "inf", "-inf", "1e309", "not-a-number"):
+            with self.subTest(timeout=value):
+                result = self.invoke("job", "check", job["job_id"], f"--timeout={value}", "--json")
+                self.assertEqual(result.returncode, 2)
+                self.assertFalse(marker.exists())
+        result = self.invoke("job", "check", job["job_id"], "--unknown", "--json")
+        self.assertEqual(result.returncode, 2)
+        self.assertFalse(marker.exists())
+
+    def test_check_rejects_unknown_absent_and_active_attempts(self):
+        from agentctl_jobs import StatePaths, Store, prepare_attempt
+        marker = self.root / "ran"
+        self.extra_environment["FAKE_ACCEPTANCE_COMMANDS"] = json.dumps([f"touch {marker}"])
+        job = self.create(acceptance=[{"kind": "command", "value": f"touch {marker}"}])
+        unknown = self.invoke("job", "id").stdout.strip()
+        for job_id in (unknown, job["job_id"]):
+            result = self.invoke("job", "check", job_id, "--json")
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+        with Store(StatePaths.from_value(self.state_dir)) as store:
+            prepare_attempt(store, job["job_id"], "codex")
+        result = self.invoke("job", "check", job["job_id"], "--json")
+        self.assertEqual(result.returncode, 2)
+        self.assertFalse(marker.exists())
+
+    def test_check_preflight_rejects_dirty_hidden_files_head_and_missing_workspace(self):
+        marker = self.root / "ran"
+        job, workspace = self.check_fixture([f"touch {marker}"])
+        for flag in ("--assume-unchanged", "--skip-worktree"):
+            subprocess.run(["git", "-C", str(workspace), "update-index", flag, "tracked.txt"], check=True)
+            (workspace / "tracked.txt").write_text("hidden dirt\n")
+            result = self.invoke("job", "check", job["job_id"], "--json")
+            self.assertEqual(result.returncode, 2, result.stdout + result.stderr)
+            self.assertFalse(marker.exists())
+            (workspace / "tracked.txt").write_text("base\n")
+            subprocess.run(["git", "-C", str(workspace), "update-index", flag.replace("--", "--no-", 1), "tracked.txt"], check=True)
+        (workspace / "extra.py").touch()
+        self.assertEqual(self.invoke("job", "check", job["job_id"], "--json").returncode, 2)
+        (workspace / "extra.py").unlink()
+        subprocess.run(["git", "-C", str(workspace), "commit", "--allow-empty", "-qm", "unexpected"], check=True)
+        result = self.invoke("job", "check", job["job_id"], "--json")
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("unexpected HEAD", result.stderr)
+        shutil.rmtree(workspace)
+        self.assertEqual(self.invoke("job", "check", job["job_id"], "--json").returncode, 2)
+        self.assertFalse(marker.exists())
+
+    def test_check_validates_all_cwds_before_first_command(self):
+        marker = self.root / "ran"
+        for number, cwd in enumerate(("missing", "linked", "nested/linked/child")):
+            with self.subTest(cwd=cwd):
+                commands = [f"touch {marker}", "pwd"]
+                self.extra_environment["FAKE_ACCEPTANCE_COMMANDS"] = json.dumps(commands)
+                job = self.create(name=f"cwd-{number}.json", acceptance=[
+                    {"kind": "command", "value": commands[0]},
+                    {"kind": "command", "value": commands[1], "cwd": cwd}])
+                result = self.invoke("job", "run", job["job_id"], "--provider", "codex", "--json")
+                self.assertEqual(result.returncode, 0, result.stderr)
+                job = json.loads(result.stdout)
+                workspace = Path(job["attempts"][-1]["workspace_path"])
+                if cwd != "missing":
+                    link = workspace / ("linked" if cwd == "linked" else "nested/linked")
+                    link.parent.mkdir(exist_ok=True)
+                    link.symlink_to(self.root, target_is_directory=True)
+                result = self.invoke("job", "check", job["job_id"], "--json")
+                self.assertEqual(result.returncode, 2)
+                self.assertFalse(marker.exists())
 
     def write_collaboration_decision(self, name: str = "collaboration-decision.json") -> Path:
         decision = json.loads(

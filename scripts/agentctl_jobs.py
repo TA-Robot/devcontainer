@@ -14,10 +14,12 @@ from datetime import datetime, timezone
 import fcntl
 import hashlib
 import json
+import math
 import os
 from pathlib import Path, PurePosixPath
 import re
 import secrets
+import selectors
 import shutil
 import signal
 import socket
@@ -3284,6 +3286,259 @@ def reconcile_attempts(store: Store, *, orphan_after_seconds: float = 30.0) -> l
             action["retention_error"] = retention_error
         actions.append(action)
     return actions
+
+
+def _check_directory(path: Path) -> Path:
+    """Require an existing absolute directory without resolving through symlinks."""
+    if not path.is_absolute() or ".." in path.parts:
+        raise AgentctlJobError(f"unsafe check directory: {path}")
+    current = Path(path.anchor)
+    for part in path.parts[1:]:
+        current /= part
+        if not stat.S_ISDIR(current.lstat().st_mode):
+            raise AgentctlJobError(f"check directory is symlinked or not a directory: {current}")
+    return path
+
+
+def _check_git(workspace: Path, *arguments: str) -> bytes:
+    # Caller Git overrides must not redirect identity checks to another index/repo.
+    environment = {key: value for key, value in os.environ.items() if not key.startswith("GIT_")}
+    result = subprocess.run(
+        ["git", "--no-optional-locks", "-c", "core.fsmonitor=false",
+         "-c", "core.untrackedCache=false", "-C", str(workspace), *arguments],
+        env=environment, stdout=subprocess.PIPE, stderr=subprocess.PIPE, check=False,
+    )
+    if result.returncode:
+        raise AgentctlJobError("cannot inspect submitted Git source: " +
+                               result.stderr.decode("utf-8", errors="replace").strip())
+    return result.stdout
+
+
+def _check_file_identity(path: Path, *, blob_algorithm: str | None = None) -> tuple[int, str]:
+    info = path.lstat()
+    digest = hashlib.new(blob_algorithm or "sha256")
+    if stat.S_ISLNK(info.st_mode):
+        data = os.fsencode(os.readlink(path))
+        if blob_algorithm:
+            digest.update(f"blob {len(data)}\0".encode())
+        digest.update(data)
+    elif stat.S_ISREG(info.st_mode):
+        if blob_algorithm:
+            digest.update(f"blob {info.st_size}\0".encode())
+        # Do not follow a substituted symlink or block on a substituted FIFO.
+        descriptor = os.open(path, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK)
+        with os.fdopen(descriptor, "rb") as source:
+            if not stat.S_ISREG(os.fstat(source.fileno()).st_mode):
+                raise AgentctlJobError(f"unsafe submitted file: {path}")
+            for chunk in iter(lambda: source.read(65536), b""):
+                digest.update(chunk)
+    else:
+        raise AgentctlJobError(f"unsupported submitted file type: {path}")
+    return stat.S_IMODE(info.st_mode), digest.hexdigest()
+
+
+def _check_source_snapshot(workspace: Path) -> dict[str, Any]:
+    """Inspect bytes even for assume-unchanged/skip-worktree paths; never refresh index.
+
+    Deliberately compare raw blobs without invoking clean/smudge filters. Sparse
+    missing files, submodules and transformed worktree bytes fail closed.
+    """
+    _check_directory(workspace)
+    head = _check_git(workspace, "rev-parse", "--verify", "HEAD^{commit}").strip().decode("ascii")
+    algorithm = "sha1" if len(head) == 40 else "sha256"
+    tree = {}
+    for record in _check_git(workspace, "ls-tree", "-rz", "--full-tree", head).split(b"\0"):
+        if record:
+            metadata, name = record.split(b"\t", 1)
+            mode, kind, oid = metadata.split()
+            if kind != b"blob":
+                raise AgentctlJobError("submodule source verification is not supported")
+            tree[name] = (mode, oid)
+    entries = {}
+    for record in _check_git(workspace, "ls-files", "--stage", "-z").split(b"\0"):
+        if record:
+            metadata, name = record.split(b"\t", 1)
+            mode, oid, stage = metadata.split()
+            if stage != b"0":
+                raise AgentctlJobError("submitted index has unmerged paths")
+            entries[name] = (mode, oid)
+    if entries != tree:
+        raise AgentctlJobError("submitted index differs from HEAD")
+    if _check_git(workspace, "ls-files", "--others", "--exclude-standard", "-z"):
+        raise AgentctlJobError("submitted source has nonignored untracked files")
+    files = {}
+    for name, (mode, oid) in tree.items():
+        relative = Path(os.fsdecode(name))
+        if relative.is_absolute() or ".." in relative.parts:
+            raise AgentctlJobError("unsafe tracked source path")
+        path = workspace / relative
+        _check_directory(path.parent)
+        permissions, actual_oid = _check_file_identity(path, blob_algorithm=algorithm)
+        file_mode = path.lstat().st_mode
+        actual_mode = (b"120000" if stat.S_ISLNK(file_mode) else
+                       b"100755" if file_mode & stat.S_IXUSR else b"100644")
+        if actual_oid.encode() != oid or actual_mode != mode:
+            raise AgentctlJobError(f"submitted tracked bytes or mode differ from HEAD: {relative}")
+        files[name] = (permissions, actual_oid)
+    git_dir = Path(os.fsdecode(_check_git(workspace, "rev-parse", "--absolute-git-dir").strip()))
+    index_path = Path(os.fsdecode(_check_git(workspace, "rev-parse", "--git-path", "index").strip()))
+    if not index_path.is_absolute():
+        index_path = workspace / index_path
+    return {"head_sha": head, "files": files,
+            "index": _check_file_identity(index_path),
+            "head": _check_file_identity(git_dir / "HEAD")}
+
+
+def _check_cwd(workspace: Path, value: str) -> Path:
+    relative = PurePosixPath(value)
+    if (not value or "\0" in value or "\\" in value or relative.is_absolute()
+            or ".." in relative.parts):
+        raise AgentctlJobError(f"unsafe acceptance cwd: {value!r}")
+    return _check_directory(workspace / relative)
+
+
+def _run_acceptance_command(check: dict[str, Any], deadline: float) -> None:
+    """Drain pipes continuously, retaining at most 32 KiB per stream in memory."""
+    started = time.monotonic()
+    tails = {"stdout_tail": bytearray(), "stderr_tail": bytearray()}
+    process = None
+    timed_out = False
+    try:
+        with selectors.DefaultSelector() as selector:
+            process = subprocess.Popen(
+                ["/bin/sh", "-c", check["command"]], cwd=check["cwd"],
+                stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+                start_new_session=True,
+            )
+            for stream, name in ((process.stdout, "stdout_tail"), (process.stderr, "stderr_tail")):
+                os.set_blocking(stream.fileno(), False)
+                selector.register(stream, selectors.EVENT_READ, name)
+            while selector.get_map() or process.poll() is None:
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    timed_out = True
+                    break
+                for key, _ in selector.select(min(remaining, 0.05)):
+                    chunk = os.read(key.fd, 32768)
+                    if not chunk:
+                        selector.unregister(key.fileobj)
+                        continue
+                    tail = tails[key.data]
+                    # Trim before extending so retained output never exceeds 64 KiB.
+                    del tail[:max(0, len(tail) + len(chunk) - 32768)]
+                    tail.extend(chunk)
+            if timed_out:
+                # Kill the group even if its shell has exited but children hold pipes.
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            check["exit_code"] = process.wait()
+            check["status"] = ("timed-out" if timed_out else
+                               "passed" if process.returncode == 0 else "failed")
+    except OSError as exc:
+        check["status"] = "failed"
+        tails["stderr_tail"] = bytearray(str(exc).encode()[-32768:])
+    finally:
+        if process is not None:
+            if process.poll() is None:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+                process.wait()
+            if check["exit_code"] is None:
+                check["exit_code"] = process.returncode
+            for stream in (process.stdout, process.stderr):
+                stream.close()
+        check["elapsed_seconds"] = max(0.0, time.monotonic() - started)
+        for name, tail in tails.items():
+            redacted, _ = _redact_log_text(tail.decode("utf-8", errors="replace"))
+            # UTF-8 replacement and redaction can expand the retained bytes.
+            check[name] = redacted.encode("utf-8")[-32768:].decode("utf-8", errors="ignore")
+
+
+def check_job(store: Store, job_id: str, *, timeout: float = 60.0) -> dict[str, Any]:
+    """Execute trusted immutable commands; do not create a job-validation claim."""
+    if not math.isfinite(timeout) or timeout <= 0:
+        raise AgentctlJobError("timeout must be a finite positive number")
+    canonical = require_job_id(job_id)
+    # Serialize with cooperating job preparation/validation for this state store.
+    # This is not protection from trusted commands or a malicious same-UID process.
+    with workspace_lock(store.paths):
+        job = get_job(store, canonical)
+        attempt = latest_attempt(store, canonical)
+        if (job["state"] not in {"succeeded", "validated"} or attempt is None
+                or attempt["state"] not in {"succeeded", "validated"}):
+            raise AgentctlJobError("job check requires a latest successful terminal attempt")
+        if store.connection.execute(
+            "SELECT 1 FROM attempts WHERE job_id = ? AND state IN ('preparing','ready','running')",
+            (canonical,),
+        ).fetchone():
+            raise AgentctlJobError("job check refuses active attempts")
+        project = get_project(store, job["project_id"])
+        workspace = _check_directory(Path(attempt["workspace_path"] or ""))
+        expected = (store.paths.worktree_dir(job["project_id"], canonical, attempt["number"])
+                    if job["lane"] == "write" else Path(project["registered_path"]))
+        if job["lane"] not in {"read", "write"} or workspace != expected:
+            raise AgentctlJobError("unsafe attempt workspace: path differs from registered attempt")
+        top = os.fsdecode(_check_git(workspace, "rev-parse", "--show-toplevel").strip())
+        common = Path(os.fsdecode(_check_git(workspace, "rev-parse", "--git-common-dir").strip()))
+        if not common.is_absolute():
+            common = workspace / common
+        if top != str(workspace) or common.resolve() != Path(project["git_common_dir"]):
+            raise AgentctlJobError("unsafe attempt workspace: Git identity differs from registration")
+        task_path = store.paths.job_dir(job["project_id"], canonical) / "task.json"
+        if Path(job["task_path"]) != task_path or task_path.is_symlink():
+            raise AgentctlJobError("unsafe immutable task path")
+        task = load_json(task_path)
+        if task.get("job_id") != canonical or task.get("base_sha") != job["base_sha"]:
+            raise AgentctlJobError("stored task identity differs from registered job")
+        checks = []
+        for entry in task["acceptance"]:
+            if entry["kind"] != "command":
+                continue
+            command = entry["value"]
+            if not isinstance(command, str) or not command or "\0" in command:
+                raise AgentctlJobError("invalid immutable acceptance command")
+            checks.append({"command": command, "cwd": str(_check_cwd(workspace, entry.get("cwd", "."))),
+                           "status": "unexecuted", "exit_code": None, "elapsed_seconds": 0.0,
+                           "stdout_tail": "", "stderr_tail": ""})
+        before = _check_source_snapshot(workspace)
+        if before["head_sha"] != attempt["head_sha"]:
+            raise AgentctlJobError("unexpected HEAD: differs from submitted attempt HEAD")
+        report = {"schema_version": 1, "job_id": canonical, "attempt_id": attempt["attempt_id"],
+                  "status": "no-checks" if not checks else "passed",
+                  "head_sha": before["head_sha"], "checks": checks, "source_changed": False}
+        deadline = time.monotonic() + timeout
+        for check in checks:
+            if time.monotonic() >= deadline:
+                report["status"] = "timed-out"
+                break
+            # Earlier commands can replace a later cwd; recheck before each launch.
+            try:
+                _check_directory(Path(check["cwd"]))
+            except (AgentctlJobError, OSError):
+                report["status"] = "source-changed"
+                report["source_changed"] = True
+                break
+            if time.monotonic() >= deadline:
+                report["status"] = "timed-out"
+                break
+            _run_acceptance_command(check, deadline)
+            if check["status"] != "passed":
+                report["status"] = check["status"]
+            try:
+                changed = _check_source_snapshot(workspace) != before
+            except (AgentctlJobError, OSError):
+                changed = True
+            if changed:
+                report["source_changed"] = True
+                if report["status"] == "passed":
+                    report["status"] = "source-changed"
+            if report["status"] != "passed":
+                break
+        return report
 
 
 def validate_succeeded_job(store: Store, job_id: str) -> dict[str, Any]:

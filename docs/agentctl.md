@@ -180,6 +180,70 @@ Process exit zero is necessary but insufficient. `succeeded` requires:
 
 Validation writes an owner-only `validation.json` beside the attempt result and records it in the SQLite `validations` ledger. It contains only broker-observed identity/Git evidence, not prompts, transcripts, or credentials.
 
+## Independently execute acceptance commands
+
+```bash
+agentctl --state-dir STATE job check JOB_ID --timeout 60 --json
+```
+
+`job check` runs the original `kind: "command"` acceptance entries from the stored
+immutable task, in task order, in the latest successful terminal attempt's actual
+workspace. It accepts `succeeded` and `validated` attempts. It refuses unknown
+jobs, missing or active attempts, an unexpected submitted HEAD, dirty source,
+and missing or unsafe workspaces before executing any acceptance command.
+It never reads commands from the provider result or starts a provider session.
+`job run` and `job validate` retain their existing behavior: their command evidence
+is the provider's report, whereas `job check` measures command exits independently.
+
+Commands run with the POSIX shell `/bin/sh -c`, closed stdin, and the caller's
+environment and execution permissions. Each optional `cwd` is relative to the
+attempt workspace (default `.`). All command directories must exist and have no
+symlink components or parent traversal; absolute and escaping values are refused.
+All directories are checked before the sequence and each is checked again before
+launch. The report includes each validated absolute `cwd`.
+
+**Authority:** the original task commands are trusted code running in the caller's
+execution context. Directory checks, source snapshots, and the cooperating
+agentctl workspace lock are not an isolation boundary against a malicious
+same-UID process. Commands can access anything the caller can access. The checker
+does not authenticate, push, merge, repair source, or change the task; trusted
+commands are responsible for their own effects.
+
+`--timeout` must be a finite positive number of seconds and defaults to 60. A
+single monotonic deadline covers the command sequence, including time between
+commands; it is never reset per command. Initial preflight and final source
+inspection/cleanup can add wall time. At timeout the shell's process group is
+killed, including children holding output pipes after the shell exits. A nonzero
+exit, timeout, or detected source change stops the sequence. Later commands remain
+`unexecuted`. No successful validation or job state transition is stored by this
+operation; save the returned JSON if durable independent evidence is needed.
+
+The JSON has `schema_version: 1`, `job_id`, `attempt_id`, `status`, `head_sha`,
+`source_changed`, and `checks`. `head_sha` always identifies the submitted HEAD
+captured before execution, even when a command changes HEAD. Overall status is
+`passed`, `failed`, `timed-out`, `source-changed`, or `no-checks`; only `passed`
+exits zero (verification failure exits 1; option/preflight errors exit 2 with a
+diagnostic on stderr). An empty command list is `no-checks`. File and manual
+acceptance entries are omitted from `checks` and remain unverified; `passed`
+means only that all command entries passed on unchanged source.
+
+Each check contains `command`, `cwd`, execution `status` (`passed`, `failed`,
+`timed-out`, or `unexecuted`), actual `exit_code` (null when unavailable; negative
+for a signal), finite nonnegative `elapsed_seconds`, `stdout_tail`, and
+`stderr_tail`. Unexecuted commands have null exit code, zero elapsed time, and
+empty tails. Output is continuously drained with at most 32 KiB retained per
+stream (64 KiB total per command), uses the existing best-effort log redaction,
+and creates no raw output files. Output text cannot override an exit status.
+
+Source checks compare HEAD, index bytes, tracked file bytes and modes, and
+nonignored untracked paths before and after execution (also after each command).
+They inspect files hidden by `assume-unchanged` or `skip-worktree`; ignored caches
+are allowed. Raw tracked bytes must match committed blobs, without invoking Git
+clean/smudge filters. Transformed checkouts, absent sparse-checkout files, and
+submodules are conservatively refused. Changes are left in place. Zero exit with
+changed source is `source-changed`; nonzero exit remains `failed` and timeout
+remains `timed-out`, with `source_changed: true` if mutation is also detected.
+
 ## Collect for single-writer integration
 
 Collection is an explicit, read-only handoff after validation:
