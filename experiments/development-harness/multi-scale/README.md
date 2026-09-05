@@ -1,6 +1,6 @@
 # 規模別の実開発評価
 
-[評価方針](../../../docs/agents/development-harness-evaluation.md)に従い、小規模と大規模を別に評価する。現在は[大規模01](large-01/protocol.md)の課題・外部検証・有限段階実行を準備している。live結果はまだない。
+[評価方針](../../../docs/agents/development-harness-evaluation.md)に従い、小規模と大規模を別に評価する。[大規模01](large-01/protocol.md)の3段階と小規模01で、それぞれ対照・改良のlive実行を完了した。[cycle-002の結果](../../../docs/agents/development-harness-cycle-002.md)に、両規模の比較と限界を記録する。
 
 ## 有限の段階実行
 

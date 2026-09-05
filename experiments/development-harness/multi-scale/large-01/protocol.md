@@ -3,7 +3,9 @@
 Status: task sequence and external acceptance fixed before live execution.
 Runner/evaluator preflight passed 18 tests, including a real Docker transport
 with a fake provider. The initial source passed 0/35 semantic scenarios in a
-read-only, network-disabled container. No large-scale comparison result exists yet.
+read-only, network-disabled container. Execution is now complete; see the
+[cycle-002 report](../../../../docs/agents/development-harness-cycle-002.md).
+The requirements, budgets and acceptance below remain the pre-execution protocol.
 
 ## Selection and scope
 
