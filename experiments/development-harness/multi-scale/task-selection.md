@@ -1,7 +1,9 @@
 # 規模別評価の課題選定メモ
 
-状態: 候補Aの[大規模01](large-01/protocol.md)と[小規模01](small-01.md)のlive比較はcycle-002で完了。[結果](../../../docs/agents/development-harness-cycle-002.md)を保存し、現在は[cycle-003の準備](../../../docs/agents/development-harness-cycle-003.md)として品質評価と検証能力を確認している。以下のAとsmall-01の選定過程は履歴であり、未実施の新課題ではない。
-判断の正本は[規模別評価方針](../../../docs/agents/development-harness-evaluation.md)。
+状態: 以下はcycle-002/003の選定履歴。現行の選定は[Cycle 004後の再計画](../../../docs/agents/development-harness-next-plan.md)のP2に従う。
+履歴paginationの下書きは保留し、依存jobの独立検証・中断復旧・収集までの結合した利用経路を第一候補として不足を監査する。
+不足と自動検査は未確定。単純なCLIの組合せで足りれば機能を膨らませず、大規模taskとして採らない。
+判断の正本は[規模別評価方針](../../../docs/agents/development-harness-evaluation.md)。過去に解いたtaskを未見taskとして扱わない。
 
 ## 小規模
 
