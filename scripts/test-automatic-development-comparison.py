@@ -230,11 +230,22 @@ class DockerAutomaticPairTests(unittest.TestCase):
                 output = root / 'comparison'
                 record = compare.seal(path, output)
                 compare.execute_all(record, output)
-                result = compare.evaluate(record, output)
+                future = root / 'future-source'
+                future.mkdir()
+                (future / 'unreleased.txt').write_text('must not be mounted into phase 1')
+                original_observer = compare.evaluate_one
+                with patch.object(compare, 'evaluate_one', side_effect=lambda sealed, directory, row:
+                                  original_observer(sealed, directory, {**row, 'previous': str(future)})):
+                    result = compare.evaluate(record, output)
+                for context in (output / 'observations').glob('*/context.json'):
+                    mounts = json.loads(context.read_text())['mounts']
+                    self.assertNotIn('/previous', [m['Destination'] for m in mounts])
                 self.assertTrue(result['conditions']['improved']['quality_and_budget_passed'])
                 self.assertFalse(result['conditions']['control']['quality_and_budget_passed'])
                 self.assertIsNone(result['speed_ratio'])
                 self.assertFalse(result['human_grading'])
+                self.assertEqual(result['conditions']['improved']['usage_by_session'][0][0]['input_tokens'], 10)
+                self.assertIsNone(result['conditions']['improved']['monetary_cost'])
                 with self.assertRaises(ValueError):
                     compare.execute_all(record, output)
             finally:

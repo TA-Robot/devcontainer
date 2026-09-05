@@ -227,13 +227,13 @@ def evaluate_one(record, output, row):
                  '--mount', f'type=bind,src={folder},dst=/results']
     if config.get('legacy'):
         arguments += ['--mount', f'type=bind,src={config["legacy"]},dst=/legacy,readonly']
-    if row.get('previous'):
+    if row['phase'] == 3 and row.get('previous'):
         arguments += ['--mount', f'type=bind,src={row["previous"]},dst=/previous,readonly']
     arguments += [config['image'], 'python3', '/oracle/automatic/observer.py', '--task', config['task'],
                   '--candidate', '/candidate', '--phase', str(row['phase']), '--output', '/results/result.json']
     if config.get('legacy'):
         arguments += ['--legacy', '/legacy']
-    if row.get('previous'):
+    if row['phase'] == 3 and row.get('previous'):
         arguments += ['--previous', '/previous']
     started = time.monotonic()
     try:
@@ -286,6 +286,10 @@ def summarize(config, states, rows, catalog):
             'submitted_within_observed_budget': budget['submitted_within_observed_budget'],
             'final_quality_accepted': accepted, 'development_seconds': state['total_seconds'],
             'output_tokens': state['output_tokens'], 'usage_complete': budget['usage_complete'],
+            'usage_by_session': [session['observation']['usage'] for session in state['sessions']],
+            'requested_model': state['manifest']['model'], 'requested_effort': state['manifest']['effort'],
+            'cli_version': state['manifest']['cli_version'], 'applied_model': state.get('applied_model'),
+            'applied_effort': state.get('applied_effort'), 'monetary_cost': None,
             'quality_and_budget_passed': accepted is True and budget['submitted_within_observed_budget'],
             'terminal': terminal, 'observations': selected}
     a, b = result['conditions']['control'], result['conditions']['improved']
