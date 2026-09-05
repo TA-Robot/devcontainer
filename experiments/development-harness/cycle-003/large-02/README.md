@@ -36,3 +36,14 @@ does not execute acceptance or result-only commands, while executing the origina
 command independently produces its witness and exit 17. It also covers a manual-only
 task. These two tests establish the fixture and the missing capability; they are
 not a calibrated evaluator for the future three-stage implementation.
+
+Draft execution limits are task-local, owned by the primary/integrator. The
+finite positive whole-sequence deadline, no implicit execution on reads, and
+exclusive ownership per attempt are hard guards against false or overlapping
+verification. The 64 KiB combined retained output is a resource cap aligned with
+the existing default log view; it is not a quality score. The 60-second default
+deadline is a planning prior for short acceptance checks, explicitly overridable
+by the caller. Real checks that exceed it, required diagnostics lost to the cap,
+or failures to terminate owned processes invalidate these assumptions and must be
+resolved before freezing the study. The fixture's subprocess deadlines bound
+provider-free setup; a setup timeout is an observer failure, not a fast candidate.
