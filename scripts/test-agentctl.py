@@ -113,6 +113,8 @@ class AgentctlTest(unittest.TestCase):
         help_text: str,
         *,
         auth_ready: bool = True,
+        version_stderr: str = "",
+        version_exit: int = 0,
     ) -> Path:
         path = self.bin_dir / name
         path.write_text(
@@ -122,13 +124,19 @@ class AgentctlTest(unittest.TestCase):
             f"version = {version!r}\n"
             f"help_text = {help_text!r}\n"
             f"auth_ready = {auth_ready!r}\n"
+            f"version_stderr = {version_stderr!r}\n"
+            f"version_exit = {version_exit!r}\n"
             "if 'codex' in sys.argv[0] and sys.argv[1:] == ['login', 'status']:\n"
             "    print('Logged in using test' if auth_ready else 'Not logged in')\n"
             "    raise SystemExit(0 if auth_ready else 1)\n"
             "if 'claude' in sys.argv[0] and sys.argv[1:] == ['auth', 'status']:\n"
             "    print(json.dumps({'loggedIn': auth_ready, 'authMethod': 'test' if auth_ready else 'none'}))\n"
             "    raise SystemExit(0 if auth_ready else 1)\n"
-            "print(version if '--version' in sys.argv else help_text)\n",
+            "if '--version' in sys.argv:\n"
+            "    sys.stderr.write(version_stderr)\n"
+            "    print(version)\n"
+            "    raise SystemExit(version_exit)\n"
+            "print(help_text)\n",
             encoding="utf-8",
         )
         path.chmod(0o755)
@@ -185,6 +193,34 @@ class AgentctlTest(unittest.TestCase):
         self.assertEqual(scheduler["status"], "pass")
         self.assertEqual(scheduler["capacity"]["integration"], 1)
         self.assertEqual(scheduler["port_range"], [24000, 24999])
+
+    def test_doctor_version_ignores_nonfatal_stderr_warning(self) -> None:
+        noisy = self.make_provider("noisy-codex", "codex-cli 1.2.3", CODEX_HELP,
+                                   version_stderr="WARNING: could not create PATH aliases: read-only filesystem\n")
+        result = self.invoke("doctor", "--json", "--workspace", str(self.workspace), codex=noisy)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(json.loads(result.stdout)["capabilities"]["codex"]["version"], "codex-cli 1.2.3")
+
+    def test_doctor_version_does_not_match_a_pin_mentioned_only_in_stderr(self) -> None:
+        noisy = self.make_provider("wrong-codex", "codex-cli 9.9.9", CODEX_HELP,
+                                   version_stderr="previous cached version was 1.2.3\n")
+        result = self.invoke("doctor", "--json", "--workspace", str(self.workspace), codex=noisy)
+        self.assertEqual(result.returncode, 1)
+        self.assertEqual(json.loads(result.stdout)["capabilities"]["codex"]["version"], "codex-cli 9.9.9")
+
+    def test_doctor_version_preserves_stderr_only_cli_support(self) -> None:
+        stderr_only = self.make_provider("stderr-codex", "", CODEX_HELP,
+                                         version_stderr="codex-cli 1.2.3\n")
+        result = self.invoke("doctor", "--json", "--workspace", str(self.workspace), codex=stderr_only)
+        self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
+        self.assertEqual(json.loads(result.stdout)["capabilities"]["codex"]["version"], "codex-cli 1.2.3")
+
+    def test_doctor_version_failure_is_not_hidden_by_valid_stdout(self) -> None:
+        failed = self.make_provider("failed-codex", "codex-cli 1.2.3", CODEX_HELP, version_exit=1)
+        result = self.invoke("doctor", "--json", "--workspace", str(self.workspace), codex=failed)
+        self.assertEqual(result.returncode, 1)
+        check = next(row for row in json.loads(result.stdout)["checks"] if row["id"] == "provider.codex")
+        self.assertEqual(check["status"], "fail")
 
     def test_doctor_rejects_missing_provider_capability(self) -> None:
         broken = self.make_provider("broken-claude", "4.5.6", "--print --output-format --agent --worktree")

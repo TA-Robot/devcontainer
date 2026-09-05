@@ -66,17 +66,22 @@ def command_path(env_name: str, fallback: str) -> str | None:
     return shutil.which(fallback)
 
 
-def probe(argv: list[str], timeout: float = 20.0) -> tuple[int, str]:
+def probe(argv: list[str], timeout: float = 20.0, *, prefer_stdout: bool = False) -> tuple[int, str]:
     try:
         result = subprocess.run(
             argv,
             text=True,
             stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT,
+            stderr=subprocess.PIPE if prefer_stdout else subprocess.STDOUT,
             timeout=timeout,
             check=False,
         )
-        return result.returncode, result.stdout
+        # Version commands can succeed while emitting unrelated startup warnings
+        # on stderr. Retain stderr-only CLIs without mixing diagnostics into data.
+        output = result.stdout
+        if prefer_stdout and not output.strip():
+            output = result.stderr or ""
+        return result.returncode, output
     except (OSError, subprocess.TimeoutExpired) as exc:
         return 127, str(exc)
 
@@ -106,7 +111,7 @@ def provider_capability(
         add_check(checks, f"provider.{name}", "fail", f"{name} executable is missing")
         return {"available": False, "missing": required}
 
-    version_rc, version_text = probe([binary, "--version"])
+    version_rc, version_text = probe([binary, "--version"], prefer_stdout=True)
     combined_help = ""
     failed_help: list[str] = []
     for suffix in help_commands:
