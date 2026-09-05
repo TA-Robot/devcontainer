@@ -88,7 +88,11 @@ image内Codexはversion pin / stable-edge同期をこのrepositoryが所有す�
 
 ### 4. Native multi-agent contractをprojectへ導入する
 
-新規projectでは独自wrapperから始めず、このrepositoryの`project/`をcopy sourceとして使います。既存の`AGENTS.md`やprovider設定を上書きしないよう差分を確認し、`<<...>>`をproject固有値へ置き換えてください。`AGENTS_TEMPLATE.md`は同じcontractをmanager向け説明込みで展開した版です。
+新規projectではこのrepositoryの`project/`をtemplate sourceとして、`scripts/manage-agent-project`で導入・更新できます。`plan --source project --target TARGET --json`の出力をJSONファイルへ保存し、確認後に`apply --target TARGET --plan PLAN_JSON --json`で適用します。TARGETは既存の別project directoryを指定してください。既存の未管理`AGENTS.md`やprovider設定は内容が一致していても衝突となり、全体の適用を停止します。所有履歴は`.agent-project/`へ保存し、`status --target TARGET --json`で管理pathとlocal変更を確認できます。使用例と更新・復旧の制約は[`project lifecycle guide`](docs/agent-project-lifecycle.md)を参照してください。導入後に`<<...>>`をproject固有値へ置き換えた内容はlocal変更として保持されます。`AGENTS_TEMPLATE.md`は同じcontractをmanager向け説明込みで展開した版です。
+
+imageには`manage-agent-project`と既定templateを同梱しています。checkoutをmountしなくても任意のcwdから`manage-agent-project plan --target TARGET --json`を使えます。checkoutの`scripts/manage-agent-project`はこのrepositoryの`project/`を既定にし、どちらも`--source`で明示指定できます。以前copyしたprojectは、全template fileのbytesと実行bitが一致する歴史的sourceで`adopt --source SOURCE --target TARGET --json`し、退避したlocal変更を戻して更新できます。更新時は共通baseから重ならないUTF-8の行変更と互換なmode変更をmergeし、競合は全体の適用前に停止します。
+
+中断時は`status`の`pending_transaction`を確認し、`recover --target TARGET --json`で変更前へ復旧します。直近の完了transactionは`rollback --target TARGET --transaction ID --json`で戻せます。どちらも対象への後続編集があれば全体を拒否し、無関係なfileは保持します。`.agent-project/`にはprivateな変更前の内容も保存されます。新しい管理ディレクトリは内部の`.gitignore`で通常のGit操作から除外し、project自身の`.gitignore`は変更しません。旧状態の除外、手動競合解決、crash test、mountなしcontainer smokeの手順は[lifecycle guide](docs/agent-project-lifecycle.md)に記載しています。
 
 ```text
 AGENTS.md                         project共通のscope / lane / permission / integration

@@ -41,6 +41,7 @@ execution laneは「どこで安全に走らせるか」、roleは「何へ責�
 
 - **開発コンテナ基盤**の提供（`.devcontainer/`）
 - native-first multi-agent project contract（`project/.agent/` + `.codex/agents/` + `.claude/agents/` + `.grok/agents/`）、collaboration playbook、`agentctl` control planeの提供
+- project templateの導入・更新・復旧CLI（`scripts/manage-agent-project`）の提供
 - feature-frozenなセカンドエージェント・ラッパー（`scripts/second-agent` 共通エンジン + `codex-second-agent` / `claude-second-agent` シム）の移行互換
 - ミラのorchestrator persona、VS Code companion extension、Codex / agentctl activity bridge、visual assetsの提供（`extensions/mira-companion/` / `assets/mira/` / `docs/mira/`）
 
@@ -62,6 +63,18 @@ execution laneは「どこで安全に走らせるか」、roleは「何へ責�
   - 例: 機能追加 / バグ修正 / ドキュメント はコミットを分ける
 
 ## 最低限の確認コマンド
+
+project template lifecycle（`scripts/manage-agent-project`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-manage-agent-project.py scripts/test-agent-contracts.py
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate-agent-contracts.py
+```
+
+配布を変更した場合は、以下の`.devcontainer/`確認に加えて、作成したimageで
+`scripts/test-agent-project-container.sh IMAGE`も実行します。
+状態・journal形式を変える場合は、旧状態の読み込み、no-opの不変性、
+中断復旧、rollback、利用者の編集・permission保持を回帰テストで確認します。
 
 セカンドエージェント関連（`scripts/second-agent` / `*-second-agent` / `*-filter.py`）を触ったら:
 
