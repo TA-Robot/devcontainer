@@ -11,6 +11,7 @@ import tarfile
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[3]
+CURRENT = Path(os.environ.get("AGENTCTL_TEST_BIN", ROOT / "scripts/agentctl"))
 ARCHIVE = Path(__file__).with_name("baseline-source.tar.gz")
 
 
@@ -64,7 +65,7 @@ with Store(StatePaths.from_value(sys.argv[1])) as store:
             environment["PATH"] = str(fixture.bin_dir) + os.pathsep + os.environ["PATH"]
 
             def current(*arguments):
-                return subprocess.run([sys.executable, str(ROOT / "scripts/agentctl"), "--state-dir",
+                return subprocess.run([sys.executable, str(CURRENT), "--state-dir",
                                        str(fixture.state_dir), *arguments], env=environment,
                                       capture_output=True, text=True, timeout=30)
 
