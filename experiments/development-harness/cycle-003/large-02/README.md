@@ -1,15 +1,14 @@
 # Independent acceptance execution: staged study
 
-Status: source/installed observers and finite execution protocol are calibrated.
-The [protocol](protocol.md) fixes the three-stage comparison; exact tasks, runtime,
-source, image, cache and manifests are sealed in private provenance before launch.
-Small-02's separately frozen comparison has finished; see its
-[results](../small-result.json). This page does not claim a completed large trial.
+Status: the three-stage live comparison, outside review and implementation integration
+have finished. See [results](result.json) and the [cycle report](../../../../docs/agents/development-harness-cycle-003.md).
+The [protocol](protocol.md), prompts and calibrated frozen observers retain their
+pre-run bytes. Small-02 is reported [separately](../small-result.json).
 
-The current broker verifies Git and the shape of the provider result, but does
-not independently execute the original task's command acceptance. This affects
-whether a reported successful job can be trusted for integration. The proposed
-feature extends the existing control plane; it does not create another scheduler.
+The shipped broker now independently executes the original task's command
+acceptance and can require fresh durable evidence for validation. The comparison
+also exposed publication interruption, GC and Git metadata handling problems;
+reviewed fixes were integrated into the existing control plane.
 
 | Stage | User outcome | Independent evidence required |
 | --- | --- | --- |
@@ -40,3 +39,11 @@ Tasks, hidden evaluators and reference code are absent from the developer
 checkout. Each condition receives later stages only after its recorded earlier
 session completes; external findings are withheld. Disposable projects, provider
 logs, Docker resources and all raw evidence remain outside this repository.
+
+Raw frozen recovery observations remain 40/41 source and 12/13 installed for the
+control candidate. Its documented `--recover-incomplete` workflow passes a
+separate probe after the operator establishes the old process group has stopped.
+This is an observer applicability limitation, not a silently revised frozen score.
+The improved candidate submitted earlier but failed the additional SQL publication
+interruption probe. Both candidates required GC fixes. The control exceeded its
+observed output cap; it is not a success within the same budget.
