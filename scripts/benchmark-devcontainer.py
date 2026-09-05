@@ -29,6 +29,10 @@ class BenchmarkContainerError(RuntimeError):
     """A scoped benchmark-container operation failed."""
 
 
+class BenchmarkCommandTimeout(BenchmarkContainerError):
+    """A command timed out; readiness polling may retry within its own deadline."""
+
+
 def require_name(value: str) -> str:
     if not NAME_PATTERN.fullmatch(value):
         raise BenchmarkContainerError(
@@ -144,7 +148,9 @@ def run(
             timeout=timeout,
             check=False,
         )
-    except (OSError, subprocess.TimeoutExpired) as exc:
+    except subprocess.TimeoutExpired as exc:
+        raise BenchmarkCommandTimeout(f"cannot run {argv[0]!r}: {exc}") from exc
+    except OSError as exc:
         raise BenchmarkContainerError(f"cannot run {argv[0]!r}: {exc}") from exc
 
 
@@ -163,15 +169,19 @@ def container_exists(docker: str, name: str) -> bool:
 def wait_for_nested_docker(docker: str, name: str, timeout_seconds: float) -> str:
     deadline = time.monotonic() + timeout_seconds
     last_error = "nested Docker did not answer"
-    while time.monotonic() < deadline:
-        result = run(
-            [docker, "exec", name, "docker", "info", "--format", "{{.ServerVersion}}"],
-            timeout=5,
-        )
-        if result.returncode == 0 and result.stdout and result.stdout.strip():
-            return result.stdout.strip()
-        last_error = (result.stderr or result.stdout or last_error).strip()[-1000:]
-        time.sleep(0.5)
+    while (remaining := deadline - time.monotonic()) > 0:
+        try:
+            result = run(
+                [docker, "exec", name, "docker", "info", "--format", "{{.ServerVersion}}"],
+                timeout=min(5, remaining),
+            )
+        except BenchmarkCommandTimeout as exc:
+            last_error = str(exc)[-1000:]
+        else:
+            if result.returncode == 0 and result.stdout and result.stdout.strip():
+                return result.stdout.strip()
+            last_error = (result.stderr or result.stdout or last_error).strip()[-1000:]
+        time.sleep(min(0.5, max(0, deadline - time.monotonic())))
     raise BenchmarkContainerError(
         f"nested Docker was not ready after {timeout_seconds:g}s: {last_error}; "
         f"inspect with `docker logs {name}`"
