@@ -110,6 +110,7 @@ scripts/test-devcontainer-ai-cli-wrappers.sh
 bash -n scripts/devcontainer-grok scripts/devcontainer-grok-trusted scripts/sync-host-ai-cli-versions .devcontainer/initialize-host.sh
 docker build -f .devcontainer/Dockerfile -t devcontainer-smoke:latest .
 scripts/test-mira-container-hook.sh devcontainer-smoke:latest
+scripts/test-agentctl-check-container.sh devcontainer-smoke:latest
 ```
 
 robot soccer simulator / controller development toolsを触ったら:

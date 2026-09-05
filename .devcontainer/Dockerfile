@@ -176,6 +176,9 @@ COPY scripts/devcontainer-claude-trusted /usr/local/bin/claude-trusted
 COPY scripts/devcontainer-grok-trusted /usr/local/bin/grok-trusted
 COPY scripts/agentctl /usr/local/bin/agentctl
 COPY scripts/agentctl_jobs.py /usr/local/lib/agentctl/agentctl_jobs.py
+# Independent acceptance execution uses this installed module and Python stdlib.
+# Ship the operational/recovery instructions alongside the runtime.
+COPY docs/agentctl.md /usr/local/share/agentctl/README.md
 COPY scripts/agentctl_supervisor.py /usr/local/lib/agentctl/agentctl_supervisor.py
 COPY scripts/agent_contracts.py /usr/local/lib/agentctl/agent_contracts.py
 

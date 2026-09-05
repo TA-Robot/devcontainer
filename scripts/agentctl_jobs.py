@@ -573,6 +573,63 @@ def workspace_lock(paths: StatePaths) -> Iterator[None]:
         os.close(descriptor)
 
 
+def _check_lock_path(paths: StatePaths, attempt_id: str) -> Path:
+    return paths.root / "locks" / f"check-{require_job_id(attempt_id)}.lock"
+
+
+@contextlib.contextmanager
+def _attempt_check_lock(paths: StatePaths, attempt_id: str, *, shared: bool = False) -> Iterator[int]:
+    """Nonblocking ownership; never unlink the inode used by cooperating readers.
+
+    A command inherits the descriptor so ordinary descendants also retain the
+    lock if the checker dies. Closing (not LOCK_UN) preserves their ownership.
+    Incomplete durable evidence additionally requires explicit crash recovery.
+    """
+    descriptor = os.open(_check_lock_path(paths, attempt_id),
+                         os.O_RDWR | os.O_CREAT | os.O_NOFOLLOW, 0o600)
+    try:
+        try:
+            fcntl.flock(descriptor, (fcntl.LOCK_SH if shared else fcntl.LOCK_EX) | fcntl.LOCK_NB)
+        except BlockingIOError as exc:
+            raise AgentctlJobError("independent check already in progress for this attempt") from exc
+        yield descriptor
+    finally:
+        os.close(descriptor)
+
+
+def _check_in_progress(paths: StatePaths, attempt_id: str) -> bool:
+    """Probe existing ownership only; no lock file or observation is created."""
+    try:
+        descriptor = os.open(_check_lock_path(paths, attempt_id), os.O_RDONLY | os.O_NOFOLLOW)
+    except FileNotFoundError:
+        return False
+    try:
+        try:
+            fcntl.flock(descriptor, fcntl.LOCK_SH | fcntl.LOCK_NB)
+        except BlockingIOError:
+            return True
+        return False
+    finally:
+        os.close(descriptor)
+
+
+@contextlib.contextmanager
+def _check_interruptions() -> Iterator[list[int]]:
+    # Record rather than raise in the handler: Popen must finish assigning its
+    # child before cleanup, and publication must never escape with a false pass.
+    received: list[int] = []
+    def interrupted(signum, frame):
+        if not received:
+            received.append(signum)
+    previous = {sig: signal.signal(sig, interrupted)
+                for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP)}
+    try:
+        yield received
+    finally:
+        for sig, handler in previous.items():
+            signal.signal(sig, handler)
+
+
 def _row(row: sqlite3.Row | None, *, message: str) -> dict[str, Any]:
     if row is None:
         raise AgentctlJobError(message)
@@ -3438,7 +3495,8 @@ def _check_cwd(workspace: Path, value: str) -> Path:
     return _check_directory(workspace / relative)
 
 
-def _run_acceptance_command(check: dict[str, Any], deadline: float) -> None:
+def _run_acceptance_command(check: dict[str, Any], deadline: float,
+                            interrupted: list[int], ownership_fd: int) -> None:
     """Drain pipes continuously, retaining at most 32 KiB per stream in memory."""
     started = time.monotonic()
     tails = {"stdout_tail": bytearray(), "stderr_tail": bytearray()}
@@ -3449,12 +3507,14 @@ def _run_acceptance_command(check: dict[str, Any], deadline: float) -> None:
             process = subprocess.Popen(
                 ["/bin/sh", "-c", check["command"]], cwd=check["cwd"],
                 stdin=subprocess.DEVNULL, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-                start_new_session=True,
+                start_new_session=True, pass_fds=(ownership_fd,),
             )
             for stream, name in ((process.stdout, "stdout_tail"), (process.stderr, "stderr_tail")):
                 os.set_blocking(stream.fileno(), False)
                 selector.register(stream, selectors.EVENT_READ, name)
             while selector.get_map() or process.poll() is None:
+                if interrupted:
+                    break
                 remaining = deadline - time.monotonic()
                 if remaining <= 0:
                     timed_out = True
@@ -3468,26 +3528,28 @@ def _run_acceptance_command(check: dict[str, Any], deadline: float) -> None:
                     # Trim before extending so retained output never exceeds 64 KiB.
                     del tail[:max(0, len(tail) + len(chunk) - 32768)]
                     tail.extend(chunk)
-            if timed_out:
+            if timed_out or interrupted:
                 # Kill the group even if its shell has exited but children hold pipes.
                 try:
                     os.killpg(process.pid, signal.SIGKILL)
                 except ProcessLookupError:
                     pass
             check["exit_code"] = process.wait()
-            check["status"] = ("timed-out" if timed_out else
+            check["status"] = ("interrupted" if interrupted else "timed-out" if timed_out else
                                "passed" if process.returncode == 0 else "failed")
     except OSError as exc:
         check["status"] = "failed"
         tails["stderr_tail"] = bytearray(str(exc).encode()[-32768:])
     finally:
         if process is not None:
-            if process.poll() is None:
-                try:
-                    os.killpg(process.pid, signal.SIGKILL)
-                except ProcessLookupError:
-                    pass
-                process.wait()
+            # Also stop background children that closed their output pipes.
+            # Never release verification ownership with ordinary group members
+            # still executing, even when the shell itself already exited.
+            try:
+                os.killpg(process.pid, signal.SIGKILL)
+            except ProcessLookupError:
+                pass
+            process.wait()
             if check["exit_code"] is None:
                 check["exit_code"] = process.returncode
             for stream in (process.stdout, process.stderr):
@@ -3572,16 +3634,36 @@ def _check_submission(store: Store, job: dict[str, Any]) -> tuple:
     return attempt, workspace, task_digest, checks, before
 
 
-def check_job(store: Store, job_id: str, *, timeout: float = 60.0) -> dict[str, Any]:
+def check_job(store: Store, job_id: str, *, timeout: float = 60.0,
+              recover_incomplete: bool = False) -> dict[str, Any]:
     """Execute trusted immutable commands; do not create a job-validation claim."""
     if not math.isfinite(timeout) or timeout <= 0:
         raise AgentctlJobError("timeout must be a finite positive number")
     canonical = require_job_id(job_id)
-    # Serialize with cooperating job preparation/validation for this state store.
-    # This is not protection from trusted commands or a malicious same-UID process.
-    with workspace_lock(store.paths):
+    with contextlib.ExitStack() as ownership, _check_interruptions() as interrupted:
         job = get_job(store, canonical)
-        attempt, workspace, task_digest, checks, before = _check_submission(store, job)
+        selected = latest_attempt(store, canonical)
+        if selected is None:
+            raise AgentctlJobError("verification requires a latest successful terminal attempt")
+        # Take the nonblocking lock first: a duplicate must not wait behind even
+        # an expensive preflight. Revalidate selection under the preparation lock.
+        descriptor = ownership.enter_context(_attempt_check_lock(store.paths, selected["attempt_id"]))
+        # Keep the global preparation lock only for selecting and owning the
+        # attempt. Independent attempt workspaces can execute concurrently.
+        with workspace_lock(store.paths):
+            job = get_job(store, canonical)
+            attempt, workspace, task_digest, checks, before = _check_submission(store, job)
+            if attempt["attempt_id"] != selected["attempt_id"]:
+                raise AgentctlJobError("latest attempt changed while acquiring independent check ownership")
+            previous = store.connection.execute("""SELECT * FROM command_verifications
+                WHERE attempt_id = ? ORDER BY sequence DESC LIMIT 1""",
+                (attempt["attempt_id"],)).fetchone()
+            if previous and (not previous["finished_at"] or not previous["report_digest"]
+                             or previous["status"] == "incomplete") and not recover_incomplete:
+                raise AgentctlJobError("independent check is incomplete; establish that the old execution "
+                                       "has stopped, then explicitly check with --recover-incomplete")
+            if interrupted:
+                raise AgentctlJobError("independent check interrupted before execution")
         report = {"schema_version": 1, "job_id": canonical, "attempt_id": attempt["attempt_id"],
                   "status": "no-checks" if not checks else "passed",
                   "head_sha": before["head_sha"], "checks": checks, "source_changed": False}
@@ -3600,6 +3682,9 @@ def check_job(store: Store, job_id: str, *, timeout: float = 60.0) -> dict[str, 
                  report["source_fingerprint"], str(report_path), report["started_at"]))
         deadline = time.monotonic() + timeout
         for check in checks:
+            if interrupted:
+                report["status"] = "interrupted"
+                break
             if time.monotonic() >= deadline:
                 report["status"] = "timed-out"
                 break
@@ -3613,7 +3698,10 @@ def check_job(store: Store, job_id: str, *, timeout: float = 60.0) -> dict[str, 
             if time.monotonic() >= deadline:
                 report["status"] = "timed-out"
                 break
-            _run_acceptance_command(check, deadline)
+            if interrupted:
+                report["status"] = "interrupted"
+                break
+            _run_acceptance_command(check, deadline, interrupted, descriptor)
             if check["status"] != "passed":
                 report["status"] = check["status"]
             try:
@@ -3634,28 +3722,45 @@ def check_job(store: Store, job_id: str, *, timeout: float = 60.0) -> dict[str, 
             report["task_changed"] = True
             if report["status"] == "passed":
                 report["status"] = "source-changed"
+        if interrupted:
+            report["status"] = "interrupted"
+            report["interruption_signal"] = interrupted[0]
         report["finished_at"] = utc_now()
         write_json_private(report_path, report)
         digest = "sha256:" + _check_file_identity(report_path)[1]
         with store.transaction() as connection:
+            if interrupted and report["status"] != "interrupted":
+                # A signal during artifact publication must not finalize a pass.
+                # Leave the durable incomplete row for explicit recovery.
+                raise AgentctlJobError("independent check interrupted during report publication")
             connection.execute("""UPDATE command_verifications SET status = ?, report_digest = ?,
                 finished_at = ? WHERE verification_id = ?""",
                 (report["status"], digest, report["finished_at"], verification_id))
+            if interrupted and report["status"] != "interrupted":
+                # SQLite releases the GIL during the update; a handler can have
+                # run since the first gate. Roll back before committing success.
+                raise AgentctlJobError("independent check interrupted during report publication")
         return report
 
 
 def job_checks(store: Store, job_id: str) -> dict[str, Any]:
     """Inspect the latest observation without executing, repairing or recording anything.
 
-    No workspace lock: an ongoing checker is observable as incomplete. Strict
-    validation calls this under its existing lock and checks again before sealing.
+    No writer lock: an ongoing checker is observable as incomplete. Strict
+    validation owns a shared attempt lock and checks again before sealing.
     """
     job = get_job(store, job_id)
     row = store.connection.execute("""SELECT * FROM command_verifications WHERE job_id = ?
         ORDER BY sequence DESC LIMIT 1""", (job["job_id"],)).fetchone()
     response = {"schema_version": 1, "job_id": job["job_id"], "latest": None,
-                "fresh": False, "stale_reasons": []}
+                "fresh": False, "in_progress": False, "stale_reasons": []}
     reasons = response["stale_reasons"]
+    # Inspect all attempts: an older checker must remain visible after a retry.
+    attempt_ids = [r[0] for r in store.connection.execute(
+        "SELECT attempt_id FROM attempts WHERE job_id = ?", (job["job_id"],))]
+    response["in_progress"] = any(_check_in_progress(store.paths, identity) for identity in attempt_ids)
+    if response["in_progress"]:
+        reasons.append("independent check execution is in progress")
     if row is None:
         reasons.append("independent check evidence is absent")
         return response
@@ -3713,8 +3818,14 @@ def job_checks(store: Store, job_id: str) -> dict[str, Any]:
             reasons.append("passing independent command evidence is incomplete")
         if report.get("source_changed") or report.get("task_changed"):
             reasons.append("source or task changed during verification")
+        if report["status"] in {"interrupted", "incomplete"}:
+            reasons.append("latest independent check execution was interrupted or incomplete")
     except (AgentctlJobError, ContractValidationError, OSError, ValueError, TypeError, KeyError) as exc:
         reasons.append(f"current submission cannot match evidence: {exc}")
+    # A checker may have acquired ownership while source inspection was running.
+    if not response["in_progress"] and any(_check_in_progress(store.paths, identity) for identity in attempt_ids):
+        response["in_progress"] = True
+        reasons.append("independent check execution is in progress")
     response["fresh"] = not reasons
     return response
 
@@ -3722,7 +3833,7 @@ def job_checks(store: Store, job_id: str) -> dict[str, Any]:
 def _complete_command_observation(check: dict[str, Any]) -> bool:
     elapsed = check.get("elapsed_seconds")
     if (type(elapsed) not in (int, float) or not math.isfinite(elapsed) or elapsed < 0
-            or check.get("status") not in {"passed", "failed", "timed-out", "unexecuted"}
+            or check.get("status") not in {"passed", "failed", "timed-out", "unexecuted", "interrupted"}
             or "exit_code" not in check
             or (check["exit_code"] is not None and type(check["exit_code"]) is not int)):
         return False
@@ -3748,7 +3859,7 @@ def _require_passing_checks(store: Store, job_id: str) -> dict[str, Any]:
 
 def validate_succeeded_job(store: Store, job_id: str, *, require_checks: bool = False) -> dict[str, Any]:
     canonical = require_job_id(job_id)
-    with workspace_lock(store.paths):
+    with workspace_lock(store.paths), contextlib.ExitStack() as ownership:
         job = get_job(store, canonical)
         if job["state"] != "succeeded":
             raise AgentctlJobError(f"job validation requires succeeded state, got {job['state']!r}")
@@ -3756,6 +3867,7 @@ def validate_succeeded_job(store: Store, job_id: str, *, require_checks: bool = 
         if attempt is None or attempt["state"] != "succeeded":
             raise AgentctlJobError("latest attempt is not succeeded")
         independent = _require_passing_checks(store, canonical) if require_checks else None
+        ownership.enter_context(_attempt_check_lock(store.paths, attempt["attempt_id"], shared=True))
         _, schema = _result_schema(Path(attempt["workspace_path"]))
         try:
             verified = verify_result(job, attempt, schema, broker_final=True)

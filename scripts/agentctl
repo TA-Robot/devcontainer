@@ -954,7 +954,8 @@ def positive_finite_seconds(value: str) -> float:
 
 def run_job_check(args: argparse.Namespace) -> int:
     with Store(state_paths(args)) as store:
-        report = check_job(store, args.job_id, timeout=args.timeout)
+        report = check_job(store, args.job_id, timeout=args.timeout,
+                           recover_incomplete=args.recover_incomplete)
     print_payload(
         report,
         as_json=args.json,
@@ -1121,6 +1122,8 @@ def parser() -> argparse.ArgumentParser:
     job_check.add_argument("job_id")
     job_check.add_argument("--timeout", type=positive_finite_seconds, default=60.0,
                            help="complete command sequence budget in seconds (default: 60)")
+    job_check.add_argument("--recover-incomplete", action="store_true",
+                           help="start a new check after establishing the previous incomplete execution stopped")
     job_check.add_argument("--json", action="store_true")
     job_check.set_defaults(handler=run_job_check)
 

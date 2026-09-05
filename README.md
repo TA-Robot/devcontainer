@@ -130,7 +130,10 @@ agentctl job create --task docs/agents/tasks/task-0001.json
 agentctl job run <job-id> --provider codex   # または claude / grok
 agentctl job run <job-id> --provider codex --detach
 agentctl job cancel <job-id>
-agentctl job validate <job-id>
+agentctl job validate <job-id>                 # 従来のprovider報告 + Git検証
+agentctl job check <job-id> --timeout 60 --json # immutable taskのcommandを独立実行
+agentctl job checks <job-id> --json            # 再実行せずfresh / in_progressを確認
+agentctl job validate <job-id> --require-checks --json
 agentctl job collect <job-id> --json
 agentctl job logs <job-id> --lines 80
 agentctl gc --dry-run --job <job-id> --json
@@ -141,6 +144,8 @@ write providerはGit common metadataへ直接commitせず、`ready_for_commit`�
 Lane Iはまだstable runtimeを持たず、同一containerへfallbackしません。optional runtimeの導入前probeと、model request/image pullなしのprivate-daemon比較は`python3 scripts/benchmark-isolated-runtime-pilot.py --probe-only` / `--repetitions 5`で実行できます。現時点の結果と「privileged DinDをsecurity boundaryにはしない」という判断は[`docs/agents/isolated-runtime-pilot-2026-08-12.md`](docs/agents/isolated-runtime-pilot-2026-08-12.md)にあります。
 
 長時間のオーケストレーション評価は、専用のnested-Docker volumeとauth readiness検査を固定する`scripts/benchmark-devcontainer.py`で起動できます。普段どおり`tmux`から`/goal`を投入し、独自schedulerは挟みません。手順とevidence境界は[`docs/agents/orchestration-benchmark-runbook.md`](docs/agents/orchestration-benchmark-runbook.md)を参照してください。
+
+独立チェックはproviderや認証を起動せず、呼び出し元の権限で元のtask commandを実行します。同じattemptの重複実行は即時拒否し、過去のpassより最新の失敗・中断・実行中の状態を優先します。SIGTERM時の子process cleanup、強制終了後の`--recover-incomplete`手順、64 KiB/commandのbounded evidence方針は[`運用・復旧手順`](docs/agentctl.md#unattended-checking-interruption-and-recovery)を参照してください。
 
 設計判断は[`ADR-0001`](docs/adr/0001-native-first-multi-agent-execution.md)、target contractの全体像は[`AGENTS_TEMPLATE.md`](AGENTS_TEMPLATE.md)、実行fabricは[`docs/agentctl.md`](docs/agentctl.md)、失敗時の正本は[`project/docs/agents/runbook.md`](project/docs/agents/runbook.md)です。
 

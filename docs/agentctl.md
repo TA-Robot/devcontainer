@@ -204,7 +204,7 @@ launch. The report includes each validated absolute `cwd`.
 
 **Authority:** the original task commands are trusted code running in the caller's
 execution context. Directory checks, source snapshots, and the cooperating
-agentctl workspace lock are not an isolation boundary against a malicious
+agentctl ownership locks are not an isolation boundary against a malicious
 same-UID process. Commands can access anything the caller can access. The checker
 does not authenticate, push, merge, repair source, or change the task; trusted
 commands are responsible for their own effects.
@@ -221,14 +221,14 @@ job or writes a successful job-validation claim.
 The JSON has `schema_version: 1`, `job_id`, `attempt_id`, `status`, `head_sha`,
 `source_changed`, and `checks`. `head_sha` always identifies the submitted HEAD
 captured before execution, even when a command changes HEAD. Overall status is
-`passed`, `failed`, `timed-out`, `source-changed`, or `no-checks`; only `passed`
+`passed`, `failed`, `timed-out`, `source-changed`, `interrupted`, or `no-checks`; only `passed`
 exits zero (verification failure exits 1; option/preflight errors exit 2 with a
 diagnostic on stderr). An empty command list is `no-checks`. File and manual
 acceptance entries are omitted from `checks` and remain unverified; `passed`
 means only that all command entries passed on unchanged source.
 
 Each check contains `command`, `cwd`, execution `status` (`passed`, `failed`,
-`timed-out`, or `unexecuted`), actual `exit_code` (null when unavailable; negative
+`timed-out`, `interrupted`, or `unexecuted`), actual `exit_code` (null when unavailable; negative
 for a signal), finite nonnegative `elapsed_seconds`, `stdout_tail`, and
 `stderr_tail`. Unexecuted commands have null exit code, zero elapsed time, and
 empty tails. Output is continuously drained with at most 32 KiB retained per
@@ -266,9 +266,10 @@ An `incomplete` SQLite observation is committed before command execution. The
 artifact is atomically written before the row is finalized. Interruption during
 execution or publication leaves incomplete evidence that blocks an earlier pass;
 reading never repairs or completes it. A preflight refusal executes nothing and
-does not create an observation. Explicitly run `job check` again for new evidence.
+does not create an observation. Explicitly run `job check` again for new evidence;
+unfinished crash records require the recovery procedure below.
 
-`job checks` returns `schema_version: 1`, `job_id`, `latest`, `fresh`, and
+`job checks` returns `schema_version: 1`, `job_id`, `latest`, `fresh`, `in_progress`, and
 `stale_reasons`. With no history, `latest` is null, `fresh` is false, and the reason
 states that evidence is absent. Incomplete or corrupted history is identified
 explicitly and never replaced with an older successful report. `fresh` describes
@@ -279,6 +280,11 @@ during execution invalidates freshness even if the source is later restored.
 Inspection exits zero for a readable job, including absent/stale evidence, and
 never executes acceptance commands. Unknown jobs/state return an error; inspection
 does not create a missing state root, verification record, or repair any file.
+While a checker owns an attempt, `in_progress` is true and `fresh` is false,
+even if `latest` still names a previous passing artifact during preflight or
+publication. With no active checker/retained execution lock, `in_progress` is
+false; an incomplete crash record remains explicitly stale. Ownership probing
+opens existing locks only and never creates lock files or observations.
 
 `validate --require-checks` requires a complete, integrity-checked, fresh **passing**
 observation before sealing. It also retains the existing result/Git validation.
@@ -314,6 +320,111 @@ not authentication against a malicious same-UID process that can rewrite both
 SQLite and files. Original task commands remain trusted code in that same caller
 context. Legacy migration trusts the existing immutable task as found; it cannot
 detect edits made before its digest was first recorded.
+
+## Unattended checking, interruption, and recovery
+
+The installed runtime includes the checker in `/usr/local/lib/agentctl/agentctl_jobs.py`;
+it needs only the existing Python standard library, Git and `/bin/sh`. These
+instructions also ship at `/usr/local/share/agentctl/README.md`. After installing
+the project contract with `manage-agent-project` and writing a task as above,
+the ordinary workflow in a fresh devcontainer user account is:
+
+```bash
+state="${AGENTCTL_STATE_DIR:-$HOME/.local/state/agentctl}"
+job_id=$(agentctl --state-dir "$state" job create \
+  --workspace "$PWD" --task "$PWD/.git/agentctl-inputs/task.json" \
+  --base "$(git rev-parse HEAD)" --json | jq -er .job_id)
+agentctl --state-dir "$state" job run "$job_id" --provider codex --json
+agentctl --state-dir "$state" job check "$job_id" --timeout 60 --json
+agentctl --state-dir "$state" job checks "$job_id" --json
+agentctl --state-dir "$state" job validate "$job_id" --require-checks --json
+```
+
+Run these steps only after the preceding step succeeds (use `set -e` in a
+script). `job run` is the provider invocation; the last three operations require
+no provider, authentication flow or model session. `checks` is inspection and
+never reruns tests. `validate` without the flag preserves legacy provider-reported
+command authority. Neither form of validation pushes, merges or repairs source.
+
+Each attempt has a nonblocking kernel ownership lock under
+`STATE/locks/check-ATTEMPT_ID.lock`. A second checker fails promptly before any
+command side effect or new observation. Separate attempts can execute concurrently;
+they have independent budgets. Validation also holds the attempt lock while
+sealing so a checker cannot start between the freshness check and state change.
+The global preparation lock is held briefly, never for command execution.
+
+SIGTERM, SIGINT and SIGHUP during execution stop the shell process group, retain
+the bounded/redacted tails already observed, mark the report `interrupted`, and
+leave later commands unexecuted. The CLI exits nonzero and a new explicit check
+is needed. Group cleanup also covers ordinary background children after a shell
+exits; acceptance commands should wait for their children and must not daemonize.
+Only the original process group is managed. A trusted command that creates a
+separate session, closes inherited ownership descriptors, or otherwise escapes
+that group is outside this containment contract.
+
+For unattended execution, record and wait for the actual foreground checker PID:
+
+```bash
+agentctl --state-dir "$state" job check "$job_id" --timeout 60 --json &
+checker_pid=$!
+# To interrupt this owned execution from the controlling shell:
+# kill -TERM "$checker_pid"
+wait "$checker_pid"
+agentctl --state-dir "$state" job checks "$job_id" --json
+```
+
+SIGKILL, loss of the containing runtime, or interrupted artifact publication may
+leave `incomplete` metadata without a completed artifact. This supersedes any old
+pass. The execution lock is inherited by ordinary command descendants, so it can
+remain held after the checker dies. No PID or process is claimed to survive a
+container restart, and lock-file existence alone is not proof of a live owner.
+The database's incomplete record survives as evidence that completion was never
+established. Reads and validation never clear it.
+
+Before recovering, establish that the old checker **and its command descendants**
+have stopped: wait for the owned foreground process after SIGTERM and inspect
+its process tree/groups with the host's process tools, or stop and wait for the
+entire dedicated execution container/runtime to exit. A confirmed full container
+stop establishes termination of its contained processes; restarting a CLI alone
+does not. Do not signal a stale numeric PID without checking process identity.
+If termination cannot be established, leave the evidence incomplete. Inspect
+source changes without restoring them automatically. Once the source is a valid
+submitted delivery and the old execution is known stopped:
+
+```bash
+agentctl --state-dir "$state" job checks "$job_id" --json
+agentctl --state-dir "$state" job check "$job_id" --recover-incomplete --timeout 60 --json
+agentctl --state-dir "$state" job validate "$job_id" --require-checks --json
+```
+
+`--recover-incomplete` is the operator's assertion of that termination check.
+It cannot bypass an active ownership lock. It creates a **new observation** and
+executes the entire original sequence with an explicit new budget; it never
+resumes an old command, resets an old deadline, deletes old records, or turns
+unfinished evidence into a pass. Do not delete lock files to force recovery.
+This also applies to unfinished phase-2 observations, which had no per-attempt
+ownership tracking. Complete earlier passing reports remain usable when intact
+and fresh; no new database schema version or historic checks are fabricated.
+
+Failure diagnosis:
+
+| Observation | Operator action |
+| --- | --- |
+| `in_progress: true` / already in progress | Wait for or interrupt the owned checker. Do not launch another copy. |
+| `interrupted` | Inspect tails/source and explicitly check again after cleanup. |
+| `incomplete` | Establish termination, then use the explicit recovery procedure. |
+| `failed` / `timed-out` | Inspect actual exit codes and bounded tails at `report_path`; fix through the job workflow and explicitly recheck. A previous pass cannot hide this observation. |
+| `source-changed` / stale fingerprint | Preserve edits; deliver an updated attempt via the existing retry workflow described above, then recheck it. |
+| Missing/corrupted artifact | Preserve evidence for diagnosis; run a new check after investigating private-state integrity. Editing JSON cannot validate a job. |
+| `no-checks` | The task has no command acceptance; it cannot provide independent command verification. Narrative review remains separate. |
+
+The artifact retains at most 64 KiB of redacted output per command, regardless of
+output volume. This bounds retained output, not the number of explicit historical
+observations. No new raw stdout/stderr files are written. The original command
+string is retained verbatim as task identity; put credentials in the execution
+environment, never directly in task command text. Private state and trusted task
+commands share the caller's authority; they are not protection against a malicious
+same-UID process.
 
 ## Collect for single-writer integration
 

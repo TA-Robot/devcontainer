@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import math
 import os
 from pathlib import Path
 import shutil
+import signal
 import sqlite3
 import subprocess
 import sys
@@ -18,8 +20,9 @@ from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parent.parent
-AGENTCTL = ROOT / "scripts/agentctl"
-sys.path.insert(0, str(ROOT / "scripts"))
+AGENTCTL = Path(os.environ.get("AGENTCTL_TEST_BIN", ROOT / "scripts/agentctl"))
+TEMPLATE_ROOT = Path(os.environ.get("AGENTCTL_TEST_TEMPLATE", ROOT / "project"))
+sys.path.insert(0, os.environ.get("AGENTCTL_TEST_LIBRARY", str(ROOT / "scripts")))
 from agentctl_jobs import _redact_log_text
 
 
@@ -304,12 +307,12 @@ class AgentctlJobTests(unittest.TestCase):
         subprocess.run(
             ["git", "-C", str(self.workspace), "config", "user.name", "test"], check=True
         )
-        shutil.copytree(ROOT / "project/.agent", self.workspace / ".agent")
-        shutil.copytree(ROOT / "project/.codex", self.workspace / ".codex")
-        shutil.copytree(ROOT / "project/.claude", self.workspace / ".claude")
-        shutil.copytree(ROOT / "project/.grok", self.workspace / ".grok")
-        shutil.copy2(ROOT / "project/AGENTS.md", self.workspace / "AGENTS.md")
-        shutil.copy2(ROOT / "project/CLAUDE.md", self.workspace / "CLAUDE.md")
+        shutil.copytree(TEMPLATE_ROOT / ".agent", self.workspace / ".agent")
+        shutil.copytree(TEMPLATE_ROOT / ".codex", self.workspace / ".codex")
+        shutil.copytree(TEMPLATE_ROOT / ".claude", self.workspace / ".claude")
+        shutil.copytree(TEMPLATE_ROOT / ".grok", self.workspace / ".grok")
+        shutil.copy2(TEMPLATE_ROOT / "AGENTS.md", self.workspace / "AGENTS.md")
+        shutil.copy2(TEMPLATE_ROOT / "CLAUDE.md", self.workspace / "CLAUDE.md")
         (self.workspace / "tracked.txt").write_text("base\n", encoding="utf-8")
         subprocess.run(["git", "-C", str(self.workspace), "add", "."], check=True)
         subprocess.run(["git", "-C", str(self.workspace), "commit", "-qm", "base"], check=True)
@@ -499,6 +502,254 @@ class AgentctlJobTests(unittest.TestCase):
         self.assertEqual(self.invoke("job", "show", job["job_id"], "--json").stdout, before)
         self.assertFalse(Path(job["attempts"][-1]["result_path"]).with_name("validation.json").exists())
         return result
+
+    def wait_for_check_marker(self, path, checker):
+        deadline = time.monotonic() + 8
+        while time.monotonic() < deadline:
+            if path.exists() and path.stat().st_size:
+                return
+            if checker.poll() is not None:
+                stdout, stderr = checker.communicate(timeout=2)
+                self.fail(f"checker exited before command marker: {stdout} {stderr}")
+            time.sleep(0.01)
+        self.fail("checker did not reach its command marker")
+
+    def stop_checker(self, checker):
+        if checker.poll() is None:
+            checker.terminate()
+        checker.communicate(timeout=8)
+        checker.stdout.close()
+        checker.stderr.close()
+
+    def bounded_check_invocation(self, *arguments):
+        process = self.popen(*arguments, mode="exit")
+        try:
+            stdout, stderr = process.communicate(timeout=3)
+            return subprocess.CompletedProcess(arguments, process.returncode, stdout, stderr)
+        finally:
+            self.stop_checker(process)
+
+    def assert_check_process_stopped(self, pid):
+        deadline = time.monotonic() + 3
+        while time.monotonic() < deadline:
+            proc = Path(f"/proc/{pid}/stat")
+            if not proc.exists() or proc.read_text().rsplit(")", 1)[1].split()[0] == "Z":
+                return
+            time.sleep(0.02)
+        self.fail(f"check child {pid} still running")
+
+    def test_check_ownership_rejects_overlap_and_validation_promptly(self):
+        gate, started, calls = (self.root / name for name in ("gate", "started", "calls"))
+        command = (f"printf x >> '{calls}'; if test -f '{gate}'; then "
+                   f"echo $$ > '{started}'; sleep 30; fi")
+        job, _ = self.check_fixture([command])
+        passed = self.check_report(job)
+        gate.touch()
+        checker = self.popen("job", "check", job["job_id"], "--json")
+        try:
+            self.wait_for_check_marker(started, checker)
+            live = self.checks_view(job)
+            self.assertTrue(live["in_progress"])
+            self.assertFalse(live["fresh"])
+            self.assertEqual(live["latest"]["status"], "incomplete")
+            for arguments in (("check", "--recover-incomplete"), ("validate", "--require-checks"),
+                              ("validate",)):
+                denied = self.bounded_check_invocation("job", arguments[0], job["job_id"],
+                                                       *arguments[1:], "--json")
+                self.assertNotEqual(denied.returncode, 0, denied.stdout)
+                self.assertIn("in progress", denied.stderr)
+            self.assertEqual(calls.read_text(), "xx")
+            with sqlite3.connect(self.state_dir / "state.db") as connection:
+                self.assertEqual(connection.execute("SELECT count(*) FROM command_verifications").fetchone()[0], 2)
+                self.assertEqual(connection.execute("SELECT count(*) FROM validations").fetchone()[0], 0)
+            self.assertEqual(json.loads(Path(passed["report_path"]).read_text()), passed)
+        finally:
+            self.stop_checker(checker)
+        self.assertFalse(self.checks_view(job)["in_progress"])
+
+    def test_check_ownership_before_observation_overrides_previous_pass(self):
+        from agentctl_jobs import StatePaths, _attempt_check_lock
+        job, _ = self.check_fixture(["true"])
+        passed = self.check_report(job)
+        with _attempt_check_lock(StatePaths.from_value(self.state_dir), job["attempts"][-1]["attempt_id"]):
+            view = self.checks_view(job)
+            self.assertEqual(view["latest"], passed)
+            self.assertTrue(view["in_progress"])
+            self.assertFalse(view["fresh"])
+            denied = self.bounded_check_invocation("job", "validate", job["job_id"], "--require-checks", "--json")
+            self.assertNotEqual(denied.returncode, 0)
+        self.assertTrue(self.checks_view(job)["fresh"])
+
+    def test_check_different_attempts_execute_concurrently(self):
+        gate = self.root / "gate"
+        gate.touch()
+        markers = [self.root / f"started-{i}" for i in range(2)]
+        jobs = [self.check_fixture([f"echo ready > '{marker}'; while test -f '{gate}'; do sleep 0.05; done"])[0]
+                for marker in markers]
+        checkers = []
+        try:
+            for job, marker in zip(jobs, markers):
+                checker = self.popen("job", "check", job["job_id"], "--timeout", "20", "--json")
+                checkers.append(checker)
+                self.wait_for_check_marker(marker, checker)
+            self.assertTrue(all(checker.poll() is None for checker in checkers))
+            self.assertTrue(all(self.checks_view(job)["in_progress"] for job in jobs))
+            gate.unlink()
+            for checker in checkers:
+                stdout, stderr = checker.communicate(timeout=8)
+                self.assertEqual(checker.returncode, 0, stderr)
+                self.assertEqual(json.loads(stdout)["status"], "passed")
+        finally:
+            for checker in checkers:
+                self.stop_checker(checker)
+        self.assertTrue(all(self.checks_view(job)["fresh"] for job in jobs))
+
+    def test_check_signals_preserve_bounded_evidence_clean_children_and_recheck(self):
+        for sig in (signal.SIGTERM, signal.SIGINT, signal.SIGHUP):
+            with self.subTest(signal=sig):
+                gate = self.root / f"gate-{sig}"
+                marker = self.root / f"child-{sig}"
+                later = self.root / f"later-{sig}"
+                gate.touch()
+                self.extra_environment["CHECK_SECRET"] = "synthetic-secret"
+                command = (f"if test -f '{gate}'; then "
+                           "printf 'password=%s\\n' \"$CHECK_SECRET\"; printf diagnostic >&2; "
+                           f"sleep 30 & echo $! > '{marker}'; wait; fi")
+                job, _ = self.check_fixture(["printf first", command, f"touch '{later}'"])
+                checker = self.popen("job", "check", job["job_id"], "--json")
+                try:
+                    self.wait_for_check_marker(marker, checker)
+                    checker.send_signal(sig)
+                    stdout, stderr = checker.communicate(timeout=8)
+                    self.assertEqual(checker.returncode, 1, stderr)
+                    report = json.loads(stdout)
+                    self.assertEqual(report["status"], "interrupted")
+                    self.assertEqual(report["interruption_signal"], sig)
+                    self.assertEqual([c["status"] for c in report["checks"]],
+                                     ["passed", "interrupted", "unexecuted"])
+                    self.assertEqual(report["checks"][1]["exit_code"], -9)
+                    self.assertIn("[REDACTED]", report["checks"][1]["stdout_tail"])
+                    self.assertNotIn("synthetic-secret", json.dumps(report))
+                    self.assertEqual(report["checks"][1]["stderr_tail"], "diagnostic")
+                    self.assertFalse(later.exists())
+                    self.assert_check_process_stopped(int(marker.read_text()))
+                    view = self.checks_view(job)
+                    self.assertEqual(view["latest"], report)
+                    self.assertFalse(view["in_progress"])
+                    self.assertFalse(view["fresh"])
+                    self.strict_rejection(job)
+                finally:
+                    self.stop_checker(checker)
+                gate.unlink()
+                self.assertEqual(self.check_report(job)["status"], "passed")
+                sealed = self.invoke("job", "validate", job["job_id"], "--require-checks", "--json")
+                self.assertEqual(sealed.returncode, 0, sealed.stderr)
+
+    def test_check_abrupt_death_keeps_incomplete_and_requires_explicit_recovery(self):
+        gate, marker = self.root / "gate", self.root / "group"
+        command = f"if test -f '{gate}'; then echo $$ > '{marker}'; sleep 30 & wait; fi"
+        job, _ = self.check_fixture([command])
+        passed = self.check_report(job)
+        gate.touch()
+        checker = self.popen("job", "check", job["job_id"], "--json")
+        group = None
+        try:
+            self.wait_for_check_marker(marker, checker)
+            group = int(marker.read_text())
+            checker.kill()
+            checker.wait(timeout=3)
+            view = self.checks_view(job)
+            self.assertEqual(view["latest"]["status"], "incomplete")
+            self.assertTrue(view["in_progress"], "descendants must retain inherited ownership")
+            denied = self.bounded_check_invocation("job", "check", job["job_id"], "--recover-incomplete", "--json")
+            self.assertNotEqual(denied.returncode, 0)
+            self.assertIn("in progress", denied.stderr)
+            os.killpg(group, signal.SIGKILL)
+            self.assert_check_process_stopped(group)
+            checker.communicate(timeout=3)
+            self.assertFalse(self.checks_view(job)["in_progress"])
+            self.strict_rejection(job)
+            gate.unlink()
+            denied = self.invoke("job", "check", job["job_id"], "--json")
+            self.assertNotEqual(denied.returncode, 0)
+            self.assertIn("--recover-incomplete", denied.stderr)
+            recovered = self.check_report(job, "--recover-incomplete")
+            self.assertEqual(recovered["status"], "passed")
+            self.assertNotEqual(recovered["verification_id"], passed["verification_id"])
+            with sqlite3.connect(self.state_dir / "state.db") as connection:
+                statuses = [r[0] for r in connection.execute("SELECT status FROM command_verifications ORDER BY sequence")]
+            self.assertEqual(statuses, ["passed", "incomplete", "passed"])
+        finally:
+            if group is not None:
+                try:
+                    os.killpg(group, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            self.stop_checker(checker)
+
+    def test_check_success_cleans_background_children_with_closed_pipes(self):
+        marker = self.root / "child"
+        command = f"sleep 30 </dev/null >/dev/null 2>&1 & echo $! > '{marker}'"
+        job, _ = self.check_fixture([command])
+        self.assertEqual(self.check_report(job)["status"], "passed")
+        self.assert_check_process_stopped(int(marker.read_text()))
+        self.assertFalse(self.checks_view(job)["in_progress"])
+
+    def test_checks_signal_during_publication_cannot_publish_success(self):
+        import agentctl_jobs as jobs
+        job, _ = self.check_fixture(["true"])
+        passed = self.check_report(job)
+        original_write = jobs.write_json_private
+
+        def interrupt_publication(path, report):
+            original_write(path, report)
+            os.kill(os.getpid(), signal.SIGTERM)
+
+        with jobs.Store(jobs.StatePaths.from_value(self.state_dir)) as store:
+            with patch("agentctl_jobs.write_json_private", side_effect=interrupt_publication):
+                with self.assertRaisesRegex(jobs.AgentctlJobError, "interrupted during report publication"):
+                    jobs.check_job(store, job["job_id"])
+        view = self.checks_view(job)
+        self.assertFalse(view["in_progress"])
+        self.assertFalse(view["fresh"])
+        self.assertEqual(view["latest"]["status"], "incomplete")
+        self.assertNotEqual(view["latest"]["verification_id"], passed["verification_id"])
+        # The atomically written JSON alone claims success; its metadata does not.
+        artifact = json.loads(Path(view["latest"]["report_path"]).read_text())
+        self.assertEqual(artifact["status"], "passed")
+        self.strict_rejection(job)
+        self.assertEqual(self.check_report(job, "--recover-incomplete")["status"], "passed")
+
+    def test_checks_signal_during_metadata_update_rolls_back_success(self):
+        import agentctl_jobs as jobs
+        job, _ = self.check_fixture(["true"])
+        self.check_report(job)
+        with jobs.Store(jobs.StatePaths.from_value(self.state_dir)) as store:
+            original_transaction = store.transaction
+
+            class InterruptedConnection:
+                def __init__(self, connection):
+                    self.connection = connection
+
+                def execute(self, query, parameters):
+                    result = self.connection.execute(query, parameters)
+                    if query.startswith("UPDATE command_verifications"):
+                        os.kill(os.getpid(), signal.SIGTERM)
+                    return result
+
+            @contextlib.contextmanager
+            def interrupted_transaction():
+                with original_transaction() as connection:
+                    yield InterruptedConnection(connection)
+
+            with patch.object(store, "transaction", interrupted_transaction):
+                with self.assertRaisesRegex(jobs.AgentctlJobError, "interrupted during report publication"):
+                    jobs.check_job(store, job["job_id"])
+        view = self.checks_view(job)
+        self.assertEqual(view["latest"]["status"], "incomplete")
+        self.assertFalse(view["in_progress"])
+        self.assertFalse(view["fresh"])
+        self.strict_rejection(job)
 
     def test_checks_absence_readonly_and_no_provider_fabrication(self):
         absent = self.invoke("job", "checks", "0" * 26, "--json")
@@ -770,6 +1021,14 @@ class AgentctlJobTests(unittest.TestCase):
         )
         self.assertEqual(reproduced.returncode, 0, reproduced.stdout + reproduced.stderr)
         self.assertIn("actual old database upgraded", reproduced.stdout)
+
+    def test_checks_upgrade_actual_phase2_evidence_and_interruption(self):
+        reproduced = subprocess.run(
+            [sys.executable, str(ROOT / "scripts/fixtures/agentctl-history/reproduce-phase2-upgrade.py")],
+            capture_output=True, text=True, timeout=60,
+        )
+        self.assertEqual(reproduced.returncode, 0, reproduced.stdout + reproduced.stderr)
+        self.assertIn("actual phase-2", reproduced.stdout)
 
     def test_check_runs_original_task_in_attempt_and_does_not_validate_job(self):
         commands = ["test -f result.txt && printf 'submitted\\n'", "pwd"]

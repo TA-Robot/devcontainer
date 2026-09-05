@@ -113,6 +113,7 @@ docker run --rm --network none -v "$repo_root:/workspace:ro" -w /workspace \
 echo "ok - repository template validation and checkout library selection"
 
 "$script_dir/test-agent-project-container.sh" "$image_name"
+"$script_dir/test-agentctl-check-container.sh" "$image_name"
 
 if [[ "${DEVCONTAINER_FROZEN_RUN_SMOKE:-1}" == "1" ]]; then
   # Feature entrypoints are runtime metadata and are not written into the image
