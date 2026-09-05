@@ -117,17 +117,20 @@ Docker readinessの一時timeoutで早期終了する不具合は修正し、期
 次の優先は、[独立したacceptance実行](../experiments/development-harness/cycle-003/large-02/README.md)
 の継続開発である。現在のjob検証が、実際には失敗するcommandをモデルの成功報告だけで
 受け入れることをfake providerの実jobで再現した。実行・証拠の鮮度・中断と配布の
-3段階へ分け、後続変更で以前の性質が維持できるかも測る。段階要求、実job fixture、
-実行の証跡を照合する4観測のprobeはdraft済みで、referenceと誤実装の校正6テストが成功した。
-全段階の外部評価器・旧状態・予算・公開時点を固定してから実行する。
+3段階へ分け、後続変更で以前の性質が維持できるかも測る。全41観測の外部評価器を
+実行可能なreferenceと誤実装で校正した。配布版は実際のimage内の13観測で別に確認する。
+[事前protocol](../experiments/development-harness/cycle-003/large-02/protocol.md)で
+旧状態、有限予算、要求の公開条件、時点比較と未完了の扱いを固定した。
 新しい汎用schedulerの開発へは広げない。
 
 配布確認では、コードを取り込んだbase imageの後段でDocker-in-Docker Featureの
 インストールが再実行され、APT索引48.2 MBの取得だけで10分17秒を要した。
 モデル開発時間には含めていないが、実際に利用可能になるまでの足止めである。
-継続開発の予算を固定する前に、変更頻度の低い依存環境と頻繁に変わるコードを
-分けてcacheできるか検証する。既存の公式Feature、固定版、sourceなしの配布確認を
-維持できることを条件にし、今回の単発の通信遅延から一般的な短縮率は推定しない。
+共通環境は同じ署名付きAPT archiveをHTTPSで取得するよう修正し、通常／固定依存buildと
+導入package一覧の一致を確認した。OCI cacheでソース変更時のtoolchain層再利用も確認した。
+再起動時の一時領域とDocker/cacheの準備待ちを揃え、その費用はモデル時間から分ける。
+両条件へ同じcacheを供給し、既存の公式Feature、固定版、sourceなしの配布確認を維持する。
+単発の通信遅延やcache試行から一般的な短縮率は推定しない。
 
 ## 後順位
 
