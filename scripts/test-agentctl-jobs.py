@@ -60,6 +60,9 @@ else:
             f"memory={os.environ.get('GROK_MEMORY', '')}\n",
             encoding="utf-8",
         )
+        if os.environ.get("FAKE_DELIVERY_TEXT"):
+            with (workspace / relative).open("a") as delivered:
+                delivered.write(os.environ["FAKE_DELIVERY_TEXT"] + "\n")
         changed = [relative]
     head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
     if mode == "head-mismatch":
@@ -478,6 +481,296 @@ class AgentctlJobTests(unittest.TestCase):
                 self.assertEqual(check["stderr_tail"], "")
         return report
 
+    def checks_view(self, job):
+        result = self.invoke("job", "checks", job["job_id"], "--json", mode="exit")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        view = json.loads(result.stdout)
+        self.assertEqual(view["schema_version"], 1)
+        self.assertEqual(view["job_id"], job["job_id"])
+        if not view["fresh"]:
+            self.assertTrue(view["stale_reasons"])
+        return view
+
+    def strict_rejection(self, job):
+        before = self.invoke("job", "show", job["job_id"], "--json").stdout
+        result = self.invoke("job", "validate", job["job_id"], "--require-checks", "--json", mode="exit")
+        self.assertNotEqual(result.returncode, 0, result.stdout)
+        self.assertIn("independent", result.stderr)
+        self.assertEqual(self.invoke("job", "show", job["job_id"], "--json").stdout, before)
+        self.assertFalse(Path(job["attempts"][-1]["result_path"]).with_name("validation.json").exists())
+        return result
+
+    def test_checks_absence_readonly_and_no_provider_fabrication(self):
+        absent = self.invoke("job", "checks", "0" * 26, "--json")
+        self.assertNotEqual(absent.returncode, 0)
+        self.assertFalse(self.state_dir.exists())
+        job, workspace = self.check_fixture(["echo real"])
+        result_path = Path(job["attempts"][-1]["result_path"])
+        provider = json.loads(result_path.read_text())
+        provider["verification_id"] = "fake-provider-evidence"
+        provider["independent_checks"] = {"status": "passed"}
+        result_path.write_text(json.dumps(provider))
+        before = {str(p): (p.read_bytes(), p.stat().st_mode) for p in self.state_dir.rglob("*")
+                  if p.is_file() and p.suffix not in {".db", ".db-wal", ".db-shm"}}
+        view = self.checks_view(job)
+        self.assertIsNone(view["latest"])
+        self.assertFalse(view["fresh"])
+        self.strict_rejection(job)
+        after = {str(p): (p.read_bytes(), p.stat().st_mode) for p in self.state_dir.rglob("*")
+                 if p.is_file() and p.suffix not in {".db", ".db-wal", ".db-shm"}}
+        self.assertEqual(before, after)
+        self.assertEqual((workspace / "tracked.txt").read_text(), "base\n")
+
+    def test_checks_persist_pass_and_strict_validation_never_executes(self):
+        marker = self.root / "execution-count"
+        job, workspace = self.check_fixture([f"printf x >> '{marker}'"])
+        report = self.check_report(job)
+        artifact = Path(report["report_path"])
+        self.assertEqual(artifact.stat().st_mode & 0o777, 0o600)
+        self.assertEqual(artifact.parent.stat().st_mode & 0o777, 0o700)
+        self.assertEqual(json.loads(artifact.read_text()), report)
+        self.assertRegex(report["verification_id"], r"^[0-9a-f]{32}$")
+        for key in ("task_digest", "source_fingerprint"):
+            self.assertRegex(report[key], r"^sha256:[0-9a-f]{64}$")
+        with sqlite3.connect(self.state_dir / "state.db") as connection:
+            digest, = connection.execute("SELECT report_digest FROM command_verifications").fetchone()
+        self.assertEqual(digest, "sha256:" + hashlib.sha256(artifact.read_bytes()).hexdigest())
+        for _ in range(2):
+            view = self.checks_view(job)
+            self.assertTrue(view["fresh"], view)
+            self.assertEqual(view["latest"], report)
+        result = self.invoke("job", "validate", job["job_id"], "--require-checks", "--json", mode="exit")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        validation = json.loads(result.stdout)["validation"]
+        self.assertEqual(validation["command_evidence"], "independently-executed")
+        self.assertEqual(validation["verification_id"], report["verification_id"])
+        self.assertEqual(marker.read_text(), "x")
+        self.assertTrue(self.checks_view(job)["fresh"])
+        retry = self.invoke("job", "run", job["job_id"], "--clean-retry", "--provider", "codex")
+        self.assertNotEqual(retry.returncode, 0)
+
+    def test_checks_later_failure_supersedes_pass_and_recheck_is_explicit(self):
+        toggle = self.root / "toggle"
+        toggle.touch()
+        job, _ = self.check_fixture([f"test -f '{toggle}'", "echo later"])
+        passed = self.check_report(job)
+        original = Path(passed["report_path"]).read_bytes()
+        toggle.unlink()
+        failed = self.check_report(job)
+        self.assertEqual(failed["status"], "failed")
+        self.assertNotEqual(passed["verification_id"], failed["verification_id"])
+        self.assertEqual(Path(passed["report_path"]).read_bytes(), original)
+        view = self.checks_view(job)
+        self.assertEqual(view["latest"], failed)
+        self.assertTrue(view["fresh"], view)  # Fresh observation does not mean passing.
+        self.strict_rejection(job)
+        toggle.touch()
+        self.assertEqual(self.checks_view(job)["latest"], failed)
+        rechecked = self.check_report(job)
+        self.assertEqual(rechecked["status"], "passed")
+        self.assertEqual(len(list(Path(passed["report_path"]).parent.glob("*.json"))), 3)
+
+    def test_checks_failed_timeout_no_checks_and_source_changed_cannot_seal(self):
+        cases = [(["exit 9"], "failed"), (["sleep 2"], "timed-out"),
+                 ([], "no-checks"), (["echo edited > tracked.txt"], "source-changed")]
+        for commands, status in cases:
+            with self.subTest(status=status):
+                job, _ = self.check_fixture(commands, acceptance=(None if commands else [
+                    {"kind": "manual", "value": "operator review"}]))
+                report = self.check_report(job, "--timeout", "0.15")
+                self.assertEqual(report["status"], status)
+                self.assertEqual(self.checks_view(job)["latest"], report)
+                self.strict_rejection(job)
+
+    def test_checks_detect_changed_source_and_task_without_repair(self):
+        mutations = ["printf edited > tracked.txt", "chmod +x tracked.txt", "chmod 600 tracked.txt",
+                     "touch new.py", "git add -N new.py", "git update-index --assume-unchanged tracked.txt",
+                     "git update-index --skip-worktree tracked.txt",
+                     "git commit --allow-empty -qm updated"]
+        for mutation in mutations:
+            with self.subTest(mutation=mutation):
+                job, workspace = self.check_fixture(["true"])
+                self.check_report(job)
+                if mutation == "git add -N new.py":
+                    (workspace / "new.py").touch()
+                subprocess.run(["/bin/sh", "-c", mutation], cwd=workspace, check=True)
+                self.assertFalse(self.checks_view(job)["fresh"])
+                self.strict_rejection(job)
+        for flag in ("--assume-unchanged", "--skip-worktree"):
+            job, workspace = self.check_fixture(["true"])
+            subprocess.run(["git", "-C", str(workspace), "update-index", flag, "tracked.txt"], check=True)
+            self.check_report(job)
+            (workspace / "tracked.txt").write_text("hidden mutation\n")
+            self.assertFalse(self.checks_view(job)["fresh"])
+            self.strict_rejection(job)
+            self.assertEqual((workspace / "tracked.txt").read_text(), "hidden mutation\n")
+        job, _ = self.check_fixture(["true"])
+        self.check_report(job)
+        task = Path(job["task_path"])
+        stored = json.loads(task.read_text())
+        stored["objective"] = "altered immutable task"
+        task.write_text(json.dumps(stored))
+        view = self.checks_view(job)
+        self.assertFalse(view["fresh"])
+        self.assertIn("task", str(view["stale_reasons"]))
+        self.strict_rejection(job)
+        self.assertNotEqual(self.invoke("job", "check", job["job_id"]).returncode, 0)
+
+    def test_checks_ignore_cache_and_reject_missing_or_symlinked_workspace(self):
+        job, workspace = self.check_fixture(["true"])
+        git_dir = Path(subprocess.check_output(["git", "-C", str(workspace), "rev-parse", "--git-common-dir"], text=True).strip())
+        (git_dir / "info/exclude").write_text("cache/\n")
+        self.check_report(job)
+        (workspace / "cache").mkdir()
+        (workspace / "cache/test.pyc").write_bytes(b"ignored")
+        self.assertTrue(self.checks_view(job)["fresh"])
+        moved = workspace.with_name("moved")
+        workspace.rename(moved)
+        self.assertFalse(self.checks_view(job)["fresh"])
+        self.strict_rejection(job)
+        workspace.symlink_to(moved)
+        self.assertFalse(self.checks_view(job)["fresh"])
+        self.strict_rejection(job)
+
+    def test_checks_report_tampering_missing_metadata_and_incomplete_evidence(self):
+        job, _ = self.check_fixture(["true", "echo checked"])
+        report = self.check_report(job)
+        artifact = Path(report["report_path"])
+        original = artifact.read_bytes()
+        for mutation in (b'{"status":"passed"}', b'not json', original + b'\n'):
+            artifact.write_bytes(mutation)
+            view = self.checks_view(job)
+            self.assertFalse(view["fresh"])
+            self.assertEqual(view["latest"]["status"], "corrupted")
+            self.strict_rejection(job)
+            self.assertEqual(artifact.read_bytes(), mutation)
+        artifact.unlink()
+        self.assertFalse(self.checks_view(job)["fresh"])
+        self.strict_rejection(job)
+        target = self.root / "substituted.json"
+        target.write_bytes(original)
+        artifact.symlink_to(target)
+        self.assertFalse(self.checks_view(job)["fresh"])
+        artifact.unlink()
+        artifact.write_bytes(original)
+        # Even a self-consistent report file cannot complete pending DB metadata.
+        with sqlite3.connect(self.state_dir / "state.db") as connection:
+            connection.execute("UPDATE command_verifications SET finished_at = NULL")
+        self.assertEqual(self.checks_view(job)["latest"]["status"], "incomplete")
+        self.strict_rejection(job)
+        # An unregistered JSON artifact is never evidence.
+        with sqlite3.connect(self.state_dir / "state.db") as connection:
+            connection.execute("DELETE FROM command_verifications")
+        self.assertIsNone(self.checks_view(job)["latest"])
+        self.strict_rejection(job)
+        self.assertEqual(artifact.read_bytes(), original)
+
+    def test_checks_interrupted_later_execution_blocks_prior_pass(self):
+        marker = self.root / "started"
+        job, _ = self.check_fixture([f"if test -f '{marker}'; then sleep 1; else touch '{marker}'; fi"])
+        passed = self.check_report(job)
+        # Simulate failure to publish a finished artifact after commands completed.
+        from agentctl_jobs import Store, StatePaths, check_job, AgentctlJobError
+        with Store(StatePaths.from_value(self.state_dir)) as store:
+            with patch("agentctl_jobs.write_json_private", side_effect=OSError("synthetic interrupted write")):
+                with self.assertRaises(OSError):
+                    check_job(store, job["job_id"], timeout=0.1)
+        view = self.checks_view(job)
+        self.assertFalse(view["fresh"])
+        self.assertEqual(view["latest"]["status"], "incomplete")
+        self.assertNotEqual(view["latest"]["verification_id"], passed["verification_id"])
+        self.assertTrue(Path(passed["report_path"]).is_file())
+        self.strict_rejection(job)
+
+    def test_checks_inspects_incomplete_execution_without_waiting_or_reexecution(self):
+        marker = self.root / "live-check-started"
+        job, _ = self.check_fixture([f"touch '{marker}'; sleep 3"])
+        checker = self.popen("job", "check", job["job_id"], "--timeout", "1", "--json")
+        try:
+            deadline = time.monotonic() + 5
+            while not marker.exists() and time.monotonic() < deadline:
+                time.sleep(0.01)
+            self.assertTrue(marker.exists())
+            view = self.checks_view(job)
+            self.assertFalse(view["fresh"])
+            self.assertEqual(view["latest"]["status"], "incomplete")
+            self.assertIsNone(checker.poll())
+            stdout, stderr = checker.communicate(timeout=10)
+            self.assertEqual(checker.returncode, 1, stderr)
+            report = json.loads(stdout)
+            self.assertEqual(report["status"], "timed-out")
+            self.assertEqual(self.checks_view(job)["latest"], report)
+        finally:
+            if checker.poll() is None:
+                checker.wait(timeout=10)
+            checker.stdout.close()
+            checker.stderr.close()
+
+    def test_checks_rejects_incomplete_fields_even_with_matching_integrity_metadata(self):
+        job, _ = self.check_fixture(["true"])
+        report = self.check_report(job)
+        artifact = Path(report["report_path"])
+        for field, value in (("elapsed_seconds", None), ("elapsed_seconds", float("nan")),
+                             ("elapsed_seconds", -1), ("stdout_tail", None),
+                             ("exit_code", None), ("status", "unexecuted")):
+            with self.subTest(field=field, value=value):
+                incomplete = json.loads(json.dumps(report))
+                incomplete["checks"][0][field] = value
+                raw = json.dumps(incomplete).encode()
+                artifact.write_bytes(raw)
+                # Emulate a partial older writer/corruption, not provider authority.
+                with sqlite3.connect(self.state_dir / "state.db") as connection:
+                    connection.execute("UPDATE command_verifications SET report_digest = ?",
+                                       ("sha256:" + hashlib.sha256(raw).hexdigest(),))
+                self.assertFalse(self.checks_view(job)["fresh"])
+                self.strict_rejection(job)
+
+    def test_checks_clean_retry_requires_new_evidence_for_new_source(self):
+        job, workspace = self.check_fixture(["test -f result.txt"])
+        passed = self.check_report(job)
+        (workspace / "result.txt").write_text("user edit after delivery\n")
+        self.strict_rejection(job)
+        # Keep the existing retry state machine: legacy post-validation fails first.
+        legacy = self.invoke("job", "validate", job["job_id"], "--json")
+        self.assertNotEqual(legacy.returncode, 0)
+        failed = json.loads(self.invoke("job", "show", job["job_id"], "--json").stdout)
+        self.assertEqual(failed["state"], "failed")
+        self.assertEqual(failed["attempts"][-1]["exit_reason"], "post_validation")
+        # A legitimate provider delivery on the next existing workflow attempt.
+        self.extra_environment["FAKE_DELIVERY_TEXT"] = "new-source-delivery"
+        retry = self.invoke("job", "run", job["job_id"], "--provider", "codex", "--clean-retry", "--json")
+        self.assertEqual(retry.returncode, 0, retry.stderr)
+        retried = json.loads(retry.stdout)
+        self.assertNotEqual(retried["attempts"][-1]["attempt_id"], passed["attempt_id"])
+        self.assertNotEqual(retried["attempts"][-1]["head_sha"], passed["head_sha"])
+        view = self.checks_view(retried)
+        self.assertFalse(view["fresh"])
+        self.assertEqual(view["latest"], passed)
+        self.strict_rejection(retried)
+        rechecked = self.check_report(retried)
+        self.assertEqual(rechecked["status"], "passed")
+        self.assertNotEqual(rechecked["source_fingerprint"], passed["source_fingerprint"])
+        result = self.invoke("job", "validate", job["job_id"], "--require-checks", "--json")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual((workspace / "result.txt").read_text(), "user edit after delivery\n")
+
+    def test_checks_legacy_validation_explicitly_labels_provider_claims(self):
+        job, _ = self.check_fixture(["exit 7"])
+        result = self.invoke("job", "validate", job["job_id"], "--json")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        report = json.loads(result.stdout)["validation"]
+        self.assertEqual(report["command_evidence"], "provider-reported")
+        self.assertIsNone(report["verification_id"])
+        self.assertIsNone(self.checks_view(job)["latest"])
+
+    def test_checks_upgrade_actual_earlier_database_and_jobs(self):
+        reproduced = subprocess.run(
+            [sys.executable, str(ROOT / "scripts/fixtures/agentctl-history/reproduce-baseline-upgrade.py")],
+            capture_output=True, text=True, timeout=60,
+        )
+        self.assertEqual(reproduced.returncode, 0, reproduced.stdout + reproduced.stderr)
+        self.assertIn("actual old database upgraded", reproduced.stdout)
+
     def test_check_runs_original_task_in_attempt_and_does_not_validate_job(self):
         commands = ["test -f result.txt && printf 'submitted\\n'", "pwd"]
         acceptance = [{"kind": "manual", "value": "Must be reviewed by an operator"},
@@ -578,7 +871,9 @@ class AgentctlJobTests(unittest.TestCase):
         self.assertIn("[REDACTED]", check["stdout_tail"])
         self.assertTrue(check["stdout_tail"].endswith("stdout-end\n"))
         self.assertTrue(check["stderr_tail"].endswith("stderr-end\n"))
-        self.assertFalse(any(p.name.startswith("check") for p in self.state_dir.rglob("*")))
+        artifacts = list(self.state_dir.glob("projects/*/jobs/*/checks/*"))
+        self.assertEqual(artifacts, [Path(report["report_path"])])
+        self.assertLess(artifacts[0].stat().st_size, 100000)
 
     def test_check_source_mutations_invalidate_without_repair(self):
         mutations = [

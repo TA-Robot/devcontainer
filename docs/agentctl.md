@@ -176,7 +176,7 @@ Process exit zero is necessary but insufficient. `succeeded` requires:
 - all changed or dirty paths inside allowed scope and outside forbidden scope;
 - a clean worktree after the broker commit.
 
-`agentctl job validate` repeats result and Git verification and moves `succeeded` to `validated`. Dependency jobs must reach `validated`, not merely exit, before a dependent job can start.
+`agentctl job validate` repeats result and Git verification and moves `succeeded` to `validated`. Without `--require-checks`, command evidence remains provider-reported; the validation JSON explicitly labels it `command_evidence: "provider-reported"` with no `verification_id`. Dependency jobs must reach `validated`, not merely exit, before a dependent job can start.
 
 Validation writes an owner-only `validation.json` beside the attempt result and records it in the SQLite `validations` ledger. It contains only broker-observed identity/Git evidence, not prompts, transcripts, or credentials.
 
@@ -192,7 +192,7 @@ workspace. It accepts `succeeded` and `validated` attempts. It refuses unknown
 jobs, missing or active attempts, an unexpected submitted HEAD, dirty source,
 and missing or unsafe workspaces before executing any acceptance command.
 It never reads commands from the provider result or starts a provider session.
-`job run` and `job validate` retain their existing behavior: their command evidence
+`job run` and `job validate` without `--require-checks` retain their existing behavior: their command evidence
 is the provider's report, whereas `job check` measures command exits independently.
 
 Commands run with the POSIX shell `/bin/sh -c`, closed stdin, and the caller's
@@ -215,8 +215,8 @@ commands; it is never reset per command. Initial preflight and final source
 inspection/cleanup can add wall time. At timeout the shell's process group is
 killed, including children holding output pipes after the shell exits. A nonzero
 exit, timeout, or detected source change stops the sequence. Later commands remain
-`unexecuted`. No successful validation or job state transition is stored by this
-operation; save the returned JSON if durable independent evidence is needed.
+`unexecuted`. This operation stores independent observations but never seals a
+job or writes a successful job-validation claim.
 
 The JSON has `schema_version: 1`, `job_id`, `attempt_id`, `status`, `head_sha`,
 `source_changed`, and `checks`. `head_sha` always identifies the submitted HEAD
@@ -243,6 +243,77 @@ clean/smudge filters. Transformed checkouts, absent sparse-checkout files, and
 submodules are conservatively refused. Changes are left in place. Zero exit with
 changed source is `source-changed`; nonzero exit remains `failed` and timeout
 remains `timed-out`, with `source_changed: true` if mutation is also detected.
+
+## Inspect independent evidence and require it before sealing
+
+```bash
+agentctl --state-dir STATE job checks JOB_ID --json
+agentctl --state-dir STATE job validate JOB_ID --require-checks --json
+```
+
+Every `job check` that passes preflight creates an opaque `verification_id` and a
+new observation. Completed reports include `task_digest`, `source_fingerprint`,
+`started_at`, `finished_at`, and `report_path`. The private JSON artifact lives at
+`projects/<project>/jobs/<job>/checks/<verification_id>.json` under the state root,
+with directory mode 0700 and file mode 0600. Its SHA-256 integrity digest is stored
+separately in SQLite with task/attempt/source identities. The reader verifies that
+metadata before trusting the artifact; changing a file's `status` to `passed`
+cannot manufacture evidence. Prior reports remain intact after later checks.
+Stored tails use the same bounded, redacted executor output; no raw output logs
+are added.
+
+An `incomplete` SQLite observation is committed before command execution. The
+artifact is atomically written before the row is finalized. Interruption during
+execution or publication leaves incomplete evidence that blocks an earlier pass;
+reading never repairs or completes it. A preflight refusal executes nothing and
+does not create an observation. Explicitly run `job check` again for new evidence.
+
+`job checks` returns `schema_version: 1`, `job_id`, `latest`, `fresh`, and
+`stale_reasons`. With no history, `latest` is null, `fresh` is false, and the reason
+states that evidence is absent. Incomplete or corrupted history is identified
+explicitly and never replaced with an older successful report. `fresh` describes
+whether the latest complete observation matches the current task, latest attempt,
+workspace and exact source fingerprint; **fresh does not mean passed**. A current
+failed, timed-out or no-checks observation still cannot seal a job. A source change
+during execution invalidates freshness even if the source is later restored.
+Inspection exits zero for a readable job, including absent/stale evidence, and
+never executes acceptance commands. Unknown jobs/state return an error; inspection
+does not create a missing state root, verification record, or repair any file.
+
+`validate --require-checks` requires a complete, integrity-checked, fresh **passing**
+observation before sealing. It also retains the existing result/Git validation.
+Missing, failed, timed-out, empty, incomplete, corrupted or stale evidence is
+rejected before changing validation or job/attempt state. Neither `checks` nor
+`validate` reruns acceptance commands or starts a model session. Successful strict
+validation records `command_evidence: "independently-executed"`, `verification_id`
+and `independent_report_path`. Narrative/file acceptance still requires operator
+review; this flag proves only command acceptance.
+
+Freshness includes immutable task bytes, latest attempt identity, submitted HEAD,
+index bytes, and tracked bytes/modes (including paths hidden by index flags).
+New nonignored files invalidate it; ignored test caches do not. Even an index
+refresh that changes index bytes requires a new check. A later retry always needs
+its own evidence. The retry state machine is unchanged: after editing a succeeded
+delivery, legacy `job validate` can fail post-validation; `job run --clean-retry`
+then creates the next attempt. Strict evidence rejection itself leaves the job
+unchanged. Already validated jobs cannot be retried unrestrictedly.
+
+On first open, an additive, schema-v2-compatible migration adds
+`verification_tasks` and `command_verifications` plus an index. Existing database
+v1 upgrade remains supported. Job/attempt states, leases, queues, result/task
+contracts and validation records retain their earlier representation, readable by
+old clients. Existing immutable tasks are pinned by digest when first encountered
+(including jobs subsequently created by an older client); no historical command
+execution is inferred. New jobs pin their task digest at creation. An unreadable
+legacy task receives no usable digest and is not automatically repaired. This
+compatible schema/identity migration is allowed on a read-only first open; later
+inspection does not change job, task, source or verification content.
+
+Digest metadata is an integrity check in the caller's trusted private state,
+not authentication against a malicious same-UID process that can rewrite both
+SQLite and files. Original task commands remain trusted code in that same caller
+context. Legacy migration trusts the existing immutable task as found; it cannot
+detect edits made before its digest was first recorded.
 
 ## Collect for single-writer integration
 

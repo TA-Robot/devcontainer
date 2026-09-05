@@ -321,11 +321,15 @@ class StatePaths:
     root: Path
 
     @classmethod
-    def from_value(cls, value: str | Path | None) -> "StatePaths":
+    def from_value(cls, value: str | Path | None, *, existing: bool = False) -> "StatePaths":
         configured = value or os.environ.get("AGENTCTL_STATE_DIR") or "~/.local/state/agentctl"
         root = Path(configured).expanduser().resolve()
         if root == Path(root.anchor):
             raise AgentctlJobError("agentctl state root may not be a filesystem root")
+        if existing:
+            if not (root / "state.db").is_file():
+                raise AgentctlJobError("agentctl state database does not exist")
+            return cls(root=root)
         _mkdir_private(root)
         _mkdir_private(root / "projects")
         _mkdir_private(root / "locks")
@@ -511,6 +515,23 @@ class Store:
                 CREATE INDEX IF NOT EXISTS validations_attempt_profile
                     ON validations(attempt_id, profile, created_at);
 
+                -- Additive schema-v2 extension: old clients ignore these tables.
+                CREATE TABLE IF NOT EXISTS command_verifications (
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+                    verification_id TEXT NOT NULL UNIQUE,
+                    job_id TEXT NOT NULL REFERENCES jobs(job_id) ON DELETE CASCADE,
+                    attempt_id TEXT NOT NULL REFERENCES attempts(attempt_id) ON DELETE CASCADE,
+                    task_digest TEXT NOT NULL,
+                    source_fingerprint TEXT NOT NULL,
+                    status TEXT NOT NULL,
+                    report_path TEXT NOT NULL,
+                    report_digest TEXT,
+                    started_at TEXT NOT NULL,
+                    finished_at TEXT
+                );
+                CREATE INDEX IF NOT EXISTS command_verifications_job_sequence
+                    ON command_verifications(job_id, sequence);
+
                 CREATE TABLE IF NOT EXISTS state_events (
                     sequence INTEGER PRIMARY KEY AUTOINCREMENT,
                     job_id TEXT NOT NULL REFERENCES jobs(job_id) ON DELETE CASCADE,
@@ -523,6 +544,21 @@ class Store:
                 );
             """
         )
+        # Pin legacy immutable tasks once, without inventing execution evidence.
+        # A null digest records an unreadable legacy task; readers never repair it.
+        with self.transaction() as connection:
+            connection.execute("""CREATE TABLE IF NOT EXISTS verification_tasks (
+                job_id TEXT PRIMARY KEY REFERENCES jobs(job_id) ON DELETE CASCADE,
+                task_digest TEXT
+            )""")
+            for job in connection.execute("""SELECT jobs.* FROM jobs LEFT JOIN verification_tasks
+                    USING(job_id) WHERE verification_tasks.job_id IS NULL""").fetchall():
+                try:
+                    digest = _stored_task_digest(self.paths, dict(job))
+                except (AgentctlJobError, OSError):
+                    digest = None
+                connection.execute("INSERT INTO verification_tasks VALUES (?, ?)",
+                                   (job["job_id"], digest))
 
 
 @contextlib.contextmanager
@@ -1073,6 +1109,11 @@ def create_job(
                         now,
                         now,
                     ),
+                )
+                connection.execute(
+                    "INSERT INTO verification_tasks(job_id, task_digest) VALUES (?, ?)",
+                    (job_id, _stored_task_digest(store.paths, {"project_id": project["project_id"],
+                                                            "job_id": job_id, "task_path": str(stored_task_path)})),
                 )
                 connection.execute(
                     """
@@ -3458,6 +3499,79 @@ def _run_acceptance_command(check: dict[str, Any], deadline: float) -> None:
             check[name] = redacted.encode("utf-8")[-32768:].decode("utf-8", errors="ignore")
 
 
+def _stored_task_digest(paths: StatePaths, job: dict[str, Any]) -> str:
+    path = paths.job_dir(job["project_id"], job["job_id"]) / "task.json"
+    if Path(job["task_path"]) != path or not stat.S_ISREG(path.lstat().st_mode):
+        raise AgentctlJobError("unsafe immutable task path")
+    _check_directory(path.parent)
+    return "sha256:" + _check_file_identity(path)[1]
+
+
+def _source_fingerprint(snapshot: dict[str, Any]) -> str:
+    # Git path bytes need a lossless, deterministic JSON representation.
+    payload = {**snapshot, "files": [
+        [name.hex(), identity] for name, identity in sorted(snapshot["files"].items())
+    ]}
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":"), allow_nan=False).encode()
+    return "sha256:" + hashlib.sha256(encoded).hexdigest()
+
+
+def _verification_path(store: Store, job: dict[str, Any], verification_id: str) -> Path:
+    return store.paths.job_dir(job["project_id"], job["job_id"]) / "checks" / f"{verification_id}.json"
+
+
+def _check_submission(store: Store, job: dict[str, Any]) -> tuple:
+    """Shared read-only preflight for execution and evidence freshness."""
+    canonical = job["job_id"]
+    attempt = latest_attempt(store, canonical)
+    if (job["state"] not in {"succeeded", "validated"} or attempt is None
+            or attempt["state"] not in {"succeeded", "validated"}):
+        raise AgentctlJobError("verification requires a latest successful terminal attempt")
+    if store.connection.execute(
+        "SELECT 1 FROM attempts WHERE job_id = ? AND state IN ('preparing','ready','running')",
+        (canonical,),
+    ).fetchone():
+        raise AgentctlJobError("verification refuses active attempts")
+    project = get_project(store, job["project_id"])
+    workspace = _check_directory(Path(attempt["workspace_path"] or ""))
+    expected = (store.paths.worktree_dir(job["project_id"], canonical, attempt["number"])
+                if job["lane"] == "write" else Path(project["registered_path"]))
+    if job["lane"] not in {"read", "write"} or workspace != expected:
+        raise AgentctlJobError("unsafe attempt workspace: path differs from registered attempt")
+    top = os.fsdecode(_check_git(workspace, "rev-parse", "--show-toplevel").strip())
+    common = Path(os.fsdecode(_check_git(workspace, "rev-parse", "--git-common-dir").strip()))
+    if not common.is_absolute():
+        common = workspace / common
+    if top != str(workspace) or common.resolve() != Path(project["git_common_dir"]):
+        raise AgentctlJobError("unsafe attempt workspace: Git identity differs from registration")
+    task_path = store.paths.job_dir(job["project_id"], canonical) / "task.json"
+    if Path(job["task_path"]) != task_path or task_path.is_symlink():
+        raise AgentctlJobError("unsafe immutable task path")
+    task_digest = _stored_task_digest(store.paths, job)
+    anchor = store.connection.execute(
+        "SELECT task_digest FROM verification_tasks WHERE job_id = ?", (canonical,),
+    ).fetchone()
+    if anchor is None or anchor["task_digest"] != task_digest:
+        raise AgentctlJobError("immutable task digest differs from registered task")
+    task = load_json(task_path)
+    if task.get("job_id") != canonical or task.get("base_sha") != job["base_sha"]:
+        raise AgentctlJobError("stored task identity differs from registered job")
+    checks = []
+    for entry in task["acceptance"]:
+        if entry["kind"] != "command":
+            continue
+        command = entry["value"]
+        if not isinstance(command, str) or not command or "\0" in command:
+            raise AgentctlJobError("invalid immutable acceptance command")
+        checks.append({"command": command, "cwd": str(_check_cwd(workspace, entry.get("cwd", "."))),
+                       "status": "unexecuted", "exit_code": None, "elapsed_seconds": 0.0,
+                       "stdout_tail": "", "stderr_tail": ""})
+    before = _check_source_snapshot(workspace)
+    if before["head_sha"] != attempt["head_sha"]:
+        raise AgentctlJobError("unexpected HEAD: differs from submitted attempt HEAD")
+    return attempt, workspace, task_digest, checks, before
+
+
 def check_job(store: Store, job_id: str, *, timeout: float = 60.0) -> dict[str, Any]:
     """Execute trusted immutable commands; do not create a job-validation claim."""
     if not math.isfinite(timeout) or timeout <= 0:
@@ -3467,49 +3581,23 @@ def check_job(store: Store, job_id: str, *, timeout: float = 60.0) -> dict[str, 
     # This is not protection from trusted commands or a malicious same-UID process.
     with workspace_lock(store.paths):
         job = get_job(store, canonical)
-        attempt = latest_attempt(store, canonical)
-        if (job["state"] not in {"succeeded", "validated"} or attempt is None
-                or attempt["state"] not in {"succeeded", "validated"}):
-            raise AgentctlJobError("job check requires a latest successful terminal attempt")
-        if store.connection.execute(
-            "SELECT 1 FROM attempts WHERE job_id = ? AND state IN ('preparing','ready','running')",
-            (canonical,),
-        ).fetchone():
-            raise AgentctlJobError("job check refuses active attempts")
-        project = get_project(store, job["project_id"])
-        workspace = _check_directory(Path(attempt["workspace_path"] or ""))
-        expected = (store.paths.worktree_dir(job["project_id"], canonical, attempt["number"])
-                    if job["lane"] == "write" else Path(project["registered_path"]))
-        if job["lane"] not in {"read", "write"} or workspace != expected:
-            raise AgentctlJobError("unsafe attempt workspace: path differs from registered attempt")
-        top = os.fsdecode(_check_git(workspace, "rev-parse", "--show-toplevel").strip())
-        common = Path(os.fsdecode(_check_git(workspace, "rev-parse", "--git-common-dir").strip()))
-        if not common.is_absolute():
-            common = workspace / common
-        if top != str(workspace) or common.resolve() != Path(project["git_common_dir"]):
-            raise AgentctlJobError("unsafe attempt workspace: Git identity differs from registration")
-        task_path = store.paths.job_dir(job["project_id"], canonical) / "task.json"
-        if Path(job["task_path"]) != task_path or task_path.is_symlink():
-            raise AgentctlJobError("unsafe immutable task path")
-        task = load_json(task_path)
-        if task.get("job_id") != canonical or task.get("base_sha") != job["base_sha"]:
-            raise AgentctlJobError("stored task identity differs from registered job")
-        checks = []
-        for entry in task["acceptance"]:
-            if entry["kind"] != "command":
-                continue
-            command = entry["value"]
-            if not isinstance(command, str) or not command or "\0" in command:
-                raise AgentctlJobError("invalid immutable acceptance command")
-            checks.append({"command": command, "cwd": str(_check_cwd(workspace, entry.get("cwd", "."))),
-                           "status": "unexecuted", "exit_code": None, "elapsed_seconds": 0.0,
-                           "stdout_tail": "", "stderr_tail": ""})
-        before = _check_source_snapshot(workspace)
-        if before["head_sha"] != attempt["head_sha"]:
-            raise AgentctlJobError("unexpected HEAD: differs from submitted attempt HEAD")
+        attempt, workspace, task_digest, checks, before = _check_submission(store, job)
         report = {"schema_version": 1, "job_id": canonical, "attempt_id": attempt["attempt_id"],
                   "status": "no-checks" if not checks else "passed",
                   "head_sha": before["head_sha"], "checks": checks, "source_changed": False}
+        verification_id = uuid.uuid4().hex
+        report_path = _verification_path(store, job, verification_id)
+        report.update(verification_id=verification_id, task_digest=task_digest,
+                      source_fingerprint=_source_fingerprint(before), report_path=str(report_path),
+                      started_at=utc_now())
+        # Commit an incomplete observation BEFORE launch. A crash must not expose
+        # an older pass as the latest evidence. This is never a job validation.
+        with store.transaction() as connection:
+            connection.execute("""INSERT INTO command_verifications(
+                verification_id, job_id, attempt_id, task_digest, source_fingerprint,
+                status, report_path, started_at) VALUES (?, ?, ?, ?, ?, 'incomplete', ?, ?)""",
+                (verification_id, canonical, attempt["attempt_id"], task_digest,
+                 report["source_fingerprint"], str(report_path), report["started_at"]))
         deadline = time.monotonic() + timeout
         for check in checks:
             if time.monotonic() >= deadline:
@@ -3538,10 +3626,127 @@ def check_job(store: Store, job_id: str, *, timeout: float = 60.0) -> dict[str, 
                     report["status"] = "source-changed"
             if report["status"] != "passed":
                 break
+        try:
+            task_changed = _stored_task_digest(store.paths, job) != task_digest
+        except (AgentctlJobError, OSError):
+            task_changed = True
+        if task_changed:
+            report["task_changed"] = True
+            if report["status"] == "passed":
+                report["status"] = "source-changed"
+        report["finished_at"] = utc_now()
+        write_json_private(report_path, report)
+        digest = "sha256:" + _check_file_identity(report_path)[1]
+        with store.transaction() as connection:
+            connection.execute("""UPDATE command_verifications SET status = ?, report_digest = ?,
+                finished_at = ? WHERE verification_id = ?""",
+                (report["status"], digest, report["finished_at"], verification_id))
         return report
 
 
-def validate_succeeded_job(store: Store, job_id: str) -> dict[str, Any]:
+def job_checks(store: Store, job_id: str) -> dict[str, Any]:
+    """Inspect the latest observation without executing, repairing or recording anything.
+
+    No workspace lock: an ongoing checker is observable as incomplete. Strict
+    validation calls this under its existing lock and checks again before sealing.
+    """
+    job = get_job(store, job_id)
+    row = store.connection.execute("""SELECT * FROM command_verifications WHERE job_id = ?
+        ORDER BY sequence DESC LIMIT 1""", (job["job_id"],)).fetchone()
+    response = {"schema_version": 1, "job_id": job["job_id"], "latest": None,
+                "fresh": False, "stale_reasons": []}
+    reasons = response["stale_reasons"]
+    if row is None:
+        reasons.append("independent check evidence is absent")
+        return response
+    metadata = dict(row)
+    latest = {key: metadata[key] for key in (
+        "verification_id", "attempt_id", "task_digest", "source_fingerprint",
+        "status", "report_path", "started_at", "finished_at",
+    )}
+    response["latest"] = latest
+    if not metadata["finished_at"] or not metadata["report_digest"] or metadata["status"] == "incomplete":
+        latest["status"] = "incomplete"
+        reasons.append("latest independent check evidence is incomplete")
+        return response
+    try:
+        if not re.fullmatch(r"[0-9a-f]{32}", metadata["verification_id"]):
+            raise AgentctlJobError("invalid verification identity")
+        path = _verification_path(store, job, metadata["verification_id"])
+        _check_directory(path.parent)
+        if str(path) != metadata["report_path"] or not stat.S_ISREG(path.lstat().st_mode):
+            raise AgentctlJobError("unsafe verification report path")
+        if "sha256:" + _check_file_identity(path)[1] != metadata["report_digest"]:
+            raise AgentctlJobError("verification report integrity mismatch")
+        report = load_json(path)
+        if (not isinstance(report, dict) or report.get("schema_version") != 1
+                or report.get("job_id") != job["job_id"]
+                or any(report.get(key) != value for key, value in latest.items())):
+            raise AgentctlJobError("verification report metadata mismatch")
+        response["latest"] = report
+    except (AgentctlJobError, ContractValidationError, OSError, ValueError) as exc:
+        latest["status"] = "corrupted"
+        reasons.append(f"independent check evidence is unavailable or corrupted: {exc}")
+        return response
+    try:
+        attempt, _, task_digest, expected_checks, snapshot = _check_submission(store, job)
+        if attempt["attempt_id"] != metadata["attempt_id"]:
+            reasons.append("latest attempt differs from verified attempt")
+        if task_digest != metadata["task_digest"]:
+            reasons.append("stored task digest differs from verified task")
+        if (snapshot["head_sha"] != report.get("head_sha")
+                or _source_fingerprint(snapshot) != metadata["source_fingerprint"]):
+            reasons.append("current source fingerprint differs from verified source (HEAD/index/bytes/modes)")
+        actual = report.get("checks")
+        if (not isinstance(actual, list) or len(actual) != len(expected_checks)
+                or any(not isinstance(check, dict) or
+                       any(check.get(key) != expected[key] for key in ("command", "cwd"))
+                       for check, expected in zip(actual, expected_checks))):
+            reasons.append("independent command evidence is incomplete or differs from task")
+        elif any(not _complete_command_observation(check) for check in actual):
+            reasons.append("independent command observation is incomplete or invalid")
+        elif report["status"] == "passed" and (
+            not actual or report.get("source_changed") is not False or report.get("task_changed", False)
+            or any(check.get("status") != "passed" or type(check.get("exit_code")) is not int
+                   or check["exit_code"] != 0 for check in actual)
+        ):
+            reasons.append("passing independent command evidence is incomplete")
+        if report.get("source_changed") or report.get("task_changed"):
+            reasons.append("source or task changed during verification")
+    except (AgentctlJobError, ContractValidationError, OSError, ValueError, TypeError, KeyError) as exc:
+        reasons.append(f"current submission cannot match evidence: {exc}")
+    response["fresh"] = not reasons
+    return response
+
+
+def _complete_command_observation(check: dict[str, Any]) -> bool:
+    elapsed = check.get("elapsed_seconds")
+    if (type(elapsed) not in (int, float) or not math.isfinite(elapsed) or elapsed < 0
+            or check.get("status") not in {"passed", "failed", "timed-out", "unexecuted"}
+            or "exit_code" not in check
+            or (check["exit_code"] is not None and type(check["exit_code"]) is not int)):
+        return False
+    tails = [check.get("stdout_tail"), check.get("stderr_tail")]
+    if (not all(isinstance(tail, str) for tail in tails)
+            or sum(len(tail.encode("utf-8")) for tail in tails) > 65536):
+        return False
+    if check["status"] == "unexecuted":
+        return check["exit_code"] is None and elapsed == 0 and tails == ["", ""]
+    if check["status"] == "passed":
+        return type(check["exit_code"]) is int and check["exit_code"] == 0
+    return True
+
+
+def _require_passing_checks(store: Store, job_id: str) -> dict[str, Any]:
+    evidence = job_checks(store, job_id)
+    if not evidence["fresh"]:
+        raise AgentctlJobError("independent checks required: " + "; ".join(evidence["stale_reasons"]))
+    if evidence["latest"]["status"] != "passed":
+        raise AgentctlJobError("independent checks required: latest observation is " + evidence["latest"]["status"])
+    return evidence["latest"]
+
+
+def validate_succeeded_job(store: Store, job_id: str, *, require_checks: bool = False) -> dict[str, Any]:
     canonical = require_job_id(job_id)
     with workspace_lock(store.paths):
         job = get_job(store, canonical)
@@ -3550,10 +3755,14 @@ def validate_succeeded_job(store: Store, job_id: str) -> dict[str, Any]:
         attempt = latest_attempt(store, canonical)
         if attempt is None or attempt["state"] != "succeeded":
             raise AgentctlJobError("latest attempt is not succeeded")
+        independent = _require_passing_checks(store, canonical) if require_checks else None
         _, schema = _result_schema(Path(attempt["workspace_path"]))
         try:
             verified = verify_result(job, attempt, schema, broker_final=True)
         except BaseException as exc:
+            if require_checks:
+                # Strict rejection must not change job validation state.
+                raise
             _mark_run_failure(
                 store,
                 canonical,
@@ -3563,6 +3772,8 @@ def validate_succeeded_job(store: Store, job_id: str) -> dict[str, Any]:
                 reason=str(exc),
             )
             raise
+        if require_checks:
+            independent = _require_passing_checks(store, canonical)
         validation_id = new_ulid()
         verified_at = utc_now()
         report_path = Path(attempt["result_path"]).with_name("validation.json")
@@ -3579,6 +3790,9 @@ def validate_succeeded_job(store: Store, job_id: str) -> dict[str, Any]:
             "dirty_state": verified["observed_git"]["dirty_state"],
             "result_path": attempt["result_path"],
             "verified_at": verified_at,
+            "command_evidence": "independently-executed" if require_checks else "provider-reported",
+            "verification_id": independent["verification_id"] if independent else None,
+            "independent_report_path": independent["report_path"] if independent else None,
         }
         write_json_private(report_path, validation_report)
         try:

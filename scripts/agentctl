@@ -32,6 +32,7 @@ from agentctl_jobs import (  # noqa: E402
     Store,
     capacity_limits,
     check_job,
+    job_checks,
     collect_job,
     create_job,
     gc_inventory,
@@ -932,7 +933,7 @@ def run_internal_supervisor(args: argparse.Namespace) -> int:
 
 def run_job_validate(args: argparse.Namespace) -> int:
     with Store(state_paths(args)) as store:
-        job = validate_succeeded_job(store, args.job_id)
+        job = validate_succeeded_job(store, args.job_id, require_checks=args.require_checks)
     print_payload(
         job,
         as_json=args.json,
@@ -960,6 +961,16 @@ def run_job_check(args: argparse.Namespace) -> int:
         summary=f"job {report['job_id']} checks {report['status']} at {report['head_sha']}",
     )
     return 0 if report["status"] == "passed" else 1
+
+
+def run_job_checks(args: argparse.Namespace) -> int:
+    # Opening an existing DB may install compatible schema extensions, but this
+    # inspection must not create an empty state root or acquire a writer lock.
+    with Store(StatePaths.from_value(args.state_dir, existing=True)) as store:
+        report = job_checks(store, args.job_id)
+    print_payload(report, as_json=args.json,
+                  summary=f"job {report['job_id']} independent checks fresh={report['fresh']}")
+    return 0
 
 
 def run_job_collect(args: argparse.Namespace) -> int:
@@ -1099,6 +1110,8 @@ def parser() -> argparse.ArgumentParser:
 
     job_validate = job_commands.add_parser("validate", help="recompute Git/result evidence and seal success")
     job_validate.add_argument("job_id")
+    job_validate.add_argument("--require-checks", action="store_true",
+                              help="require fresh passing independent command evidence before sealing")
     job_validate.add_argument("--json", action="store_true")
     job_validate.set_defaults(handler=run_job_validate)
 
@@ -1110,6 +1123,11 @@ def parser() -> argparse.ArgumentParser:
                            help="complete command sequence budget in seconds (default: 60)")
     job_check.add_argument("--json", action="store_true")
     job_check.set_defaults(handler=run_job_check)
+
+    checks = job_commands.add_parser("checks", help="inspect latest independent check evidence without execution")
+    checks.add_argument("job_id")
+    checks.add_argument("--json", action="store_true")
+    checks.set_defaults(handler=run_job_checks)
 
     job_collect = job_commands.add_parser(
         "collect", help="write a read-only single-writer integration handoff report"
