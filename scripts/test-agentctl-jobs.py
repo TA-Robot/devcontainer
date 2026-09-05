@@ -12,10 +12,13 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from unittest.mock import patch
 
 
 ROOT = Path(__file__).resolve().parent.parent
 AGENTCTL = ROOT / "scripts/agentctl"
+sys.path.insert(0, str(ROOT / "scripts"))
+from agentctl_jobs import _redact_log_text
 
 
 FAKE_PROVIDER = r'''#!/usr/bin/env python3
@@ -126,6 +129,154 @@ else:
     else:
         print(json.dumps({"structuredOutput": result, "argv": sys.argv[1:]}))
 '''
+
+
+class LogRedactionTests(unittest.TestCase):
+    def setUp(self) -> None:
+        environment = patch.dict(os.environ, {}, clear=True)
+        environment.start()
+        self.addCleanup(environment.stop)
+
+    def redact(self, text: str) -> tuple[str, int]:
+        result, count = _redact_log_text(text)
+        self.assertIsInstance(count, int)
+        self.assertGreaterEqual(count, 0)
+        return result, count
+
+    def test_json_secret_names_are_case_insensitive_and_use_existing_rule(self) -> None:
+        for key in (
+            "api_key", "Api-Key", "APIKEY", "access_TOKEN", "clientSecret",
+            "PASSWORD", "passwd", "credentials", "private-key", "PRIVATE_KEY",
+            "privatekey", "aUtHoRiZaTiOn",
+        ):
+            with self.subTest(key=key):
+                value = {key: "fixture-private-value-123", "message": "表示は残す 🌟"}
+                result, count = self.redact(json.dumps(value, ensure_ascii=False))
+                self.assertEqual(json.loads(result), {**value, key: "[REDACTED]"})
+                self.assertNotIn("fixture-private-value-123", result)
+                self.assertGreater(count, 0)
+
+    def test_json_escaped_keys_and_values(self) -> None:
+        source = (
+            r'{"api\u005fkey":"fixture-\"quoted\"-\\path\nline\t\u79d8",'
+            r'"Authoriz\u0061tion":"fixture\/auth\rvalue",'
+            r'"ordinary":"quote: \"; slash: \\; Unicode: \u79d8"}'
+        )
+        result, count = self.redact(source)
+        self.assertEqual(json.loads(result), {
+            "api_key": "[REDACTED]", "Authorization": "[REDACTED]",
+            "ordinary": json.loads(source)["ordinary"],
+        })
+        self.assertNotIn("fixture", result)
+        self.assertEqual(count, 2)
+
+    def test_nested_objects_arrays_and_non_string_secret_values(self) -> None:
+        source = [
+            {"nested": [{"token": "fixture-nested-value"}, ["ordinary", 2, False, None]]},
+            {"secret": {"password": "fixture-inner-value", "ok": True}},
+            {"api_key": ["ordinary", {"credential": "fixture-array-value"}]},
+            {"password": 123, "token": False, "secret": None, "api_key": ""},
+        ]
+        expected = json.loads(json.dumps(source))
+        expected[0]["nested"][0]["token"] = "[REDACTED]"
+        expected[1]["secret"]["password"] = "[REDACTED]"
+        expected[2]["api_key"][1]["credential"] = "[REDACTED]"
+        result, count = self.redact(json.dumps(source, indent=2))
+        self.assertEqual(json.loads(result), expected)
+        self.assertEqual(count, 3)
+
+    def test_prefixed_payloads_and_neighboring_lines(self) -> None:
+        source = (
+            'starting normally\n[INFO] request {"api_key":"fixture-first", "ok":true}'
+            ' next [{"TOKEN":"fixture-second"}, "visible"]\n'
+            'DEBUG {\n "Authorization": "fixture-third",\n "count": 3\n}\n'
+            'finished normally\n'
+        )
+        expected = source
+        for secret in ("fixture-first", "fixture-second", "fixture-third"):
+            expected = expected.replace(secret, "[REDACTED]")
+        result, count = self.redact(source)
+        self.assertEqual(result, expected)
+        self.assertEqual(count, 3)
+
+    def test_existing_formats_in_plain_text_and_json_strings(self) -> None:
+        secrets = [
+            "sk-" + "a" * 20, "sk-ant-" + "b" * 20, "sk-proj-" + "c" * 20,
+            "xai-" + "d" * 20, "ghp_" + "e" * 20, "github_pat_" + "f" * 20,
+            "AKIA" + "A" * 16, "eyJheader12345.eyJpayload12345.signature12345",
+            "fixture-assigned", "fixture-bearer", "fixture-basic", "fixture-env-value",
+        ]
+        source = "\n".join([
+            *secrets[:8], f"PASSWORD={secrets[8]}; still visible",
+            f"Authorization: Bearer {secrets[9]}",
+            f"Authorization=Basic {secrets[10]}", f"environment says {secrets[11]}",
+        ])
+        with patch.dict(os.environ, {"SERVICE_SECRET": secrets[11]}):
+            for encoded in (False, True):
+                with self.subTest(json=encoded):
+                    result, count = self.redact(
+                        json.dumps({"message": source}) if encoded else source
+                    )
+                    message = json.loads(result)["message"] if encoded else result
+                    for secret in secrets:
+                        self.assertNotIn(secret, message)
+                    self.assertIn("still visible", message)
+                    self.assertEqual(message.count("[REDACTED]"), len(secrets))
+                    self.assertGreaterEqual(count, len(secrets))
+
+    def test_environment_values_with_json_escapes_preserve_structure(self) -> None:
+        secret = 'fixture-"quoted"-\\path\n秘密'
+        with patch.dict(os.environ, {"SERVICE_PRIVATE_KEY": secret}):
+            result, count = self.redact(json.dumps({"message": f"before {secret} after"}))
+        self.assertEqual(json.loads(result), {"message": "before [REDACTED] after"})
+        self.assertEqual(count, 1)
+
+    def test_known_tokens_and_environment_values_in_json_keys_and_arrays(self) -> None:
+        token = "ghp_" + "g" * 20
+        environment_secret = "fixture-environment-key"
+        source = [{token: "ordinary field value"}, {environment_secret: True}, token]
+        with patch.dict(os.environ, {"SERVICE_SECRET": environment_secret}):
+            result, count = self.redact(json.dumps(source))
+        self.assertEqual(json.loads(result), [
+            {"[REDACTED]": "ordinary field value"}, {"[REDACTED]": True}, "[REDACTED]",
+        ])
+        self.assertEqual(count, 3)
+
+    def test_duplicate_keys_and_numeric_lexemes_are_preserved(self) -> None:
+        source = (
+            '{"token":"fixture-one", "token":"fixture-two", '
+            '"big":1e400, "precise":1.234567890123456789, "token_count":12345678}'
+        )
+        with patch.dict(os.environ, {"SERVICE_SECRET": "12345678"}):
+            result, count = self.redact(source)
+        self.assertEqual(
+            result, source.replace("fixture-one", "[REDACTED]").replace("fixture-two", "[REDACTED]")
+        )
+        self.assertEqual(count, 2)
+
+    def test_no_sensitive_content_and_complete_scalar_json(self) -> None:
+        for source in ('', 'ordinary log\n', '{"secret":"", "ok":"日本語"}',
+                       '[1, true, null, "ordinary"]', '123', 'false', 'null'):
+            with self.subTest(source=source):
+                self.assertEqual(self.redact(source), (source, 0))
+        result, count = self.redact('"PASSWORD=fixture-scalar"')
+        self.assertEqual(json.loads(result), "PASSWORD=[REDACTED]")
+        self.assertGreater(count, 0)
+
+    def test_long_integer_does_not_disable_neighbor_secret_redaction(self) -> None:
+        number = "9" * 5000
+        source = '{"number":' + number + ',"api_key":"fixture-secret"}'
+        result, count = self.redact(source)
+        self.assertEqual(result, source.replace("fixture-secret", "[REDACTED]"))
+        self.assertEqual(count, 1)
+
+    def test_redacted_escaped_surrogate_remains_utf8_printable(self) -> None:
+        token = "sk-proj-" + "a" * 20
+        source = '{"message":"\\ud800 ' + token + '","ordinary":"日本語"}'
+        result, count = self.redact(source)
+        decoded = json.loads(result.encode("utf-8"))
+        self.assertEqual(decoded, {"message": "\ud800 [REDACTED]", "ordinary": "日本語"})
+        self.assertEqual(count, 1)
 
 
 class AgentctlJobTests(unittest.TestCase):
@@ -1044,6 +1195,40 @@ class AgentctlJobTests(unittest.TestCase):
         redirected_result = self.invoke("job", "logs", str(job["job_id"]))
         self.assertEqual(redirected_result.returncode, 2)
         self.assertIn("recorded result path", redirected_result.stderr)
+
+    def test_structured_log_view_redacts_without_changing_raw_logs(self) -> None:
+        job = self.create("structured-logs.json")
+        run = self.invoke("job", "run", str(job["job_id"]), "--provider", "codex", "--json")
+        self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+        log_path = Path(json.loads(run.stdout)["attempts"][0]["log_path"])
+        raw = (
+            'before\nINFO {"api\\u005fkey":"fixture-private-value-123",'
+            '"ordinary":"日本語", "nested":[{"Authorization":"fixture-auth-value"},42]}\n'
+            'after\n'
+        ).encode("utf-8")
+        for source in (log_path, log_path.with_name("runner.log")):
+            with self.subTest(source=source.name):
+                source.write_bytes(raw)
+                flags = ["--runner"] if source.name == "runner.log" else []
+                for output_flags in (["--json"], []):
+                    viewed = self.invoke("job", "logs", str(job["job_id"]), *flags, *output_flags)
+                    self.assertEqual(viewed.returncode, 0, viewed.stdout + viewed.stderr)
+                    content = viewed.stdout
+                    if output_flags:
+                        log = json.loads(content)
+                        self.assertIsInstance(log["redaction_count"], int)
+                        self.assertGreater(log["redaction_count"], 0)
+                        content = log["content"]
+                    self.assertNotIn("fixture-private-value-123", content)
+                    self.assertNotIn("fixture-auth-value", content)
+                    self.assertIn("before\nINFO ", content)
+                    self.assertIn("\nafter\n", content)
+                    line = next(line for line in content.splitlines() if line.startswith("INFO "))
+                    self.assertEqual(json.loads(line[5:]), {
+                        "api_key": "[REDACTED]", "ordinary": "日本語",
+                        "nested": [{"Authorization": "[REDACTED]"}, 42],
+                    })
+                    self.assertEqual(source.read_bytes(), raw)
 
     def test_terminal_provider_log_retention_is_bounded_and_recorded(self) -> None:
         job = self.create("noisy-log.json")

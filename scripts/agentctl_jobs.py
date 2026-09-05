@@ -1252,7 +1252,7 @@ def _release_runtime_leases(
     )
 
 
-def _redact_log_text(text: str) -> tuple[str, int]:
+def _redact_unstructured_log_text(text: str) -> tuple[str, int]:
     redactions = 0
     for pattern in SECRET_TEXT_PATTERNS:
         text, count = pattern.subn("[REDACTED]", text)
@@ -1279,6 +1279,75 @@ def _redact_log_text(text: str) -> tuple[str, int]:
             text = text.replace(value, "[REDACTED]")
             redactions += count
     return text, redactions
+
+
+def _redact_log_text(text: str) -> tuple[str, int]:
+    # Decode only to locate complete JSON payloads. Keep number lexemes (including
+    # large integers/exponents), duplicate keys, and all non-string syntax intact.
+    decoder = json.JSONDecoder(parse_int=lambda _: None, parse_float=lambda _: None)
+    strings = re.compile(r'"(?:[^"\\]|\\.)*"')
+    key_separator = re.compile(r"\s*:\s*")
+    redactions = 0
+
+    def redact_json(payload: str) -> str:
+        sensitive_start = -1
+
+        def replace_string(match: re.Match[str]) -> str:
+            nonlocal sensitive_start, redactions
+            value = json.loads(match.group())
+            # In validated JSON only object keys precede a colon. Track the
+            # direct value position so container-valued keys keep their contents.
+            separator = key_separator.match(payload, match.end())
+            if separator is not None:
+                sensitive_start = (
+                    separator.end()
+                    if SECRET_ENV_NAME.search(value) or value.lower() == "authorization"
+                    else -1
+                )
+            if separator is None and match.start() == sensitive_start and value:
+                replacement, count = "[REDACTED]", 1
+            else:
+                replacement, count = _redact_unstructured_log_text(value)
+            redactions += count
+            return (
+                # Preserve escaped surrogate codepoints as printable JSON escapes.
+                json.dumps(replacement, ensure_ascii=True)
+                if replacement != value else match.group()
+            )
+
+        return strings.sub(replace_string, payload)
+
+    def redact_plain(payload: str) -> str:
+        nonlocal redactions
+        replacement, count = _redact_unstructured_log_text(payload)
+        redactions += count
+        return replacement
+
+    # Also protect the syntax of complete scalar JSON inputs.
+    start = len(text) - len(text.lstrip())
+    try:
+        _, end = decoder.raw_decode(text, start)
+    except (ValueError, RecursionError):
+        pass
+    else:
+        if not text[end:].strip():
+            return redact_json(text), redactions
+
+    parts = []
+    cursor = 0
+    search_from = 0
+    payload_start = re.compile(r"[\[{]")
+    while match := payload_start.search(text, search_from):
+        try:
+            _, end = decoder.raw_decode(text, match.start())
+        except (ValueError, RecursionError):
+            search_from = match.end()
+            continue
+        parts.append(redact_plain(text[cursor:match.start()]))
+        parts.append(redact_json(text[match.start():end]))
+        cursor = search_from = end
+    parts.append(redact_plain(text[cursor:]))
+    return "".join(parts), redactions
 
 
 def enforce_log_tail_retention(
