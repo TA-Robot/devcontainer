@@ -1,0 +1,291 @@
+{
+  "schema_version": 1,
+  "baseline_commit": "b1fecd3",
+  "preflight_commit": "57564e9",
+  "mode": "prospective",
+  "task": "duplicates-v1",
+  "condition_order": [
+    "control",
+    "improved"
+  ],
+  "intervention": "command_network_access false/true only",
+  "image": "sha256:9ae0e10d8fef70ad64079fdab71333de8cad6ccb6c73b31623afea1122092c4b",
+  "cache_index_sha256": "563367de3927ffda94e6e16d782d9a9471bcf18298a996f9e0b0de812cb4acd8",
+  "initial_source_hash": "08832f041aa1f9e6cdbcde54268a53b5d7e2537f9056d6019f7742a7cbf7360a",
+  "initial_git_heads": {
+    "control": "b2f73fb6833ab5e06ffece11664767da17b83a55",
+    "improved": "b2f73fb6833ab5e06ffece11664767da17b83a55"
+  },
+  "manifest_sha256": {
+    "control": "fbb39197bb683816533e592ec7e036e1bda71e72e5283dd41f27c31639bfb3a1",
+    "improved": "e05456aec9aced2fa9681ed7fdab797e637450e42a50f541364be120d7c724e4"
+  },
+  "code_sha256": {
+    "experiments/development-harness/automatic/compare.py": "f52c432d0c44c64c4e4f304aa065b183986db7a074a1501773868e4b574d2b38",
+    "experiments/development-harness/automatic/observer.py": "80efa753420574fdb1164a6b694f30c66deb89c64adbf89a39f5a72cf9459a30",
+    "experiments/development-harness/campaign.py": "f1534f2f7b2d531a9aae7c1103b299345dda571f6474f36ba82b17cdba859ff2",
+    "experiments/development-harness/continuation/admission.py": "9149b5a33134faece69d69ebf94fecba2f24c5b09b4234e6301d156665b0fa0c",
+    "experiments/development-harness/continuation/recovery.py": "e3be7abe01778eea9c9272b8a952102d6c845bd52e2842175adef22bdf2243d5",
+    "experiments/development-harness/cycle-003/evaluate_redaction.py": "7dc7c6986748cb75ae98ce103686859562de1732f03809e927c4755b4771c19d",
+    "experiments/development-harness/cycle-003/large-02/evaluate_execution.py": "5c195a997b0f637b107e747d4d01dada8d6d5d3708784cb00cd27f90b71cf263",
+    "experiments/development-harness/cycle-003/large-02/evaluate_installed.py": "f7a74c468e1797464f9a8f18b081d8dc5f0ea784daefa9396cc1db0358e22933",
+    "experiments/development-harness/cycle-003/large-02/evaluate_staged.py": "f246d4d276b87ff7431f5280ea43522a69a5e94488a15f9daba7ff5b29a685bb",
+    "experiments/development-harness/cycle-003/large-02/fixture.py": "ca71493daf4a9c053bcc084fac0a2c9f7e23c471439abab3bc2a52a36e8d42af",
+    "experiments/development-harness/cycle-003/large-02/runtime.py": "283c571e610898503cea18a097eeec8eee7b5ec2a7ff8a8fc869a5b59d17b0cc",
+    "experiments/development-harness/cycle-003/large-02/staged_fixture.py": "7d8dc921fb4b7182a141f5b2247133ead761ae765605d814fe84be3ee57ca83a",
+    "experiments/development-harness/cycle-004/duplicates.py": "9a1a46de5a735610d9ebc16ff7f99cd828a7b44481274307e27ed26b1adcfd95"
+  },
+  "seal_sha256": "b2078e154d90874b9a8f2ec80629f33a35a9f63e1c9a4fa76304b3d50d0d212a",
+  "extra_provenance_sha256": "ccc4edc425e3255617622a966656a0dfbba6e7e3a89bfda071ce8ccd55ce96a6",
+  "preparation": [
+    {
+      "condition": "control",
+      "container_id": "e05dd7513c72b25e7bf7b563a42a803c4a05c01695c25d585dde99def7455cfe",
+      "image": "sha256:9ae0e10d8fef70ad64079fdab71333de8cad6ccb6c73b31623afea1122092c4b",
+      "cache_index_sha256": "563367de3927ffda94e6e16d782d9a9471bcf18298a996f9e0b0de812cb4acd8",
+      "startup": {
+        "docker_version": "29.7.2-2",
+        "cache_index_sha256": "563367de3927ffda94e6e16d782d9a9471bcf18298a996f9e0b0de812cb4acd8",
+        "seconds": 10.713,
+        "status": "ready",
+        "model_started_during_preparation": false
+      },
+      "warm_exit": 0,
+      "cli_version": "codex-cli 0.153.0",
+      "head": "b2f73fb6833ab5e06ffece11664767da17b83a55",
+      "preparation_seconds": 581.931
+    },
+    {
+      "condition": "improved",
+      "container_id": "dbcd893b8e40befcea28852f6dcfe1b582d46f34ffcdf010940a5ebfb17c8f9c",
+      "image": "sha256:9ae0e10d8fef70ad64079fdab71333de8cad6ccb6c73b31623afea1122092c4b",
+      "cache_index_sha256": "563367de3927ffda94e6e16d782d9a9471bcf18298a996f9e0b0de812cb4acd8",
+      "startup": {
+        "docker_version": "29.7.2-2",
+        "cache_index_sha256": "563367de3927ffda94e6e16d782d9a9471bcf18298a996f9e0b0de812cb4acd8",
+        "seconds": 6.715,
+        "status": "ready",
+        "model_started_during_preparation": false
+      },
+      "warm_exit": 0,
+      "cli_version": "codex-cli 0.153.0",
+      "head": "b2f73fb6833ab5e06ffece11664767da17b83a55",
+      "preparation_seconds": 374.628
+    }
+  ],
+  "preflight_tests": {
+    "total": 15,
+    "passed": 15,
+    "actual_docker_pair": true,
+    "log_sha256": "c5562f35f7b40d7c73af300b10125208235d5e41288ca895eba35af31aa4612d"
+  },
+  "observer_calibration_image_log_sha256": "eb9e72ff92c6e8a5f82bc1966f274f3483c8aa5c9b1c47e5b1f03b46ff03e73d",
+  "baseline_observer": {
+    "checks": [
+      {
+        "name": "duplicate-root",
+        "phase": 1,
+        "dimension": "ambiguity",
+        "status": "failed",
+        "detail": "invalid or ambiguous input accepted"
+      },
+      {
+        "name": "duplicate-nested",
+        "phase": 1,
+        "dimension": "ambiguity",
+        "status": "failed",
+        "detail": "invalid or ambiguous input accepted"
+      },
+      {
+        "name": "duplicate-array-object",
+        "phase": 1,
+        "dimension": "ambiguity",
+        "status": "failed",
+        "detail": "invalid or ambiguous input accepted"
+      },
+      {
+        "name": "escaped-equivalent-key",
+        "phase": 1,
+        "dimension": "ambiguity",
+        "status": "failed",
+        "detail": "invalid or ambiguous input accepted"
+      },
+      {
+        "name": "equal-values-still-duplicate",
+        "phase": 1,
+        "dimension": "ambiguity",
+        "status": "failed",
+        "detail": "invalid or ambiguous input accepted"
+      },
+      {
+        "name": "empty-key-duplicate",
+        "phase": 1,
+        "dimension": "ambiguity",
+        "status": "failed",
+        "detail": "invalid or ambiguous input accepted"
+      },
+      {
+        "name": "siblings-allowed",
+        "phase": 1,
+        "dimension": "compatibility",
+        "status": "passed",
+        "detail": null
+      },
+      {
+        "name": "case-sensitive-names",
+        "phase": 1,
+        "dimension": "compatibility",
+        "status": "passed",
+        "detail": null
+      },
+      {
+        "name": "unicode-distinct-names",
+        "phase": 1,
+        "dimension": "compatibility",
+        "status": "passed",
+        "detail": null
+      },
+      {
+        "name": "ordinary-types",
+        "phase": 1,
+        "dimension": "compatibility",
+        "status": "passed",
+        "detail": null
+      },
+      {
+        "name": "top-level-scalar",
+        "phase": 1,
+        "dimension": "compatibility",
+        "status": "passed",
+        "detail": null
+      },
+      {
+        "name": "top-level-array",
+        "phase": 1,
+        "dimension": "compatibility",
+        "status": "passed",
+        "detail": null
+      },
+      {
+        "name": "nonfinite-nan",
+        "phase": 1,
+        "dimension": "compatibility",
+        "status": "passed",
+        "detail": null
+      },
+      {
+        "name": "nonfinite-infinity",
+        "phase": 1,
+        "dimension": "compatibility",
+        "status": "passed",
+        "detail": null
+      },
+      {
+        "name": "overflowing-float",
+        "phase": 1,
+        "dimension": "compatibility",
+        "status": "passed",
+        "detail": null
+      },
+      {
+        "name": "syntax-diagnostic",
+        "phase": 1,
+        "dimension": "diagnostics",
+        "status": "passed",
+        "detail": null
+      },
+      {
+        "name": "io-diagnostic",
+        "phase": 1,
+        "dimension": "diagnostics",
+        "status": "passed",
+        "detail": null
+      },
+      {
+        "name": "duplicate-values-private",
+        "phase": 1,
+        "dimension": "diagnostics",
+        "status": "failed",
+        "detail": "invalid or ambiguous input accepted"
+      },
+      {
+        "name": "schema-duplicate",
+        "phase": 1,
+        "dimension": "validation-entrypoints",
+        "status": "failed",
+        "detail": "input path missing from diagnostic"
+      },
+      {
+        "name": "instance-duplicate",
+        "phase": 1,
+        "dimension": "validation-entrypoints",
+        "status": "failed",
+        "detail": "invalid or ambiguous input accepted"
+      },
+      {
+        "name": "schema-type-still-enforced",
+        "phase": 1,
+        "dimension": "validation-entrypoints",
+        "status": "passed",
+        "detail": null
+      },
+      {
+        "name": "valid-instance-still-accepted",
+        "phase": 1,
+        "dimension": "validation-entrypoints",
+        "status": "passed",
+        "detail": null
+      }
+    ]
+  },
+  "automatic_execution_completed": false,
+  "interruption": {
+    "condition": "improved",
+    "operation": "docker unpause at checkpoint",
+    "operation_timeout_seconds": 60,
+    "raw_controller_log_sha256": "3bc5c6dd3f46a0d49e6d967e14ffc2af5f7e603667a969cf3378f3706c79ced6",
+    "automatic_state_retained": true,
+    "model_restarts": 0
+  },
+  "finalization": {
+    "schema_version": 1,
+    "kind": "interrupted-artifact-finalization",
+    "started_unix": 1788610423.9468389,
+    "source_seal_sha256": "b2078e154d90874b9a8f2ec80629f33a35a9f63e1c9a4fa76304b3d50d0d212a",
+    "finalizer_sha256": "450264dffa66fd00c89cf1fae14e81e10df169c98a94ec7ccd10dcae4368ed62",
+    "original_state_sha256": {
+      "control": "50632ff7f5a7c546bf86f4bcda0241dfc9cfadda277cdc4b6cae2657379dff2e",
+      "improved": "58433bfc84c0255fd696486f307b21550ccd772052276cde7688f576c3419044"
+    },
+    "developer_stop_evidence": [
+      {
+        "container_id": "e05dd7513c72b25e7bf7b563a42a803c4a05c01695c25d585dde99def7455cfe",
+        "stopped": true,
+        "removed": false,
+        "finished_at": "2026-09-05T11:49:53.918406189Z"
+      },
+      {
+        "container_id": "dbcd893b8e40befcea28852f6dcfe1b582d46f34ffcdf010940a5ebfb17c8f9c",
+        "stopped": true,
+        "removed": false,
+        "finished_at": "2026-09-05T12:06:50.998439696Z"
+      }
+    ],
+    "model_restarts": 0,
+    "grading_contract": "unchanged sealed catalog, observer, and grade function",
+    "recovered_source_is_submission": false
+  },
+  "recovery_tests": {
+    "total": 4,
+    "passed": 4,
+    "log_sha256": "4ea7dc1a62d0f7d87d0747563b6791b5cf6cecd68de69f27a39a643eef8b9dbe"
+  },
+  "comparison_result_sha256": "7d07faa5608e1a33645e06f5fb73d87e25ed33c72331665ab081ae471cde2630",
+  "limitations": [
+    "One fixed-order pair; no general speed or model-quality claim.",
+    "Original control wall observation includes shutdown; submission time was not independently measured.",
+    "Interrupted improved duration and usage are unknown; reservation charge is not an observed duration.",
+    "Host response delays and unpause timeout occurred; their causes were not isolated.",
+    "Late preservation of an interrupted artifact does not prove in-budget submission."
+  ]
+}

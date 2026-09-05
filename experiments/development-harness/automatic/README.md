@@ -123,3 +123,26 @@ image指定がなければDocker試験はskipとして明示する。
 python3 experiments/development-harness/automatic/report.py \
   --comparison /private/new-comparison/comparison.json --output /private/new-comparison/comparison.md
 ```
+
+## 実行が中断した場合
+
+Cycle 004ではコンテナ再開のtimeoutで一括実行が中断した。元の記録を保持し、
+両developerの実際の停止を確認した後、次の入口で保存済み成果の採点を閉じられる。
+これは開発の再試行ではなく、一括実行が完了した扱いにも変更しない。
+
+```bash
+python3 experiments/development-harness/automatic/finalize_interrupted.py \
+  --sealed /private/interrupted-comparison --output /private/new-finalization
+```
+
+停止していない、daemonが確認できない、元のコードhashやstateが変わった場合は拒否する。
+元のstateを変更せず、予約分の保守的な計上と使用量の欠測を別のstateへ投影する。
+中断後の保全成果は提出物にせず、その品質だけを固定テストで測る。
+所要時間とoutput tokensの欠測をゼロや確定値に見せず、速度比の条件も緩めない。
+中断後の停止を含む一括処理への接続は、故障注入で検証してから次の比較へ進める。
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-interrupted-development-finalization.py
+```
+
+[新課題の実測・中断・保全結果](../cycle-004/README.md)を参照。
