@@ -58,6 +58,9 @@ def validate(manifest: dict) -> None:
     for key in ('study_id', 'condition', 'model', 'effort', 'cli_version'):
         if not isinstance(manifest.get(key), str) or not manifest[key]:
             raise CampaignError(f'missing {key}')
+    for key in ('command_network_access', 'temporary_docker_config'):
+        if key in manifest and type(manifest[key]) is not bool:
+            raise CampaignError(f'{key} must be an explicit boolean')
     for key in ('max_seconds', 'max_sessions', 'max_output_tokens', 'checkpoint_seconds', 'max_snapshot_bytes'):
         positive(manifest.get(key), key)
     if type(manifest['max_sessions']) is not int or type(manifest['max_output_tokens']) is not int:
@@ -182,13 +185,17 @@ class Docker:
                 command(['docker', 'unpause', self.identity])
 
     def argv(self, manifest, seconds):
-        return ['docker', 'exec', '-i', '-e', f"DEVCONTAINER_CODEX_CLI_VERSION={manifest['cli_version']}",
+        validate(manifest)
+        environment = ['-e', 'DOCKER_CONFIG=/tmp/development-harness-docker'] if manifest.get('temporary_docker_config', False) else []
+        policy = (['-c', 'sandbox_workspace_write.network_access=' + str(manifest['command_network_access']).lower()]
+                  if 'command_network_access' in manifest else [])
+        return ['docker', 'exec', '-i', '-e', f"DEVCONTAINER_CODEX_CLI_VERSION={manifest['cli_version']}", *environment,
                 '-w', '/workspace', self.identity,
                 'timeout', '--signal=TERM', '--kill-after=5s', f'{seconds}s',
                 'codex', 'exec', '--json', '--ephemeral', '--ignore-user-config',
                 '-m', manifest['model'], '-c', f"model_reasoning_effort={json.dumps(manifest['effort'])}",
                 '-c', 'approval_policy="never"', '-c', 'agents.enabled=false',
-                '-c', 'features.multi_agent=false', '--sandbox', 'workspace-write', '-']
+                '-c', 'features.multi_agent=false', '--sandbox', 'workspace-write', *policy, '-']
 
 
 def initialize(manifest: dict, workspace: Path, output: Path, transport) -> dict:

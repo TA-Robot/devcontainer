@@ -99,6 +99,29 @@ class CampaignTests(unittest.TestCase):
     def initialize(self):
         return campaign.initialize(self.manifest, self.workspace, self.output, self.transport)
 
+    def test_execution_policy_requires_boolean_opt_in(self):
+        for name in ('command_network_access', 'temporary_docker_config'):
+            for value in ('false', 'true', 1, None):
+                with self.subTest(name=name, value=value):
+                    manifest = {**self.manifest, name: value}
+                    with self.assertRaisesRegex(campaign.CampaignError, 'explicit boolean'):
+                        campaign.validate(manifest)
+
+    def test_network_setting_does_not_remove_filesystem_sandbox_or_enable_agents(self):
+        transport = object.__new__(campaign.Docker)
+        transport.identity = 'owned-container'
+        for enabled in (False, True):
+            command = transport.argv({**self.manifest, 'command_network_access': enabled,
+                                      'temporary_docker_config': True}, 10)
+            self.assertEqual(command[command.index('--sandbox') + 1], 'workspace-write')
+            self.assertIn('sandbox_workspace_write.network_access=' + str(enabled).lower(), command)
+            self.assertIn('DOCKER_CONFIG=/tmp/development-harness-docker', command)
+            self.assertIn('approval_policy="never"', command)
+            self.assertIn('agents.enabled=false', command)
+            self.assertNotIn('--dangerously-bypass-approvals-and-sandbox', command)
+        legacy = transport.argv(self.manifest, 10)
+        self.assertFalse(any('network_access=' in arg or 'DOCKER_CONFIG=' in arg for arg in legacy))
+
     def test_stages_preserve_source_and_accumulate_usage_without_leaking_future(self):
         self.initialize()
         first = campaign.run_stage(self.output, self.transport)
