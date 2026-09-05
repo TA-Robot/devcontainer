@@ -105,6 +105,7 @@ scripts/test-second-agent-contract.sh   # 実 CLI のフラグ表面を確認（
 
 ```bash
 scripts/test-devcontainer-lock.sh
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-devcontainer-lock-isolation.py
 scripts/test-devcontainer-ai-cli-sync.sh
 scripts/test-devcontainer-ai-cli-wrappers.sh
 bash -n scripts/devcontainer-grok scripts/devcontainer-grok-trusted scripts/sync-host-ai-cli-versions .devcontainer/initialize-host.sh

@@ -62,11 +62,18 @@ else
   cli=(npx --yes "@devcontainers/cli@${cli_version}")
 fi
 
-"${cli[@]}" build \
-  --workspace-folder "$repo_root" \
-  --config "$config" \
-  --frozen-lockfile \
-  --image-name "$image_name"
+(
+  # The official CLI derives some generated paths from a millisecond clock.
+  # Separate build scratch space even when callers already use distinct tags.
+  build_scratch="$(mktemp -d "${TMPDIR:-/tmp}/devcontainer-frozen.XXXXXX")"
+  trap 'rm -rf -- "$build_scratch"' EXIT
+  export TMPDIR="$build_scratch"
+  "${cli[@]}" build \
+    --workspace-folder "$repo_root" \
+    --config "$config" \
+    --frozen-lockfile \
+    --image-name "$image_name"
+)
 
 echo "ok - frozen Dev Container build: $image_name"
 

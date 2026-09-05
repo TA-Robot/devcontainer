@@ -109,6 +109,11 @@ Build through the pinned official CLI and reject any lock mutation:
 scripts/test-devcontainer-lock.sh --build
 ```
 
+Each frozen build owns a temporary directory under `${TMPDIR:-/tmp}` and removes
+it when the CLI exits, including on failure. This prevents concurrent CLI calls
+from sharing generated Feature Dockerfiles. Concurrent callers must also select
+distinct `DEVCONTAINER_FROZEN_IMAGE` tags.
+
 The build command uses `devcontainer build --frozen-lockfile`; if no global
 `devcontainer` command exists, it uses `npx --yes @devcontainers/cli@0.88.0`.
 The smoke also rejects API key variables in the built image ENV and starts the
