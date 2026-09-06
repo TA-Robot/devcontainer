@@ -85,8 +85,11 @@ F12-L revision 3の事前相談→makerとsoloを一組実行した。
 自由文と無効な運用手順が依然通る2候補も残し、構造化assemblyという測定範囲を明示する。
 実Dockerを含む14テストが合格。旧runは変換・再採点せず、品質解釈のguardも保持する。
 F04-Lの動作監査では、原子的置換と引数保持の見逃しを再現し、別probeで識別できると確認した。
-次は[review→修正の具体化](../../experiments/development-harness/selection/f04-lifecycle-audit.md)へ進む。
-同じ初期実装のsolo点検・修正を対照にし、review後の実動作を測る。v2やF04の校正だけでlive比較は開始しない。
+[queue別版](../../experiments/development-harness/queue_review/v1/README.md)でreview→修正を実装・校正し、
+[固定2組の実比較](../../experiments/development-harness/queue_review/v1/result.md)を完了した。
+欠陥ありと正しい初期実装の全条件が4/4。review付きの時間はそれぞれ1.842倍・2.893倍で、input/outputも増加。
+正しい実装は両条件とも変更せず、品質の上積みは確認できなかった。常時reviewを不採用とし、
+次は公開check・自力修正後に残る不足に応じた起動方式を比較する。confirmationはlive未使用のまま保持する。
 以下の診断候補の準備履歴も保持し、既存資産や過去比較を未実施へ戻さない。
 
 ### 診断別版で実装・判断したこと

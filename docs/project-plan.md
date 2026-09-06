@@ -83,10 +83,10 @@ flowchart LR
 | 段階 | 成果物・完了条件 | 現状 |
 | --- | --- | --- |
 | M0: 目的と証拠の整理 | 循環、資産の実装/実測/未実証、各実験から変える対象を一つの計画へ統合 | 今回完了。今後の判断はこの目的へ戻す |
-| M1: 実験群の適格性 | 既存候補を監査し、方式に適する課題と自動評価の範囲を決定。正解の多様性・欠陥検出・solo対照・費用計測を確認し、初回protocolを固定 | **進行中**。[証拠統合v2](../experiments/development-harness/consultation/synthesis_v2/README.md)を39候補で校正。[F04-L動作監査](../experiments/development-harness/selection/f04-lifecycle-audit.md)では2つの妥当な実装を受理し、旧評価の2種類の見逃しを再現。次は別版のreview→修正比較を校正する。旧pilotは実施済み、次のlive条件は未固定 |
-| M2: 協働比較の自動実行 | 最初に適格となった方式を既存terminal/所有権/評価へ接続。受渡し、全参加者停止・全usage・統合・外部評価を疑似providerと実Dockerで確認 | [実Codex接続](../experiments/development-harness/consultation/synthesis-runtime.md)も実装。sandbox probe・環境同等性・全停止・採点を実比較で確認。途中相談やsession継続は未対応 |
-| M3: 方式別の探索比較 | 相談・review・案収集・実装比較を対象に、適格な課題で有限の比較。正/負/不明、発動状況、失敗、全費用、未着手を保存 | [事前相談の新経路pilot](../experiments/development-harness/consultation/synthesis-result.md)を一組実施。品質解釈は評価器の誤判定により保留。他方式を済ませたことにしない |
-| M4: ハーネス改良と再評価 | 採用/条件限定/棄却/保留を決め、指示・情報・実行制御を版付きで改修。結果を見ていない課題で改良前後を再評価 | 集計guard・実測ガイドへ採否を反映。別評価版のprovider-free校正まで完了。改良した協働手順の未使用課題での実比較は未実施。**ここまでを最初の改善循環の完了条件**とする |
+| M1: 実験群の適格性 | 既存候補を監査し、方式に適する課題と自動評価の範囲を決定。正解の多様性・欠陥検出・solo対照・費用計測を確認し、初回protocolを固定 | 限定した動作比較は[queue review別版](../experiments/development-harness/queue_review/v1/README.md)で校正・固定・実行まで完了。9候補と実Dockerを含む9テストを確認。他方式・広い品質を扱う課題の適格性確認は継続 |
+| M2: 協働比較の自動実行 | 最初に適格となった方式を既存terminal/所有権/評価へ接続。受渡し、全参加者停止・全usage・統合・外部評価を疑似providerと実Dockerで確認 | [実Codex接続](../experiments/development-harness/consultation/synthesis-runtime.md)をqueueのreview→修正にも再利用。候補codeを認証なしの専用containerで実行し、評価側が状態を観測。途中相談やsession継続は未対応 |
+| M3: 方式別の探索比較 | 相談・review・案収集・実装比較を対象に、適格な課題で有限の比較。正/負/不明、発動状況、失敗、全費用、未着手を保存 | F12事前相談は品質保留。[queue reviewの2組](../experiments/development-harness/queue_review/v1/result.md)は全条件4/4、review側の時間・消費増。正しい初期実装も変更なし。案収集・複数実装比較の実測は未着手 |
+| M4: ハーネス改良と再評価 | 採用/条件限定/棄却/保留を決め、指示・情報・実行制御を版付きで改修。結果を見ていない課題で改良前後を再評価 | 集計guard・実測ガイドへ採否を反映。queueでは常時reviewを不採用。次は公開検査・自力修正後に残る不足を理由とする起動方式を具体化し、live未使用のconfirmationで新protocolの比較を行う。**この再評価までを最初の改善循環の完了条件**とする |
 | M5: 継続開発で確認 | AIが方式を選び直し、仕様追加・状態引継ぎ・復旧・統合まで進める。強いsoloと改良前ハーネスを対照に確認 | 複数段階の既存資産を使う。単発fixtureからproject全体へ一般化しない |
 
 M3→M4は方式ごとに繰り返す。全方式の探索が終わるまで最初の改善を待たない。
@@ -112,8 +112,12 @@ F04-Lの[9実装監査](../experiments/development-harness/selection/f04-lifecyc
 直接上書きと空白引数を壊すwrapperが旧4/4を通った。別processの動作probeでこの2欠陥を検出し、
 異なる原子的writerも受理した。実Dockerを含む7テストを確認。過去10観測中9満点は旧検査の結果であり、
 成果物未保存のため再採点しない。書込み中のprocess kill・電源断・競合は未測定とする。
-次は同じ初期実装をsoloで点検・修正する条件と、独立review→fresh修正担当の条件を比較する別版を作る。
-修正後の実動作と退行を採点し、正しい初期実装も対照に含める。課題・外部評価・全予算を固定してからliveへ進む。
+[queue別版](../experiments/development-harness/queue_review/v1/result.md)で、soloの点検・修正と独立review→fresh makerを実比較した。
+欠陥ありでは96.055秒対176.978秒、正しい初期実装では63.777秒対184.508秒。全条件が動作4項目に合格し、
+正しい実装は両条件とも変更しなかった。review側のinput/outputも増加したため、常時reviewは採用しない。
+2組・全6participantの停止と消費回収・外部評価まで完了し、初回protocolの追加実行はしない。
+次は公開検査と自力修正を先行し、残った具体的な不確実性があるときに相談する起動方式を実装・校正する。
+起動判断の費用も含めて同じ協働能力・全予算で比較し、live未使用のconfirmationを新protocolで使う。
 これはM1のplanning priorであり、相談や複数実装の有効性を仮定しない。同じ旧oracleで本数を増やさない。
 他候補も現contractで答えられる問いに限定し、過去の資産を勝敗の期待から捨てない。
 追加人数・repeat・期限は全体のdefaultにせず、M1で参加者の役割と全体予算から固定する。

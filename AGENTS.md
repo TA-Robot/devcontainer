@@ -277,6 +277,17 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-f04-lifecycle-audit.p
 固定されたprovider-free候補だけを使い、host評価へlive成果物を渡さない。
 旧oracle・得点を上書きせず、別processでの正常再実行と書込み中の中断耐性を区別する。
 
+queue review→修正比較（`experiments/development-harness/queue_review/v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-queue-review.py
+```
+
+`QUEUE_REVIEW_IMAGE`に検証済みimage IDを指定し、外部動作評価と両初期状態・両条件を疑似providerで確認する。
+liveの初回2組は実施済み。追加の実比較は新しいprotocol・全予算・sourceと一致する校正/検証を固定する。
+留保したconfirmationを勝つまでの追加runに使わない。candidate codeをhostで実行せず、
+旧oracle・得点・固定runnerは変更しない。通常再実行とcrash durabilityを区別する。
+
 Cycle 005のCLI同期課題・評価器（`experiments/development-harness/cycle-005/`）またはfeedbackのtask adapterを触ったら:
 
 ```bash

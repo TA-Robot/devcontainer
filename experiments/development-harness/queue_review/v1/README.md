@@ -5,6 +5,10 @@
 同じ初期実装へのsolo点検・修正と、独立review→fresh makerを比較する。
 [公開課題](brief.md)と[固定protocol](protocol.md)が今回の範囲を定める。
 
+2026-09-06に[固定2組の実比較](result.md)まで完了した。全4conditionが動作4項目に合格し、
+正しい初期実装は両条件で変更なし。review付きは両組で時間・input/outputが増えたため、常時reviewは採用しない。
+初回protocolの2組は実施済み。追加のliveは留保条件と起動方式を含めて新しいprotocolを固定する。
+
 ## 測るもの
 
 - 各commandを別processで実行したときの状態とackの冪等性。
