@@ -13,6 +13,7 @@ import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import public_checks as public
+import task_evaluation
 runner = public.runner
 legacy = runner.legacy
 campaign = runner.campaign
@@ -48,7 +49,7 @@ def validate(config):
             or {c['id']: c['mode'] for c in conditions} != {'control': 'self', 'improved': 'feedback'}):
         raise runner.Error('one strong self-check control and one feedback condition required')
     expected_phases = 3 if config.get('task') == 'acceptance-v2' else 1
-    if (config.get('task') not in ('acceptance-v2', 'redaction-v2', 'duplicates-v1')
+    if (config.get('task') not in ('acceptance-v2', 'redaction-v2', 'duplicates-v1', 'cli-sync-v1')
             or len(manifest['phases']) != expected_phases
             or manifest['scale'] != ('large' if expected_phases == 3 else 'small')):
         raise runner.Error('fixed evaluator does not match task phases/scale')
@@ -99,7 +100,7 @@ def seal(config_path, output, make_transport=factory):
     record = {'schema_version': 1, 'kind': KIND, 'config': config, 'sealed_unix': time.time(),
               'initial_source': identities[0], 'initial_snapshots': snapshots,
               'environment': environments[0],
-              'catalog': legacy.observer.catalog(config['task']),
+              'catalog': task_evaluation.catalog(config['task'], legacy),
               'code_sha256': {str(p): legacy.sha(p) for p in code},
               'legacy_hash': legacy.tree_hash(Path(config['legacy'])) if config.get('legacy') else None}
     record['initialization_seconds'] = time.monotonic() - started
@@ -288,7 +289,9 @@ def evaluate(record, output, states, evaluate_one):
     return results
 
 
-def run(record, output, make_transport=factory, evaluate_one=legacy.evaluate_one):
+def run(record, output, make_transport=factory, evaluate_one=None):
+    if evaluate_one is None:
+        evaluate_one = lambda r, o, row: task_evaluation.evaluate_one(r, o, row, legacy)
     verify(record)
     config = record['config']
     with ExitStack() as locks, runner.cancellation() as cancelled:
