@@ -226,6 +226,16 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-automatic-development
 `AUTOMATIC_COMPARISON_IMAGE`に検証済みimage IDを指定すると、疑似providerによる両条件の
 実行・外部採点・集計まで実Dockerで確認する。人やLLMによる採点の上書きを追加しない。
 
+終端回収と測定時計v2（`experiments/development-harness/terminal/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-terminal-development.py
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-development-campaign.py scripts/test-development-admission.py scripts/test-development-recovery.py scripts/test-automatic-development-comparison.py scripts/test-interrupted-development-finalization.py
+```
+
+`TERMINAL_DEVELOPMENT_IMAGE`に検証済みimage IDを指定して、新版の実Docker故障試験と一括採点も実行する。
+疑似providerだけを使い、旧manifest・時計・評価器・得点を新版へ読み替えない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
