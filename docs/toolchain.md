@@ -87,6 +87,53 @@ installed and the matching versioned Grok binary is downloaded into
 `DEVCONTAINER_AI_CLI_SYNC=0` disables host probing/synchronization. New automation
 should use `DEVCONTAINER_AI_CLI_CHANNEL`.
 
+Edge synchronization prepares changed tools in a separate, clean temporary npm
+prefix. It checks each requested executable's exit status and reported version
+with `--version` (Grok also receives `--no-auto-update`); package metadata alone
+does not count. Each version probe has a 20-second timeout. Matching executables
+do not trigger installation or downloads.
+This is a per-probe cost cap owned by the toolchain maintainer, intended to avoid
+holding update ownership on a hung version command. Recalibrate it with regression
+evidence if supported CLI startup behavior changes.
+
+Only after all requested tools pass verification does synchronization publish a
+complete executable directory. The existing physical prefix stays in place, so
+the container user needs no write access to `/opt` and wrappers keep using
+`$DEVCONTAINER_AI_CLI_PREFIX/bin`. A first update atomically exchanges the legacy
+physical `bin` directory with a symlink using Linux `renameat2`; subsequent
+updates atomically replace that symlink. If the filesystem cannot perform that
+exchange, synchronization fails without replacing the usable installation.
+The active npm library lives alongside `bin` inside its `.ai-cli-generation-*`
+directory; the original top-level `lib` remains a legacy copy, not the active npm
+inventory. Unspecified tools and unrelated prefix files are retained. Wrapper
+flags, authentication mounts, host configuration and image pins are unchanged.
+
+An install, download or executable verification failure exits nonzero and leaves
+the previous executable set usable. Fix the reported cause and rerun
+`scripts/sync-host-ai-cli-versions` with the same edge environment, or reopen the
+container. A kernel lock on the physical prefix excludes concurrent installers,
+including callers using a symlink alias. A competing caller fails promptly with
+a retry diagnostic. Installer children inherit the lock: after SIGTERM/SIGKILL,
+retry once the old execution group has stopped. Container restart releases the
+lock too; recovery never requires a surviving coordinator or deleting lock files.
+A later manifest is read by a fresh invocation and converges on retry.
+Termination after the atomic publication can leave the new complete generation
+active even if the caller did not receive the final message. A retry verifies the
+requested versions; it does not infer rollback from that missing message.
+
+Failed preparation normally removes its temporary files. Forced termination can
+leave unused temporary directories, or an unreferenced generation if interrupted
+during the final copy. They cannot become active on retry. Published generations
+and the original `bin` are retained so existing processes can still access older
+files; updates therefore require additional disk space. Container recreation
+reclaims the default prefix's writable layer without a user-maintained recovery
+journal. A custom prefix on a persistent external volume is outside that reclaim
+behavior; this updater does not garbage-collect its generations.
+The sync regression suite includes provider-free failure, interruption,
+concurrency, symlink and executable-version checks; run
+`scripts/test-devcontainer-ai-cli-sync.sh` and
+`scripts/test-devcontainer-ai-cli-wrappers.sh`.
+
 Changing an environment variable in a separate terminal does not update an
 already-running editor. Restart the editor with the intended environment and
 recreate the container after changing its channel. Returning an edge container

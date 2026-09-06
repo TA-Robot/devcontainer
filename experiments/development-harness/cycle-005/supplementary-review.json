@@ -1,0 +1,57 @@
+{
+  "scope": "post-run integration review; original 13-case grades unchanged",
+  "observations": [
+    {
+      "condition": "control",
+      "case": "unspecified-relative-external-binary",
+      "exit_code": 0,
+      "versions": {
+        "codex": "codex 2.3.4",
+        "claude": null,
+        "gemini": "gemini 1.0.0",
+        "grok": "grok 1.0.0"
+      },
+      "external_unchanged": true,
+      "passed": false
+    },
+    {
+      "condition": "control",
+      "case": "symlinked-package-directory",
+      "exit_code": 1,
+      "versions": {
+        "codex": "codex 1.0.0",
+        "claude": "claude 1.0.0",
+        "gemini": "gemini 1.0.0",
+        "grok": "grok 1.0.0"
+      },
+      "external_unchanged": true,
+      "passed": false
+    },
+    {
+      "condition": "improved",
+      "case": "unspecified-relative-external-binary",
+      "exit_code": 0,
+      "versions": {
+        "codex": "codex 2.3.4",
+        "claude": "claude 1.0.0",
+        "gemini": "gemini 1.0.0",
+        "grok": "grok 1.0.0"
+      },
+      "external_unchanged": true,
+      "passed": true
+    },
+    {
+      "condition": "improved",
+      "case": "symlinked-package-directory",
+      "exit_code": 0,
+      "versions": {
+        "codex": "codex 2.3.4",
+        "claude": "claude 1.0.0",
+        "gemini": "gemini 1.0.0",
+        "grok": "grok 1.0.0"
+      },
+      "external_unchanged": true,
+      "passed": true
+    }
+  ]
+}

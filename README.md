@@ -350,7 +350,9 @@ edgeでは次の順でhost側versionを反映します。
 
 1. ホストの `initializeCommand` が `codex --version` / `gemini --version` / `claude --version` / `grok --version` を検出し、`~/.cache/devcontainer-ai-cli/versions.env` にバージョン番号だけを保存
 2. cache ディレクトリをコンテナへ read-only mount
-3. `postStartCommand` が差分のあるnpm packageとGrok公式binaryを `/opt/devcontainer-ai-cli` へ導入
+3. `postStartCommand` が差分のあるnpm packageとGrok公式binaryを作業用prefixへ導入し、要求された全CLIの実行結果とversionを検証してから `/opt/devcontainer-ai-cli/bin` を一括で切り替える
+
+公開前の同期失敗・中断では直前のCLIを保持します。切替後に呼出元が停止した場合も、公開済みの完全な世代を使い、再試行で要求版を確認できます。原因を解消し、前の実行groupが停止してから同じedge環境で `scripts/sync-host-ai-cli-versions` を再実行してください。同じprefixへの同時同期はretry案内付きで失敗し、lock fileの手動削除は不要です。世代の保持と復旧の詳細は [`docs/toolchain.md`](docs/toolchain.md) を参照してください。
 
 ホストの実行ファイル自体は mount しません。Codex などには OS / CPU 別の native package が含まれるため、バージョンだけを合わせてコンテナ向け package を導入します。
 
