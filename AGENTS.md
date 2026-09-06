@@ -263,6 +263,16 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-cli-sync-evaluator.py
 `TERMINAL_DEVELOPMENT_IMAGE`へ検証済みimage IDを指定し、実imageのread-only評価とadapterも確認する。
 校正用referenceをdeveloper checkoutへ入れず、旧評価器・過去の得点を変更しない。
 
+相談比較の診断課題（`experiments/development-harness/consultation/v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-consultation-diagnosis.py
+```
+
+`CONSULTATION_DIAGNOSIS_IMAGE`に検証済みimage IDを指定して、network・認証なしの実Docker校正も行う。
+旧atlasのcase/revisionは変更せず、新課題の校正とlive協働の効果を区別する。
+校正結果を更新するときは`calibrate.py --output`に未使用pathを渡し、過去の結果を上書きしない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
