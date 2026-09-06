@@ -20,6 +20,10 @@ Error = campaign.CampaignError
 CLOCK = 'terminal-v2'
 
 
+class DeadlineReached(Error):
+    pass
+
+
 def fingerprint(manifest):
     return campaign.digest(json.dumps(manifest, sort_keys=True, ensure_ascii=False, allow_nan=False).encode())
 
@@ -223,7 +227,7 @@ def cancellation():
             signal.signal(number, handler)
 
 
-def _run_stage(output, transport):
+def _run_stage(output, transport, *, deadline=None):
     """Caller holds the state lock, including during evaluation in a paired run."""
     with cancellation() as cancelled:
         state = load(output)
@@ -256,19 +260,27 @@ def _run_stage(output, transport):
             session['clock']['preparation_seconds'] = time.monotonic() - overall
             if cancelled:
                 raise Error('controller interrupted during preparation')
+            if deadline is not None:
+                seconds = min(seconds, deadline - time.monotonic())
+                if seconds <= 0:
+                    raise DeadlineReached('enclosing development budget exhausted during preparation')
+                session['reserved_seconds'] = seconds
+                state['active']['reserved_seconds'] = seconds
             (folder / 'prompt.private.txt').write_bytes(prompt_for(manifest, index))
             (folder / 'prompt.private.txt').chmod(0o600)
             campaign.save(folder / 'spec.json', {'argv': transport.argv(manifest, seconds),
                           'output_cap': decision['remaining']['output_tokens']})
             started = time.monotonic()
+            if deadline is not None and started >= deadline:
+                raise DeadlineReached('enclosing development budget exhausted before recorder start')
             with (folder / 'recorder.private.log').open('wb') as log:
                 process = subprocess.Popen([sys.executable, str(HERE / 'recorder.py'), str(folder)],
                                            stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
             state['active']['recorder_pid'] = process.pid
             campaign.save(output / 'state.json', state)
-            deadline = started + seconds
-            while process.poll() is None and time.monotonic() < deadline and not cancelled:
-                time.sleep(min(.02, max(0, deadline - time.monotonic())))
+            stop_at = min(started + seconds, deadline) if deadline is not None else started + seconds
+            while process.poll() is None and time.monotonic() < stop_at and not cancelled:
+                time.sleep(min(.02, max(0, stop_at - time.monotonic())))
             elapsed = time.monotonic() - started
             session['clock']['development_seconds'] = elapsed
             evidence = folder / 'record.json'
@@ -280,7 +292,7 @@ def _run_stage(output, transport):
                 session['kind'] = 'interrupted'
                 session['observation']['stop_reason'] = 'controller_signal'
                 session['infrastructure_failure'] = 'controller_interrupted'
-            elif elapsed >= seconds:
+            elif time.monotonic() >= stop_at:
                 session['kind'] = 'cutoff'
                 session['observation']['stop_reason'] = 'wall_cap'
             elif process.returncode != 0 or not (folder / 'record.json').exists():
@@ -300,6 +312,10 @@ def _run_stage(output, transport):
             if started is None:
                 session['clock']['preparation_seconds'] = time.monotonic() - overall
             session['error_type'] = type(error).__name__
+            if isinstance(error, DeadlineReached):
+                session.update(kind='cutoff', infrastructure_failure=None)
+                session['clock']['development_seconds'] = 0.0
+                session['observation']['stop_reason'] = 'enclosing_budget_exhausted'
         finally:
             origin = started if started is not None else overall
             session['clock']['stop_requested_seconds'] = time.monotonic() - origin
