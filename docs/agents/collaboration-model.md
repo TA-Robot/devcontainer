@@ -3,6 +3,9 @@
 Status: guidance accepted; effectiveness and runtime extensions remain evidence-gated
 Updated: 2026-08-26
 
+実測に基づく条件付きの採否と限界は[協働の実測ガイド](collaboration-evidence.md)を参照する。
+方式の説明だけから改善率や既定の参加者構成を導かない。
+
 ## Purpose
 
 この文書は、native-first multi-agent基盤で**なぜ複数agentを使い、どう関係づけ、いつ止めるか**の設計境界を定義します。

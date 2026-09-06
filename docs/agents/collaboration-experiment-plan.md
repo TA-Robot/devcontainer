@@ -1,6 +1,6 @@
 # 協働実験計画: 比較から何を改善するか
 
-更新: 2026-09-06。状態: **直列相談の疑似provider/実Docker接続、F12-L反例監査まで完了。live protocolは未seal。**
+更新: 2026-09-06。状態: **新経路の事前相談live pilot・独立評価・validity gateまで完了。品質効果は誤判定により保留。**
 [プロジェクト計画](../project-plan.md)のM1〜M5を具体化する。
 既存実験を未実施へ戻さず、以下の新しい方式比較を過去runへ遡及しない。
 
@@ -72,6 +72,17 @@ F03-Lを通せるまで他方式の検討を止めたり、一方式の実行完
 
 ## M1で作る最初のprotocol
 
+### 実モデル比較まで進めた現在地
+
+[固定protocol](../../experiments/development-harness/consultation/synthesis-protocol.md)で、
+F12-L revision 3の事前相談→makerとsoloを一組実行した。
+[原結果と採否](../../experiments/development-harness/consultation/synthesis-result.md):
+元の固定得点は10/12同士。相談側の提出時間19.3%増、input44.8%増、output6.5%増。
+ただし原失点に否定表現と関連unknownの個数制限による誤判定が作用しており、品質を揃えた速度比較は保留する。
+校正用別表現の失敗を[集計gate](../../experiments/development-harness/consultation/synthesis_report.py)へ結び、得点を上書きせず改善率を抑止した。
+次は別評価版で公開scopeと根拠関係を検査し、正しい別表現と実際の誤りを識別する校正を通す。
+以下の診断候補の準備履歴も保持し、既存資産や過去比較を未実施へ戻さない。
+
 ### 診断別版で実装・判断したこと
 
 [consultation-crash-diagnosis-v1](../../experiments/development-harness/consultation/v1/README.md)で、
@@ -117,7 +128,8 @@ F12-L revision 3の[反例監査](../../experiments/development-harness/selectio
 [実装と検証記録](../../experiments/development-harness/consultation/README.md):
 `flow_v1.py`でsoloと「advisor停止・保全→助言→新しいmaker→全停止→採点」を接続した。
 直列の事前助言が対象で、primaryの途中相談・同一session再開・双方向対話は未対応。
-live adapterはなく、固定応答の疑似providerによる確認だけ。元のterminalコードは変更していない。
+この`flow_v1.py`自体は疑似provider用。別の[synthesis pilot接続](../../experiments/development-harness/consultation/synthesis-runtime.md)で
+実Codex・model-free probe・環境比較・実promptのhash付きrelayを実装し、liveで確認した。元のterminalコードは変更していない。
 
 [terminal](../../experiments/development-harness/terminal/README.md)の時計・停止・保全、
 [feedback](../../experiments/development-harness/feedback/README.md)の共通公開check・累積予算、

@@ -37,6 +37,9 @@ execution laneは「どこで安全に走らせるか」、roleは「何へ責�
 
 設計の正本は`docs/agents/collaboration-model.md`、自動観測contractは`docs/agents/collaboration-observation.md`、target project向け手順は`project/docs/agents/collaboration-playbook.md`、探索catalogは`temp/multi-agent-collaboration/`を参照してください。
 
+方式の採否を考えるときは`docs/agents/collaboration-evidence.md`の実測と適用範囲も参照する。
+評価器が妥当な別表現を拒否する場合、元の得点を保持して品質効果・改善率の判断を保留する。
+
 ## このリポジトリの責務
 
 - **開発コンテナ基盤**の提供（`.devcontainer/`）
@@ -281,6 +284,15 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-consultation-flow.py
 
 `CONSULTATION_FLOW_IMAGE`へ検証済みimage IDを指定し、正常な両条件とadvisor timeoutの停止を実Dockerで確認する。
 このflowは疑似provider専用。旧terminal runnerや過去のprotocolを変更して既存runを再開しない。
+
+証拠統合のCodex pilot / prompt relay / 集計を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-synthesis-consultation-pilot.py scripts/test-synthesis-pilot-report.py
+```
+
+`SYNTHESIS_PILOT_IMAGE`に検証済みimage IDを指定して、実sandbox probe、疑似provider両条件、未知usage時の停止、独立評価を確認する。
+liveは別の固定protocol・configで実行し、校正referenceをdeveloperへ渡さない。過去の得点や旧oracleは変更しない。
 
 ## 参照（別プロジェクト向けテンプレ）
 

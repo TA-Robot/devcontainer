@@ -3,6 +3,9 @@
 更新: 2026-09-06。`flow_v1.py`を実装し、疑似providerと実Dockerで検証済み。
 **live provider adapterは未実装。ここでの成功は協働効果の測定結果ではない。**
 
+上記は`flow_v1.py`の境界。後続の[synthesis pilot接続](synthesis-runtime.md)では実Codex比較まで完了し、
+[原結果と評価器の制限](synthesis-result.md)を記録した。二つの実行kindを混ぜない。
+
 ## 実行する関係
 
 同じ公開診断課題で、soloのmaker一人と、advisorの助言を受けるmakerを比較する実行経路。
@@ -79,3 +82,5 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-consultation-flow.py
 CLI接続、advisorとmakerの情報境界の実確認が必要。現在の疑似輸送の注入をlive対応済みと表示しない。
 主比較の題材は[F12-L監査](../selection/f12-synthesis-audit.md)に基づいて測定範囲を限定し、
 公開仕様、oracle、介入、採否を変える条件をまとめてからlive protocolを固定する。
+
+この後続作業は別接続で実施済み。現在の次作業は、liveで再現した誤判定を別評価版の校正へ戻すこと。

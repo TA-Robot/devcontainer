@@ -1,0 +1,39 @@
+{
+  "kind": "synthesis-pilot-preflight-validation",
+  "source_commit": "e82c616",
+  "tests": 6,
+  "failures": 0,
+  "skipped": 0,
+  "reported_seconds": 54.684,
+  "image": "sha256:c7f904a12d7e7c63a2c7e46bc6654c8304b497a2836ecb08fb5bea0118f679ea",
+  "provider_generation": "deterministic fake only",
+  "verified": [
+    "distinct-key environment order normalized; duplicate keys rejected",
+    "relay validates old and actual prompt hashes",
+    "real Codex sandbox probes without auth",
+    "independent fixed scoring in read-only network-disabled container",
+    "unknown advisor usage prevents maker/solo generation",
+    "separate advisor minimum and maker reservation",
+    "owned-container cleanup and no output-directory replay"
+  ],
+  "source_sha256": {
+    "experiments/development-harness/consultation/synthesis_pilot.py": "6ba675f1b7acd85b0edc3e3f2dd0eacd4da60ad40ce50fb4034c79de55c8aee1",
+    "experiments/development-harness/consultation/synthesis_task.py": "3109fcee72b3e0dc2b4a648fd977de147e6b1c69ccdb28aa3bfbe33813b250bd",
+    "experiments/development-harness/consultation/codex_transport.py": "cab93bde6f10d0591c56ca40eacb62bf61368cb94785e996ed493fa0d736373d",
+    "experiments/development-harness/consultation/prompt_relay.py": "b91376f5549d5b59a8d02bc93029ef6342c1b32536f6232dc84d711d0d6bd790",
+    "experiments/development-harness/consultation/synthesis-protocol.md": "46dbb14c26edc2dcaef9bab5ad4772c7ec9976c12a0a5ea5d0a41f67fab63d63",
+    "scripts/test-synthesis-consultation-pilot.py": "054ffd69986abd95b0db394784812661325d2494a6857e56e6b36e7f9f6f86ab"
+  },
+  "post_pilot_verification": {
+    "tests": 9,
+    "failures": 0,
+    "skipped": 0,
+    "reported_seconds": 85.472,
+    "command": "SYNTHESIS_PILOT_IMAGE=sha256:c7f904a12d7e7c63a2c7e46bc6654c8304b497a2836ecb08fb5bea0118f679ea PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-synthesis-consultation-pilot.py scripts/test-synthesis-pilot-report.py",
+    "source_sha256": {
+      "experiments/development-harness/consultation/synthesis_report.py": "a8305be96dca3f3b03b10529414f7b00109b0c9396c55247d22cd66339c5a766",
+      "experiments/development-harness/selection/audit_synthesis_false_negatives.py": "2ec91e94f0dbf2be4d7c49c6df8ca0ec332d5ff8b54050f2eb3929b3177a65b1",
+      "scripts/test-synthesis-pilot-report.py": "6a5d5687fba3ee3f61187a6209a4fd18bd01bdf7dc63c9ffd751689a99a46a65"
+    }
+  }
+}

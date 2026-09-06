@@ -2,6 +2,8 @@
 
 `synthesis_pilot.py`は[固定protocol](synthesis-protocol.md)の新しい実行入口。
 旧`flow_v1.py`とterminal/feedback runnerは変更しない。
+実比較は[結果と採否](synthesis-result.md)、事前確認は[synthesis-validation.json](synthesis-validation.json)を参照。
+後続の`synthesis_report.py`が校正のvalidityを結合し、誤判定があると品質付き速度比を抑止する。
 
 `synthesis_task.py`はF12-L revision 3の公開workspaceだけを各participantへ渡す。
 advisorは`advice.json`、makerは既存の2成果物だけを提出する。余分なfile、symlink、入力変更を拒否し、
