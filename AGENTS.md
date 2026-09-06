@@ -245,6 +245,15 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-development-feedback.
 `TERMINAL_DEVELOPMENT_IMAGE`へ検証済みimage IDを指定し、実Codex sandboxと疑似providerで能力・修正・停止を確認する。
 実モデルへの要求やhost認証は不要。P2で課題・oracle・全予算を固定するまでlive比較へ進めない。
 
+課題選定のagentctl不足監査（`experiments/development-harness/selection/audit_agentctl.py`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 experiments/development-harness/selection/audit_agentctl.py --output /tmp/new-agentctl-candidate-audit.json
+```
+
+出力は未使用のpathを指定し、以前の監査結果を上書きしない。配布の能力を主張する場合は
+`scripts/test-agentctl-check-container.sh IMAGE`も検証済みimageで実行する。監査fixtureの成功をlive比較の効果へ読み替えない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
