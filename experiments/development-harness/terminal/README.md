@@ -88,6 +88,8 @@ control/improvedの`conditions: [{id, state}, ...]`、digest固定`image`、
 
 このP0で使った課題は既存の校正fixture。P1の公開check/feedback contractとP2の未見課題・
 全予算の固定は別のゲートであり、この実装だけで次のlive比較を開始しない。
+P1の実装は[feedback](../feedback/README.md)へ分離した。P0の原時計を保持しつつ、呼出元が
+任意のmonotonic期限を指定できる。指定時は起動準備の後にも残時間を確認してprovider起動を制限する。
 
 ## 確認
 

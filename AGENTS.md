@@ -236,6 +236,15 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-development-campaign.
 `TERMINAL_DEVELOPMENT_IMAGE`に検証済みimage IDを指定して、新版の実Docker故障試験と一括採点も実行する。
 疑似providerだけを使い、旧manifest・時計・評価器・得点を新版へ読み替えない。
 
+公開checkとfeedback実行（`experiments/development-harness/feedback/`）を触ったら、上記の終端・旧ハーネス確認に加えて:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-development-feedback.py
+```
+
+`TERMINAL_DEVELOPMENT_IMAGE`へ検証済みimage IDを指定し、実Codex sandboxと疑似providerで能力・修正・停止を確認する。
+実モデルへの要求やhost認証は不要。P2で課題・oracle・全予算を固定するまでlive比較へ進めない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ

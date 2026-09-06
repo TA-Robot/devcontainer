@@ -1,19 +1,22 @@
 # 開発ハーネスの現行計画
 
-更新: 2026-09-06、Cycle 004後のP0実装・検証を反映。
+更新: 2026-09-06、Cycle 004後のP0/P1実装・検証を反映。
 目的は、**実開発で使える成果の品質を上げ、そこへ到達する総時間と費用を減らすこと**。
 小規模と大規模、速度と品質を別々に評価する。比較の実行・停止・検査・集計に人の採点を挟まない。
 
-**次の着手点はP1: 同じ公開checkを使う自己検証と自動フィードバックの実行contract。**
+**次の着手点はP2: 大規模候補を先に監査し、課題・評価器・予算を固定する。**
 途中freezeを使わない[測定経路v2](../experiments/development-harness/terminal/README.md)は実装し、
 実Dockerを含む新版27テストと旧ハーネス42テストで確認した。実モデルの比較はまだ開始しない。
+[公開検証と修正の実行contract](../experiments/development-harness/feedback/README.md)も実装し、
+同じ公開情報・実行環境と、検査・修正費を含む累積予算を疑似providerで確認した。
 新しい小課題を増やす前に、大規模側の課題を成立させる。
 
 綿密な案比較、測定contract、課題候補、実行枠、自己批判は
 [再計画の詳細](agents/development-harness-next-plan.md)。
 評価上の共通ルールは[規模別評価方針](agents/development-harness-evaluation.md)。
 P0の実装範囲と制約は上記の測定経路、検証記録は[validation.json](../experiments/development-harness/terminal/validation.json)。
-P1以降は今後の計画であり、記載を実装済みと扱わない。
+P1の検証証跡は[feedback/validation.json](../experiments/development-harness/feedback/validation.json)。
+P2以降は今後の計画。P1の既存課題は校正用で、次の未見課題・全予算・実行順はまだ固定していない。
 
 ## 方針を変える根拠
 
@@ -33,7 +36,7 @@ P1以降は今後の計画であり、記載を実装済みと扱わない。
 | 順位 | 成果物 | そこまでで止める条件 |
 | --- | --- | --- |
 | P0（完了） | 新しい時計、終端での回収、一括入口から中断後の停止・保全・採点までの接続 | 正常終了・遅い停止・打ち切り・recorder喪失・停止未確認・archive/評価器異常の機械試験と実Dockerの疑似実行が合格 |
-| P1 | 同じ公開checkを使う強いsolo Aと、自動feedback Bの実行contract | Aを弱くせず、Bの検査・再開費も同じ予算に含め、必要な能力を両条件で確認 |
+| P1（完了） | 同じ公開checkを使う強いsolo Aと、自動feedback Bの実行contract | 同一環境・段階公開・有限修正・未知usage時の停止・実Codex sandboxを疑似providerで確認。課題別の最終check表はP2でseal |
 | P2 | 大規模候補を先に監査し、小規模も含めて課題・oracle・予算を固定 | 実需要・依存・退行を説明でき、正しい成果と代表的欠陥を自動で識別。未定項目があればsealしない |
 | P3 | 大規模A/B、小規模A/Bの探索比較と全条件の自動報告 | 未完了・中断・未着手も残す。基盤故障で採点が成立しなければ未開始分を止める |
 | P4 | 速度・品質・総費用の採否、必要なら未見taskでの確認protocol | 初回の差だけで一般推奨にしない。判断を変えない追加runは行わない |
