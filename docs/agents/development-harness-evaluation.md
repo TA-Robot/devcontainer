@@ -1,8 +1,9 @@
 # 開発ハーネスの規模別評価
 
-更新: 2026-09-05、Cycle 004後。状態: 新しい比較方式の設計。
-[現行計画](../project-plan.md)を実行順の正本、[詳細な再計画](development-harness-next-plan.md)を
-選定理由・実装ゲート・費用枠の正本とする。[以前の方針](development-harness-evaluation-through-cycle-004.md)は履歴。
+更新: 2026-09-06。状態: Cycle 005で使用した評価原則を、今後の協働比較にも維持。
+[現行計画](../project-plan.md)を実行順の正本、[協働実験計画](collaboration-experiment-plan.md)を
+今後の比較設計とする。[Cycle 005までの再計画](development-harness-next-plan.md)と
+[以前の方針](development-harness-evaluation-through-cycle-004.md)は履歴。
 旧protocol、clock、得点、raw artifactは変更しない。以下の新版ルールを既存runへ遡及しない。
 
 ## 規模の定義
@@ -97,8 +98,9 @@ sourceはwriter停止を実際に確認してから保全し、hash付きarchive
 初回は候補選定まで。一般的な改善の採用には、別taskでの事前固定した確認と費用の評価が必要。
 修正の局所再現・回帰・配布成功は、その修正の採用根拠にはできる。
 
-現在あるものは、有限の段階runner、archive、独立observer、予算の開始判定、中断成果の後処理。
-新clock、周期pauseなしの標準入口、中断後処理の自動接続、公開feedback方式、次の大規模oracleは
-まだ実装・校正が必要。[再計画](development-harness-next-plan.md)のP0から順に進める。
+現在あるものは、有限の段階runner、archive、独立observer、予算の開始判定、中断成果の後処理に加え、
+新clock、周期pauseなしの終端回収、公開feedback方式。Cycle 005で使用済み。
+今後は[協働実験計画](collaboration-experiment-plan.md)に従い、方式ごとの課題適格性、
+複数参加者の受渡し・全停止・全費用、継続開発の評価を確認する。
 全run数・phase/session上限・時間・usage・評価費・保存容量・停止許容幅を固定する前にliveを始めない。
 ownerはprimary/integrator。ユーザーへ採点やlog保守を求めない。

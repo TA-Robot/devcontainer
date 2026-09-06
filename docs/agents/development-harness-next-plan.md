@@ -1,10 +1,14 @@
 # Cycle 004後の再計画: 最短で採否を決められる比較へ
 
+位置付け: **Cycle 005までの実装判断の履歴**。2026-09-06の目的再確認により、今後の優先順位は
+[プロジェクト計画](../project-plan.md)、協働の比較設計は[協働実験計画](collaboration-experiment-plan.md)へ移した。
+以下の「次」は当時の順序を表し、公開feedback比較を現在のプロジェクト全体の目的にしない。
+
 更新: 2026-09-06。状態: **Cycle 001〜004の実開発比較は実施済み。004後のP0/P1は実装・疑似provider検証済み。新方式のCycle 005小規模比較・評価・統合も完了。大規模側は未測定。**
 実行順の正本は[現行計画](../project-plan.md)。これまでの[計画履歴](../project-plan-history-through-cycle-004.md)、
 [Cycle 004の原結果](../../experiments/development-harness/cycle-004/README.md)を変更しない。
 ここでのP0〜P4は次サイクルの準備番号。過去の題材選定・比較・統合を未実施へ読み替えない。
-実施済みの題材と到達点は[現行計画の一覧](../project-plan.md#実施済みの題材比較と現在地)を参照。
+実施済みの題材と到達点は[Cycle 005までの計画](../project-plan-history-through-cycle-005.md)を参照。
 
 ## 目的と今回の判断
 
