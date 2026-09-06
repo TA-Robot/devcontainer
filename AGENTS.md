@@ -229,6 +229,16 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-automatic-development
 `AUTOMATIC_COMPARISON_IMAGE`に検証済みimage IDを指定すると、疑似providerによる両条件の
 実行・外部採点・集計まで実Dockerで確認する。人やLLMによる採点の上書きを追加しない。
 
+証拠統合の別評価版（`experiments/development-harness/consultation/synthesis_v2/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-synthesis-scope-v2.py scripts/test-synthesis-pilot-report.py
+```
+
+`SYNTHESIS_SCOPE_IMAGE`に検証済みimage IDを指定すると、認証・networkなしの実Docker校正も確認する。
+校正結果は新しいpathへ保存し、source hashと測定範囲を残す。旧F12 oracle・pilot原結果を上書きせず、
+v2の構造化assembly検査を自由文の真偽・運用効果・協働効果の判定へ読み替えない。
+
 終端回収と測定時計v2（`experiments/development-harness/terminal/`）を触ったら:
 
 ```bash

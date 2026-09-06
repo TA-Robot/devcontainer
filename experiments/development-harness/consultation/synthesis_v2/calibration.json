@@ -1,0 +1,1891 @@
+{
+  "case_id": "consultation-synthesis-scope-v2",
+  "kind": "provider-free-calibration",
+  "status": "pass",
+  "live_provider_calls": 0,
+  "historical_score_overwritten": false,
+  "source_sha256": {
+    "synthesis_case.py": "6c85ec2f5b520bd0bb651024bf6f90eef78d74658a973008a901aabf0c16eca5",
+    "synthesis_rules.py": "ebac4d77de0e513e56d703c79831a76d00dadb8e6083e3d5904aaef671585d9c",
+    "calibrate_synthesis.py": "258456b5455b401328f8e3478202b64774e21818f7d709c0ac766b50230ff469",
+    "brief.md": "f2e064221aa5da10d5e21875440e66a59d9bfcbc939d128bb4717c2db070f66f",
+    "historical_f12.py": "9da9c338d571aea1e1e21f9e125c1c746a722978210d9ce227c66dc286dbb898"
+  },
+  "duration_seconds": 0.9453625020032632,
+  "admission": "structured-assembly-calibrated-only",
+  "general_quality_comparison_eligible": false,
+  "records": [
+    {
+      "candidate": "reference",
+      "expected": "pass",
+      "required_failure": null,
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "pass",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "alternative-target-and-identifiers",
+      "expected": "pass",
+      "required_failure": null,
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "pass",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "deny-generalization",
+      "expected": "pass",
+      "required_failure": null,
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "pass",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "deny-serialized-guarantees",
+      "expected": "pass",
+      "required_failure": null,
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "pass",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "non-english-explanation",
+      "expected": "pass",
+      "required_failure": null,
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "pass",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "additional-recovery-unknown",
+      "expected": "pass",
+      "required_failure": null,
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "pass",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "additional-provider-unknown",
+      "expected": "pass",
+      "required_failure": null,
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "pass",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "overlapping-topics-and-evidence",
+      "expected": "pass",
+      "required_failure": null,
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "pass",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "reordered-claims",
+      "expected": "pass",
+      "required_failure": null,
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "pass",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "renamed-unknown-identifiers",
+      "expected": "pass",
+      "required_failure": null,
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "pass",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "universal-population",
+      "expected": "fail",
+      "required_failure": "claim-scope",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "failed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "cross-workload-inference",
+      "expected": "fail",
+      "required_failure": "claim-scope",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "failed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "unsupported-throughput",
+      "expected": "fail",
+      "required_failure": "claim-scope",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "failed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "missing-claim-evidence",
+      "expected": "fail",
+      "required_failure": "evidence-links",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "failed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "wrong-existing-evidence",
+      "expected": "fail",
+      "required_failure": "evidence-links",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "failed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "invented-evidence",
+      "expected": "fail",
+      "required_failure": "evidence-links",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "failed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "missing-provenance",
+      "expected": "fail",
+      "required_failure": "artifact-contract",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "failed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "unknown"
+          },
+          {
+            "name": "claim-scope",
+            "status": "unknown"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "unknown"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "unknown"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "unknown"
+          },
+          {
+            "name": "document-sync",
+            "status": "unknown"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "wrong-provenance",
+      "expected": "fail",
+      "required_failure": "evidence-links",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "failed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "missing-recovery-topic",
+      "expected": "fail",
+      "required_failure": "unknown-coverage",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "failed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "missing-provider-topic",
+      "expected": "fail",
+      "required_failure": "unknown-coverage",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "failed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "missing-recovery-evidence",
+      "expected": "fail",
+      "required_failure": "unknown-coverage",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "failed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "unknown-declared-known",
+      "expected": "fail",
+      "required_failure": "unknown-coverage",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "failed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "recovery-guaranteed",
+      "expected": "fail",
+      "required_failure": "unknown-coverage",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "failed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "missing-unknown-explanation",
+      "expected": "fail",
+      "required_failure": "artifact-contract",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "failed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "unknown"
+          },
+          {
+            "name": "claim-scope",
+            "status": "unknown"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "unknown"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "unknown"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "unknown"
+          },
+          {
+            "name": "document-sync",
+            "status": "unknown"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "duplicate-claim-id",
+      "expected": "fail",
+      "required_failure": "artifact-contract",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "failed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "unknown"
+          },
+          {
+            "name": "claim-scope",
+            "status": "unknown"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "unknown"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "unknown"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "unknown"
+          },
+          {
+            "name": "document-sync",
+            "status": "unknown"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "duplicate-unknown-id",
+      "expected": "fail",
+      "required_failure": "artifact-contract",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "failed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "unknown"
+          },
+          {
+            "name": "claim-scope",
+            "status": "unknown"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "unknown"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "unknown"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "unknown"
+          },
+          {
+            "name": "document-sync",
+            "status": "unknown"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "wrong-median",
+      "expected": "fail",
+      "required_failure": "metric-integrity",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "failed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "boolean-sample-count",
+      "expected": "fail",
+      "required_failure": "artifact-contract",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "failed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "unknown"
+          },
+          {
+            "name": "claim-scope",
+            "status": "unknown"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "unknown"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "unknown"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "unknown"
+          },
+          {
+            "name": "document-sync",
+            "status": "unknown"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "censored-count-lost",
+      "expected": "fail",
+      "required_failure": "metric-integrity",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "failed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "pooled-samples-accepted",
+      "expected": "fail",
+      "required_failure": "metric-integrity",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "failed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "missing-controls",
+      "expected": "fail",
+      "required_failure": "decision-constraints",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "failed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "immediate-target",
+      "expected": "fail",
+      "required_failure": "decision-constraints",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "failed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "missing-decision-edge",
+      "expected": "fail",
+      "required_failure": "decision-constraints",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "failed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "dangling-gate",
+      "expected": "fail",
+      "required_failure": "decision-constraints",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "failed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "missing-alternative-counterevidence",
+      "expected": "fail",
+      "required_failure": "decision-constraints",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "failed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "wrong-contract-version",
+      "expected": "fail",
+      "required_failure": "artifact-contract",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "failed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "unknown"
+          },
+          {
+            "name": "claim-scope",
+            "status": "unknown"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "unknown"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "unknown"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "unknown"
+          },
+          {
+            "name": "document-sync",
+            "status": "unknown"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "missing-scope",
+      "expected": "fail",
+      "required_failure": "artifact-contract",
+      "unmeasured_boundary": false,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "fail",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "failed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "unknown"
+          },
+          {
+            "name": "claim-scope",
+            "status": "unknown"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "unknown"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "unknown"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "unknown"
+          },
+          {
+            "name": "document-sync",
+            "status": "unknown"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "ungraded-prose-contradiction",
+      "expected": "pass",
+      "required_failure": null,
+      "unmeasured_boundary": true,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "pass",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    },
+    {
+      "candidate": "ungraded-operational-noop",
+      "expected": "pass",
+      "required_failure": null,
+      "unmeasured_boundary": true,
+      "status": "pass",
+      "evaluation": {
+        "case_id": "consultation-synthesis-scope-v2",
+        "status": "pass",
+        "checks": [
+          {
+            "name": "source-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "artifact-contract",
+            "status": "passed"
+          },
+          {
+            "name": "evidence-links",
+            "status": "passed"
+          },
+          {
+            "name": "claim-scope",
+            "status": "passed"
+          },
+          {
+            "name": "unknown-coverage",
+            "status": "passed"
+          },
+          {
+            "name": "metric-integrity",
+            "status": "passed"
+          },
+          {
+            "name": "decision-constraints",
+            "status": "passed"
+          },
+          {
+            "name": "document-sync",
+            "status": "passed"
+          }
+        ],
+        "measurement_scope": "structured-evidence-assembly",
+        "prose_semantics_measured": false,
+        "operational_effectiveness_measured": false
+      }
+    }
+  ]
+}
