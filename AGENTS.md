@@ -254,6 +254,15 @@ PYTHONDONTWRITEBYTECODE=1 python3 experiments/development-harness/selection/audi
 出力は未使用のpathを指定し、以前の監査結果を上書きしない。配布の能力を主張する場合は
 `scripts/test-agentctl-check-container.sh IMAGE`も検証済みimageで実行する。監査fixtureの成功をlive比較の効果へ読み替えない。
 
+Cycle 005のCLI同期課題・評価器（`experiments/development-harness/cycle-005/`）またはfeedbackのtask adapterを触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-cli-sync-evaluator.py scripts/test-development-feedback.py
+```
+
+`TERMINAL_DEVELOPMENT_IMAGE`へ検証済みimage IDを指定し、実imageのread-only評価とadapterも確認する。
+校正用referenceをdeveloper checkoutへ入れず、旧評価器・過去の得点を変更しない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ

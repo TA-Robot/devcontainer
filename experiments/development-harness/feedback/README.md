@@ -122,8 +122,9 @@ python3 experiments/development-harness/feedback/workflow.py run --output /priva
 ```
 
 workspace・公開directory・出力は相互に包含しない。公開directoryは空、containerは停止状態で用意する。
-現在の評価器接続は既存の`duplicates-v1/redaction-v2/acceptance-v2`のみ。次の課題を決めたらP2で
-対応表と評価器の識別能力を固定する。この校正入口だけをlive比較の開始条件にしない。
+評価器接続は既存の`duplicates-v1/redaction-v2/acceptance-v2`に加え、Cycle 005の`cli-sync-v1`を
+`task_evaluation.py`で接続する。旧評価器の原コードは変更しない。対応表と評価器の識別能力、
+実行ごとの全条件を固定してから開始する。この入口だけをlive比較の開始条件にしない。
 
 ## 検証
 
