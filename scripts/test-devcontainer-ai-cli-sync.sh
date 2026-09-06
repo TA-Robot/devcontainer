@@ -107,6 +107,15 @@ for spec in "${specs[@]}"; do
   package_dir="$prefix/lib/node_modules/$package_name"
   mkdir -p "$package_dir"
   printf '{"version":"%s"}\n' "$version" >"$package_dir/package.json"
+  case "$package_name" in
+    @openai/codex) command_name=codex ;;
+    @anthropic-ai/claude-code) command_name=claude ;;
+    @google/gemini-cli) command_name=gemini ;;
+  esac
+  printf '#!/bin/sh\necho "%s %s"\n' "$command_name" "$version" >"$package_dir/cli"
+  chmod 0755 "$package_dir/cli"
+  mkdir -p "$prefix/bin"
+  ln -sf "../lib/node_modules/$package_name/cli" "$prefix/bin/$command_name"
 done
 EOF
 chmod +x "$stub_dir/npm"
@@ -179,7 +188,9 @@ DOWNLOAD_LOG="$download_log" \
 [[ ! -s "$download_log" ]] || fail "matching Grok edge version should not download"
 
 # The old explicit enable switch remains an edge opt-in during migration.
-rm -rf "$prefix/lib"
+# Remove the executable entry points to require a reinstall, including after
+# migration to a generation whose npm library is outside the legacy lib path.
+rm -rf "$prefix/bin"
 : >"$npm_log"
 NPM_LOG="$npm_log" \
 DEVCONTAINER_AI_CLI_SYNC=1 \
@@ -197,3 +208,5 @@ fi
 grep -q 'must be stable or edge' "$tmp/err" || fail "invalid channel failure should be actionable"
 
 echo "ok - devcontainer stable/edge AI CLI version policy"
+
+PYTHONDONTWRITEBYTECODE=1 python3 "$script_dir/test-sync-host-ai-cli-transaction.py"
