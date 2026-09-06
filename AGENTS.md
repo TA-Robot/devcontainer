@@ -267,6 +267,16 @@ PYTHONDONTWRITEBYTECODE=1 python3 experiments/development-harness/selection/audi
 出力は未使用のpathを指定し、以前の監査結果を上書きしない。配布の能力を主張する場合は
 `scripts/test-agentctl-check-container.sh IMAGE`も検証済みimageで実行する。監査fixtureの成功をlive比較の効果へ読み替えない。
 
+F04-L動作監査（`experiments/development-harness/selection/audit_f04_lifecycle.py`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-f04-lifecycle-audit.py
+```
+
+`F04_AUDIT_IMAGE`に検証済みimage IDを指定して実Docker監査も確認する。
+固定されたprovider-free候補だけを使い、host評価へlive成果物を渡さない。
+旧oracle・得点を上書きせず、別processでの正常再実行と書込み中の中断耐性を区別する。
+
 Cycle 005のCLI同期課題・評価器（`experiments/development-harness/cycle-005/`）またはfeedbackのtask adapterを触ったら:
 
 ```bash

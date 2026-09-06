@@ -44,7 +44,7 @@ worker単体の回答だけで、開発episode全体の良さを採点しない�
 | F03-L-PYBASH-001 revision 1 | 再起動時のbarrier付き再現・残存状態・cleanupを検査する。[oracle設計](../../temp/multi-agent-duration-atlas/case-designs/f03-l-pybash-001/04-oracle-and-quality-rubric.md)、[実装](../../scripts/agent_duration_cases/f03.py) | **原因発見の相談比較へ現版をそのまま採用しない。** [公開capsule](../../experiments/multi-agent-duration/capsules/f03-l-crash-restart-diagnosis.md)が原因のevent順序と保証を明示している。再現手順の構築は測れる。相談で原因を発見できるかには別版が必要 |
 | F02-M-PY-001 revision 1 | 独立reviewの部品候補。可視のコードから隔離上の欠陥と根拠を提出する。[実装](../../scripts/agent_duration_cases/f02.py) | 現contractはreview.jsonのみでsource修正を禁止。review品質は測れても修正後の開発品質は測れない。修正まで扱う場合は別revision/adapterが必要 |
 | F12-L-MDJSON-001 revision 3 | 複数観点の案と統合候補。公開の制約と複数の有効な設計を許す。[実装](../../scripts/agent_duration_cases/f12.py)、[validity](../../experiments/multi-agent-duration/validity/effort-quality.json) | 既存proposalと限定された選択肢からの制約充足・証拠統合に限る。新しい案を広く発明する能力や実装後の有用性は未測定。独立案と統合後のartifactを別々に保持する必要 |
-| F04-L-PYBASH-001 revision 1 | 複数実装候補。再起動を含む動作の検査と実装自由度がある。[実装](../../scripts/agent_duration_fixtures.py) | 既存validityには天井の観測あり。全候補合格なら品質向上は識別できない。別の正当な実装を受理するか、実需要にある差を測れるか確認 |
+| F04-L-PYBASH-001 revision 1 | 実装・review後の修正候補。別processでの正常再実行を検査する。[実装](../../scripts/agent_duration_fixtures.py) | [9実装監査](../../experiments/development-harness/selection/f04-lifecycle-audit.md)で2つの妥当な実装を受理したが、直接上書き・引数再分割も旧4/4を通る。旧版のまま採用しない。過去9/10満点を要求全体の天井へ広げず、別版で観測範囲を固定 |
 | G1/G2/G3 | 実協働の失敗・復旧・観測の回帰材料がある | G2の自己申告採点/状態所有権、G3の天井などは[監査](../project-review-2026-09-05.md)参照。協働が勝つ方向への難化はしない |
 | Cycle 002/003の複数段階開発 | 状態引継ぎ、要求追加、復旧、統合というM5の候補資産 | 既存完成物を学習済みのagentへ同じ正解として出さない。新しい要求系列と固定評価が必要。大規模という名前だけで再採用しない |
 
@@ -84,7 +84,9 @@ F12-L revision 3の事前相談→makerとsoloを一組実行した。
 正当な別表現等10候補の受理、構造化scopeの一般化・根拠欠落等27候補の拒否を確認した。
 自由文と無効な運用手順が依然通る2候補も残し、構造化assemblyという測定範囲を明示する。
 実Dockerを含む14テストが合格。旧runは変換・再採点せず、品質解釈のguardも保持する。
-次はF04-Lの動作評価を使う確認課題の適格性を監査する。v2校正だけでlive再比較や一般品質の判定を開始しない。
+F04-Lの動作監査では、原子的置換と引数保持の見逃しを再現し、別probeで識別できると確認した。
+次は[review→修正の具体化](../../experiments/development-harness/selection/f04-lifecycle-audit.md)へ進む。
+同じ初期実装のsolo点検・修正を対照にし、review後の実動作を測る。v2やF04の校正だけでlive比較は開始しない。
 以下の診断候補の準備履歴も保持し、既存資産や過去比較を未実施へ戻さない。
 
 ### 診断別版で実装・判断したこと

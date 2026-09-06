@@ -83,7 +83,7 @@ flowchart LR
 | 段階 | 成果物・完了条件 | 現状 |
 | --- | --- | --- |
 | M0: 目的と証拠の整理 | 循環、資産の実装/実測/未実証、各実験から変える対象を一つの計画へ統合 | 今回完了。今後の判断はこの目的へ戻す |
-| M1: 実験群の適格性 | 既存候補を監査し、方式に適する課題と自動評価の範囲を決定。正解の多様性・欠陥検出・solo対照・費用計測を確認し、初回protocolを固定 | **進行中**。既存4課題・診断別版に続き、[証拠統合v2](../experiments/development-harness/consultation/synthesis_v2/README.md)を39候補で校正。旧pilotのprotocol/上限は固定・実施済み。一般品質を測る確認課題と次のlive条件は未固定 |
+| M1: 実験群の適格性 | 既存候補を監査し、方式に適する課題と自動評価の範囲を決定。正解の多様性・欠陥検出・solo対照・費用計測を確認し、初回protocolを固定 | **進行中**。[証拠統合v2](../experiments/development-harness/consultation/synthesis_v2/README.md)を39候補で校正。[F04-L動作監査](../experiments/development-harness/selection/f04-lifecycle-audit.md)では2つの妥当な実装を受理し、旧評価の2種類の見逃しを再現。次は別版のreview→修正比較を校正する。旧pilotは実施済み、次のlive条件は未固定 |
 | M2: 協働比較の自動実行 | 最初に適格となった方式を既存terminal/所有権/評価へ接続。受渡し、全参加者停止・全usage・統合・外部評価を疑似providerと実Dockerで確認 | [実Codex接続](../experiments/development-harness/consultation/synthesis-runtime.md)も実装。sandbox probe・環境同等性・全停止・採点を実比較で確認。途中相談やsession継続は未対応 |
 | M3: 方式別の探索比較 | 相談・review・案収集・実装比較を対象に、適格な課題で有限の比較。正/負/不明、発動状況、失敗、全費用、未着手を保存 | [事前相談の新経路pilot](../experiments/development-harness/consultation/synthesis-result.md)を一組実施。品質解釈は評価器の誤判定により保留。他方式を済ませたことにしない |
 | M4: ハーネス改良と再評価 | 採用/条件限定/棄却/保留を決め、指示・情報・実行制御を版付きで改修。結果を見ていない課題で改良前後を再評価 | 集計guard・実測ガイドへ採否を反映。別評価版のprovider-free校正まで完了。改良した協働手順の未使用課題での実比較は未実施。**ここまでを最初の改善循環の完了条件**とする |
@@ -108,7 +108,12 @@ M1のF12-L revision 3も[反例監査](../experiments/development-harness/select
 [別評価版v2](../experiments/development-harness/consultation/synthesis_v2/README.md)では公開されたscope・根拠関係・topic網羅を検査し、
 正当な10候補を受理し、不正な27候補を拒否した。自由文の虚偽と無効な運用手順を検出できない2候補も明示し、
 構造化assembly以外の品質比較には未採用。実Dockerを含む14テストを確認し、旧原結果・sealのhash不変を確認した。
-次は既存候補F04-Lの動作評価で別実装・欠陥・既知の天井を監査し、確認課題を具体化する。
+F04-Lの[9実装監査](../experiments/development-harness/selection/f04-lifecycle-audit.md)では、
+直接上書きと空白引数を壊すwrapperが旧4/4を通った。別processの動作probeでこの2欠陥を検出し、
+異なる原子的writerも受理した。実Dockerを含む7テストを確認。過去10観測中9満点は旧検査の結果であり、
+成果物未保存のため再採点しない。書込み中のprocess kill・電源断・競合は未測定とする。
+次は同じ初期実装をsoloで点検・修正する条件と、独立review→fresh修正担当の条件を比較する別版を作る。
+修正後の実動作と退行を採点し、正しい初期実装も対照に含める。課題・外部評価・全予算を固定してからliveへ進む。
 これはM1のplanning priorであり、相談や複数実装の有効性を仮定しない。同じ旧oracleで本数を増やさない。
 他候補も現contractで答えられる問いに限定し、過去の資産を勝敗の期待から捨てない。
 追加人数・repeat・期限は全体のdefaultにせず、M1で参加者の役割と全体予算から固定する。
