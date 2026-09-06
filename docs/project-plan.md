@@ -4,13 +4,32 @@
 目的は、**実開発で使える成果の品質を上げ、そこへ到達する総時間と費用を減らすこと**。
 小規模と大規模、速度と品質を別々に評価する。比較の実行・停止・検査・集計に人の採点を挟まない。
 
+## 実施済みの題材・比較と現在地
+
+**題材選定と実モデルによる比較は既に実施している。** 現在のP0〜P4はCycle 004後の
+次サイクル準備であり、プロジェクト全体を未実施へ戻した番号ではない。
+
+| 実施済みcycle | 題材 | 到達点 |
+| --- | --- | --- |
+| [001](agents/development-harness-cycle-001.md) | 共有JSON検証の非有限数拒否 | 両条件を実行・評価、成果を統合。33/33同士、379秒→235秒は1組の観測 |
+| [002](agents/development-harness-cycle-002.md) | template導入・更新・復旧の3段階と、supervisor設定検証 | 両規模で比較・評価・統合まで実施。この比較では高速化を確認しなかった |
+| [003](agents/development-harness-cycle-003.md) | JSONログの伏せ字と、独立acceptance実行・証拠保存・中断復旧の3段階 | 両規模で比較・評価・統合まで実施。予算超過・評価器の限界・統合修正を別記録 |
+| [004](../experiments/development-harness/cycle-004/README.md) | 共有JSONローダーの重複キー拒否 | 比較を実施。改良側が途中中断し、保全成果を評価して修正を統合。最終速度比は未成立 |
+
+004の中断と計時不備を受け、P0で測定を修理し、P1で「同じ公開checkを使う自己検証と
+自動feedback」の新しい比較方式を用意した。**未実施なのはこの新方式の次のlive比較。**
+004後に用意した履歴表示の3段階案も存在するが、評価器・予算は未固定で保留中。
+CLI同期は直近に追加した次サイクルの候補であり、以前選定・比較した題材の代わりではない。
+
+## 次サイクルの準備
+
 **次の着手点はP2: このdevcontainer基盤自身のCLI同期・失敗復旧を題材に、要求と評価を固定する。**
 外部projectのパスや追加要求の提出は開始条件にしない。改善候補の選定はこちらで進める。
 [次の候補と再現結果](../experiments/development-harness/selection/cli-sync-candidate.md)を参照。
 第一候補のagentctl依存job経路は、[不足監査](../experiments/development-harness/selection/README.md)で
-中核が既存CLIの合成で成立したため棄却した。P2全体とlive比較は未完了／未開始。
+中核が既存CLIの合成で成立したため棄却した。P2全体と新版の次のlive比較は未完了／未開始。
 途中freezeを使わない[測定経路v2](../experiments/development-harness/terminal/README.md)は実装し、
-実Dockerを含む新版27テストと旧ハーネス42テストで確認した。実モデルの比較はまだ開始しない。
+実Dockerを含む新版27テストと旧ハーネス42テストで確認した。新方式の実モデル比較はまだ開始しない。
 [公開検証と修正の実行contract](../experiments/development-harness/feedback/README.md)も実装し、
 同じ公開情報・実行環境と、検査・修正費を含む累積予算を疑似providerで確認した。
 新しい小課題を増やす前に、大規模側の課題を成立させる。
