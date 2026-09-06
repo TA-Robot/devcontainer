@@ -8,7 +8,7 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 - **Node.js 22.x** プリインストール
 - **AI ツール統合**: Codex CLI、Fugu wrapper、Gemini CLI、Claude Code、Grok Build がすぐに使える
 - **再現可能なstable toolchain**: Feature、Node、global npm tool、AI CLIを固定し、起動時installなし
-- **明示的なedge channel**: 必要なときだけホストのCodex / Gemini / Claude Code / Grok versionへ同期
+- **ローカル起動はedge channel**: ホストのCodex / Gemini / Claude Code / Grok versionへ自動同期。固定版を使う場合はstableを指定
 - **Docker-in-Docker**: コンテナ内でDockerを利用可能
 - **ホスト設定の引き継ぎ**: SSH鍵、Git設定、認証情報を自動マウント
 - **Mira Companion v2**: Codex / Claude / Grokのinteractive sessionとagentctl-managed jobが小さなpixel-art世界の動きになるbottom-panel companionを自動導入
@@ -334,16 +334,16 @@ AI CLI の認証ディレクトリ/ファイルは CLI の標準パスへ直接 
 
 ## Stable / edge AI CLI channel
 
-既定のstableはimage-pinned packageをそのまま使います。`grok` wrapperはbackground self-updateも抑止し、更新の所有権をstable/edge channelへ一本化します。
+このrepositoryをCursor / VS Codeで開くと、既定のedgeがホスト側CLIのversionへ同期します。Dockerfileから直接起動するimageはstableのままです。`grok` wrapperはbackground self-updateも抑止し、更新の所有権をstable/edge channelへ一本化します。
 
 ```bash
 agentctl doctor --json
 ```
 
-host側CLIのversionをcanaryしたい場合だけ、devcontainerを開く前にhostで設定します。
+起動時の同期を止めてimageの固定版を使う場合は、hostで次を設定し、その環境を引き継いでCursor / VS Codeを起動します。
 
 ```bash
-export DEVCONTAINER_AI_CLI_CHANNEL=edge
+export DEVCONTAINER_AI_CLI_CHANNEL=stable
 ```
 
 edgeでは次の順でhost側versionを反映します。
@@ -354,7 +354,7 @@ edgeでは次の順でhost側versionを反映します。
 
 ホストの実行ファイル自体は mount しません。Codex などには OS / CPU 別の native package が含まれるため、バージョンだけを合わせてコンテナ向け package を導入します。
 
-host側でCLIをupdateした後はdevcontainerを開き直してください。edge同期にはnpm registryと`x.ai`への接続が必要です。stableへ戻すには環境変数をunsetし、image-pinned prefixへ戻すためcontainerをrebuildします。
+host側でCLIをupdateした後はdevcontainerを開き直してください。edge同期にはnpm registryと`x.ai`への接続が必要です。stableへ戻すには上記を指定し、image-pinned prefixへ戻すためcontainerをrebuildします。既に起動したエディタの別terminalでexportするだけでは起動環境は変わりません。設定を変えた場合はエディタを終了して、その環境から起動し直してください。
 
 確認:
 

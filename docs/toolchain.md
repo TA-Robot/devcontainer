@@ -1,10 +1,12 @@
 # Stable and edge toolchain policy
 
-## Stable is the default
+## Stable images and local edge startup
 
 The devcontainer image is the stable release unit. Its base image digest, Dev
 Container Features, Node version, global npm tools, and AI CLIs are pinned in the
-repository. Opening or restarting a stable container performs no CLI version
+repository. The checked-in Cursor / VS Code launch configuration defaults to
+edge and synchronizes host CLI versions. Standalone image runs still default to
+stable. Opening or restarting an explicitly stable container performs no CLI version
 probe on the host and no package install. The managed Grok wrapper also passes
 its supported no-auto-update flag so the binary cannot silently leave the
 selected channel.
@@ -66,15 +68,17 @@ digest-checked bundled build, matching the frozen-image behavior. Remove this
 split only after a Codex/Ubuntu update passes the no-generation workspace-write,
 unrelated-read, and network-denial probe with the system helper.
 
-## Edge is explicit
+## Selecting the local startup channel
 
-Set the following on the host before opening the devcontainer:
+Local editor startup defaults to edge. To keep the pinned image versions instead,
+set the following on the host and launch the editor from that environment:
 
 ```bash
-export DEVCONTAINER_AI_CLI_CHANNEL=edge
+export DEVCONTAINER_AI_CLI_CHANNEL=stable
 ```
 
-The host initializer then records supported CLI version numbers (never package
+With edge selected (or the local setting unset), the host initializer records
+supported CLI version numbers (never package
 directories or credentials). At container start, mismatched npm-based CLIs are
 installed and the matching versioned Grok binary is downloaded into
 `/opt/devcontainer-ai-cli` for the container OS/CPU.
@@ -82,6 +86,14 @@ installed and the matching versioned Grok binary is downloaded into
 `DEVCONTAINER_AI_CLI_SYNC=1` remains a migration-compatible spelling for edge.
 `DEVCONTAINER_AI_CLI_SYNC=0` disables host probing/synchronization. New automation
 should use `DEVCONTAINER_AI_CLI_CHANNEL`.
+
+Changing an environment variable in a separate terminal does not update an
+already-running editor. Restart the editor with the intended environment and
+recreate the container after changing its channel. Returning an edge container
+to pinned versions requires recreation from the image; skipping sync alone does
+not undo previously installed packages. `initialize-host.sh` and
+`devcontainer.json` share the local edge default, while the Dockerfile and the
+standalone sync command retain stable as their default.
 
 Edge is a canary surface. It is not reproducible, may require npm registry and
 `x.ai` access, and must pass `agentctl doctor --json` before its capabilities are

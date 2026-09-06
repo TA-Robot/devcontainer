@@ -26,7 +26,7 @@
 
 ## Stable / Edge Toolchain
 
-認証情報のbind mountとCLI配布は別レイヤーです。stableが既定で、起動時にhost CLIをprobeせずpackage installもしません。
+認証情報のbind mountとCLI配布は別レイヤーです。Cursor / VS Codeでのローカル起動はedgeが既定で、hostのCLI versionへ同期します。Dockerfileから直接起動するimageと、明示的に選択したstableは、起動時にhost CLIをprobeせずpackage installもしません。
 
 ```text
 DEVCONTAINER_AI_CLI_CHANNEL=edge
