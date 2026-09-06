@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Test launch defaults independently of the caller's selected channel.
+unset DEVCONTAINER_AI_CLI_CHANNEL DEVCONTAINER_AI_CLI_SYNC
+
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 repo_root="$(cd -- "$script_dir/.." && pwd -P)"
 sync_script="$repo_root/scripts/sync-host-ai-cli-versions"
@@ -41,23 +44,34 @@ echo "grok 1.0.3 (fixture) [stable]"
 EOF
 chmod +x "$stub_dir/codex" "$stub_dir/claude" "$stub_dir/gemini" "$stub_dir/grok"
 
-# Stable is the default and must not execute host CLI probes.
+# Explicit stable must not execute host CLI probes.
 PROBE_LOG="$probe_log" HOME="$host_home" PATH="$stub_dir:/usr/bin:/bin" \
+DEVCONTAINER_AI_CLI_CHANNEL=stable \
   sh "$host_init" >/dev/null
 manifest="$host_home/.cache/devcontainer-ai-cli/versions.env"
 [[ ! -s "$probe_log" ]] || fail "stable initialize must not probe host AI CLIs"
 [[ "$(wc -l <"$manifest" | tr -d ' ')" == "1" ]] || fail "stable manifest should contain only its header"
 [[ "$(cat "$host_home/.claude.json")" == "{}" ]] || fail "Claude state file was not initialized"
 
-# Edge explicitly probes the host and records only version numbers.
+# The local editor launch defaults to edge and records only version numbers.
 : >"$probe_log"
 PROBE_LOG="$probe_log" HOME="$host_home" PATH="$stub_dir:/usr/bin:/bin" \
-DEVCONTAINER_AI_CLI_CHANNEL=edge sh "$host_init" >/dev/null
+  sh "$host_init" >/dev/null
 grep -qx 'CODEX_CLI_VERSION=1.2.3' "$manifest" || fail "edge host Codex version was not detected"
 grep -qx 'CLAUDE_CODE_VERSION=4.5.6' "$manifest" || fail "edge host Claude version was not detected"
 grep -qx 'GEMINI_CLI_VERSION=7.8.9' "$manifest" || fail "edge host Gemini version was not detected"
 grep -qx 'GROK_CLI_VERSION=1.0.3' "$manifest" || fail "edge host Grok version was not detected"
 [[ "$(wc -l <"$probe_log" | tr -d ' ')" == "4" ]] || fail "edge should probe each supported host CLI"
+
+# The opt-out must also suppress probes under the new local edge default and
+# replace an earlier populated manifest rather than retaining stale versions.
+: >"$probe_log"
+PROBE_LOG="$probe_log" HOME="$host_home" PATH="$stub_dir:/usr/bin:/bin" \
+DEVCONTAINER_AI_CLI_SYNC=0 sh "$host_init" >/dev/null
+[[ ! -s "$probe_log" ]] || fail "sync opt-out must not probe host AI CLIs"
+[[ "$(wc -l <"$manifest" | tr -d ' ')" == "1" ]] || fail "sync opt-out must clear previous versions"
+PROBE_LOG="$probe_log" HOME="$host_home" PATH="$stub_dir:/usr/bin:/bin" \
+DEVCONTAINER_AI_CLI_CHANNEL=edge sh "$host_init" >/dev/null
 
 prefix="$tmp/prefix"
 npm_log="$tmp/npm.log"

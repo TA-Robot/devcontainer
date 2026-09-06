@@ -15,8 +15,8 @@
   // ユーザー設定
   "remoteUser": "devuser",
 
-  // bind mount 元を用意する。stableではhost CLIをprobeせずimage pinを使う。
-  // edgeを明示した場合だけhost version番号を記録し、container向けnpm packageを同期する。
+  // ローカル開発はhost CLI versionへ同期する。stableを明示すればimage pinを使う。
+  // 実行ファイルは共有せず、container向けの同一versionを導入する。
   "initializeCommand": "sh \"${localWorkspaceFolder}/.devcontainer/initialize-host.sh\"",
   
   // 機能追加（必要に応じてコメントアウト解除）
@@ -90,8 +90,8 @@
     "MIRA_COMPANION_ENABLED": "${localEnv:MIRA_COMPANION_ENABLED}",
     // 0 にするとMira Companion拡張の自動package/installを無効化できる
     "MIRA_COMPANION_INSTALL": "${localEnv:MIRA_COMPANION_INSTALL}",
-    // stable（既定）は起動時更新なし。edgeだけhost versionへ同期する
-    "DEVCONTAINER_AI_CLI_CHANNEL": "${localEnv:DEVCONTAINER_AI_CLI_CHANNEL:stable}",
+    // ローカル起動はedgeが既定。stableを明示すると起動時更新なし
+    "DEVCONTAINER_AI_CLI_CHANNEL": "${localEnv:DEVCONTAINER_AI_CLI_CHANNEL:edge}",
     // legacy switch: 1はedge opt-in、0は同期/host probe無効
     "DEVCONTAINER_AI_CLI_SYNC": "${localEnv:DEVCONTAINER_AI_CLI_SYNC}"
   },

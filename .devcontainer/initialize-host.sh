@@ -19,7 +19,9 @@ mkdir -p "$version_dir"
 trap 'rm -f "$version_tmp"' EXIT HUP INT TERM
 
 sync_switch="${DEVCONTAINER_AI_CLI_SYNC:-}"
-channel="${DEVCONTAINER_AI_CLI_CHANNEL:-stable}"
+# Match devcontainer.json's local-development default. Standalone images keep
+# their stable default; this initializer belongs to the editor launch path.
+channel="${DEVCONTAINER_AI_CLI_CHANNEL:-edge}"
 if [ "$sync_switch" = "1" ]; then
   channel=edge
 fi
