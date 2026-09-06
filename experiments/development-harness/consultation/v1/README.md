@@ -3,7 +3,7 @@
 状態: 課題生成・公開観測・独立評価・provider-free校正を実装・検証済み。
 **相談による品質向上を測る主課題としては不採用。実行経路の校正と不要な相談を調べる対照候補として保持。**
 この版は`consultation-crash-diagnosis-v1`。旧atlasのF03-L revision 1を変更しない。
-協働runnerへの接続、live実行の予算固定、方式の効果測定は未完了。
+協働runnerの疑似provider接続は完了。live実行の予算固定と方式の効果測定は未完了。
 [協働実験計画](../../../../docs/agents/collaboration-experiment-plan.md)のM1の成果物。
 
 ## 比較の問いと範囲
@@ -100,9 +100,8 @@ AIが非agent手段で足りる課題に不要な相談を増やさないかを�
 
 ## 次の接続作業
 
-既存terminal経路へこの独立評価を接続し、疑似providerでsoloと相談条件の受渡しを確かめる。
-advisorへの情報境界、maker継続、全participant停止、全usage・待ち・統合費を
-疑似providerで検証してから、model/effort/実行順/全体予算/停止方針をmanifestへ固定する。
-主比較の課題は別に適格性を確認する。次の候補はF12-L revision 3の証拠統合で、
-既存の選択肢・制約・複数の根拠からの判断を測る範囲に限り、情報の重なりと異なる観点の寄与を監査する。
-現在の校正成功を、協働実行経路や効果の検証済み表示に使わない。
+[相談flow](../README.md)で既存terminalへ接続し、疑似providerの受渡し・全停止・外部評価を実Dockerでも確認した。
+対象は事前助言→新しいmakerという直列関係。途中の相談や同一sessionの継続は未対応。
+F12-L revision 3も監査し、現版で測れる数値・参照・明示制約の統合と、測れない対策の実効性を分けた。
+次は限定した比較の問いと採否基準、live adapter、能力・環境の確認、全予算を固定する。
+疑似providerの接続成功を、liveの協働効果へ読み替えない。

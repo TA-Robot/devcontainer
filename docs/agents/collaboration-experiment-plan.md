@@ -1,6 +1,6 @@
 # 協働実験計画: 比較から何を改善するか
 
-更新: 2026-09-06。状態: **診断別版の実装・校正と主課題不採用の判断まで完了。live protocolは未seal。**
+更新: 2026-09-06。状態: **直列相談の疑似provider/実Docker接続、F12-L反例監査まで完了。live protocolは未seal。**
 [プロジェクト計画](../project-plan.md)のM1〜M5を具体化する。
 既存実験を未実施へ戻さず、以下の新しい方式比較を過去runへ遡及しない。
 
@@ -83,9 +83,11 @@ F03-Lを通せるまで他方式の検討を止めたり、一方式の実行完
 **相談で品質を上げる主課題には不採用**。実行・評価の校正、および不要な相談を評価する対照候補として残す。
 校正結果は[記録](../../experiments/development-harness/consultation/v1/calibration.json)。live効果は未測定。
 
-次はこの小課題をM2の疑似providerによる受渡し・採点確認へ使い、主比較用にはF12-L revision 3の
-証拠統合を監査する。これは次候補というplanning priorで、ownerはprimary/integrator。
-複数の証拠・制約の統合と別観点の寄与を対応付けられないなら採用しない。
+この小課題をM2の疑似providerによる受渡し・採点確認へ使い、実Dockerの正常系とadvisor停止を検証した。
+F12-L revision 3の[反例監査](../../experiments/development-harness/selection/f12-synthesis-audit.md)も実施。
+数値の誤りは検出したが、実効性のない対策・rollbackでも12/12となったため、数値・参照・明示制約の
+組立てという限定された問いの候補にする。これはplanning priorで、ownerはprimary/integrator。
+その範囲で相談の起動・context分割・根拠引継ぎの採否を変えられないなら採用しない。
 単に難しい、課題が大きい、モデルが失敗した、という理由だけで選ばない。
 
 ### 診断候補で具体化したprotocol項目
@@ -111,6 +113,11 @@ F03-Lを通せるまで他方式の検討を止めたり、一方式の実行完
 これはユーザーの題材指定や承認待ちではなく、実装側が完了すべき準備作業。
 
 ## M2の実装境界
+
+[実装と検証記録](../../experiments/development-harness/consultation/README.md):
+`flow_v1.py`でsoloと「advisor停止・保全→助言→新しいmaker→全停止→採点」を接続した。
+直列の事前助言が対象で、primaryの途中相談・同一session再開・双方向対話は未対応。
+live adapterはなく、固定応答の疑似providerによる確認だけ。元のterminalコードは変更していない。
 
 [terminal](../../experiments/development-harness/terminal/README.md)の時計・停止・保全、
 [feedback](../../experiments/development-harness/feedback/README.md)の共通公開check・累積予算、

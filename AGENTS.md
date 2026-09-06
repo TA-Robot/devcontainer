@@ -273,6 +273,15 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-consultation-diagnosi
 旧atlasのcase/revisionは変更せず、新課題の校正とlive協働の効果を区別する。
 校正結果を更新するときは`calibrate.py --output`に未使用pathを渡し、過去の結果を上書きしない。
 
+相談の受渡しflow（`experiments/development-harness/consultation/flow_v1.py`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-consultation-flow.py
+```
+
+`CONSULTATION_FLOW_IMAGE`へ検証済みimage IDを指定し、正常な両条件とadvisor timeoutの停止を実Dockerで確認する。
+このflowは疑似provider専用。旧terminal runnerや過去のprotocolを変更して既存runを再開しない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
