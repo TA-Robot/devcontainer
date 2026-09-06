@@ -31,7 +31,7 @@ class SyncOracleTests(unittest.TestCase):
         elif mutation == 'missing-check':
             source = source.replace("for line in Path(env['DEVCONTAINER_AI_CLI_VERSION_FILE']).read_text().splitlines():", 'for line in []:')
         (self.scripts / 'reference_sync.py').write_text(source)
-        shutil.copyfile(ROOT / 'scripts/sync-host-ai-cli-versions', self.scripts / 'baseline-sync')
+        shutil.copyfile(HERE / 'baseline-sync.sh', self.scripts / 'baseline-sync')
         (self.scripts / 'sync-host-ai-cli-versions').write_text('#!/bin/sh\nexec python3 "$(dirname "$0")/reference_sync.py"\n')
 
     def statuses(self, value):
@@ -45,7 +45,7 @@ class SyncOracleTests(unittest.TestCase):
         self.assertEqual(set(self.statuses(result).values()), {'passed'}, result)
 
     def test_original_fails_preservation_and_interruption_requirements(self):
-        shutil.copyfile(ROOT / 'scripts/sync-host-ai-cli-versions', self.scripts / 'sync-host-ai-cli-versions')
+        shutil.copyfile(HERE / 'baseline-sync.sh', self.scripts / 'sync-host-ai-cli-versions')
         result = self.statuses(oracle.evaluate(self.candidate))
         self.assertEqual(result['stable'], 'passed')
         for name in ('curl-fail', 'npm-fail', 'term', 'kill'):
