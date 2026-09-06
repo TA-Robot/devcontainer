@@ -288,6 +288,17 @@ liveの初回2組は実施済み。追加の実比較は新しいprotocol・全�
 留保したconfirmationを勝つまでの追加runに使わない。candidate codeをhostで実行せず、
 旧oracle・得点・固定runnerは変更しない。通常再実行とcrash durabilityを区別する。
 
+条件付き相談の情報介入（`experiments/development-harness/queue_review/conditional_v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-conditional-review.py
+```
+
+`CONDITIONAL_REVIEW_IMAGE`に検証済みimage IDを指定し、submit/consultの両情報条件と異常停止を実Dockerで確認する。
+両条件の能力は同じにし、自己申告の質問・理由を主観採点して一方だけ相談を許可するgateを設けない。
+初回1組とconfirmationは実施・使用済み。追加は別protocolで本数・順序・全予算を固定し、
+同じ入力を未使用課題と呼ばず、過去の得点・runner・protocolを変更して再開しない。
+
 Cycle 005のCLI同期課題・評価器（`experiments/development-harness/cycle-005/`）またはfeedbackのtask adapterを触ったら:
 
 ```bash

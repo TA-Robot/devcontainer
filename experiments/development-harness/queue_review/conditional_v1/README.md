@@ -4,6 +4,10 @@
 [固定protocol](protocol.md)・[live config](live-config.json)・[検証証跡](validation.json)を使う。
 旧v1の常時reviewとsoloの値を、今回のcontrolとして流用しない。
 
+2026-09-07に[固定した1組の実比較](result.md)を完了した。両側ともsubmit・4/4。
+情報ありは時間10.176%・input13.615%減だが、時間基準を約0.168秒だけ満たす1組の観測であり、
+独立確認候補に留める。今回のconfirmationと初回protocolは使用済み。追加の確認には新しいprotocolを固定する。
+
 両条件はまずdrafterを実行し、`review-request.json`のsubmit/consultで分岐する。
 submitならそのまま終了。consultなら、停止・保全した現在の実装と質問をreviewerへ渡し、
 同じ実装と助言をfresh final makerへ渡す。後続を呼ばないときはそのprovider/containerを作らない。
