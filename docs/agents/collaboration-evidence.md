@@ -3,6 +3,10 @@
 更新: 2026-09-07。方式の選択時に[協働モデル](collaboration-model.md)と一緒に参照する。
 使い方の説明、実行できた証拠、成果への効果を区別し、未測定を改善率で埋めない。
 
+別projectへは[配布用の実測snapshot](../../project/docs/agents/collaboration-study-evidence.md)と
+同梱の原集計を提供する。通常のorchestration skill/playbookから参照でき、基盤repositoryのcheckoutを必要としない。
+この導線の利用確認は、案内による開発性能改善の実測とは分ける。
+
 ## 事前相談による証拠統合
 
 対象はF12-L revision 3の、公開された数値・根拠ID・移行制約を最終記録へ統合する限定課題。

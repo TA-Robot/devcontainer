@@ -1,0 +1,48 @@
+{
+  "kind": "saved-lifecycle-evidence-reuse-audit-v1",
+  "date": "2026-09-07",
+  "source_commit": "f4c5c96",
+  "scope": "retained-source-and-saved-assessment-identity",
+  "candidate_execution_performed": false,
+  "live_provider_calls": 0,
+  "historical_scores_overwritten": false,
+  "calibration_sha256": "5cb74c714fdff49f1fda8e935334cdb155425040a9de515184f0158b6adffbdc",
+  "candidates": [
+    {
+      "name": "control",
+      "directory": "/home/asakura/.local/state/devcontainer-evaluations/cycle-002/large-control-phase-3-source",
+      "tree_sha256": "7209b2a358448b84f67e59fa4a4c4a819c43d7a0661b731309f0d3fddcc1e1b8",
+      "saved_evaluation": "/home/asakura/.local/state/devcontainer-evaluations/cycle-003/quality-calibration/control.json",
+      "saved_evaluation_sha256": "b93f21a6d1c9e26c6b4fb5da9f1391cfa1e64c5aadb840f60a07758e292265ad",
+      "matching_adoption": "passed",
+      "independent_of_control": null
+    },
+    {
+      "name": "improved",
+      "directory": "/home/asakura/.local/state/devcontainer-evaluations/cycle-002/large-improved-phase-3-source",
+      "tree_sha256": "adbdc823ebb2b61af1f42f48671ac1b0529e93b7c0b6aa39a71c6611a3cbed70",
+      "saved_evaluation": "/home/asakura/.local/state/devcontainer-evaluations/cycle-003/quality-calibration/improved.json",
+      "saved_evaluation_sha256": "d11ed1e3e6cc756ca1a9ca00ade8e14bad3848ae2ea76b6d8ee59d4ad3c0d69b",
+      "matching_adoption": "failed",
+      "independent_of_control": null
+    },
+    {
+      "name": "integrated",
+      "directory": "/home/asakura/.local/state/devcontainer-evaluations/cycle-002/integrated-source",
+      "tree_sha256": "9c496c9230208ef3d1f64b6918f94e1a962109d6b8acb33c4adc9e5a2a4524d8",
+      "saved_evaluation": "/home/asakura/.local/state/devcontainer-evaluations/cycle-003/quality-calibration/integrated.json",
+      "saved_evaluation_sha256": "7cae86df494c83f0a8f5eff2515b5f8472fa0f2a3e42c6019c509e074c8653a7",
+      "matching_adoption": "passed",
+      "independent_of_control": false
+    }
+  ],
+  "sources_sha256": {
+    "experiments/development-harness/quality/lifecycle.py": "0ce55a4c1f7d0a8f5a619d4afa8d24653c6e840fe8495ad78bf0b7f8bcb71318",
+    "experiments/development-harness/multi-scale/large-01/evaluate.py": "7c74d6d4e1ab91b3235c2b0433cb0eefec92ac5203113283cee1458e0c6f7ef4",
+    "experiments/development-harness/multi-scale/large-01/phase-1.md": "7765efcd12ed401584d52950ef0f7b474cb5862bf805938e83880d7ee6d589ad",
+    "experiments/development-harness/multi-scale/large-01/phase-2.md": "db7be29968de4e6dc406795378483ab5302e31a062c9c4df0017f95a1db168f4",
+    "experiments/development-harness/multi-scale/large-01/phase-3.md": "73d957e9832b33eaa1220b2fa826b1cc72944d4c2cdaf62a2907ed8052415cc1"
+  },
+  "decision": "reuse-existing-calibration-without-rerunning; independent-generation-study-not-selected",
+  "remaining_uncertainty": "public-evidence-based acceptance or selection behavior; no live protocol fixed"
+}

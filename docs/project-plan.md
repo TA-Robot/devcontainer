@@ -124,12 +124,15 @@ F04-Lの[9実装監査](../experiments/development-harness/selection/f04-lifecyc
 [3者の独立批判](agents/project-direction-review-2026-09-07.md)を受け、queueの順序反転確認は当面保留する。
 独立確認候補という実験上の判定と、次に予算を使う優先順位は区別する。再開するなら新protocolを固定する。
 [統合判断への再批判](agents/project-direction-review-2026-09-07.md)で、複数実装を第一候補とする順位も取り下げた。
-まず既存の範囲付き実測を配布入口へ接続し、通常入口からagentが観測と限界を取り出せるか確認する。
+[配布入口への接続と利用確認](agents/collaboration-evidence-delivery-2026-09-07.md)を完了した。
+既存skill/playbookから実測と原集計へ辿れ、新imageから導入した通常入口を初見のagentが利用した。
 これは利用経路の中間確認であり、性能改善の実証や改善循環の完了ではない。
-次の比較はCycle 002の具体的な変更episodeの未達要求から選び、期待する作用・公開検証・外部判定・接続差分を対応させる。
-Cycle 003のtemplate評価と、別題材である独立acceptanceの継続開発runnerは別々に再利用可否を確認する。
-複数実装なら実装判断の分岐と公開選択基準、分担なら独立作業境界と結合検査を示せることが必要。
-一件の限定実装へ進むか保留するかを決めた時点で選定を終え、3段階全再演や新runner作成を準備の既定にしない。
+[保存済みlifecycle成果の監査](../experiments/development-harness/selection/lifecycle-reuse-audit-2026-09-07.md)では、
+3成果と保存評価のhash一致、公開の採用条件に対するpermission誤読、既存評価による識別を確認した。
+同じ校正の再実行と独立複数実装の新規生成は保留する。integrated成果は独立した第三候補ではない。
+次の限定実装は、保存済み候補に対する公開証拠からの受入判断・選択を記録するtask adapter。
+中立projection・公開検証の隔離・採用保留を許す出力・保存判定とのidentity照合を対象とし、方式の効果とは区別する。
+この一件で選定監査を終了し、3段階全再演や全方式runnerへ広げない。live比較の方式・本数・予算は未固定。
 既知課題の再利用と未使用系列での案内再評価を区別し、全体計画や全方式対応engineの作り直しは開始しない。
 これはM1のplanning priorであり、相談や複数実装の有効性を仮定しない。同じ旧oracleで本数を増やさない。
 他候補も現contractで答えられる問いに限定し、過去の資産を勝敗の期待から捨てない。
