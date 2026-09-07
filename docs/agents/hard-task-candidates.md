@@ -7,12 +7,14 @@
 これは下記の最初の有限準備jobの成果。続く[workload校正](../../experiments/development-harness/scheduling/workloads_v1/README.md)で
 4系列・到達可能な参照vectorを固定し、144方策/scenario実行を確認した。
 続く[H2初回2run](../../experiments/development-harness/scheduling/solo_v1/result.md)では、強いsoloが2回とも全12指標へ到達した。
-今回のA課題版はH3に採用せず、次にBの適格性を確認する。A全体の容易さは断定しない。
+今回のA課題版はH3に採用しない。Bへ移る方針はその後のユーザー指摘で修正し、
+[難度を大きく広げるA次版](hard-task-escalation-2026-09-08.md)を優先する。A全体の容易さは断定しない。
 live協働比較は未実施。旧G2のraw source・oracle・得点は変更していない。
 
 ## 選定の判断
 
-初回の第一候補は制約付き実行計画policy。参照水準へのsolo到達を受け、次の確認対象はrobot soccer制御。
+第一候補は制約付き実行計画policy。次は継続到着・締切・資源競合・障害復帰を含む新しい課題版を優先する。
+robot soccer制御は別系列候補として保留する。
 第三候補は異なる難しさを確かめる複合障害・互換移行の変更系列とする。
 狙いは、初期実装が動いてからも、解法の転換、実験、実装比較、統合によって到達成果が変わる課題。
 第一候補から順に適格性を確かめ、全候補用のrunnerを同時に作らない。
