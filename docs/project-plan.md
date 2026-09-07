@@ -130,9 +130,13 @@ F04-Lの[9実装監査](../experiments/development-harness/selection/f04-lifecyc
 [保存済みlifecycle成果の監査](../experiments/development-harness/selection/lifecycle-reuse-audit-2026-09-07.md)では、
 3成果と保存評価のhash一致、公開の採用条件に対するpermission誤読、既存評価による識別を確認した。
 同じ校正の再実行と独立複数実装の新規生成は保留する。integrated成果は独立した第三候補ではない。
-次の限定実装は、保存済み候補に対する公開証拠からの受入判断・選択を記録するtask adapter。
-中立projection・公開検証の隔離・採用保留を許す出力・保存判定とのidentity照合を対象とし、方式の効果とは区別する。
-この一件で選定監査を終了し、3段階全再演や全方式runnerへ広げない。live比較の方式・本数・予算は未固定。
+[保存候補の選択adapter](../experiments/development-harness/selection/lifecycle_v1/README.md)を実装・校正した。
+公開仕様とCLIだけの中立projection、Pythonのみの固定imageでの公開probe、採用保留を許す出力、保存判定との照合がある。
+採用条件とパス境界の2群に限定し、専用imageで10テスト・標準/校正referenceの両経路を確認した。
+通常imageに完成版CLIが含まれる情報漏洩経路は独立reviewで見つけ、専用image以外を拒否するよう修正した。
+分類一致は根拠の意味・全品質・協働効果ではない。次の不足はagentから公開probeを呼ぶ窓口と全予算・停止の接続。
+agent自身の環境からも完成実装を除いたうえで、live比較の問い・方式・本数・予算を別protocolへ固定する。
+この一件で選定監査を終了し、3段階全再演や全方式runnerへ広げない。live比較は未実施。
 既知課題の再利用と未使用系列での案内再評価を区別し、全体計画や全方式対応engineの作り直しは開始しない。
 これはM1のplanning priorであり、相談や複数実装の有効性を仮定しない。同じ旧oracleで本数を増やさない。
 他候補も現contractで答えられる問いに限定し、過去の資産を勝敗の期待から捨てない。

@@ -98,7 +98,11 @@ F04-Lの動作監査では、原子的置換と引数保持の見逃しを再現
 [通常配布入口への接続と利用確認](collaboration-evidence-delivery-2026-09-07.md)を完了した。性能改善の比較とは区別する。
 [保存済みlifecycle成果の監査](../../experiments/development-harness/selection/lifecycle-reuse-audit-2026-09-07.md)では、
 成果・評価の再利用可否と公開要求への誤読を確認し、同じ校正の再実行と新規の複数実装生成を保留した。
-次は保存候補の公開証拠による受入判断・選択を記録する限定adapterへ進む。integratedは校正専用で、独立候補として数えない。
+[保存候補の選択adapter](../../experiments/development-harness/selection/lifecycle_v1/README.md)のprovider-free経路を実装した。
+採用条件とパス境界の2群について、候補別の分類・採用保留・校正referenceの選択と異常停止を専用imageで確認した。
+10テスト合格。通常devcontainer内の完成実装の混入は独立reviewで発見し、固定したPythonのみのimageへ変更した。
+integratedは校正専用で、独立候補として数えない。分類一致を根拠の意味や全品質へ読み替えない。
+次はagent側の情報境界・公開probe呼出し・全予算・停止を接続し、比較の問いを別protocolに固定する。
 方式・新要求・live予算は未固定。選択経路の校正や配布だけで改良前後の再評価まで済んだとは扱わない。
 以下の診断候補の準備履歴も保持し、既存資産や過去比較を未実施へ戻さない。
 

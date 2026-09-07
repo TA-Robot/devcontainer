@@ -267,6 +267,18 @@ PYTHONDONTWRITEBYTECODE=1 python3 experiments/development-harness/selection/audi
 出力は未使用のpathを指定し、以前の監査結果を上書きしない。配布の能力を主張する場合は
 `scripts/test-agentctl-check-container.sh IMAGE`も検証済みimageで実行する。監査fixtureの成功をlive比較の効果へ読み替えない。
 
+保存済みlifecycle候補の選択adapter（`experiments/development-harness/selection/lifecycle_v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-lifecycle-selection.py
+```
+
+`LIFECYCLE_SELECTION_IMAGE`へ同directoryの`probe-image.json`で固定した専用image IDを指定し、
+実Dockerで情報境界・欠陥露出・停止・分類を確認する。通常devcontainerは完成版CLIを含むため使わない。
+校正は`calibrate.py --image IMAGE --output NEW_PATH`で新しいpathへ保存する。
+保存済み判定との分類一致を根拠の意味・全品質・協働効果へ読み替えない。integratedは校正専用。
+candidate codeをhostで実行せず、旧評価・archive・runnerは変更しない。live接続とprotocolは別作業。
+
 F04-L動作監査（`experiments/development-harness/selection/audit_f04_lifecycle.py`）を触ったら:
 
 ```bash
