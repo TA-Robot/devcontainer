@@ -1,8 +1,10 @@
 # 協働実験計画: 難題の未達から方式とハーネスを改善する
 
-更新: 2026-09-07。[目的と工程の正本](../project-plan.md)に従う。
+更新: 2026-09-08。[目的と工程の正本](../project-plan.md)に従う。
 [以前の方式比較計画](collaboration-experiment-plan-history-through-lifecycle-relay.md)は実施履歴として保存する。
 旧実験を再開・再採点する計画ではない。新しい主評価のlive protocolはまだ固定していない。
+[H2初回のsolo校正](../../experiments/development-harness/scheduling/solo_v1/result.md)は2回とも参照水準へ到達。
+この版ではG3の単独未達を確認できずH3へ進めない。次候補の成果水準と適格性を先に確認する。
 
 ## 研究の問いと測定対象
 

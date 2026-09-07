@@ -1,23 +1,25 @@
 # 難題候補: 単独の探索限界を確かめるための具体設計
 
-更新: 2026-09-07。位置づけは[主計画](../project-plan.md)のH1に向けた候補設計。
-難度・協働効果・新版評価器の実装は未確認。以下をそのままlive開始済みprotocolと扱わない。
+更新: 2026-09-08。位置づけは[主計画](../project-plan.md)のH1/H2に向けた候補設計と採否履歴。
+候補設計そのものをlive protocolと扱わず、以下の実施済み結果と未着手を分ける。
 
 2026-09-08の進捗: [Aの独立評価境界](../../experiments/development-harness/scheduling/v1/README.md)を実装・校正。
 これは下記の最初の有限準備jobの成果。続く[workload校正](../../experiments/development-harness/scheduling/workloads_v1/README.md)で
 4系列・到達可能な参照vectorを固定し、144方策/scenario実行を確認した。
-H2の難度校正、live協働比較は未実施。旧G2のraw source・oracle・得点は変更していない。
+続く[H2初回2run](../../experiments/development-harness/scheduling/solo_v1/result.md)では、強いsoloが2回とも全12指標へ到達した。
+今回のA課題版はH3に採用せず、次にBの適格性を確認する。A全体の容易さは断定しない。
+live協働比較は未実施。旧G2のraw source・oracle・得点は変更していない。
 
 ## 選定の判断
 
-第一候補は制約付き実行計画policy、次候補はrobot soccer制御。
+初回の第一候補は制約付き実行計画policy。参照水準へのsolo到達を受け、次の確認対象はrobot soccer制御。
 第三候補は異なる難しさを確かめる複合障害・互換移行の変更系列とする。
 狙いは、初期実装が動いてからも、解法の転換、実験、実装比較、統合によって到達成果が変わる課題。
 第一候補から順に適格性を確かめ、全候補用のrunnerを同時に作らない。
 
 | 候補 | 主に測る単独の不足 | 意味のある別解 | 実行評価の再利用 | 現在の最大の不足 |
 | --- | --- | --- | --- | --- |
-| A: 制約付き実行計画policy | 単一heuristicへの固執、制約の統合、候補の選択 | 優先度規則、割当最適化、先読み、混合・切替え | G2の公開契約・workload・simulator案 | 旧評価の自己申告/共有状態問題と、強いsoloの難度校正 |
+| A: 制約付き実行計画policy | 単一heuristicへの固執、制約の統合、候補の選択 | 優先度規則、割当最適化、先読み、混合・切替え | G2の公開契約・workload・simulator案 | 新版の独立評価は成立。今回の参照水準ではsolo未達を示せず、H3不採用 |
 | B: 部分観測下の制御 | 単一戦術への固執、失敗traceの解釈、状況への過適合 | 反応制御、状態推定、軌道計画、戦術切替え | 既存Rust runtime・開発runner・trace | 現行の少数seedを超える評価系列と、到達水準 |
 | C: 複合障害下の継続変更 | 因果の誤認、局所修正の矛盾、初期設計への固執 | 状態・transaction設計、移行/互換戦略 | lifecycleの契約・隔離/復旧資産 | 既知修正を繰り返さない未解決系列と、現実的な反証経路 |
 
@@ -103,6 +105,11 @@ UI、汎用scheduler、全方式adapter、完全な観測schemaは含めない�
 A再開は新しい資産や具体的な短縮経路で準備費の見積りが変わった場合に、別の有限計画として判断する。
 
 ## B: 部分観測下で頑健なrobot soccer制御
+
+2026-09-08の[入口監査](soccer-candidate-entry-audit-2026-09-08.md)を完了。
+現在のseed変動は固定配置下の物理係数等であり、別配置・相手への評価は未実装。
+既存gateのcontrollerによるepisode/seed指定とhost実行も、主評価では分離が必要。
+ただしadapterを先に作らず、欲しい成果水準・到達可能な解法・保存資産・識別可能性を先に確かめる。
 
 ### 欲しい成果
 

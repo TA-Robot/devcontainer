@@ -391,6 +391,17 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-scheduling-workloads.
 生成器・seed・非公開入力・参照方策はactorへ配布しない。risk hintと確率標本を区別する。
 参照水準への到達可能性を、強いsoloに対する難度や協働効果へ読み替えない。
 
+実行計画のstrong-solo接続（`experiments/development-harness/scheduling/solo_v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 SCHEDULING_SOLO_DOCKER=1 python3 -m unittest scripts/test-scheduling-solo.py
+```
+
+実CLI＋疑似providerで編集・公開失敗→修正・shell network遮断・subagent tool非公開・提出原文と独立評価・回収を確認する。
+実測runの開始前にsourceと一致するvalidationを固定する。既存protocolの2runを勝つまで再試行しない。
+model metadataのmulti_agent_versionとfeaturesの両方を確認し、設定名だけからsolo条件を推定しない。
+コード実行は維持し、no-tools relayへ置き換えて単独を弱くしない。未提出/invalid policyと基盤故障を区別する。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ

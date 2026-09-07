@@ -5,11 +5,11 @@ This version adds four workload families, a fixed executable reference, a
 contrasting risk-hint policy, and provider-free external measurement.
 
 **H1 now has a heterogeneous population and an attainable reference vector.
-Strong-solo difficulty and collaboration effects are still unmeasured.**
+[H2 completed](../solo_v1/result.md): both strong-solo runs attained this vector;
+this version is not admitted to the hard-task H3 comparison. Collaboration effects remain unmeasured.**
 The reference is a transparent authoring heuristic, not an optimal solver or a
-certification of a demanding real-world service level. H2 must establish whether
-this level exposes a useful limitation; we will not call ordinary conformance a
-hard problem merely because a broader corpus exists.
+certification of a demanding real-world service level. H2 did not expose stable
+solo nonattainment at this level; a broader corpus alone does not make a hard task.
 
 [Public workload contract](WORKLOAD.md); [raw-vector summary](qualification.json);
 [source/measurement validation](validation.json).
@@ -58,18 +58,26 @@ separate paths, and the complete calibration was rerun to a fresh directory.
 Only the successful source-matched run is summarized, with the failed attempt
 explicitly retained in validation. No policy winner was selected from retries.
 
-## H2 entry
+## H2 entry requirements (fulfilled)
 
 [The solo difficulty protocol](solo-protocol.md) fixes the intended question,
-resources, information boundary and decision rules. Execution remains gated on
+resources, information boundary and decision rules. Execution was gated on
 an actual public development tool/actor projection and source-matched capability,
 repair, stop and independent-assessment checks. A no-tools advice relay is not a
 substitute for a strong solo developer able to run repeated experiments.
 
-There is no reason to add another generic runner or expand workload count before
-those entry checks. Existing CLI, code-mode host, bounded capture and Docker
-isolation can be reused. The current fixed image was inspected and contains the
-code-mode-host binary, but its presence alone does not prove working tool access.
+The adapter reused the CLI, code-mode host, bounded capture and Docker isolation.
+It did not require another generic runner or an expanded workload corpus. Binary
+presence alone was insufficient: actual editing, repair and sandbox capabilities
+were checked before live execution.
 The [official config reference](https://learn.chatgpt.com/docs/config-file/config-reference)
 documents the multi-agent feature setting; exact solo tool availability must be
 checked on the pinned CLI, not inferred from configuration names.
+
+## H2 completion, 2026-09-08
+
+The entry checks above passed on the sealed [solo adapter](../solo_v1/README.md).
+The fixed two-start allowance is consumed: both runs completed with all 24 cases
+valid and all twelve qualification targets attained. See [results](../solo_v1/result.md).
+The protocol remains the unchanged preregistration; its opening pending status
+is historical. No further runs, target changes or confirmation assessment were made.
