@@ -18,7 +18,7 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 
 ミラのpersonaは `AGENTS.md`、再利用templateは `AGENTS_TEMPLATE.md`、companion architectureは [`docs/mira/architecture.md`](docs/mira/architecture.md)、visual asset contractは [`docs/mira/assets.md`](docs/mira/assets.md) を参照してください。
 
-この基盤は、AIが相談・レビュー・案の収集・複数実装の比較を使い分け、単体では予算内に届かなかった成果へ進むことを目指します。実験群を比較可能に整え、自動評価から指示・情報提供・実行制御を改善し、別課題で再評価します。[現行計画と現在地](docs/project-plan.md)、[方式別の比較設計](docs/agents/collaboration-experiment-plan.md)を参照してください。
+この基盤は、強い単独AIでも解法の探索・判断・実装が行き詰まる難題を出発点に、相談・多様な案・複数実装の比較・検証と統合によって到達できる成果を広げることを目指します。単独の未達を校正し、難題での最終成果と全費用を自動評価して、指示・情報提供・実行制御を改善し、未使用の難題で再評価します。[現行計画と現在地](docs/project-plan.md)、[方式別の比較設計](docs/agents/collaboration-experiment-plan.md)を参照してください。
 
 評価は[小規模・大規模の両方](docs/agents/development-harness-evaluation.md)を対象とします。Cycle 001〜005では小規模と複数段階の開発比較を実施済みです。協働方式の効果と、その情報をAIへ渡したハーネスの改善効果は、今後それぞれ検証します。
 
