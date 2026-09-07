@@ -369,6 +369,17 @@ liveはsourceと一致するvalidation・protocolを固定し、割当済み1組
 候補codeを認証付きactorやhostで実行せず、原提出と採点入力のhash一致を保つ。
 旧adapter・oracle・得点を上書きしない。回収結果欠落を成功扱いしない。
 
+難題Aの実行計画policy評価（`experiments/development-harness/scheduling/v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 SCHEDULING_EVALUATOR_DOCKER=1 python3 -m unittest scripts/test-scheduling-evaluator.py
+```
+
+固定Python imageで疑似policyの合法/不正/容量不足/中断と回収を確認する。
+`calibrate.py --output`には未使用pathを指定し、source一致の境界校正を残す。
+候補codeをhostで実行せず、候補の自己申告値を採点しない。旧G2の得点やoracleは変更しない。
+小さな校正例を難題認定・強いsoloの未達・協働効果へ読み替えない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ

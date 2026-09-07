@@ -3,6 +3,10 @@
 更新: 2026-09-07。位置づけは[主計画](../project-plan.md)のH1に向けた候補設計。
 難度・協働効果・新版評価器の実装は未確認。以下をそのままlive開始済みprotocolと扱わない。
 
+2026-09-08の進捗: [Aの独立評価境界](../../experiments/development-harness/scheduling/v1/README.md)を実装・校正。
+これは下記の最初の有限準備jobの成果。小3例による境界確認であり、H1全体のworkload/到達水準、
+H2の難度校正、live協働比較は未実施。旧G2のraw source・oracle・得点は変更していない。
+
 ## 選定の判断
 
 第一候補は制約付き実行計画policy、次候補はrobot soccer制御。
