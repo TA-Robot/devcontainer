@@ -139,6 +139,10 @@ independenceやblindnessを無条件に適用しません。
 
 provider diversityは品質の代理指標ではありません。generatorとevaluatorのどちらへ割り当てると価値があるかもprojectごとに観測します。
 
+方式選択に過去の比較が関係する場合は、[配布された実測と適用範囲](collaboration-study-evidence.md)を参照します。
+これは基盤側の限定した実験で、以下のproject-local観測とは別です。似た課題の観測だけを判断材料にし、
+未測定の方式を無効とせず、ユーザーが求めた相談・reviewやproject固有の必須検査を省略する理由にはしません。
+
 ## Continue only while value changes
 
 各interaction後、primaryは次を判断します。

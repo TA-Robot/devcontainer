@@ -1,0 +1,665 @@
+{
+  "kind": "queue-review-series-interpretation-v1",
+  "observations": {
+    "repair": {
+      "conditions": {
+        "solo": {
+          "status": "submitted",
+          "seconds": 96.05490982000629,
+          "usage": {
+            "input_tokens": 102487,
+            "cached_input_tokens": 91904,
+            "output_tokens": 2001
+          },
+          "quality_status": "pass",
+          "checks": [
+            {
+              "name": "restart-idempotence",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                }
+              ]
+            },
+            {
+              "name": "argument-boundaries",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                }
+              ]
+            },
+            {
+              "name": "invalid-state-preservation",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 4
+                },
+                {
+                  "operation": "enqueue",
+                  "returncode": 5
+                }
+              ]
+            },
+            {
+              "name": "atomic-replacement",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                }
+              ]
+            }
+          ],
+          "changed_paths": [
+            "bin/queuectl",
+            "queue_store.py",
+            "tests/test_repair.py"
+          ],
+          "usage_complete": true
+        },
+        "consult": {
+          "status": "submitted",
+          "seconds": 176.97804307699698,
+          "usage": {
+            "input_tokens": 191367,
+            "cached_input_tokens": 159104,
+            "output_tokens": 3637
+          },
+          "quality_status": "pass",
+          "checks": [
+            {
+              "name": "restart-idempotence",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                }
+              ]
+            },
+            {
+              "name": "argument-boundaries",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                }
+              ]
+            },
+            {
+              "name": "invalid-state-preservation",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 4
+                },
+                {
+                  "operation": "enqueue",
+                  "returncode": 5
+                }
+              ]
+            },
+            {
+              "name": "atomic-replacement",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                }
+              ]
+            }
+          ],
+          "changed_paths": [
+            "bin/queuectl",
+            "queue_store.py",
+            "tests/test_repair.py"
+          ],
+          "usage_complete": true
+        }
+      },
+      "quality_conditioned_time_ratio": 1.8424674325198944,
+      "raw_submitted_time_ratio": 1.8424674325198944
+    },
+    "preserve": {
+      "conditions": {
+        "solo": {
+          "status": "submitted",
+          "seconds": 63.77689715100132,
+          "usage": {
+            "input_tokens": 82379,
+            "cached_input_tokens": 73088,
+            "output_tokens": 1192
+          },
+          "quality_status": "pass",
+          "checks": [
+            {
+              "name": "restart-idempotence",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                }
+              ]
+            },
+            {
+              "name": "argument-boundaries",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                }
+              ]
+            },
+            {
+              "name": "invalid-state-preservation",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 4
+                },
+                {
+                  "operation": "enqueue",
+                  "returncode": 5
+                }
+              ]
+            },
+            {
+              "name": "atomic-replacement",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                }
+              ]
+            }
+          ],
+          "changed_paths": [],
+          "usage_complete": true
+        },
+        "consult": {
+          "status": "submitted",
+          "seconds": 184.50750139400043,
+          "usage": {
+            "input_tokens": 208077,
+            "cached_input_tokens": 176640,
+            "output_tokens": 3641
+          },
+          "quality_status": "pass",
+          "checks": [
+            {
+              "name": "restart-idempotence",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                }
+              ]
+            },
+            {
+              "name": "argument-boundaries",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                },
+                {
+                  "operation": "pending",
+                  "returncode": 0
+                }
+              ]
+            },
+            {
+              "name": "invalid-state-preservation",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 4
+                },
+                {
+                  "operation": "enqueue",
+                  "returncode": 5
+                }
+              ]
+            },
+            {
+              "name": "atomic-replacement",
+              "status": "pass",
+              "events": [
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "enqueue",
+                  "returncode": 0
+                },
+                {
+                  "operation": "ack",
+                  "returncode": 0
+                }
+              ]
+            }
+          ],
+          "changed_paths": [],
+          "usage_complete": true
+        }
+      },
+      "quality_conditioned_time_ratio": 2.893014706519061,
+      "raw_submitted_time_ratio": 2.893014706519061
+    }
+  },
+  "comparison_measurable": true,
+  "disposition": "do-not-default",
+  "automatic_review_default": "not-adopted",
+  "general_effect_established": false,
+  "confirmation_scenario_used": false,
+  "historical_scores_overwritten": false,
+  "initial_quality": {
+    "repair": {
+      "status": "fail",
+      "checks": [
+        {
+          "name": "restart-idempotence",
+          "status": "fail",
+          "events": [
+            {
+              "operation": "enqueue",
+              "returncode": 2
+            }
+          ]
+        },
+        {
+          "name": "argument-boundaries",
+          "status": "fail",
+          "events": [
+            {
+              "operation": "enqueue",
+              "returncode": 2
+            }
+          ]
+        },
+        {
+          "name": "invalid-state-preservation",
+          "status": "fail",
+          "events": [
+            {
+              "operation": "enqueue",
+              "returncode": 2
+            }
+          ]
+        },
+        {
+          "name": "atomic-replacement",
+          "status": "fail",
+          "events": [
+            {
+              "operation": "enqueue",
+              "returncode": 2
+            }
+          ]
+        }
+      ],
+      "scope": "published-queue-behavior",
+      "crash_durability_measured": false,
+      "concurrent_writers_measured": false,
+      "case_id": "queue-review-repair-v1",
+      "changed_paths": [],
+      "isolation": {
+        "network": "none",
+        "candidate_mount": "read-only",
+        "credential_mounts": false,
+        "evaluator_code_mounted_to_candidate": false,
+        "image": "sha256:c7f904a12d7e7c63a2c7e46bc6654c8304b497a2836ecb08fb5bea0118f679ea",
+        "owned_containers_removed": 4
+      }
+    },
+    "preserve": {
+      "status": "pass",
+      "checks": [
+        {
+          "name": "restart-idempotence",
+          "status": "pass",
+          "events": [
+            {
+              "operation": "enqueue",
+              "returncode": 0
+            },
+            {
+              "operation": "enqueue",
+              "returncode": 0
+            },
+            {
+              "operation": "pending",
+              "returncode": 0
+            },
+            {
+              "operation": "ack",
+              "returncode": 0
+            },
+            {
+              "operation": "ack",
+              "returncode": 0
+            },
+            {
+              "operation": "pending",
+              "returncode": 0
+            }
+          ]
+        },
+        {
+          "name": "argument-boundaries",
+          "status": "pass",
+          "events": [
+            {
+              "operation": "enqueue",
+              "returncode": 0
+            },
+            {
+              "operation": "pending",
+              "returncode": 0
+            },
+            {
+              "operation": "ack",
+              "returncode": 0
+            },
+            {
+              "operation": "pending",
+              "returncode": 0
+            }
+          ]
+        },
+        {
+          "name": "invalid-state-preservation",
+          "status": "pass",
+          "events": [
+            {
+              "operation": "enqueue",
+              "returncode": 0
+            },
+            {
+              "operation": "ack",
+              "returncode": 4
+            },
+            {
+              "operation": "enqueue",
+              "returncode": 5
+            }
+          ]
+        },
+        {
+          "name": "atomic-replacement",
+          "status": "pass",
+          "events": [
+            {
+              "operation": "enqueue",
+              "returncode": 0
+            },
+            {
+              "operation": "enqueue",
+              "returncode": 0
+            },
+            {
+              "operation": "ack",
+              "returncode": 0
+            }
+          ]
+        }
+      ],
+      "scope": "published-queue-behavior",
+      "crash_durability_measured": false,
+      "concurrent_writers_measured": false,
+      "case_id": "queue-review-repair-v1",
+      "changed_paths": [],
+      "isolation": {
+        "network": "none",
+        "candidate_mount": "read-only",
+        "credential_mounts": false,
+        "evaluator_code_mounted_to_candidate": false,
+        "image": "sha256:c7f904a12d7e7c63a2c7e46bc6654c8304b497a2836ecb08fb5bea0118f679ea",
+        "owned_containers_removed": 16
+      }
+    }
+  },
+  "provider": {
+    "requested_model": "gpt-6-astra",
+    "requested_effort": "high",
+    "resolved_model": null,
+    "applied_effort": null,
+    "cli_version": "0.153.0"
+  },
+  "runtime": {
+    "repair": {
+      "preparation_seconds": 15.751983187001315,
+      "total_seconds": 312.46916614800284,
+      "all_writers_stopped": true,
+      "cleanup": [
+        {
+          "container_id": "7b8dd658e9c60d2dd03f711262f4b0143e4fad5e7928c1cccb5d9715d2446aa2",
+          "removed": true
+        },
+        {
+          "container_id": "50f9f14776fefbfedd9fa480a19ad475cc3f0a47888cd507614bb07623e87c71",
+          "removed": true
+        },
+        {
+          "container_id": "261aaf7db01aa3d77a4ba95537302295f49e422992803d88baf911a0b7c2ad98",
+          "removed": true
+        }
+      ]
+    },
+    "preserve": {
+      "preparation_seconds": 23.44083926500025,
+      "total_seconds": 294.4704741950045,
+      "all_writers_stopped": true,
+      "cleanup": [
+        {
+          "container_id": "8d43d71696072824b24419d9fcb7eb32316933f3650057c350a4ddba0ce7ad26",
+          "removed": true
+        },
+        {
+          "container_id": "06cfb7a396c59258c1ba885947bd47dd7eb1fef772e5fbf05acf42e9612e6373",
+          "removed": true
+        },
+        {
+          "container_id": "2024c33b1719176d2ce357f494f1b321fa56aced8957a1526b84316d0749e168",
+          "removed": true
+        }
+      ]
+    }
+  },
+  "private_credential_copies_removed": true,
+  "private_evidence_directory": "/home/asakura/.local/state/development-harness/queue-review-pilot-v1-20260906-01",
+  "source_commit": "89410fa435fb33d2685a8f3a8813b3e75de89939",
+  "controller_sha256": "4affd0262e2928ba7ddca96ad6e1e6fc20e1d66428ab28510fccc17c95829e50",
+  "plan_sha256": "d0a3cc757a85566b891da0832c1fe863ba86fa70522c1c8038a7cfd416f55a99",
+  "evidence_sha256": {
+    "repair/result.json": "65930e711dc46d6c44b8ce51d6c4c8cc9bd67e253d21d73ecf8d7998f618d787",
+    "repair/seal.json": "a41d0ed067333f0bfece81de847c5e39d409a48eff2a15347c6afb0491546059",
+    "repair/queue-summary.json": "ed1c25dbab28bd9acd83c37e00251b4b8e3e46e15e8a8f84c65fa271bdae78a5",
+    "preserve/result.json": "5cff83ceac53ca3bc57fa381120a5f89c681fd6e193a6a4153919b230f0b73ec",
+    "preserve/seal.json": "7df47cbb4070f2ebfc03c488ec6f15019d0f11c7844fac60fdc706754667ed9f",
+    "preserve/queue-summary.json": "e7e47b3a674c284615285139036b1d09371c632d776226fad48006895575e76e"
+  }
+}
