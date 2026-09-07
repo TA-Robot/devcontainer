@@ -380,6 +380,17 @@ PYTHONDONTWRITEBYTECODE=1 SCHEDULING_EVALUATOR_DOCKER=1 python3 -m unittest scri
 候補codeをhostで実行せず、候補の自己申告値を採点しない。旧G2の得点やoracleは変更しない。
 小さな校正例を難題認定・強いsoloの未達・協働効果へ読み替えない。
 
+実行計画のworkload・参照水準（`experiments/development-harness/scheduling/workloads_v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-scheduling-workloads.py
+```
+
+生成器・方策・集計を変更した場合、`qualify.py --output`へ未使用pathを指定し、
+固定imageによるdevelopment/qualificationの外部校正も実行する。confirmationを校正で消費しない。
+生成器・seed・非公開入力・参照方策はactorへ配布しない。risk hintと確率標本を区別する。
+参照水準への到達可能性を、強いsoloに対する難度や協働効果へ読み替えない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ

@@ -106,8 +106,12 @@ queueや保存候補の分類で両者が満点になり、時間差や相談の
 
 2026-09-08、[第一候補の独立評価境界](../experiments/development-harness/scheduling/v1/README.md)を実装・校正した。
 候補は隔離processから割当だけを返し、評価側が状態・時計・実消費を所有する。小さい有効解の成果差と不正・中断を確認した。
-最初の有限準備枠はここで閉じる。H1全体の異質なworkload・到達水準と、H2の強いsoloによる難度校正は未完了。
-次は公開/未使用workload系列と到達可能な品質水準を具体化し、その評価費用からH2の全run数・有限予算を固定する。
+最初の有限準備枠はここで閉じた。続いて[4系列のworkloadと到達可能な参照水準](../experiments/development-harness/scheduling/workloads_v1/README.md)を固定し、
+3方策×開発/校正各24scenarioの144外部実行を完了した。参照方策は校正側でFIFOより全12指標が良く、
+別方策との完了/失敗検出のtrade-offもある。ただし実用上十分高い水準・強いsoloの未達は未確認。
+[H2初回protocol](../experiments/development-harness/scheduling/workloads_v1/solo-protocol.md)は独立solo 2run・各30分の資源方針を固定。
+次は公開projectionと実CLIの編集・自己検証・停止能力をsource一致で確認し、初回の難度校正へ進む。
+actor用実行接続が未完了なのでliveは未開始。自己検証を削ったno-tools relayで代用しない。
 新しい汎用runnerや会話UIを先に完成させる作業は置かない。
 Aの最初の準備は[候補設計の有限な作業枠](agents/hard-task-candidates.md)に限定する。
 H1/H2の妥当性を妨げる不足がなくなればH3へ進み、汎用化・観測追加・補助比較の完成を待たない。
