@@ -1,0 +1,16 @@
+{
+  "codex_sha256": "fce635028842bfe9257140e8b7d53162732945e2f356fc35225be0702b4974be",
+  "absent": [
+    "/usr/local/bin/manage-agent-project",
+    "/usr/local/share/agent-project",
+    "/usr/local/lib/agentctl",
+    "/opt/devcontainer-ai-cli"
+  ],
+  "image": "sha256:d17fe408310871f59526d8f651ef6c32ca63b79889a9f88b1b41677279821139",
+  "dockerfile_sha256": "57de6e8ef67588a3eda1a511d241ffd163009144b5ca2a732a366c919533e497",
+  "cli_version": "0.153.0",
+  "source_images": {
+    "tool_source": "sha256:760ecc736134756d8bb8d03312c01e97e1b865b58e12d40f7ca7328a6586e7f7",
+    "python_base": "sha256:df8eb7a18e1d462af44d23e9d9c0d32c2c960a49452c61fa17e0d215c821a9e0"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "type": "object",
+  "properties": {
+    "action": {"type": "string", "enum": ["probe", "submit", "advice"]},
+    "content": {"type": "string"}
+  },
+  "required": ["action", "content"],
+  "additionalProperties": false
+}
