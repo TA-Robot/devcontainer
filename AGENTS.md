@@ -348,6 +348,17 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-synthesis-consultatio
 `SYNTHESIS_PILOT_IMAGE`に検証済みimage IDを指定して、実sandbox probe、疑似provider両条件、未知usage時の停止、独立評価を確認する。
 liveは別の固定protocol・configで実行し、校正referenceをdeveloperへ渡さない。過去の得点や旧oracleは変更しない。
 
+保存候補の実モデルrelay（`experiments/development-harness/selection/relay_v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 LIFECYCLE_RELAY_DOCKER=1 python3 -m unittest scripts/test-lifecycle-relay.py
+```
+
+固定actor/probe imageで疑似provider両条件と実CLIのtoolsなし要求を確認する。
+liveはsourceと一致するvalidation・protocolを固定し、割当済み1組を超えて再試行しない。
+候補codeを認証付きactorやhostで実行せず、原提出と採点入力のhash一致を保つ。
+旧adapter・oracle・得点を上書きしない。回収結果欠落を成功扱いしない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
