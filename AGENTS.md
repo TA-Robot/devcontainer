@@ -402,6 +402,17 @@ PYTHONDONTWRITEBYTECODE=1 SCHEDULING_SOLO_DOCKER=1 python3 -m unittest scripts/t
 model metadataのmulti_agent_versionとfeaturesの両方を確認し、設定名だけからsolo条件を推定しない。
 コード実行は維持し、no-tools relayへ置き換えて単独を弱くしない。未提出/invalid policyと基盤故障を区別する。
 
+動的実行計画（`experiments/development-harness/scheduling/dynamic_v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 SCHEDULING_DYNAMIC_DOCKER=1 python3 -m unittest scripts/test-scheduling-dynamic.py
+```
+
+到着・実処理時間・障害の未来情報をactorへ渡さず、評価側が時計・資源・完了を所有する。
+旧版を変更せず、校正は未使用pathへ`--max-cases 24`を明示して全負荷帯を残す。
+未完了仕事を応答時間集計から消して高品質と判定しない。未来を知るoffline解や方式ごとの最良セルをonline必達目標にしない。
+非agent校正をstrong soloの未達・協働効果へ読み替えない。実装・校正sourceを一致させる。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
