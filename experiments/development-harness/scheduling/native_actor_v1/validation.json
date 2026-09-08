@@ -1,0 +1,141 @@
+{
+  "status": "passed",
+  "scope": "same native lifecycle bridge with synthetic providers, not live comparison admission",
+  "raw_root": "/home/asakura/.local/state/devcontainer-evaluations/native-actor-preflight-20260908-03",
+  "tests": {
+    "command": "NATIVE_ACTOR_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-native-development-actor.py",
+    "count": 2,
+    "skipped": 0,
+    "seconds": 37.299
+  },
+  "source_sha256": {
+    "experiments/development-harness/scheduling/native_actor_v1/actor.py": "682918bf2c6292b4ec4ecb65a7cbfa944096062dae019d9c6c769173789d1cfa",
+    "experiments/development-harness/scheduling/native_actor_v1/fake_adaptive.py": "797cdbd195494ee912985b0b07dfe40e1d0e8b03971c75cc4670787136a82044",
+    "experiments/development-harness/scheduling/native_actor_v1/fake_solo.py": "bdf776c698ad918d89f3bce9840df1b2a63f64b2df296bc7dbc54da9c544d11c",
+    "experiments/development-harness/scheduling/native_actor_v1/entry.py": "8188333c594d5bec162d6f535a90550a20c943fe17990c3f3989bf423e034eaf",
+    "experiments/development-harness/scheduling/native_actor_v1/TASK.md": "b92efe4487372218788da2f4f71c292b74315a34a5a6c3bdda92e514f77d9f30",
+    "scripts/test-native-development-actor.py": "ae5bc3027925d7ec1ceaf6b37a231fc4ad68e8946645c507e1c91948918694e9",
+    "experiments/development-harness/scheduling/native_probe_v1/accounting.py": "37995413ba88c801c2dc6bfe9b3240b16607876c3894c471ad778a411584c477"
+  },
+  "actors": {
+    "solo": {
+      "status": "completed",
+      "removed": true,
+      "credential_copy_removed": true,
+      "source_unchanged": true,
+      "usage": {
+        "input_tokens": 80,
+        "cached_input_tokens": 0,
+        "output_tokens": 20,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 100
+      },
+      "reason": null,
+      "observed_usage": {
+        "input_tokens": 80,
+        "cached_input_tokens": 0,
+        "output_tokens": 20,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 100
+      },
+      "result_sha256": "9b6895f2eaf5e15391b440574d14c3aeed8258e088144a75460ed6b62e1e8343",
+      "seal_sha256": "3aa88a85c740eb90d183477154e353a7769fb1ec6f3519c8d42487d2bc9a33e4"
+    },
+    "adaptive": {
+      "status": "completed",
+      "removed": true,
+      "credential_copy_removed": true,
+      "source_unchanged": true,
+      "usage": {
+        "input_tokens": 180,
+        "cached_input_tokens": 63,
+        "output_tokens": 45,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 225
+      },
+      "reason": null,
+      "observed_usage": {
+        "input_tokens": 180,
+        "cached_input_tokens": 63,
+        "output_tokens": 45,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 225
+      },
+      "result_sha256": "17ac2a6de899231b2dd300fedf86c83f07e2351126f5ccfede06f3808d03c01e",
+      "seal_sha256": "6c7a9ecad867f2d14d4012077d55a82cc30f51676637d129fa76845e199b256d"
+    },
+    "missing": {
+      "status": "withhold",
+      "removed": true,
+      "credential_copy_removed": true,
+      "source_unchanged": true,
+      "usage": null,
+      "reason": "incomplete participant accounting",
+      "observed_usage": {
+        "input_tokens": 160,
+        "cached_input_tokens": 56,
+        "output_tokens": 40,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 200
+      },
+      "result_sha256": "889bc8b4caedea270907b7d7b8e257f1742d7bf2fbb351346d7ef30765634e00",
+      "seal_sha256": "8131a017c4a7146c43538a578fb1e9820d6c53a4c8796fdf384e499efb6a7bc7"
+    },
+    "timeout": {
+      "status": "withhold",
+      "removed": true,
+      "credential_copy_removed": true,
+      "source_unchanged": true,
+      "usage": null,
+      "reason": "TimeoutError: development deadline",
+      "observed_usage": {
+        "input_tokens": 80,
+        "cached_input_tokens": 28,
+        "output_tokens": 20,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 100
+      },
+      "result_sha256": "66c551a1fa7e0bd43717437ab5890728591fdee1cebe833bf411dbf377718657",
+      "seal_sha256": "fd6adad813de1306423e2d0a591980fcc591c6b68289336465194c5de0a3cc34"
+    },
+    "cost": {
+      "status": "withhold",
+      "removed": true,
+      "credential_copy_removed": true,
+      "source_unchanged": true,
+      "usage": null,
+      "reason": "observed output token cap exceeded",
+      "observed_usage": {
+        "input_tokens": 180,
+        "cached_input_tokens": 63,
+        "output_tokens": 45,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 225
+      },
+      "result_sha256": "050df10016a4d4c0d18e3e96e55990048cfd4c1a380ac94e2bc8c585b7916b71",
+      "seal_sha256": "d51d08ad7d244b4085126167caa2f83b0592dba757ae443e8fa356d1933a2962"
+    }
+  },
+  "assessments": {
+    "solo": {
+      "status": "completed",
+      "all_containers_removed": true,
+      "cases": 1,
+      "result_sha256": "fff5d11ecb73fa7fb6181c6da237f7aca28150d688bdb3d844d6e217d09e94d8"
+    },
+    "adaptive": {
+      "status": "completed",
+      "all_containers_removed": true,
+      "cases": 1,
+      "result_sha256": "5b34cf1cdfd52a7d48719c2b58237316aa463b113760990fd6813442c1b68bb0"
+    }
+  },
+  "live_provider_calls": 0
+}

@@ -146,7 +146,12 @@ Bの[入口監査](agents/soccer-candidate-entry-audit-2026-09-08.md)は保存�
 CLI stdoutのusageには子の消費が含まれないことを実動作で確認した。
 応答記録とthread inventoryを照合するcollectorを追加し、履歴fork・子への再相談を二重計上せず回収した。
 usage欠落時の保留、子の公開checkとnetwork制限、子稼働中の期限停止・container削除を含む11試験が通った。
-疑似providerだけの配線検査であり、協働効果は未測定。次はこのcollectorをlive actorの終了処理へ接続する。
+疑似providerだけの配線検査であり、協働効果は未測定。
+[共通actorへの接続](../experiments/development-harness/scheduling/native_actor_v1/README.md)も実装した。
+実Dockerで両条件の正常終了、usage欠落、子稼働中の期限、全参加者output超過の5経路を確認し、
+正常な両条件の公開smoke結果は独立採点と一致した。使用した7 containerは全て削除済み。
+観測directoryはchild shellから書けず、欠落・中断時の正式usageはnull、部分観測は保存する。
+共通公開contractとtransportを90秒へ合わせ、旧soloの協働禁止文が協働条件へ混入する問題も除いた。
 実際に許可する同時子・孫・compactionなどの観測範囲と、途中停止時の費用の扱いを固定してから、
 新しい公開check時間・有限予算・両条件のsourceと一致するpreflightを保存し、fresh比較へ進む。
 

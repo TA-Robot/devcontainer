@@ -447,6 +447,17 @@ NATIVE_ACCOUNTING_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts
 子・再相談・履歴forkの応答記録とinventoryを照合する。usage欠落・未回収・中断は保留する。
 保存する検証結果は未使用pathへ出力し、過去のsolo protocolや得点は変更しない。
 
+native開発actor接続（`experiments/development-harness/scheduling/native_actor_v1/`）を触ったら:
+
+```bash
+NATIVE_ACTOR_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-native-development-actor.py
+```
+
+疑似providerで単独/協働の共通bridge、全参加者usage、欠落・期限・費用超過時の保留、
+private観測の書込み境界、独立Docker採点との一致を確認する。
+原記録を保存するときは`NATIVE_ACTOR_EVIDENCE`へ未使用pathを指定する。
+新しいlive比較の開始台帳・protocol・source一致preflightを固定するまで実モデルを開始しない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
