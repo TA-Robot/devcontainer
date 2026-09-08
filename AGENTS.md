@@ -406,12 +406,15 @@ model metadataのmulti_agent_versionとfeaturesの両方を確認し、設定名
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 SCHEDULING_DYNAMIC_DOCKER=1 python3 -m unittest scripts/test-scheduling-dynamic.py
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-scheduling-calibration-review.py
 ```
 
 到着・実処理時間・障害の未来情報をactorへ渡さず、評価側が時計・資源・完了を所有する。
 旧版を変更せず、校正は未使用pathへ`--max-cases 24`を明示して全負荷帯を残す。
 未完了仕事を応答時間集計から消して高品質と判定しない。未来を知るoffline解や方式ごとの最良セルをonline必達目標にしない。
 非agent校正をstrong soloの未達・協働効果へ読み替えない。実装・校正sourceを一致させる。
+新規校正には`calibrate_v2.py`を使い、旧`calibrate.py`は履歴として保持する。
+容量・期限の楽観的必要条件を満たしてもonlineでの達成可能性を証明したとは扱わない。
 
 ## 参照（別プロジェクト向けテンプレ）
 

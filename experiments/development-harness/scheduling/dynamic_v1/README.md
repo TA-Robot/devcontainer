@@ -22,7 +22,7 @@ receive exactly the same public-information interface, with no generator access.
 ```bash
 PYTHONDONTWRITEBYTECODE=1 SCHEDULING_DYNAMIC_DOCKER=1 \
   python3 -m unittest scripts/test-scheduling-dynamic.py
-PYTHONDONTWRITEBYTECODE=1 python3 experiments/development-harness/scheduling/dynamic_v1/calibrate.py \
+PYTHONDONTWRITEBYTECODE=1 python3 experiments/development-harness/scheduling/dynamic_v1/calibrate_v2.py \
   --output /path/to/new-private-calibration --max-cases 24
 ```
 
@@ -33,6 +33,15 @@ cleanup reserve, with forced child-controller termination after that reserve if
 needed. These are finite authoring cost caps, not a developer budget or measured
 optimal settings. Invalid policy or unmeasured execution stops subsequent batches;
 no winning subset is selected. Missing cleanup evidence prevents success.
+
+The reviewed controller `calibrate_v2.py` snapshots all scoring/workload/reference
+source before generating inputs, launches only that snapshot, retains attempted
+starts, verifies exact coverage and assessment seals, and ends failures as
+`withhold`. Killing the evaluator process is not proof that its Docker children
+were removed: interrupted/missing cleanup remains unknown and requires recovery.
+The original `calibrate.py` is retained for historical source identity and should
+not be used for new runs. It could leave launch failures marked running and read
+changed source after recording a plan hash.
 
 `transport.py` is a byte-identical copy of the frozen v1 transport; `evaluate.py`
 reuses the same snapshot, process isolation, limits and result-recovery structure
@@ -52,6 +61,14 @@ do not remove the shared image as though it belonged only to this task.
 were removed. See [results and limitations](result.md) and [source-bound data](calibration.json).
 
 ## Admission status
+
+The [2026-09-08 review](../../../../docs/project-review-2026-09-08.md) verified the
+new controller on all 96 executions, with identical scoring results and traces.
+Its [necessary-bound audit](bounds-audit.json) shows that completing all offered
+work is capacity-impossible in four severe cases. Missing value is therefore not
+all recoverable by better reasoning. The audit does not prove online feasibility
+for the critical class. Stronger references are diagnostic work, not an indefinite
+prerequisite for the next bounded solo quality exploration.
 
 Runtime validity, reference quality separation, attainment targets, strong-solo
 difficulty and collaboration effect are distinct. This is authoring calibration;

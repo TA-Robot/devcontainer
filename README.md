@@ -471,11 +471,15 @@ mkdir -p ~/.codex ~/.config/gemini ~/.claude ~/.grok
 
 ### ホストと AI CLI のバージョンが合わない
 
+まず選択中のchannelを確認してください。`stable`ではimage固定版を使うため、ホストとのversion差は正常です。
+以下は`edge`でホストへ同期する場合の手順です。エディタ起動時の環境で`DEVCONTAINER_AI_CLI_CHANNEL=stable`や
+`DEVCONTAINER_AI_CLI_SYNC=0`を指定している場合、initialize/postStartを繰り返してもホスト同期は行いません。
+
 1. ホスト側で `.devcontainer/initialize-host.sh` を実行し、`~/.cache/devcontainer-ai-cli/versions.env` を更新する
 2. devcontainer を開き直す
 3. 起動ログの `devcontainer: syncing ...` または `already matches the host` を確認する
 
-純粋な `docker restart` ではホスト側の `initializeCommand` は実行されない実装もあります。その場合も上記の手動実行後に再起動すれば、`postStartCommand` が同期します。
+純粋な `docker restart` ではホスト側の `initializeCommand` は実行されない実装もあります。その場合もedgeの同期が有効なら、上記の手動実行後に再起動すれば、`postStartCommand` が同期します。
 
 ### 権限エラー
 

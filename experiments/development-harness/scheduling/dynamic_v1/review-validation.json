@@ -1,0 +1,75 @@
+{
+  "kind": "scheduling-review-validation-v1",
+  "date": "2026-09-08",
+  "status": "passed",
+  "controller_plan": {
+    "source_sha256": {
+      "runtime.py": "541a5c1337b2a1fd404bd210fd90e3f6fb3b830e222afee19cc36b6f4781568f",
+      "transport.py": "e679a83c2bae513902f3710083b1d0a1d7dfdcce9cb31b4e29bff48d02d8d18b",
+      "evaluate.py": "df5e7434841e992258ede9c3b4f5ca43cd0ebce3e41cf80bfc8c6f331c823512",
+      "workloads.py": "2da5084a7df1e05f5f97d6cc55c08fb6c567f5f258a1a9c6555a653f36ece094",
+      "TASK.md": "af5d163af3015fed756a0eec8f4a7846e4d62075bc25c7b4995f23363ec573f8",
+      "policies/reference.py": "191bc159fb685d16d1ad4be811705c9bcde35b55a52533d761aa294d1233c39f"
+    },
+    "controller_sha256": "ebd8b54c00caa1ae1ef802a4507675aad190ebd9e22ae763b37f92f98df91613",
+    "case_sha256": "84dac4fba53fbfe3d6abb1cbf675cc8d24ebe4a37e23b9ec22de73f0e97e72e9",
+    "modes": [
+      "fifo",
+      "edf",
+      "density",
+      "lookahead"
+    ],
+    "cases": 24,
+    "seconds_per_mode": 300,
+    "cleanup_seconds_per_mode": 30,
+    "stop_on_failure": true
+  },
+  "controller_result_sha256": "59da1047cc8c265ab6ae336a87a90cb634738e786fb223cf116f8bda9a860e8d",
+  "controller_elapsed_seconds": 404.3734169569798,
+  "raw_root": "/home/asakura/.local/state/devcontainer-evaluations/scheduling-dynamic-controller-v2-20260908-01",
+  "comparisons": {
+    "fifo": {
+      "cases": 24,
+      "full_semantic_result_and_trace_equal": true,
+      "old_result_sha256": "8d67dc578f93ee52ff6dde672605fadb853d50d55129170d8a0e137168257f50",
+      "new_result_sha256": "7555662e1eed93374f94e063196532108a255aa7f3cba215258e3b3c95c57e4a",
+      "elapsed_seconds": 95.0114568489953
+    },
+    "edf": {
+      "cases": 24,
+      "full_semantic_result_and_trace_equal": true,
+      "old_result_sha256": "56f9ce21743f056eec98d932d0c5ade1570334399b701580b0e748e87a7fddaa",
+      "new_result_sha256": "00e81151f660fa6d46221df668b3c08acb246e2304c88edb6705fd540ef9e8a2",
+      "elapsed_seconds": 94.89380436600186
+    },
+    "density": {
+      "cases": 24,
+      "full_semantic_result_and_trace_equal": true,
+      "old_result_sha256": "5e28123ffd2c97050626c11a618eac95d59f1aabcc500cae3bcca0758abe3725",
+      "new_result_sha256": "69d2e584a1e06ebc5dfaa0ea79745e43f3abee830fa58078f833d7e3fe5b2fc7",
+      "elapsed_seconds": 103.0104689419968
+    },
+    "lookahead": {
+      "cases": 24,
+      "full_semantic_result_and_trace_equal": true,
+      "old_result_sha256": "32ee336b0561fb2d1c1eb05d8c6a923f6b390625e20d16b255cec4f684c237cd",
+      "new_result_sha256": "0097ad6866b134a763cd8a939924244dc25b1c32492d9eb369c2f3e96c5190a4",
+      "elapsed_seconds": 108.60558217100333
+    }
+  },
+  "owned_containers_absent": 96,
+  "historical_source_unchanged": true,
+  "bounds_audit_sha256": "e048abfd82a1fc964a279c4407d4e1a9a13ea07b045d8e88eeedfde17164dfd5",
+  "tests": {
+    "passed": 18,
+    "skipped": 0,
+    "seconds": 4.079,
+    "source_sha256": {
+      "test-scheduling-dynamic.py": "210378f69af05c72bbece590c8697227538d7b035c41e5bd83c4e442f416f956",
+      "test-scheduling-calibration-review.py": "83b48ec610b9f895834e8d1471c09f991cd98f56624a17e56b165b6e46c9c8b5"
+    }
+  },
+  "live_provider_calls": 0,
+  "old_scores_replaced": false,
+  "collaboration_effect_measured": false
+}
