@@ -1,6 +1,6 @@
 # プロジェクト計画: 単独では届きにくい成果へ、協働で到達する
 
-更新: 2026-09-09。会話圧縮の費用回収修正と、fresh単独/adaptive協働の探索比較開始まで反映した。
+更新: 2026-09-09。fresh単独/adaptiveの原比較保留、固定成果物の診断、次の回収修正まで反映した。
 この文書が目的・優先順位・到達条件の正本。
 [直前の計画](project-plan-history-through-lifecycle-relay.md)と
 [Cycle 005までの計画](project-plan-history-through-cycle-005.md)は履歴として保存する。
@@ -156,9 +156,22 @@ usage欠落時の保留、子の公開checkとnetwork制限、子稼働中の期
 圧縮によるcounter再通知を欠落と誤判定する問題を修正し、圧縮応答自体のusage欠落は保留する。
 root stdoutはremote compactionの費用も除く例があり、全応答台帳を使用する。
 [新しい探索比較](../experiments/development-harness/scheduling/adaptive_pair_v1/protocol.md)を固定し、
-source一致の7テスト通過後、2026-09-09に実行開始した。単独→adaptiveを各1回、開発各40分、
+source一致の7テスト通過後、2026-09-09に2開始を使用した。単独→adaptiveを各1回、開発各40分、
 全参加者output上限各16万、両提出後に全24例を採点する。失敗時の追加runはなく、confirmationは使わない。
 今回の1組で安定した能力拡張や因果的な協働効果を証明したとは扱わず、結果から次のハーネス変更を判断する。
+
+[実行結果と別診断](../experiments/development-harness/scheduling/adaptive_pair_v1/result.md)を保存した。
+両developerは約34分で正常終了したが、協働の38箇所で未計上出力の直後に通知があり、元比較はwithhold。
+通知だけで欠落する因果は疑似providerで確認できず、実providerの全費用は不明のまま残す。
+選択済み2ファイルだけの別診断48採点は完了。価値は単独11464/協働11422、最重要完了は564/550。
+severe/scarceの局所改善はあるが、全3負荷帯で最重要完了が減った。協働の全般的な品質改善は確認していない。
+既知outputだけでも協働97664/単独49534で、準備・外側orchestrationを除く。費用効率は認定しない。
+
+**次は成果物回収・品質測定と費用の完全性を分離する。** 使用量検査の前に正常終了した提出物を封印し、
+新protocolではquality/usage/cleanup/budgetの状態を別に持つ。欠落後も既知の応答消費を回収する。
+通知・遅延終端・終端usage欠落を含むprovider-free通し検査でこの経路を確認し、旧runは更新しない。
+その後、候補source固定と再現可能な実験・退行の比較を選択へ反映する支援を、次の品質改善仮説として試す。
+今回の追加runで勝敗を探したり、題材変更や人数増加を先に進めたりしない。
 
 新しい汎用runnerや会話UIを先に完成させる作業は置かない。
 Aの最初の準備は[候補設計の有限な作業枠](agents/hard-task-candidates.md)内で終了した。

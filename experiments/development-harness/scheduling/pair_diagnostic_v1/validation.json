@@ -1,0 +1,25 @@
+{
+  "status": "completed",
+  "scope": "fixed artifact diagnosis; original pair remains withheld",
+  "raw_root": "/home/asakura/.local/state/devcontainer-evaluations/scheduling-pair-artifact-diagnostic-20260909-01",
+  "source_sha256": {
+    "audit_usage.py": "5dd8c17e7eb2debc373d94a7f6cb68fca458dae5832834380a3737fccebb942d",
+    "run.py": "4f2ff51228644ca8deed4888a8b2e575f87089010858eeebe2deccfb417507f7"
+  },
+  "plan_sha256": "d0dc24014f794f48a2d5a52279dec994e9047ff9ffe2d13940228a40967e0f99",
+  "result_sha256": "eddf735ca53dffa6e0e1fd7ce61e39322988bc757a00284376819e8f1062aef6",
+  "assessments": 2,
+  "cases": 48,
+  "all_containers_removed": true,
+  "elapsed_seconds": 413.6973860290018,
+  "live_provider_calls": 0,
+  "unit_tests": {
+    "count": 2,
+    "skipped": 0,
+    "seconds": 0.04
+  },
+  "usage_audits": {
+    "solo": "ed793f9c3a1ba0c20b8527ca248de05cd98d92b118b536a62938df51bdd9c743",
+    "adaptive": "44abb38ce8c4ecd835d15d002b8a02ffae42e14bea1fab2374b8fc49bb68d866"
+  }
+}

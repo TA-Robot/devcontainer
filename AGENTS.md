@@ -468,6 +468,17 @@ ADAPTIVE_PAIR_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/tes
 liveは固定campaign pathを一度だけ使用し、旧保留soloを対照にしない。失敗時の再試行枠を作らない。
 root stdoutのusageを圧縮・子を含む全費用へ読み替えない。
 
+通知中断とpairの別診断（`scheduling/preemption_probe_v1/`、`scheduling/pair_diagnostic_v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-pair-recovery-diagnostics.py
+```
+
+元pairのwithhold、使用量欠落、原結果を保持する。通知中断probeは疑似providerのみ。
+成果物診断は選択済みの固定2ファイルだけを同じ封印済み評価器で採点し、モデル再実行や候補交換をしない。
+`known_usage`は記録済み部分の下限であり、欠落費用をゼロにしたり費用比較を認定したりしない。
+全出力は未使用pathに保存する。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
