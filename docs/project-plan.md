@@ -1,6 +1,6 @@
 # プロジェクト計画: 単独では届きにくい成果へ、協働で到達する
 
-更新: 2026-09-08。動的soloの保留結果・時間診断と、native協働の費用回収検査まで反映した。
+更新: 2026-09-09。会話圧縮の費用回収修正と、fresh単独/adaptive協働の探索比較開始まで反映した。
 この文書が目的・優先順位・到達条件の正本。
 [直前の計画](project-plan-history-through-lifecycle-relay.md)と
 [Cycle 005までの計画](project-plan-history-through-cycle-005.md)は履歴として保存する。
@@ -152,8 +152,13 @@ usage欠落時の保留、子の公開checkとnetwork制限、子稼働中の期
 正常な両条件の公開smoke結果は独立採点と一致した。使用した7 containerは全て削除済み。
 観測directoryはchild shellから書けず、欠落・中断時の正式usageはnull、部分観測は保存する。
 共通公開contractとtransportを90秒へ合わせ、旧soloの協働禁止文が協働条件へ混入する問題も除いた。
-実際に許可する同時子・孫・compactionなどの観測範囲と、途中停止時の費用の扱いを固定してから、
-新しい公開check時間・有限予算・両条件のsourceと一致するpreflightを保存し、fresh比較へ進む。
+続いて同時子/孫の4ノード実行と、local/remote compaction、圧縮usage欠落を検査した。
+圧縮によるcounter再通知を欠落と誤判定する問題を修正し、圧縮応答自体のusage欠落は保留する。
+root stdoutはremote compactionの費用も除く例があり、全応答台帳を使用する。
+[新しい探索比較](../experiments/development-harness/scheduling/adaptive_pair_v1/protocol.md)を固定し、
+source一致の7テスト通過後、2026-09-09に実行開始した。単独→adaptiveを各1回、開発各40分、
+全参加者output上限各16万、両提出後に全24例を採点する。失敗時の追加runはなく、confirmationは使わない。
+今回の1組で安定した能力拡張や因果的な協働効果を証明したとは扱わず、結果から次のハーネス変更を判断する。
 
 新しい汎用runnerや会話UIを先に完成させる作業は置かない。
 Aの最初の準備は[候補設計の有限な作業枠](agents/hard-task-candidates.md)内で終了した。
