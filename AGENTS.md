@@ -416,6 +416,27 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-scheduling-calibratio
 新規校正には`calibrate_v2.py`を使い、旧`calibrate.py`は履歴として保持する。
 容量・期限の楽観的必要条件を満たしてもonlineでの達成可能性を証明したとは扱わない。
 
+動的課題の単独開発接続（`experiments/development-harness/scheduling/dynamic_solo_v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 DYNAMIC_SOLO_DOCKER=1 python3 -m unittest scripts/test-dynamic-solo.py
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-dynamic-solo-report.py
+```
+
+実CLIの編集・修正・通信遮断・subagent非公開と、公開結果/独立評価/提出原文/回収を確認する。
+source一致のvalidationを固定し、全24件の公開checkも1 CPUで照合する。
+初回protocolは単独1開始だけ。40分の品質探索を旧静的H2の再実行や二値合否へ読み替えない。
+提出後の固定非agent参照はadvisorではなく診断基準。全負荷帯・重要class・未完了量を残し、評価情報をdeveloperへ返さない。
+
+動的課題の時間上限診断（`experiments/development-harness/scheduling/timing_diagnostic_v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 DYNAMIC_TIMING_DOCKER=1 python3 -m unittest scripts/test-dynamic-timing-diagnostic.py
+```
+
+元の40分profile・30秒評価は保留のまま保持する。別の固定診断でのみ同一提出物/参照/入力を採点する。
+モデルの追加実行・候補の選び直し・元得点の上書きをしない。総scenario上限と1応答上限を区別し、CPU時間と呼ばない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
