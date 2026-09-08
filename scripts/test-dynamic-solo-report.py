@@ -1,6 +1,8 @@
 import copy
 import importlib.util
+import json
 from pathlib import Path
+import tempfile
 import unittest
 
 spec = importlib.util.spec_from_file_location('profile_report', Path(__file__).with_name('report-dynamic-solo-profile.py'))
@@ -39,6 +41,23 @@ class ReportTests(unittest.TestCase):
         for raw in r.values():
             for row in raw['cases']: row['result']['service_classes'] = {}
         self.assertIsNone(module.summarize(r)['bands']['severe']['submission']['critical_fraction'])
+
+    def test_withheld_profile_retains_partial_grader_without_promotion(self):
+        with tempfile.TemporaryDirectory() as d:
+            root = Path(d); (root/'assessment-submission').mkdir()
+            (root/'result.json').write_text(json.dumps({'status': 'withhold', 'actor_started': True,
+                'actor': {'status': 'completed'}, 'failure': 'incomplete assessment',
+                'assessments': {'submission': {'cleanup': 'unknown'}}}))
+            rows = [{'id': str(i), 'status': 'measured'} for i in range(21)]
+            rows.append({'id': 'timeout', 'status': 'unmeasured', 'failure': 'TimeoutError', 'execution': {'removed': True}})
+            (root/'assessment-submission/result.json').write_text(json.dumps({'status': 'withhold', 'all_containers_removed': True, 'cases': rows}))
+            r = module.report(root, root/'summary.json')
+            self.assertEqual(r['status'], 'withhold')
+            self.assertNotIn('quality', r)
+            c = r['assessment_coverage']['submission']
+            self.assertEqual((c['measured'], c['unmeasured'], c['not_reached']), (21, 1, 2))
+            self.assertTrue(c['grader_reported_cleanup'])
+            self.assertFalse(r['assessment_coverage']['reference']['registered'])
 
 
 if __name__ == '__main__': unittest.main()

@@ -58,12 +58,27 @@ def report(root, output):
              'actor': raw.get('actor'), 'elapsed_seconds': raw.get('elapsed_seconds')}
     if raw['status'] == 'completed' and raw.get('owned_cleanup_confirmed') and raw.get('credential_copy_removed'):
         summary = summarize({n: raw['assessments'][n]['result'] for n in ('submission', 'reference')})
-        # Keep case metrics/completion times, not duplicate all large action traces.
+        # Keep every case metric; large traces/completion maps stay in the hashed raw report.
         for cases in summary['cases'].values():
-            for name, row in cases.items(): cases[name] = {k: v for k, v in row.items() if k != 'trace'}
+            for name, row in cases.items(): cases[name] = {k: v for k, v in row.items() if k not in ('trace', 'completion_times')}
         value.update(status='completed', quality=summary, submission_sha256=raw['submission_sha256'])
     else:
-        value['reason'] = raw['status']
+        value['reason'] = raw.get('failure', raw['status'])
+    value['assessment_coverage'] = {}
+    for name in ('submission', 'reference'):
+        path = root/f'assessment-{name}'/'result.json'
+        coverage = {'registered': name in raw.get('assessments', {}), 'report_present': path.exists()}
+        if path.exists():
+            assessment = json.loads(path.read_text())
+            rows = assessment.get('cases', [])
+            coverage.update(raw_sha256=hashlib.sha256(path.read_bytes()).hexdigest(),
+                            measured=sum(r['status'] == 'measured' for r in rows),
+                            unmeasured=sum(r['status'] == 'unmeasured' for r in rows),
+                            invalid=sum(r['status'] == 'invalid-policy' for r in rows),
+                            not_reached=24-len(rows), grader_reported_cleanup=assessment.get('all_containers_removed'),
+                            failures=[{k: r.get(k) for k in ('id', 'status', 'failure', 'execution')}
+                                      for r in rows if r['status'] != 'measured'])
+        value['assessment_coverage'][name] = coverage
     # Raw actor messages/capability payloads stay private; usage and measured timings suffice.
     if value['actor']:
         value['actor'] = {k: value['actor'].get(k) for k in ('status', 'usage', 'development_seconds', 'commands', 'removed', 'image')}
