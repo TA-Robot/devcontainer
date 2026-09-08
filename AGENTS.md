@@ -437,6 +437,16 @@ PYTHONDONTWRITEBYTECODE=1 DYNAMIC_TIMING_DOCKER=1 python3 -m unittest scripts/te
 元の40分profile・30秒評価は保留のまま保持する。別の固定診断でのみ同一提出物/参照/入力を採点する。
 モデルの追加実行・候補の選び直し・元得点の上書きをしない。総scenario上限と1応答上限を区別し、CPU時間と呼ばない。
 
+native協働のusage能力検査（`experiments/development-harness/scheduling/native_probe_v1/`）を触ったら:
+
+```bash
+NATIVE_ACCOUNTING_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-native-collaboration-accounting.py
+```
+
+固定されたactor imageと疑似providerだけを使う。親のCLI stdoutを全参加者のusageへ読み替えず、
+子・再相談・履歴forkの応答記録とinventoryを照合する。usage欠落・未回収・中断は保留する。
+保存する検証結果は未使用pathへ出力し、過去のsolo protocolや得点は変更しない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ

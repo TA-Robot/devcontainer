@@ -1,6 +1,6 @@
 # プロジェクト計画: 単独では届きにくい成果へ、協働で到達する
 
-更新: 2026-09-08。ユーザーの目的訂正に基づく工程へ、H2初回2runの結果を反映した。
+更新: 2026-09-08。動的soloの保留結果・時間診断と、native協働の費用回収検査まで反映した。
 この文書が目的・優先順位・到達条件の正本。
 [直前の計画](project-plan-history-through-lifecycle-relay.md)と
 [Cycle 005までの計画](project-plan-history-through-cycle-005.md)は履歴として保存する。
@@ -122,10 +122,10 @@ A全般が容易、協働が無効とは解釈しない。追加run・事後の�
 Bの[入口監査](agents/soccer-candidate-entry-audit-2026-09-08.md)は保存し、Bのadapter実装は保留する。
 動的課題の[初回校正](../experiments/development-harness/scheduling/dynamic_v1/result.md)を実装・完了した。
 3負荷帯・4系列・4方式の96実行は全て正常。重い負荷の期限内価値はFIFO約8%から配置探索約61%へ変わった。
-これは方策差の識別であり、strong soloの未達や協働効果は未測定。
+これは方策差の識別であり、この初回校正だけではstrong soloの未達や協働効果を測っていない。
 [実装・評価・進め方のレビュー](project-review-2026-09-08.md)で、重い負荷8例中4例は全仕事の処理に資源が不足すると確認した。
 全件完了からの差を、AIで回復可能な未達へ読み替えない。重要classの保護と全体の期限内価値を両方残す。
-次の優先は、現在の動的課題を実際に開発できる公開toolへ接続し、有限なstrong-soloの品質プロファイルを測ること。
+続いて、この動的課題を実際に開発できる公開toolへ接続し、有限なstrong-soloの品質プロファイルを測った。
 既存4方式は比較の基準として使い、より強い非agent最適化器の完成は開始の必須条件にしない。
 開発条件・主品質vector・全予算を先に固定する。絶対的なSLAを裏付けられない段階では連続品質の探索として扱い、
 恣意的な満点や「単独には不可能」という判定を作らない。参照追加は結果の解釈に必要な不足へ限定する。
@@ -141,6 +141,14 @@ Bの[入口監査](agents/soccer-candidate-entry-audit-2026-09-08.md)は保存�
 次は新しい時間方針を事前固定した有限な協働の探索比較へ進むため、同じ公開開発能力と全参加者の費用・停止を接続する。
 難題適格性と安定した能力拡張は未確定であり、正式な確認比較とは分ける。
 元runを新条件の単独対照に流用せず、単独/協働の両条件を同じ新protocolで揃える。既知qualificationを未使用確認と呼ばない。
+
+[native協働の費用回収検査](../experiments/development-harness/scheduling/native_probe_v1/README.md)で、
+CLI stdoutのusageには子の消費が含まれないことを実動作で確認した。
+応答記録とthread inventoryを照合するcollectorを追加し、履歴fork・子への再相談を二重計上せず回収した。
+usage欠落時の保留、子の公開checkとnetwork制限、子稼働中の期限停止・container削除を含む11試験が通った。
+疑似providerだけの配線検査であり、協働効果は未測定。次はこのcollectorをlive actorの終了処理へ接続する。
+実際に許可する同時子・孫・compactionなどの観測範囲と、途中停止時の費用の扱いを固定してから、
+新しい公開check時間・有限予算・両条件のsourceと一致するpreflightを保存し、fresh比較へ進む。
 
 新しい汎用runnerや会話UIを先に完成させる作業は置かない。
 Aの最初の準備は[候補設計の有限な作業枠](agents/hard-task-candidates.md)内で終了した。
