@@ -1,0 +1,34 @@
+{
+  "status": "passed",
+  "source_sha256": {
+    "experiments/development-harness/scheduling/dynamic_solo_v1/Actor.Dockerfile": "73c4298e36fb976d5351db6bf9811c08a98acac8133fb352921b51beed471890",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/PROMPT.md": "3f67b765a52269788647eda0c871e3acd393acd74028dad1cbe89a5b293e2ed6",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/TASK.md": "6fe9fe5ae925692c480a862680e6713ba44dee4f4a5a6f2e8c9f096e62a4fa83",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/capability.py": "aafd2eac7608c83527bc19468f42e60bcece5e83294078a3a6c506888fcef59e",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/fifo.py": "553714f929e0bd78dc1fcb79b85af74dcec9b2b79bafb65a31970105fa28460b",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/image.json": "82a59b2bb49646785649cc52754a695b275a6c2d8d5736276a47294a0bc71a04",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/model-catalog.json": "0f50535b7ae228b47ef48b75e9a59f0f0881980a547585e0da5e7de157dd3cd4",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/policy.json": "ad606772f2a6ab4b2758b7529dd7f9e1a5b900e7e8a26212d70db952bc618fc9",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/projection.py": "c86c6678407adf768c92d1dbe1204a0f47efc9894dbde43886971bf6942363cd",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/protocol.md": "afd2f666eb266066101301fcecb92d7deb46377b750fcc244257eb711ab74abc",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/public_check.py": "4ab262c1bc02ccb900026eaee5633160f8eea401e931c711dd308a8c0969f4a8",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/runner.py": "043ef48c9541fa2ad3c0c66b50331cae92f03d02eb7d62780dec968c8c9d265d",
+    "experiments/development-harness/scheduling/dynamic_v1/TASK.md": "af5d163af3015fed756a0eec8f4a7846e4d62075bc25c7b4995f23363ec573f8",
+    "experiments/development-harness/scheduling/dynamic_v1/evaluate.py": "df5e7434841e992258ede9c3b4f5ca43cd0ebce3e41cf80bfc8c6f331c823512",
+    "experiments/development-harness/scheduling/dynamic_v1/policies/reference.py": "191bc159fb685d16d1ad4be811705c9bcde35b55a52533d761aa294d1233c39f",
+    "experiments/development-harness/scheduling/dynamic_v1/runtime.py": "541a5c1337b2a1fd404bd210fd90e3f6fb3b830e222afee19cc36b6f4781568f",
+    "experiments/development-harness/scheduling/dynamic_v1/transport.py": "e679a83c2bae513902f3710083b1d0a1d7dfdcce9cb31b4e29bff48d02d8d18b",
+    "experiments/development-harness/scheduling/dynamic_v1/workloads.py": "2da5084a7df1e05f5f97d6cc55c08fb6c567f5f258a1a9c6555a653f36ece094",
+    "scripts/agent_duration_live.py": "5f65783bf63d6dc733b0f8044e01629dcc7b85588d40b465e43a98037ce820de"
+  },
+  "persistent_preflight": "/home/asakura/.local/state/devcontainer-evaluations/dynamic-solo-preflight-20260908-01",
+  "public_full_cases": 24,
+  "public_seconds": 77.167452676018,
+  "full_public_equals_frozen_external_fifo": true,
+  "tests": {
+    "passed": 5,
+    "skipped": 0,
+    "seconds": 9.474
+  },
+  "live_provider_calls": 0
+}
