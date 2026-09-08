@@ -73,6 +73,38 @@ class NativeActorTests(unittest.TestCase):
                     # Neither the copied native home nor credentials are in evidence.
                     self.assertFalse((base / name / 'observation/auth.json').exists())
 
+    @unittest.skipUnless(os.environ.get('NATIVE_ACTOR_DOCKER') == '1', 'explicit actual CLI/Docker preflight')
+    def test_tree_and_compaction_accounting(self):
+        with tempfile.TemporaryDirectory() as d:
+            evidence = os.environ.get('NATIVE_ACTOR_EVIDENCE')
+            base = Path(evidence + '-extended') if evidence else Path(d)
+            if evidence:
+                base.mkdir(parents=True, mode=0o700, exist_ok=False)
+            actor.prepare_public(base / 'public')
+            for mode in ('tree', 'compact', 'remote_compact', 'missing_compact'):
+                with self.subTest(mode=mode):
+                    r = actor.run(base / mode, base / 'public', condition='adaptive', fake=True,
+                                  fake_mode=mode, seconds=60, output_tokens=80000, prompt='Finite extended probe.')
+                    self.assertTrue(r['removed'] and r['source_unchanged'])
+                    fixture = actor.read(base / mode / 'stdout.private.txt')
+                    if mode == 'missing_compact':
+                        self.assertEqual(r['status'], 'withhold')
+                        self.assertIsNone(r['usage'])
+                        self.assertTrue(any('compaction response without usage' in f['failure']
+                                            for f in r['bridge']['accounting']['failures']))
+                    else:
+                        self.assertEqual(r['status'], 'completed', r)
+                        expected = {k: sum(q['usage'][k] for q in fixture['requests']) for k in r['usage']}
+                        self.assertEqual(r['usage'], expected)
+                        actual = {(t['thread_id'], q['response_id']) for t in r['bridge']['accounting']['threads']
+                                  for q in t['responses']}
+                        self.assertEqual(actual, {(q['thread_id'], q['response_id']) for q in fixture['requests']})
+                    if mode == 'tree':
+                        self.assertEqual(len(r['bridge']['accounting']['threads']), 4)
+                    if mode == 'remote_compact':
+                        self.assertEqual(fixture['root_stdout_usage']['input_tokens'], 40)
+                        self.assertEqual(r['usage']['input_tokens'], 60)
+
 
 if __name__ == '__main__':
     unittest.main()

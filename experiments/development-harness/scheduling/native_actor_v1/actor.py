@@ -17,6 +17,10 @@ PROBE = HERE.parent / 'native_probe_v1'
 TIMING = HERE.parent / 'timing_diagnostic_v1'
 
 
+class StopRequested(RuntimeError):
+    pass
+
+
 def read(path):
     return json.loads(path.read_text())
 
@@ -63,7 +67,7 @@ def run(output, public, *, condition, prompt, auth=None, fake=False,
     exposed = output / 'public'
     shutil.copytree(public, exposed)
     shutil.copyfile(HERE / 'entry.py', sources / 'codex')
-    shutil.copyfile(PROBE / 'accounting.py', sources / 'accounting.py')
+    shutil.copyfile(HERE / 'accounting.py', sources / 'accounting.py')
     shutil.copyfile(HERE / ('fake_adaptive.py' if condition == 'adaptive' else 'fake_solo.py'), sources / 'probe.py')
     shutil.copyfile(HERE / 'actor.py', sources / 'actor.py')
     (sources / 'codex').chmod(0o555)
@@ -96,7 +100,7 @@ def run(output, public, *, condition, prompt, auth=None, fake=False,
     handlers = {}
 
     def stop(signum, frame):
-        raise InterruptedError('actor controller interrupted')
+        raise StopRequested('actor controller interrupted')
 
     try:
         for sig in (signal.SIGINT, signal.SIGTERM):
@@ -136,7 +140,7 @@ def run(output, public, *, condition, prompt, auth=None, fake=False,
             process = subprocess.Popen(['docker', 'start', '-ai', name], stdin=stdin, stdout=stdout, stderr=stderr)
             process.wait(timeout=seconds + 20)
         report['returncode'] = process.returncode
-    except (OSError, ValueError, subprocess.SubprocessError) as exc:
+    except (StopRequested, OSError, ValueError, subprocess.SubprocessError) as exc:
         report['failure'] = type(exc).__name__ + ': ' + str(exc)
     finally:
         for sig in handlers:

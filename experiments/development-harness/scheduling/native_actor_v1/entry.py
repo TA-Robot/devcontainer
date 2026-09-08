@@ -18,6 +18,10 @@ import time
 from accounting import collect
 
 
+class StopRequested(RuntimeError):
+    pass
+
+
 def main():
     output = Path('/observation')
     # A second root invocation must not overwrite the first one's accounting.
@@ -30,7 +34,7 @@ def main():
     handlers = {}
 
     def stop(signum, frame):
-        raise InterruptedError('bridge interrupted')
+        raise StopRequested('bridge interrupted')
 
     try:
         for sig in (signal.SIGTERM, signal.SIGINT):
@@ -64,7 +68,7 @@ def main():
                         forward.write(chunk)
                         forward.flush()
             result['returncode'] = process.returncode
-    except (OSError, ValueError, subprocess.SubprocessError) as exc:
+    except (StopRequested, OSError, ValueError, subprocess.SubprocessError) as exc:
         result['reason'] = type(exc).__name__ + ': ' + str(exc)
     finally:
         # Stop native runtime and tool children before taking observations.
