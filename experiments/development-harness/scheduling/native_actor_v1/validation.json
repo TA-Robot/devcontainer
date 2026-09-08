@@ -1,28 +1,19 @@
 {
   "status": "passed",
-  "scope": "same native lifecycle bridge with synthetic providers, not live comparison admission",
-  "raw_root": "/home/asakura/.local/state/devcontainer-evaluations/native-actor-preflight-20260908-03",
-  "tests": {
-    "command": "NATIVE_ACTOR_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-native-development-actor.py",
-    "count": 2,
-    "skipped": 0,
-    "seconds": 37.299
-  },
+  "scope": "synthetic provider with pinned native runtime, including tree and compaction",
   "source_sha256": {
-    "experiments/development-harness/scheduling/native_actor_v1/actor.py": "682918bf2c6292b4ec4ecb65a7cbfa944096062dae019d9c6c769173789d1cfa",
-    "experiments/development-harness/scheduling/native_actor_v1/fake_adaptive.py": "797cdbd195494ee912985b0b07dfe40e1d0e8b03971c75cc4670787136a82044",
+    "experiments/development-harness/scheduling/native_actor_v1/actor.py": "a2e4e9cffa68a7708d324a356c6003a2e12c13b03306055cf11dde2043f146c2",
+    "experiments/development-harness/scheduling/native_actor_v1/fake_adaptive.py": "69e9d8ed5cea5fc89b8e742bb0cf27d314bbdabef10b2767549d1ec7bdd39302",
     "experiments/development-harness/scheduling/native_actor_v1/fake_solo.py": "bdf776c698ad918d89f3bce9840df1b2a63f64b2df296bc7dbc54da9c544d11c",
-    "experiments/development-harness/scheduling/native_actor_v1/entry.py": "8188333c594d5bec162d6f535a90550a20c943fe17990c3f3989bf423e034eaf",
+    "experiments/development-harness/scheduling/native_actor_v1/accounting.py": "e35b2d4142be5a61fd6efd97abfda5ad93ce8eb121ddbd091017790148c9be08",
+    "experiments/development-harness/scheduling/native_actor_v1/entry.py": "acc8c9b5ff3689bc816d263a4e455f264118edf024160e00d9f02f32f735ddb9",
     "experiments/development-harness/scheduling/native_actor_v1/TASK.md": "b92efe4487372218788da2f4f71c292b74315a34a5a6c3bdda92e514f77d9f30",
-    "scripts/test-native-development-actor.py": "ae5bc3027925d7ec1ceaf6b37a231fc4ad68e8946645c507e1c91948918694e9",
-    "experiments/development-harness/scheduling/native_probe_v1/accounting.py": "37995413ba88c801c2dc6bfe9b3240b16607876c3894c471ad778a411584c477"
+    "scripts/test-native-development-actor.py": "5856d13d3c682529edaf93980ec3b66715dc6d2680d39823c0d7be9004ac6956"
   },
   "actors": {
     "solo": {
       "status": "completed",
       "removed": true,
-      "credential_copy_removed": true,
-      "source_unchanged": true,
       "usage": {
         "input_tokens": 80,
         "cached_input_tokens": 0,
@@ -32,22 +23,12 @@
         "total_tokens": 100
       },
       "reason": null,
-      "observed_usage": {
-        "input_tokens": 80,
-        "cached_input_tokens": 0,
-        "output_tokens": 20,
-        "cache_write_input_tokens": 0,
-        "reasoning_output_tokens": 0,
-        "total_tokens": 100
-      },
-      "result_sha256": "9b6895f2eaf5e15391b440574d14c3aeed8258e088144a75460ed6b62e1e8343",
-      "seal_sha256": "3aa88a85c740eb90d183477154e353a7769fb1ec6f3519c8d42487d2bc9a33e4"
+      "result_path": "/home/asakura/.local/state/devcontainer-evaluations/native-actor-preflight-20260909-02/solo/result.json",
+      "result_sha256": "6323a7e2d3186dab79407a4e39850b8662f6e60b94c4f2fa19d75d51ce5820aa"
     },
     "adaptive": {
       "status": "completed",
       "removed": true,
-      "credential_copy_removed": true,
-      "source_unchanged": true,
       "usage": {
         "input_tokens": 180,
         "cached_input_tokens": 63,
@@ -57,85 +38,92 @@
         "total_tokens": 225
       },
       "reason": null,
-      "observed_usage": {
-        "input_tokens": 180,
-        "cached_input_tokens": 63,
-        "output_tokens": 45,
-        "cache_write_input_tokens": 0,
-        "reasoning_output_tokens": 0,
-        "total_tokens": 225
-      },
-      "result_sha256": "17ac2a6de899231b2dd300fedf86c83f07e2351126f5ccfede06f3808d03c01e",
-      "seal_sha256": "6c7a9ecad867f2d14d4012077d55a82cc30f51676637d129fa76845e199b256d"
+      "result_path": "/home/asakura/.local/state/devcontainer-evaluations/native-actor-preflight-20260909-02/adaptive/result.json",
+      "result_sha256": "1263a62d486f8f92d53340da8c7cf00235d8b75bdf8fbffa3a75d4715966326c"
     },
     "missing": {
       "status": "withhold",
       "removed": true,
-      "credential_copy_removed": true,
-      "source_unchanged": true,
       "usage": null,
       "reason": "incomplete participant accounting",
-      "observed_usage": {
-        "input_tokens": 160,
-        "cached_input_tokens": 56,
-        "output_tokens": 40,
-        "cache_write_input_tokens": 0,
-        "reasoning_output_tokens": 0,
-        "total_tokens": 200
-      },
-      "result_sha256": "889bc8b4caedea270907b7d7b8e257f1742d7bf2fbb351346d7ef30765634e00",
-      "seal_sha256": "8131a017c4a7146c43538a578fb1e9820d6c53a4c8796fdf384e499efb6a7bc7"
+      "result_path": "/home/asakura/.local/state/devcontainer-evaluations/native-actor-preflight-20260909-02/missing/result.json",
+      "result_sha256": "0d6a263e7e6a1b1e2b8370e42f9d24fd196afd44f55d88b6647e65b47fd9543e"
     },
     "timeout": {
       "status": "withhold",
       "removed": true,
-      "credential_copy_removed": true,
-      "source_unchanged": true,
       "usage": null,
       "reason": "TimeoutError: development deadline",
-      "observed_usage": {
-        "input_tokens": 80,
-        "cached_input_tokens": 28,
-        "output_tokens": 20,
-        "cache_write_input_tokens": 0,
-        "reasoning_output_tokens": 0,
-        "total_tokens": 100
-      },
-      "result_sha256": "66c551a1fa7e0bd43717437ab5890728591fdee1cebe833bf411dbf377718657",
-      "seal_sha256": "fd6adad813de1306423e2d0a591980fcc591c6b68289336465194c5de0a3cc34"
+      "result_path": "/home/asakura/.local/state/devcontainer-evaluations/native-actor-preflight-20260909-02/timeout/result.json",
+      "result_sha256": "f68c7c54e6ca6163232b13b34ceda1049b09608f84e4b90f6a7dfc8494190ff5"
     },
     "cost": {
       "status": "withhold",
       "removed": true,
-      "credential_copy_removed": true,
-      "source_unchanged": true,
       "usage": null,
       "reason": "observed output token cap exceeded",
-      "observed_usage": {
-        "input_tokens": 180,
-        "cached_input_tokens": 63,
-        "output_tokens": 45,
+      "result_path": "/home/asakura/.local/state/devcontainer-evaluations/native-actor-preflight-20260909-02/cost/result.json",
+      "result_sha256": "5034d4b4a8d272a113491c5c47f9ed9ad6c5733b6ab44b3b023f2b6a59b1323c"
+    },
+    "tree": {
+      "status": "completed",
+      "removed": true,
+      "usage": {
+        "input_tokens": 280,
+        "cached_input_tokens": 98,
+        "output_tokens": 70,
         "cache_write_input_tokens": 0,
         "reasoning_output_tokens": 0,
-        "total_tokens": 225
+        "total_tokens": 350
       },
-      "result_sha256": "050df10016a4d4c0d18e3e96e55990048cfd4c1a380ac94e2bc8c585b7916b71",
-      "seal_sha256": "d51d08ad7d244b4085126167caa2f83b0592dba757ae443e8fa356d1933a2962"
+      "reason": null,
+      "result_path": "/home/asakura/.local/state/devcontainer-evaluations/native-actor-preflight-20260909-02-extended/tree/result.json",
+      "result_sha256": "70b534f3ee48cd9e2eeaa79f81a772f399dc5e01392c7939dd88ed94637f849f"
+    },
+    "compact": {
+      "status": "completed",
+      "removed": true,
+      "usage": {
+        "input_tokens": 60,
+        "cached_input_tokens": 21,
+        "output_tokens": 15,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 75
+      },
+      "reason": null,
+      "result_path": "/home/asakura/.local/state/devcontainer-evaluations/native-actor-preflight-20260909-02-extended/compact/result.json",
+      "result_sha256": "bb98cbb83b935083c3be208036ee931db11a114a5e0ec5e9a692e98bf1220c4a"
+    },
+    "remote_compact": {
+      "status": "completed",
+      "removed": true,
+      "usage": {
+        "input_tokens": 60,
+        "cached_input_tokens": 21,
+        "output_tokens": 15,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 75
+      },
+      "reason": null,
+      "result_path": "/home/asakura/.local/state/devcontainer-evaluations/native-actor-preflight-20260909-02-extended/remote_compact/result.json",
+      "result_sha256": "32f74aedafd4c739387722fc12288cf8539c57938df43a745693ee7a31c386dc"
+    },
+    "missing_compact": {
+      "status": "withhold",
+      "removed": true,
+      "usage": null,
+      "reason": "incomplete participant accounting",
+      "result_path": "/home/asakura/.local/state/devcontainer-evaluations/native-actor-preflight-20260909-02-extended/missing_compact/result.json",
+      "result_sha256": "e5324a93877e4e250b77174a885f9630a4f40efd7d425516445f5f6a1ef3929f"
     }
   },
-  "assessments": {
-    "solo": {
-      "status": "completed",
-      "all_containers_removed": true,
-      "cases": 1,
-      "result_sha256": "fff5d11ecb73fa7fb6181c6da237f7aca28150d688bdb3d844d6e217d09e94d8"
-    },
-    "adaptive": {
-      "status": "completed",
-      "all_containers_removed": true,
-      "cases": 1,
-      "result_sha256": "5b34cf1cdfd52a7d48719c2b58237316aa463b113760990fd6813442c1b68bb0"
-    }
+  "actor_tests": 3,
+  "combined_tests": {
+    "count": 7,
+    "skipped": 0,
+    "seconds": 91.214
   },
   "live_provider_calls": 0
 }

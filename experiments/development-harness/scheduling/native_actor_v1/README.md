@@ -2,16 +2,17 @@
 
 単独とadaptive協働に、同じCLI起動・期限停止・終了後のusage回収を接続した。
 `entry.py`は固定Codex 0.153.0を起動するcontainer内bridgeであり、疑似providerとlive引数で共用する。
-**実モデルの新しい比較はまだ開始していない。** このdirectoryだけでは比較protocol・開始台帳・全体集計は提供しない。
+比較protocol・開始台帳・全体集計は[adaptive pair](../adaptive_pair_v1/protocol.md)へ接続する。
 
 ## 実装と検証済みの結果
 
 - `actor.py`: fresh workspace、共通公開入力、条件別native tool設定、source/input seal、credential copy除去、container回収。
 - `entry.py`: 永続native記録を有効にした1回のexec、CLI出力上限、開発期限、CLI process group停止、usage/inventory回収。
-- collectorは[前段で検証したもの](../native_probe_v1/accounting.py)をsnapshotして使用する。
+- collectorは[前段](../native_probe_v1/accounting.py)から分けた[圧縮対応版](accounting.py)をsnapshotして使用する。
 - `fake_solo.py`と`fake_adaptive.py`も同じbridgeを通す。前者の疑似response IDは応答ごとに一意。
 
-[検証記録](validation.json)の2テストには、実Dockerのactor 5実行と外部policy採点2実行を含む。
+[検証記録](validation.json)のactor suiteは3テスト。以下の5実行と外部policy採点2実行に加え、
+4ノードの同時子/孫、local compaction、remote compaction v2、圧縮usage欠落の4実行を含む。
 
 | actor条件 | 結果 | 確認した内容 |
 | --- | --- | --- |
@@ -21,10 +22,16 @@
 | 子がshell実行中に開発期限到達 | withhold | 実行開始の印、deadline理由、部分usageを保存してcontainerを削除 |
 | 全参加者のoutput上限40に対し45を観測 | withhold | 親の30だけでは超過を見逃す例を、子も含めて検出 |
 
-7 containerは全て削除済み。child shellの疑似providerへのsocket接続と、`/observation`への書込みは拒否された。
+actor suiteの11 containerは全て削除済み。child shellの疑似providerへのsocket接続と、`/observation`への書込みは拒否された。
 SQLiteはinventoryの4列だけを保存し、`auth.json`やCodex home全体をhostへコピーしない。
 session原記録とCLI出力はrun内のprivate evidenceへ残す。通常の集計は本文を含まない。
 credentialのcopy/removeを実行するlive分岐は、この認証なし検査の測定範囲外。
+
+圧縮では、provider応答なしに累積counterが再通知される。新しいモデル出力がなく累積値も一致する
+通知は追加費用にせず、各圧縮の`compaction_response_id`へ対応するusage recordを必須にする。
+remote compaction v2のfixtureではroot stdoutがinput 40 / output 10でも実際は60 / 15だった。
+圧縮分を含む応答台帳は疑似providerと一致し、圧縮usage欠落はwithholdになった。
+旧collector・既存runの費用/得点を変更せず、過去runに圧縮があったとは未検証のまま断定しない。
 
 ## 公開能力と時計
 
@@ -47,8 +54,8 @@ output token上限は**終了後の全参加者観測**であり、token単位�
 タイムアウトやusage欠落で全費用が取れなければ正式usageはnullのまま、観測できた部分を保存する。
 強制killやhost障害でbridge結果が出ない場合も、削除結果を残してwithholdにする。
 
-live比較前に残っている作業は、有限な開始台帳・条件別prompt・全予算・source一致preflightの固定と、
-許す同時子/孫/compactionの観測検査。actorのauth引数が存在するだけでlive比較へ進めない。
+同時子/孫/compactionの観測検査と、有限な開始台帳・条件別prompt・全予算を含む
+[pair runner](../adaptive_pair_v1/run.py)を実装した。liveはpairのsource一致preflightを通して開始する。
 旧保留soloを新条件の対照に流用せず、fresh soloとadaptiveを新しいprotocolで開始する。
 協働の効果、安定性、費用効率はまだ未測定。
 

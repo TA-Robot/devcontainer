@@ -458,6 +458,16 @@ private観測の書込み境界、独立Docker採点との一致を確認する�
 原記録を保存するときは`NATIVE_ACTOR_EVIDENCE`へ未使用pathを指定する。
 新しいlive比較の開始台帳・protocol・source一致preflightを固定するまで実モデルを開始しない。
 
+動的課題のadaptive pair（`experiments/development-harness/scheduling/adaptive_pair_v1/`）を触ったら:
+
+```bash
+ADAPTIVE_PAIR_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-adaptive-scheduling-pair.py
+```
+
+`ADAPTIVE_PAIR_EVIDENCE`は未使用path。固定sourceで両actor→両提出の封印→独立採点を確認する。
+liveは固定campaign pathを一度だけ使用し、旧保留soloを対照にしない。失敗時の再試行枠を作らない。
+root stdoutのusageを圧縮・子を含む全費用へ読み替えない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
