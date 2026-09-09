@@ -8,8 +8,9 @@
 その後、[難度を大きく広げた動的課題](hard-task-escalation-2026-09-08.md)で単独開発と協働を比較した。
 最新の[標準・改善版・単独の全3開始](../../experiments/development-harness/scheduling/refinement_cohort_v1/result.md)では、
 改善版は標準比で合計品質が増えたが、負荷帯別退行があり強い単独にも未達。通常採用は保留した。
-次は[同じ強い初期実装からの継続開発比較](../../experiments/development-harness/scheduling/refinement_cohort_v1/continuation-design.md)を具体化する。
-この次版のlive protocol・追加開始枠は未登録。現在の1 cohortを安定した効果や難題適格性の確定に使わない。
+次の[同じ強い初期実装からの継続開発比較](../../experiments/development-harness/scheduling/continuation_pair_v1/README.md)を実装・校正した。
+別protocolで単独→標準協働の各1開始・各40分を固定し、両提出後に初期sourceも同じ評価入力で測る。
+現在の1 cohortや次版の校正を安定した効果や難題適格性の確定に使わない。
 
 ## 研究の問いと測定対象
 

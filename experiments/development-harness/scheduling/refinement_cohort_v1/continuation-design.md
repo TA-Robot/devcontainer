@@ -3,6 +3,10 @@
 2026-09-09。次milestoneの設計判断。live protocol・開始台帳ではなく、新しい実行はまだ登録していない。
 ownerはprimary/integrator。今回の3開始は[result.md](result.md)で閉じた。
 
+同日追記: この設計を基に[continuation_pair_v1](../continuation_pair_v1/README.md)の接続・有限protocolを作成し、
+source一致の5試験と公開全24例の照合を完了した。実行条件はそちらのprotocol/configを正本とする。
+以下は開始前の設計判断として保持する。
+
 ## 変える問い
 
 「白紙から40分で、協働が単独より良いものを作るか」から、

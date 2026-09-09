@@ -502,6 +502,21 @@ REFINEMENT_COHORT_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts
 liveは固定path・固定3開始だけ。費用不明時の品質測定をoutput予算適合や費用効率の認定へ読み替えない。
 旧結果や封印済みsourceを変更して再開せず、候補codeをhostで実行しない。
 
+強い初期実装からの継続開発比較（`scheduling/continuation_pair_v1/`）を触ったら:
+
+```bash
+SCHEDULING_CONTINUATION_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-scheduling-continuation.py
+```
+
+`SCHEDULING_CONTINUATION_EVIDENCE`は未使用path。両条件の初期source読込み・失敗・修正・提出、
+使用量不足・output超過・期限・外側中断、同じ初期sourceと全文promptの封印を確認する。
+初期source・入力・公開接続・評価器を変えたら`calibrate.py --output NEW_PATH`で固定FIFO/初期sourceを
+公開24例ずつ採点し、1 CPUの公開checkと独立Dockerの全結果・traceを照合する。採点側入力を校正で採点しない。
+両developerの正常提出を封印後、初期sourceと両提出を同じ新しい入力で評価する。
+初期sourceをadvisorや追加model開始と数えず、前回の得点だけを単独対照にしない。
+source一致の校正・protocol・開始台帳を固定するまでliveは開始せず、固定2開始を追加しない。
+初期sourceをhostで実行せず、旧runner・原結果を変更して再開しない。usage不足時の費用・予算の保留を維持する。
+
 保存済み公開候補の上限診断（`scheduling/public_frontier_v1/`）を触ったら:
 
 ```bash
