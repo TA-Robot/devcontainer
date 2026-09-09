@@ -548,6 +548,29 @@ Docker createのタイムアウト後は、単発の不在確認を回収完了�
 有限時間で観測・削除し、作成完了が未確認なら回収はunknown。元記録と別の回収監査を保存する。
 候補codeをhostで実行しない。
 
+起動待ちと方策応答の固定診断（`scheduling/startup_probe_v1/`）を触ったら:
+
+```bash
+STARTUP_PROBE_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-scheduling-startup-probe.py
+```
+
+`STARTUP_PROBE_EVIDENCE`は未使用path。固定非agent fixtureの正常/起動前遅延/要求後遅延を、
+従来時計と準備完了後の時計で6観測だけ比較する。予想外の結果や回収不明では停止し、再試行しない。
+固定fixtureのmarkerを実モデル候補の自己申告へ一般化せず、過去の得点・期限・回収を上書きしない。
+
+評価側の起動完了と候補activation（`scheduling/ready_runtime_v1/`）を触ったら:
+
+```bash
+READY_RUNTIME_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-ready-scheduling-runtime.py
+```
+
+`READY_RUNTIME_EVIDENCE`は未使用prefix。候補がactivation前に動かないこと、元source/argv/raw stdin、
+初期化と偽markerが応答時計を延ばせないこと、起動・scenarioの上限、公開/独立採点の一致を確認する。
+公開接続や評価器を変えたら`calibrate.py --output NEW_PATH`で固定FIFO/初期sourceの公開24例ずつを照合する。
+qualification・旧live成果物を採点せず、旧runtime・得点・保留を変更しない。
+候補の自己申告を起動完了にせず、応答時計開始後にactivationして候補のimport/初期化も計測に含める。
+新しいpair protocolとsource一致actor検証へ接続するまではliveを開始しない。候補codeはhostで実行しない。
+
 保存済み公開候補の上限診断（`scheduling/public_frontier_v1/`）を触ったら:
 
 ```bash

@@ -1,0 +1,43 @@
+{
+  "status": "passed",
+  "scope": "fixed non-agent causal clock diagnostic; no live admission",
+  "tests": 2,
+  "skips": 0,
+  "elapsed_seconds": 26.006,
+  "source_sha256": {
+    "experiments/development-harness/scheduling/startup_probe_v1/PLAN.md": "fccccbe015efe8ead4ef01ac4a335d94a8a4bf1c39f551891316fad053cd3cc4",
+    "experiments/development-harness/scheduling/startup_probe_v1/fixture.py": "3cf1246c9cc235750e21733b82c9c1cad236d7e3e18f21acd5e42aebd4f15d6c",
+    "experiments/development-harness/scheduling/startup_probe_v1/run.py": "6192a26bcb876cd010989d0e0572d4e98ec91d629520eaa0ca8ab741a5beeba3",
+    "experiments/development-harness/scheduling/termination_pair_v1/recovery.py": "9644a72ca17f0ab51afa4d508e413883230a7ca800936db7085e805342eb9595",
+    "experiments/development-harness/scheduling/timing_diagnostic_v1/runtime.py": "541a5c1337b2a1fd404bd210fd90e3f6fb3b830e222afee19cc36b6f4781568f",
+    "experiments/development-harness/scheduling/timing_diagnostic_v1/transport.py": "bdca10b6e93a0c7513ee73eb97b5aca69624c941c1ac1d7e1d111677f4bf13e2",
+    "scripts/test-scheduling-startup-probe.py": "0fdbd27c60b10fc9a467f96c773e20390e9332e32a10781943830a22a42b577c"
+  },
+  "evidence_root": "/home/asakura/.local/state/devcontainer-evaluations/startup-probe-20260910-01",
+  "raw_sha256": {
+    "normal-legacy/policy.py": "3cf1246c9cc235750e21733b82c9c1cad236d7e3e18f21acd5e42aebd4f15d6c",
+    "normal-legacy/result.json": "03c43743770b5621374d40e204720b64b81c3adc4ef8d74a71ed1c2193dfc7cb",
+    "normal-legacy/start.json": "09dc083a55192b6d682c6747ae4d7e6bbd615626aaadddceee2d9ece80deec2f",
+    "normal-ready/policy.py": "3cf1246c9cc235750e21733b82c9c1cad236d7e3e18f21acd5e42aebd4f15d6c",
+    "normal-ready/result.json": "3ed3156ab44933b7d9a604d62b38f615377fb8aaef74fd3194647161e57cf351",
+    "normal-ready/start.json": "7ca8e20cdb691b7022e17668e76befde1891adaae26aabeff2e64356a1c92bea",
+    "plan.json": "729426dd1df7f3e728915e392c83f1fa83ff5f6f6e5e56f712bd8ba1107a1f97",
+    "response_delay-legacy/policy.py": "71f0eb1cf6a9d10201c1865019bfea09bab0753fcc6530679b83b06ce429fb23",
+    "response_delay-legacy/result.json": "58a56adb62ffbebd003483059c09c04cb1b63018893f2468456fbb0ace448a42",
+    "response_delay-legacy/start.json": "9036548983261ac427a6b51ec75eb20a022baf43ceb80c4ec2b21ebe383e085a",
+    "response_delay-ready/policy.py": "71f0eb1cf6a9d10201c1865019bfea09bab0753fcc6530679b83b06ce429fb23",
+    "response_delay-ready/result.json": "6cb7432593553716a0ee58b371a014b85c8c2268e1bb6e3ac401b847fa3b06cb",
+    "response_delay-ready/start.json": "45e7d82021b1a6bee3f5aa70b1c4dbe695422e7c8174b240bdfb924eadfa034b",
+    "result.json": "d94503d3d4860f8e8632d3e114acb3036402142300faaa0c25ce8d8761df5f24",
+    "startup_delay-legacy/policy.py": "94bdb885ea38fec095927c72cea8ad7cfa63045c3c2333ada7f2f28074ef3ddd",
+    "startup_delay-legacy/result.json": "8100852e3e66d8ae2f686dde215be82934010cef3e3e61459ee89509df533cc0",
+    "startup_delay-legacy/start.json": "f25fd9efa1ce98a23979b81240875fd265b09a0644723ec596c30e6077b1a9d2",
+    "startup_delay-ready/policy.py": "94bdb885ea38fec095927c72cea8ad7cfa63045c3c2333ada7f2f28074ef3ddd",
+    "startup_delay-ready/result.json": "89a69c312f66a5ee85b2b379968eb1f8cb6d72049539ae4b848cac6c247adc0c",
+    "startup_delay-ready/start.json": "189b18df17510665876f2be5fcfe9eb4d5e540f572176b83d93a01b4f67f7a97"
+  },
+  "observations": 6,
+  "all_owned_containers_absent_at_audit": true,
+  "live_provider_calls": 0,
+  "old_scores_changed": false
+}
