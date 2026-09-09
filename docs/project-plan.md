@@ -191,7 +191,10 @@ source一致の6試験と公開FIFO全24例の校正が通過し、46 container�
 usage不足・観測output超過では共通の開発時計での品質を測定し、費用・output上限適合を保留する。
 外側中断や参加者の異常終了は次の開始を止める。新しいconfirmationとは扱わない。
 
-次はこの固定cohortの実比較へ進む。回収の完成は品質改善の達成ではない。
+2026-09-09にこの固定cohortの実比較を開始した。開始・終了は
+`~/.local/state/devcontainer-evaluations/scheduling-refinement-cohort-20260909-01/` の台帳で確認する。
+全条件の終了・封印まで採点は始めず、進行中にsource・条件・開始枠を変更しない。
+回収の完成は品質改善の達成ではない。
 過去の原結果・消費済み開始枠は変更せず、題材変更・人数増加・汎用collectorや選択studioの構築を先に進めない。
 
 新しい汎用runnerや会話UIを先に完成させる作業は置かない。
