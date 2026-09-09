@@ -5,6 +5,11 @@
 新しい公開24例と採点24例を同じ生成器の固定seedから作り、全条件へ同じ公開bytesを渡す。
 新しい課題系列・未使用confirmationの検証とは呼ばない。
 
+2026-09-09に全3開始・72採点を完了した。[結果と採否](result.md)を保存した。
+改善版は標準比で価値+175・最重要+7だが、中負荷に退行があり、単独にも価値185・最重要7件届かない。
+通常配布は保留。品質はmeasured、協働の使用量不足によるoutput予算適合はwithhold。
+固定campaign pathは使用済みで、以下の入口を追加run・再開に使わない。
+
 主比較は同じ協働能力を持つ旧指示対新版。strong soloにも自己検証・複数案・逐次改善を許す。
 指示は既存の原文をsource snapshotへ含め、実験中に書き換えない。
 原pairの結果・開始枠・候補は再利用しない。
@@ -37,7 +42,7 @@ PYTHONDONTWRITEBYTECODE=1 python3 experiments/development-harness/scheduling/ref
 疑似providerで検証する。公開校正は新しい全24例を固定FIFOで実行し、採点用24例は合法性確認と封印だけを行う。
 sourceと一致する native recovery / cohort / 公開校正を `validation.json` へ固定するまでliveへ進めない。
 
-固定campaignの入口:
+実施済みcampaignの入口記録（single-use pathは使用済み）:
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 experiments/development-harness/scheduling/refinement_cohort_v1/run.py \

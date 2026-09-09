@@ -2,8 +2,9 @@
 
 `native_actor_v1` の container 条件と CLI bridge を引き継ぐ新しい版。
 過去の source、run、得点、withhold を変更しない。
-[次の指示比較](../failure_refinement_v1/README.md)を成立させる回収経路に範囲を限定する。
-live campaign・開始台帳はまだない。新 protocol と source 一致 preflight 前に live を開始しない。
+[指示比較](../failure_refinement_v1/README.md)を成立させる回収経路に範囲を限定する。
+live campaign・開始台帳は別の[refinement cohort](../refinement_cohort_v1/result.md)に置き、実行済み。
+新しい実行は別 protocol と source 一致 preflight 前に開始しない。
 
 ## 順序と判定
 
@@ -66,6 +67,8 @@ notice fixture は最大12応答、CLI25秒、actor30秒の cost cap。全て当
 - 封印後のcollector故障、回収不明、source変更、symlink、異常な評価器終了は、
   保存消失や正常品質・予算適合へ変換しない回帰試験で確認した。
 
-これは回収経路の校正であり、難題の新しいlive比較・指示改良の効果検証はまだ行っていない。
+これは回収経路の校正であり、指示改良の効果検証とは別の証拠である。
+その後の[実比較](../refinement_cohort_v1/result.md)でもusage不足を残しながら全3提出物・72採点を回収できた。
+品質回収は成立したが、協働の全費用・output上限適合は不明のままである。
 最初の校正も別pathへ保持した。その後に評価器異常終了と不正policyの分類を修正したため、
 現sourceの根拠には `native-recovery-preflight-20260909-02` とその `-extended` を使う。

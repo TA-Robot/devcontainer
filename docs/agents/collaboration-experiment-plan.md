@@ -1,11 +1,15 @@
 # 協働実験計画: 難題の未達から方式とハーネスを改善する
 
-更新: 2026-09-08。[目的と工程の正本](../project-plan.md)に従う。
+更新: 2026-09-09。[目的と工程の正本](../project-plan.md)に従う。
 [以前の方式比較計画](collaboration-experiment-plan-history-through-lifecycle-relay.md)は実施履歴として保存する。
-旧実験を再開・再採点する計画ではない。新しい主評価のlive protocolはまだ固定していない。
+旧実験を再開・再採点する計画ではない。
 [H2初回のsolo校正](../../experiments/development-harness/scheduling/solo_v1/result.md)は2回とも参照水準へ到達。
 この版ではG3の単独未達を確認できずH3へ進めない。
-その後のユーザー指摘により、[同じ題材で難度を大きく広げる次版](hard-task-escalation-2026-09-08.md)を優先する。
+その後、[難度を大きく広げた動的課題](hard-task-escalation-2026-09-08.md)で単独開発と協働を比較した。
+最新の[標準・改善版・単独の全3開始](../../experiments/development-harness/scheduling/refinement_cohort_v1/result.md)では、
+改善版は標準比で合計品質が増えたが、負荷帯別退行があり強い単独にも未達。通常採用は保留した。
+次は[同じ強い初期実装からの継続開発比較](../../experiments/development-harness/scheduling/refinement_cohort_v1/continuation-design.md)を具体化する。
+この次版のlive protocol・追加開始枠は未登録。現在の1 cohortを安定した効果や難題適格性の確定に使わない。
 
 ## 研究の問いと測定対象
 

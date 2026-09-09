@@ -1,6 +1,8 @@
 # プロジェクト計画: 単独では届きにくい成果へ、協働で到達する
 
-更新: 2026-09-09。公開候補の上限診断、次の品質介入、新版回収経路の実CLI校正まで反映した。
+更新: 2026-09-09。標準協働・反例から改良する協働・強い単独の3条件比較を完了。
+改善版は標準より合計品質が上がったが、局所退行があり単独にも届かず、通常採用は保留。
+次は同じ強い初期実装から先へ進む継続開発の比較を具体化する。
 この文書が目的・優先順位・到達条件の正本。
 [直前の計画](project-plan-history-through-lifecycle-relay.md)と
 [Cycle 005までの計画](project-plan-history-through-cycle-005.md)は履歴として保存する。
@@ -174,15 +176,15 @@ developerの公開記録に基づく診断であり、独立採点・未測定�
 
 **次の品質介入は、候補に共通する失敗を反例で崩し、より良い候補・新しい統合を生む協働手順。**
 実験用の[新版指示](../experiments/development-harness/scheduling/failure_refinement_v1/README.md)を作成した。
-現在の不足から相談を選び、初期の独立案と、その後の実測に基づく改良を接続する。効果・通常配布は未実施。
-次は同じ協働能力の旧指示対新版を比較し、同条件のstrong solo基準も保つ新しい有限protocolへ進める。
+現在の不足から相談を選び、初期の独立案と、その後の実測に基づく改良を接続する。
+同じ協働能力の旧指示対新版を比較し、同条件のstrong solo基準も保つ有限protocolで下記の評価を行った。
 
 その前提となる[新版回収経路](../experiments/development-harness/scheduling/native_recovery_v1/README.md)を実装した。
 container削除後、usage照合より先に提出物を封印し、全参加者の終了・品質・usage・予算・cleanupを分ける。
 usage欠落時も正常提出の独立採点は可能だが、全output上限適合はunknownのまま。
 期限停止は品質を保留し、観測output超過は品質を測定しても予算をexceededとする。
 実CLI＋疑似providerのsource一致7試験が通過。12 actorと7独立採点、計19 containerを全て削除した。
-通知・遅延usage・意図的usage省略、tree・fork・再相談・圧縮も確認した。新しいlive開始はない。
+通知・遅延usage・意図的usage省略、tree・fork・再相談・圧縮も確認した。この校正では実モデルを使用していない。
 
 続いて[旧指示・新版・strong soloの新しいcohort](../experiments/development-harness/scheduling/refinement_cohort_v1/protocol.md)を固定した。
 同じ系列の新しい公開24例・採点24例、各40分・観測output16万、旧指示→新版→単独の3開始だけ。
@@ -191,11 +193,21 @@ source一致の6試験と公開FIFO全24例の校正が通過し、46 container�
 usage不足・観測output超過では共通の開発時計での品質を測定し、費用・output上限適合を保留する。
 外側中断や参加者の異常終了は次の開始を止める。新しいconfirmationとは扱わない。
 
-2026-09-09にこの固定cohortの実比較を開始した。開始・終了は
-`~/.local/state/devcontainer-evaluations/scheduling-refinement-cohort-20260909-01/` の台帳で確認する。
-全条件の終了・封印まで採点は始めず、進行中にsource・条件・開始枠を変更しない。
-回収の完成は品質改善の達成ではない。
-過去の原結果・消費済み開始枠は変更せず、題材変更・人数増加・汎用collectorや選択studioの構築を先に進めない。
+2026-09-09にこの[固定cohortの全3開始・72採点](../experiments/development-harness/scheduling/refinement_cohort_v1/result.md)を完了した。
+標準/改善版/単独の期限内価値は11462/11637/11822、最重要完了は553/560/567。
+改善版は標準比で価値+175・最重要+7・未完了価値−1920だが、contendedの最重要が1件退行した。
+事前の採用候補条件はfalse。単独比でも価値−185・最重要−7で、能力拡張は未達、通常配布は保留する。
+協働のusageはpartialでoutput上限適合・費用効率は不明。品質回収の成功を費用認定へ移さない。
+全75 containerと認証コピーを回収し、45 source・提出物・barrier・全域集計の一致も確認した。
+開始・原結果は`~/.local/state/devcontainer-evaluations/scheduling-refinement-cohort-20260909-01/`へ保存した。
+
+**次は、同じ強い成果を引き継いで先へ進む[継続開発比較](../experiments/development-harness/scheduling/refinement_cohort_v1/continuation-design.md)を具体化する。**
+3条件が基礎dispatch・予約・実験harnessをそれぞれ作り直した観測から、
+現成果を共通の出発点として、残る失敗の探索・別案・改造・統合へ開発枠を使う案を優先する。
+単独にも同じ初期sourceと追加開発を許す。元の単独得点だけを固定対照にして協働を有利にしない。
+これは課題の出発状態を変える能力探索であり、今回の指示改良の効果が確認できたという意味ではない。
+まず最小の配布接続と疑似provider校正、次の有限protocolを作る。追加liveの開始枠は未登録。
+今回の開始枠を増やさず、人数増加や汎用collector・選択studioの構築も先行させない。
 
 新しい汎用runnerや会話UIを先に完成させる作業は置かない。
 Aの最初の準備は[候補設計の有限な作業枠](agents/hard-task-candidates.md)内で終了した。
