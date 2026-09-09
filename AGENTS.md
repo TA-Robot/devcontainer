@@ -517,6 +517,19 @@ SCHEDULING_CONTINUATION_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest s
 source一致の校正・protocol・開始台帳を固定するまでliveは開始せず、固定2開始を追加しない。
 初期sourceをhostで実行せず、旧runner・原結果を変更して再開しない。usage不足時の費用・予算の保留を維持する。
 
+期限停止後の成果物capture契約（`scheduling/deadline_capture_v1/`）を触ったら:
+
+```bash
+DEADLINE_CAPTURE_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-deadline-capture.py
+```
+
+`DEADLINE_CAPTURE_EVIDENCE`は未使用path。疑似providerだけで正常/期限/不正/未提出/書込み中の子/外側中断を確認する。
+元のquality・lifecycle・時計超過・usage・admissionを上書きせず、capture可否を別recordへ残す。
+要求した期限と観測した停止・capture windowを区別し、上界不明・回収不明・source不一致では採点しない。
+固定評価器の実際の終了コードとcase状態を照合し、不正policyと基盤の未測定を混ぜない。
+現接続は疑似provider専用。旧live成果物・qualificationを再採点せず、両条件の新protocolへ接続するまでliveを開始しない。
+候補codeはhostで実行しない。
+
 保存済み公開候補の上限診断（`scheduling/public_frontier_v1/`）を触ったら:
 
 ```bash

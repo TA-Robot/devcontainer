@@ -60,6 +60,18 @@ developer記録の算術上限であり独立採点ではないが、この集�
 次は[同じ強い初期実装からの継続開発](../../experiments/development-harness/scheduling/refinement_cohort_v1/continuation-design.md)を
 両条件へ与える能力探索を具体化する。今回の負の判定を覆す追試とは分け、未達の指示は一般推奨にしない。
 
+## 継続開発比較の期限停止
+
+[同じ初期sourceを引き継ぐpair](../../experiments/development-harness/scheduling/continuation_pair_v1/result.md)は、
+単独が40分の期限で停止したためwithhold。提出物と公開検証は保存できたがCLIターンは未完了だった。
+固定した規則に従い、協働を開始せず、独立採点も行っていない。未使用枠を含めこのpairを閉じる。
+developerの公開記録の改善を、独立品質、協働効果、正常終了した単独episodeの証拠へ読み替えない。
+
+この結果から、予算終了時の成果物と通常終了を分ける[別契約](../../experiments/development-harness/scheduling/deadline_capture_v1/README.md)を
+疑似providerで検証した。期限で止まっても回収できた指定sourceを評価し、不正・未提出・外側中断・回収不明を区別する。
+元のwithholdや使用量不足は維持し、要求した締切と実測したcapture windowの差も記録する。
+4試験通過は新しい測定契約の校正であり、実モデルでの品質改善・協働効果・費用効率を示さない。
+
 ## 保存候補の受入点検への事前助言
 
 [固定relayでの1組](../../experiments/development-harness/selection/relay_v1/result.md)では、

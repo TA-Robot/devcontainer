@@ -12,6 +12,12 @@
 別protocolで単独→標準協働の各1開始・各40分を固定し、両提出後に初期sourceも同じ評価入力で測る。
 現在の1 cohortや次版の校正を安定した効果や難題適格性の確定に使わない。
 
+その[継続開発の実行](../../experiments/development-harness/scheduling/continuation_pair_v1/result.md)は、単独の期限停止で保留になった。
+協働は未開始、独立採点は0。原判定と未使用枠を保持して閉じる。
+次の[期限停止後の成果物評価契約](../../experiments/development-harness/scheduling/deadline_capture_v1/README.md)を
+疑似providerで校正した。観測した停止・回収後の品質と、通常終了・要求した締切ちょうどの品質を区別する。
+両条件への接続と新しい有限protocolは次の作業で、旧実行をこの契約へ読み替えない。
+
 ## 研究の問いと測定対象
 
 欲しいのは、強い単独でも探索・判断・実装が行き詰まる課題で、協働が到達可能な成果を広げること。
