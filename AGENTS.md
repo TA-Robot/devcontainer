@@ -479,6 +479,17 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-pair-recovery-diagnos
 `known_usage`は記録済み部分の下限であり、欠落費用をゼロにしたり費用比較を認定したりしない。
 全出力は未使用pathに保存する。
 
+提出物・品質・使用量を分ける新版actor（`scheduling/native_recovery_v1/`）を触ったら:
+
+```bash
+NATIVE_RECOVERY_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-native-recovery.py
+```
+
+固定imageと疑似providerのみで、封印→usage照合の順序、正常/欠測/期限/費用超過、
+通知・圧縮と独立Docker採点を確認する。`NATIVE_RECOVERY_EVIDENCE`は未使用path。
+quality/usage/budget/cleanupを分け、費用不明や超過時の品質測定を予算適合した比較へ読み替えない。
+旧actor・runner・原結果を変更せず、新しい全条件の封印barrier・開始台帳・protocol・source一致preflight前にliveを開始しない。
+
 保存済み公開候補の上限診断（`scheduling/public_frontier_v1/`）を触ったら:
 
 ```bash

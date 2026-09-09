@@ -46,6 +46,8 @@
 1. 正常終了した提出物を usage 検査前に封印する新版の回収経路を作り、
    usage 欠落・期限・費用超過でも品質/費用/上限/cleanup を取り違えない疑似provider検証を行う。
    これは次の比較の必要条件。汎用 collector や追加の会話管理基盤へ広げない。
+   **追記: actor単位の実装・校正は完了。** [native_recovery_v1](../experiments/development-harness/scheduling/native_recovery_v1/README.md)の
+   source一致7試験が通過し、使用した19 containerを全て削除した。新しいlive開始はなく、次は2へ進む。
 2. 旧協働指示・新版・strong solo の新しい有限 protocol を固定する。
    条件間の課題・公開能力・model/effort・時間・CPU/memory を揃え、全開始と欠測の扱いを先に決める。
    既に使った課題を未使用 confirmation と呼ばず、source 一致 preflight 後に開始する。

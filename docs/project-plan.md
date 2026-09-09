@@ -1,6 +1,6 @@
 # プロジェクト計画: 単独では届きにくい成果へ、協働で到達する
 
-更新: 2026-09-09。公開候補の上限診断を受け、次の品質介入と回収修正の位置付けを見直した。
+更新: 2026-09-09。公開候補の上限診断、次の品質介入、新版回収経路の実CLI校正まで反映した。
 この文書が目的・優先順位・到達条件の正本。
 [直前の計画](project-plan-history-through-lifecycle-relay.md)と
 [Cycle 005までの計画](project-plan-history-through-cycle-005.md)は履歴として保存する。
@@ -177,9 +177,15 @@ developerの公開記録に基づく診断であり、独立採点・未測定�
 現在の不足から相談を選び、初期の独立案と、その後の実測に基づく改良を接続する。効果・通常配布は未実施。
 次は同じ協働能力の旧指示対新版を比較し、同条件のstrong solo基準も保つ新しい有限protocolへ進める。
 
-その前提として、正常終了した提出物をusage検査前に封印し、quality/usage/cleanup/budgetを分ける
-最小の新版回収経路を作る。欠落後も既知の消費を残し、通知・遅延終端・usage欠落を疑似providerで確認する。
-回収の完成は品質改善の達成ではない。今回の原結果・消費済み開始枠は変更せず、
+その前提となる[新版回収経路](../experiments/development-harness/scheduling/native_recovery_v1/README.md)を実装した。
+container削除後、usage照合より先に提出物を封印し、全参加者の終了・品質・usage・予算・cleanupを分ける。
+usage欠落時も正常提出の独立採点は可能だが、全output上限適合はunknownのまま。
+期限停止は品質を保留し、観測output超過は品質を測定しても予算をexceededとする。
+実CLI＋疑似providerのsource一致7試験が通過。12 actorと7独立採点、計19 containerを全て削除した。
+通知・遅延usage・意図的usage省略、tree・fork・再相談・圧縮も確認した。新しいlive開始はない。
+
+次は旧協働指示・新版・strong soloの全条件を封印してから採点するbarrierと、新入力・全開始台帳・
+有限protocolを固定する。回収の完成は品質改善の達成ではない。今回の原結果・消費済み開始枠は変更せず、
 題材変更・人数増加・汎用collectorや選択studioの構築を先に進めない。
 
 新しい汎用runnerや会話UIを先に完成させる作業は置かない。

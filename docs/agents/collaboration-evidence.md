@@ -30,7 +30,9 @@ gpt-6-astra/highの強いsoloと、途中相談・独立実装・検証・選択
 協働の全24例が揃う13記録をケースごと・目的ごとに最良選択しても上限11521/565で、単独11607/581以下。
 developer記録の算術上限であり独立採点ではないが、この集合では選択だけを直しても不足する。
 次の品質仮説を、共通する失敗の反証から候補の改良・新しい統合へつなぐ[実験用指示](../../experiments/development-harness/scheduling/failure_refinement_v1/README.md)へ変えた。
-品質・費用・cleanupの分離は比較の前提として修正する。新しい指示の効果は未検証。
+品質・費用・cleanupを分離する[新版actor](../../experiments/development-harness/scheduling/native_recovery_v1/README.md)は、
+実CLI＋疑似providerの7試験で確認した。使用量不足でも正常な提出物を独立採点し、費用・予算の保留を残す。
+これは回収経路の証拠であり、新しい指示の効果は未検証。
 追加runで勝敗を探さず、旧protocol・原結果は変更しない。配布snapshotへはまだ転記していない。
 
 ## 保存候補の受入点検への事前助言
