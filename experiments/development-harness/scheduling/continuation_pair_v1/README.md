@@ -5,6 +5,10 @@
 [前回の判断](../refinement_cohort_v1/result.md)を受け、同じ強い初期sourceを両条件へ渡す。
 前回未達だったrefinement指示の採用・再試行とは分ける。
 
+2026-09-09、単独が40分の期限で停止し、[比較は保留](result.md)になった。
+1開始のみ使用し、協働は開始せず、独立採点も行っていない。未使用枠を含めこのpairは閉じる。
+以下のsingle-use pathを追加開始・再開に使わない。
+
 `initial-policy.txt`は前回単独の選択済みsourceのbyte-identicalな保存物。
 SHA256は`24c82c7e2fbc98edb73a384170074da8bf0240eb5203179aa253cbe9a5055424`。
 原記録は`~/.local/state/devcontainer-evaluations/scheduling-refinement-cohort-20260909-01/actors/solo/submission.py`。
@@ -40,8 +44,9 @@ PYTHONDONTWRITEBYTECODE=1 python3 experiments/development-harness/scheduling/con
 公開checkと独立Dockerの全結果・traceを照合する。評価用入力は合法性確認と封印だけで採点しない。
 初期sourceの公開校正は接続と時間枠の証拠であり、協働効果や単独の改善不可能性ではない。
 
-開始前にsourceと一致する検証・全公開校正を`validation.json`へ固定する。
+実行前にsourceと一致する検証・全公開校正を`validation.json`へ固定した。
 認証内容を保存・表示せず、必要な有効期間だけを確認する。固定live pathはsingle-use。
+以下は実施済みの入口記録。
 
 ```bash
 PYTHONDONTWRITEBYTECODE=1 python3 experiments/development-harness/scheduling/continuation_pair_v1/run.py \
