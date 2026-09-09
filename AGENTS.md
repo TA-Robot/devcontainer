@@ -530,6 +530,24 @@ DEADLINE_CAPTURE_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/
 現接続は疑似provider専用。旧live成果物・qualificationを再採点せず、両条件の新protocolへ接続するまでliveを開始しない。
 候補codeはhostで実行しない。
 
+期限停止後の成果物による新しい継続比較（`scheduling/termination_pair_v1/`）を触ったら:
+
+```bash
+TERMINATION_PAIR_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-termination-pair.py
+```
+
+`TERMINATION_PAIR_EVIDENCE`は未使用path。正常/usage欠落/output超過/両条件の期限停止/
+書込み中の子/不正policy/未提出/外側中断、両成果物の封印と初期sourceを含む独立採点を確認する。
+公開接続・初期source・入力・評価器を変えたら`calibrate.py --output NEW_PATH`でFIFO/初期sourceの
+公開24例ずつを1 CPUの公開checkと独立Dockerで照合する。qualificationを校正で採点しない。
+元のquality/lifecycle/時計/usage/admissionを保持し、観測停止後のcapture可否を別recordへ残す。
+要求期限・観測停止・保守的なcapture上界を併記し、正常終了や厳密な期限時点の品質へ読み替えない。
+source一致preflight・公開校正・新protocol前にliveを開始せず、固定2開始を追加しない。
+旧保留runと未使用枠は再開しない。不正policyと基盤の未測定、品質とoutput予算適合を区別する。
+Docker createのタイムアウト後は、単発の不在確認を回収完了にしない。遅れて作成される所有containerを
+有限時間で観測・削除し、作成完了が未確認なら回収はunknown。元記録と別の回収監査を保存する。
+候補codeをhostで実行しない。
+
 保存済み公開候補の上限診断（`scheduling/public_frontier_v1/`）を触ったら:
 
 ```bash

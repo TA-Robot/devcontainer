@@ -1,6 +1,6 @@
 # 協働実験計画: 難題の未達から方式とハーネスを改善する
 
-更新: 2026-09-09。[目的と工程の正本](../project-plan.md)に従う。
+更新: 2026-09-10。[目的と工程の正本](../project-plan.md)に従う。
 [以前の方式比較計画](collaboration-experiment-plan-history-through-lifecycle-relay.md)は実施履歴として保存する。
 旧実験を再開・再採点する計画ではない。
 [H2初回のsolo校正](../../experiments/development-harness/scheduling/solo_v1/result.md)は2回とも参照水準へ到達。
@@ -16,7 +16,13 @@
 協働は未開始、独立採点は0。原判定と未使用枠を保持して閉じる。
 次の[期限停止後の成果物評価契約](../../experiments/development-harness/scheduling/deadline_capture_v1/README.md)を
 疑似providerで校正した。観測した停止・回収後の品質と、通常終了・要求した締切ちょうどの品質を区別する。
-両条件への接続と新しい有限protocolは次の作業で、旧実行をこの契約へ読み替えない。
+[新しい両条件への接続と有限protocol](../../experiments/development-harness/scheduling/termination_pair_v1/protocol.md)を実装し、
+疑似providerの7試験が通過した。公開FIFO/初期sourceの24例照合とsource一致validationを固定してから、
+同じ初期sourceを持つ新しい単独→協働を各1開始・各40分で測る。旧実行をこの契約へ読み替えない。
+作成タイムアウト後の遅れたcontainer残存も発見し、回収判定を修正した。単発の不在を回収完了とせず、
+作成完了の根拠が欠ける場合は有限に回収を試みてもunknownを保持する。
+最終sourceの公開校正は初期実装の初回応答タイムアウトで保留となり、実モデルは未開始。
+次は起動待ちと方策応答の非agent診断を優先し、最終sourceの公開校正を満たすまで開始しない。
 
 ## 研究の問いと測定対象
 
