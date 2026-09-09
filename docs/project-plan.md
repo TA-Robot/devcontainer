@@ -184,9 +184,15 @@ usage欠落時も正常提出の独立採点は可能だが、全output上限適
 実CLI＋疑似providerのsource一致7試験が通過。12 actorと7独立採点、計19 containerを全て削除した。
 通知・遅延usage・意図的usage省略、tree・fork・再相談・圧縮も確認した。新しいlive開始はない。
 
-次は旧協働指示・新版・strong soloの全条件を封印してから採点するbarrierと、新入力・全開始台帳・
-有限protocolを固定する。回収の完成は品質改善の達成ではない。今回の原結果・消費済み開始枠は変更せず、
-題材変更・人数増加・汎用collectorや選択studioの構築を先に進めない。
+続いて[旧指示・新版・strong soloの新しいcohort](../experiments/development-harness/scheduling/refinement_cohort_v1/protocol.md)を固定した。
+同じ系列の新しい公開24例・採点24例、各40分・観測output16万、旧指示→新版→単独の3開始だけ。
+全条件の提出物・actor結果・公開入力を封印してから、各採点前にもbarrierを照合する。
+source一致の6試験と公開FIFO全24例の校正が通過し、46 containerを全て削除した。
+usage不足・観測output超過では共通の開発時計での品質を測定し、費用・output上限適合を保留する。
+外側中断や参加者の異常終了は次の開始を止める。新しいconfirmationとは扱わない。
+
+次はこの固定cohortの実比較へ進む。回収の完成は品質改善の達成ではない。
+過去の原結果・消費済み開始枠は変更せず、題材変更・人数増加・汎用collectorや選択studioの構築を先に進めない。
 
 新しい汎用runnerや会話UIを先に完成させる作業は置かない。
 Aの最初の準備は[候補設計の有限な作業枠](agents/hard-task-candidates.md)内で終了した。

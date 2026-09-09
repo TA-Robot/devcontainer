@@ -490,6 +490,18 @@ NATIVE_RECOVERY_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/t
 quality/usage/budget/cleanupを分け、費用不明や超過時の品質測定を予算適合した比較へ読み替えない。
 旧actor・runner・原結果を変更せず、新しい全条件の封印barrier・開始台帳・protocol・source一致preflight前にliveを開始しない。
 
+旧協働指示・新版・soloのcohort（`scheduling/refinement_cohort_v1/`）を触ったら:
+
+```bash
+REFINEMENT_COHORT_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-refinement-cohort.py
+```
+
+`REFINEMENT_COHORT_EVIDENCE`は未使用path。正常/usage欠落/output超過/期限/外側中断と、全提出物の封印barrierを確認する。
+新入力や評価接続を変える場合、`calibrate.py --output NEW_PATH`で公開24例の固定FIFO校正も行う。
+採点側入力の校正得点で課題を選ばず、同じ系列の新seedを未使用の別課題やconfirmationと呼ばない。
+liveは固定path・固定3開始だけ。費用不明時の品質測定をoutput予算適合や費用効率の認定へ読み替えない。
+旧結果や封印済みsourceを変更して再開せず、候補codeをhostで実行しない。
+
 保存済み公開候補の上限診断（`scheduling/public_frontier_v1/`）を触ったら:
 
 ```bash

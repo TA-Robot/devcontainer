@@ -40,5 +40,7 @@
 
 [新版回収経路](../native_recovery_v1/README.md)は実装し、source一致の7試験を実CLI＋疑似providerで通した。
 usage欠落と観測output超過でも正常な提出物を独立採点し、費用・予算の保留を維持できる。
-これで上記1のactor単位の校正は完了した。全条件の封印barrierと新入力・開始台帳・protocolを
-固定し、この指示を比較へ接続するのが次の作業。その完了も能力拡張の達成ではなくH4の検証準備である。
+これで上記1のactor単位の校正は完了した。
+[refinement_cohort_v1](../refinement_cohort_v1/README.md)で全条件の封印barrierと新入力・開始台帳・protocolも固定し、
+source一致の6試験と公開24例の校正を通した。次はこの固定cohortで実比較する。
+この接続の完了も能力拡張の達成ではなくH4の検証準備である。
