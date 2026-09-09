@@ -479,6 +479,16 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-pair-recovery-diagnos
 `known_usage`は記録済み部分の下限であり、欠落費用をゼロにしたり費用比較を認定したりしない。
 全出力は未使用pathに保存する。
 
+保存済み公開候補の上限診断（`scheduling/public_frontier_v1/`）を触ったら:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-public-candidate-frontier.py
+```
+
+保存済み公開JSONとsourceのhashだけを読み、candidate codeを実行しない。
+出力は未使用path。developer記録を独立採点へ、目的別の事後最大値を一つの実装可能な方策へ読み替えない。
+source/inputの追跡性を分け、旧run・選択・得点を変更しない。未測定候補や新しい統合まで不可能としない。
+
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
