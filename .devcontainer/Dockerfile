@@ -272,6 +272,13 @@ COPY scripts/codex-second-agent-filter.py /usr/local/lib/second-agent/codex-seco
 COPY scripts/claude-second-agent-filter.py /usr/local/lib/second-agent/claude-second-agent-filter.py
 RUN chmod +x /usr/local/bin/second-agent /usr/local/bin/codex-second-agent /usr/local/bin/claude-second-agent /usr/local/bin/fugu /usr/local/lib/devcontainer/fugu
 
+# Byobu owns the named Mira terminals across SSH disconnects. tmux alone is
+# already available for other workflows; keep this optional frontend separate.
+RUN apt-get update && apt-get install -y --no-install-recommends byobu \
+    && rm -rf /var/lib/apt/lists/*
+COPY scripts/mira /usr/local/bin/mira
+RUN chmod 0755 /usr/local/bin/mira
+
 # AI CLI aliases. `*-auto` / `*-yolo` remain compatibility spellings, while
 # new automation should use the explicit `*-trusted` executable names.
 USER $USERNAME
