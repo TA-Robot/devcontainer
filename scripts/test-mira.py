@@ -40,7 +40,7 @@ class MiraTests(unittest.TestCase):
                 "#!/usr/bin/env python3\n"
                 "import json,sys,time\n"
                 f"with open({str(log)!r}, 'a') as out: out.write(json.dumps(sys.argv[1:]) + '\\n')\n"
-                "time.sleep(60)\n"
+                "time.sleep(180)\n"
             )
             binary.chmod(0o755)
             self.env[f"MIRA_{provider.upper()}_BIN"] = str(binary)
@@ -67,6 +67,14 @@ class MiraTests(unittest.TestCase):
             self.assertLess(time.monotonic(), deadline, f"{provider} did not start")
             time.sleep(.05)
         return json.loads(path.read_text().splitlines()[0])
+
+    def wait_for_log_count(self, provider, count):
+        path = self.root / f"{provider}-args.json"
+        deadline = time.monotonic() + 6
+        while not path.exists() or len(path.read_text().splitlines()) < count:
+            self.assertLess(time.monotonic(), deadline, f"{provider} did not start {count} times")
+            time.sleep(.05)
+        return [json.loads(line) for line in path.read_text().splitlines()]
 
     def test_reuses_provider_and_workspace_and_passes_flags(self):
         expected = {"codex": ["--model", "two words"], "claude": [],
@@ -96,8 +104,8 @@ class MiraTests(unittest.TestCase):
     def test_list_selection_survives_terminal_disconnect(self):
         self.assertEqual(self.run_mira("codex").returncode, 0)
         self.wait_for_log("codex")
-        self.assertEqual(self.run_mira("claude").returncode, 0)
-        self.wait_for_log("claude")
+        self.assertEqual(self.run_mira("codex", "--add").returncode, 0)
+        self.wait_for_log_count("codex", 2)
         sessions = self.sessions()
         self.assertEqual(len(sessions), 2)
         session = sessions[1]
@@ -114,6 +122,7 @@ class MiraTests(unittest.TestCase):
                 readable, _, _ = select.select([master], [], [], .2)
                 if readable:
                     output += os.read(master, 4096)
+            self.assertIn(b"#2", output)
             os.write(master, b"2\n")
             deadline = time.monotonic() + 10
             while True:
@@ -135,12 +144,41 @@ class MiraTests(unittest.TestCase):
                 time.sleep(.1)
             self.assertEqual(self.sessions(), sessions)
             self.assertEqual(self.run_mira("codex").returncode, 0)
-            self.assertEqual(len((self.root / "codex-args.json").read_text().splitlines()), 1)
+            self.assertEqual(len((self.root / "codex-args.json").read_text().splitlines()), 2)
         finally:
             if pid:
                 os.kill(pid, signal.SIGKILL)
                 os.waitpid(pid, 0)
             os.close(master)
+
+    def test_add_creates_distinct_sessions_and_default_reuses_one(self):
+        self.assertEqual(self.run_mira("codex", "--model", "first").returncode, 0)
+        self.assertEqual(self.wait_for_log("codex"), ["--model", "first"])
+        for model in ("second", "third"):
+            result = self.run_mira("codex", "--add", "--model", model)
+            self.assertEqual(result.returncode, 0, result.stderr)
+        sessions = self.sessions()
+        self.assertEqual(len(sessions), 3)
+        base = next(name for name in sessions if name + "_2" in sessions and name + "_3" in sessions)
+        self.assertEqual(
+            self.wait_for_log_count("codex", 3),
+            [["--model", "first"], ["--model", "second"], ["--model", "third"]],
+        )
+        listing = self.run_mira("list")
+        self.assertEqual(listing.returncode, 0, listing.stderr)
+        for instance in ("#1", "#2", "#3"):
+            self.assertIn(instance, listing.stdout)
+        self.assertEqual(self.run_mira("codex").returncode, 0)
+        self.assertEqual(self.sessions(), sessions)
+
+        subprocess.run(["byobu-tmux", "-L", self.socket, "kill-session", "-t", base],
+                       env=self.env, check=True, capture_output=True, timeout=10)
+        self.assertEqual(self.run_mira("codex").returncode, 0)
+        self.assertEqual(len(self.sessions()), 2)
+        result = self.run_mira("codex", "--add", "--model", "fourth")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(self.sessions()), 3)
+        self.assertEqual(self.wait_for_log_count("codex", 4)[-1], ["--model", "fourth"])
 
     def test_empty_list_and_invalid_provider(self):
         result = self.run_mira("list")
