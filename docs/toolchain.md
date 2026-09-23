@@ -64,7 +64,8 @@ checks the installed executable before publication. Directly mounting a host
 binary is unsuitable across host/container OS and CPU differences. To remove
 OpenCode, delete its Dockerfile ARG/install/ENV/symlink, the two mounts and host
 directory setup, and its sync mapping and tests; rebuilding the previous image
-digest is the rollback path.
+digest is the rollback path. A host CLI installed through npm can be removed
+separately with `npm uninstall -g @opencode/cli`.
 
 `bubblewrap` and `socat` are installed because Claude Code's fail-closed Linux
 sandbox requires both its filesystem sandbox and network proxy helpers; Grok
