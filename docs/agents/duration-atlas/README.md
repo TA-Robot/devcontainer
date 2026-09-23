@@ -4,6 +4,11 @@
 
 Atlasはrouterではありません。provider、model、effort、agent数、relationを順位付けせず、projectへ既定構成を与えません。どの条件を試すか、どの観測をprojectの判断材料にするかは、そのprojectの目的、risk、期間、review costに基づいて別途決めます。
 
+2026-09-23の[model更新](../model-refresh-2026-09-23.md)では、Grok 4.7 / 4.7 Build Fastの
+`low / medium / high / xhigh`を要求でき、`max`は計画・batch・実行入口で拒否します。
+旧modelの`max`試行は履歴として維持します。新modelの実測はまだなく、既存snapshotの
+時間・品質を新modelへ読み替えません。guardの受理は、account accessや実適用の証明ではありません。
+
 ## 1. 変えてはいけない原則
 
 - 36 caseはtask corpusのcoverageです。provider × model × effort × relation × environmentの全組合せを測定済みという意味ではありません。

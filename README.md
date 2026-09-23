@@ -20,7 +20,9 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 
 この基盤は、強い単独AIでも解法の探索・判断・実装が行き詰まる難題を出発点に、相談・多様な案・複数実装の比較・検証と統合によって到達できる成果を広げることを目指します。単独の未達を校正し、難題での最終成果と全費用を自動評価して、指示・情報提供・実行制御を改善し、未使用の難題で再評価します。[現行計画と現在地](docs/project-plan.md)、[方式別の比較設計](docs/agents/collaboration-experiment-plan.md)を参照してください。
 
-評価は[小規模・大規模の両方](docs/agents/development-harness-evaluation.md)を対象とします。Cycle 001〜005では小規模と複数段階の開発比較を実施済みです。協働方式の効果と、その情報をAIへ渡したハーネスの改善効果は、今後それぞれ検証します。
+評価は[小規模・大規模の両方](docs/agents/development-harness-evaluation.md)を対象とします。Cycle 001〜005と動的schedulingの比較を実施済みですが、強い単独を超える安定した能力拡張は未達です。現在は[既存の実リポジトリ難題を使う計画](docs/project-plan.md)へ進め方を改訂しています。
+
+GPT-6 Sol / Grok 4.7 / Claude Opus 5.5に向けたCLI更新、モデル指定と検証範囲は[2026-09-23の更新記録](docs/agents/model-refresh-2026-09-23.md)を参照してください。通常のnative agentはモデル継承を維持し、過去の実験結果は当時の条件のまま保存します。
 
 ## クイックスタート
 
@@ -217,7 +219,7 @@ Grokはこのfeature-frozen wrapperへ追加しません。新規のGrok jobはn
 | 権限バイパス | `--dangerously-bypass-approvals-and-sandbox --search` | `--dangerously-skip-permissions` |
 | 作業ディレクトリ | `--cd <path>` を渡す | flag が無いため wrapper が `cd` する |
 | セッション継続 | `codex exec resume <id>` | `claude -r <id>` |
-| 固定モデル | `gpt-5.5`（`CODEX_SA_MODEL` で上書き可） | `opus`（`CLAUDE_SA_MODEL` で上書き可） |
+| 固定モデル | `gpt-6-sol`（`CODEX_SA_MODEL` で上書き可） | `opus`（`CLAUDE_SA_MODEL` で上書き可） |
 | 環境変数プレフィックス | `CODEX_SA_*` | `CLAUDE_SA_*` |
 | state ディレクトリ | `.codex-second-agent` | `.claude-second-agent` |
 | worktree ブランチ | `agent/<name>` | `claude-agent/<name>` |
@@ -274,7 +276,7 @@ Grokはこのfeature-frozen wrapperへ追加しません。新規のGrok jobはn
 - 権限バイパスは危険です。隔離環境ではなく、信頼済みホスト上の高権限運用として扱ってください
 - **workspace スコープ制限は「事故低減」であって隔離（security boundary）ではありません。** 実行は常にホスト権限フルです
 - 既定エージェント（`default`）も `--cd`/`--add-dir` は**既定で実行対象 repo の中だけ**に制限されます。外を触らせたいときだけ `--allow-outside-workspace`（または `<PREFIX>_ALLOW_OUTSIDE=1`）を付けてください。なお worktree 隔離・セッション分離が欲しいサブエージェント運用では `--agent <name>` を使います
-- 使用モデルは固定です（codex: 既定 `gpt-5.5`、`CODEX_SA_MODEL` で上書き可 / claude: 既定 `opus`、`CLAUDE_SA_MODEL` で上書き可）。既定値はコード直書きのため陳腐化し得ます（env でピン留め推奨）
+- wrapperはモデル指定を固定します（codex: 既定 `gpt-6-sol`、`CODEX_SA_MODEL` で上書き可 / claude: 既定 `opus`、`CLAUDE_SA_MODEL` で上書き可）。`opus`の解決先はCLI・providerで変わるため、再現性が必要なら完全なモデルIDをenvで指定してください。
   - `--model` などのモデル選択系オプションは passthrough から除去されます
   - codex は `--config model=...` / `--oss` / `--local-provider` も無視します
   - claude は `--output-format` / `--input-format` / `--permission-mode` / `-p` / `-r` / `--session-id` など、wrapper が固定する実行フラグを passthrough から除去します

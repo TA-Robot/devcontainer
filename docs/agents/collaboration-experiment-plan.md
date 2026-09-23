@@ -1,6 +1,10 @@
 # 協働実験計画: 難題の未達から方式とハーネスを改善する
 
-更新: 2026-09-10。[目的と工程の正本](../project-plan.md)に従う。
+更新: 2026-09-23。[目的と工程の正本](../project-plan.md)に従う。
+現在の工程はR0〜R4。次のscheduling pair接続は保留し、
+[実リポジトリ課題の入口](repository-task-pilot-2026-09-23.md)を優先する。
+既存のG1〜G6は引き続き適格性の原則として使い、下記の9月10日までの経過は実施履歴として読む。
+H1〜H5の概念は維持するが、当時の着手順や予算を新しい開始枠にしない。
 [以前の方式比較計画](collaboration-experiment-plan-history-through-lifecycle-relay.md)は実施履歴として保存する。
 旧実験を再開・再採点する計画ではない。
 [H2初回のsolo校正](../../experiments/development-harness/scheduling/solo_v1/result.md)は2回とも参照水準へ到達。
@@ -22,7 +26,8 @@
 作成タイムアウト後の遅れたcontainer残存も発見し、回収判定を修正した。単発の不在を回収完了とせず、
 作成完了の根拠が欠ける場合は有限に回収を試みてもunknownを保持する。
 最終sourceの公開校正は初期実装の初回応答タイムアウトで保留となり、実モデルは未開始。
-次は起動待ちと方策応答の非agent診断を優先し、最終sourceの公開校正を満たすまで開始しない。
+その後、[起動時計の別版](../../experiments/development-harness/scheduling/ready_runtime_v1/result.md)の
+非agent校正は完了した。旧pairの保留は維持し、現在は上記のR1へ優先順位を変更している。
 
 ## 研究の問いと測定対象
 

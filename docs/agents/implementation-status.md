@@ -1,10 +1,10 @@
 # Native-first multi-agent refresh status
 
-Implementation inventory updated: 2026-08-26. Planning review: 2026-09-05.
+Implementation inventory updated: 2026-08-26. Planning review: 2026-09-23.
 
 The current cross-project priorities are in [`../project-plan.md`](../project-plan.md),
 with findings and reproduction evidence in the
-[`2026-09-05 project review`](../project-review-2026-09-05.md).
+[`2026-09-23 project review`](../project-review-2026-09-23.md).
 The completed phases below remain an implementation inventory. The Phase 4b and
 collaboration R2 follow-ups below are conditional backlog, not the immediate
 execution order. The first real repository maintenance cycle is
@@ -12,9 +12,10 @@ execution order. The first real repository maintenance cycle is
 the same task was re-evaluated, and the accepted fix was integrated. The next
 cycle follows the [small- and large-scale evaluation plan](development-harness-evaluation.md).
 Cycle 001 is a small-maintenance pilot; large-scale development is unmeasured.
-The next priority is a sustained development task with intermediate acceptance,
-changed requirements and integration, followed by a small-task check of the same
-intervention. G3 expansion and outer ForgeRoom builds are deferred.
+The current priority is a bounded entry check of existing hard repository tasks,
+then calibration of current strong-solo failures and a targeted collaboration
+comparison. See the [fixed candidate entry](repository-task-pilot-2026-09-23.md).
+The next scheduling pair and outer ForgeRoom builds are deferred.
 
 The numbered source roadmap is `temp/multi-agent-refresh/03-recommendation-and-roadmap.md`. This file records implementation state; design changes belong in the ADR or architecture docs.
 
