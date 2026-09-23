@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "study_id": "duration-atlas-wave3",
+  "block_id": "depth-curve-l-coverage-1",
+  "canonical_run_ids": [
+    "grok-f04-l-46-medium-20260827-r01",
+    "grok-f04-l-46-high-20260827-r01",
+    "grok-f04-l-46-xhigh-20260827-r01",
+    "grok-f04-l-46-max-20260827-r03",
+    "codex-f04-l-sol-medium-20260827-r01",
+    "codex-f04-l-sol-high-20260827-r01",
+    "codex-f04-l-sol-xhigh-20260827-r01",
+    "codex-f04-l-sol-max-20260827-r01",
+    "codex-f04-l-sol-ultra-20260827-r01"
+  ],
+  "excluded_records": [
+    {
+      "run_id": "grok-f04-l-46-max-20260827-r01",
+      "disposition": "instrumentation-invalid",
+      "reason_code": "pre-run-setting-metadata-misclassified"
+    }
+  ],
+  "unrecorded_attempts": [
+    {
+      "attempt_id": "grok-f04-l-46-max-20260827-r02",
+      "disposition": "instrumentation-invalid",
+      "reason_code": "failure-class-schema-missing"
+    }
+  ]
+}

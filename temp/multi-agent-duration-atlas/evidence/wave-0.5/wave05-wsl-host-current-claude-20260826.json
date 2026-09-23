@@ -1,0 +1,77 @@
+{
+  "capability_id": "wave05-wsl-host-current-claude-20260826",
+  "coverage": {
+    "limitations": [
+      "model-default-unresolved",
+      "model-inventory-unobserved",
+      "no-generation-request",
+      "setting-application-unobserved"
+    ],
+    "model_inventory": "not-observed",
+    "runtime_identity": "exact",
+    "setting_advertisement": "partial",
+    "setting_application": "not-observed"
+  },
+  "model_identity": {
+    "identity_confidence": "default-unspecified",
+    "requested_source": "unknown"
+  },
+  "model_inventory": [],
+  "observed_at": "2026-08-26T10:47:48.993Z",
+  "probe": {
+    "commands": [
+      {
+        "command_id": "version",
+        "duration_ms": 270.85,
+        "evidence_source": "version-output",
+        "exit_code": 0,
+        "status": "observed"
+      },
+      {
+        "command_id": "root-help",
+        "duration_ms": 1014.678,
+        "evidence_source": "root-help",
+        "exit_code": 0,
+        "status": "observed"
+      }
+    ],
+    "generation_request_performed": false,
+    "metadata_scope": "not-requested",
+    "mode": "passive-cli",
+    "provider_metadata_request_attempted": false,
+    "raw_output_persisted": false
+  },
+  "runtime_identity": {
+    "cli_name": "claude",
+    "cli_source": "unknown",
+    "cli_version": "2.1.220",
+    "environment_kind": "host",
+    "execution_surface": "capability-probe",
+    "observed_at": "2026-08-26T10:47:48.993Z",
+    "permission_mode": "unknown",
+    "provider": "claude"
+  },
+  "schema_version": 2,
+  "setting_probes": [],
+  "setting_surfaces": [
+    {
+      "advertised_values": [
+        "low",
+        "medium",
+        "high",
+        "xhigh",
+        "max"
+      ],
+      "advertisement": "enumerated",
+      "application_observability": "not-observed",
+      "evidence_source": "root-help",
+      "key": "effort",
+      "namespace": "claude.reasoning"
+    }
+  ],
+  "surfaces": {
+    "permission_mode": "unknown",
+    "progress_artifact": "unknown",
+    "synthesis_envelope": "unknown"
+  }
+}

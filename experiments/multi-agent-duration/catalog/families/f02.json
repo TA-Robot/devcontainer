@@ -1,0 +1,235 @@
+{
+  "schema_version": 1,
+  "catalog_id": "duration-atlas-f02",
+  "revision": 1,
+  "published_at": "2026-08-27T00:00:00.000Z",
+  "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F02-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:0ebfeeeed554ebb24e5292b30fd1183f4a2938de83ad9697288aa94eae5b382d",
+        "source_type": "fixture",
+        "family": "code-review",
+        "size": "S",
+        "profile_id": "S-local-seeded-review-python",
+        "variant_group_id": "F02-S-PY",
+        "descriptors": {
+          "context_surface": "one-python-diff-and-helper",
+          "artifact_surface": "structured-review-finding",
+          "coupling": "local-validation",
+          "validation_depth": ["schema", "seeded-defect"],
+          "environment_setup": "none",
+          "failure_distance": "direct-exploit",
+          "statefulness": "stateless",
+          "language_toolchain": ["python", "json"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "answer",
+        "risk": "low",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["seeded-recall", "invalid-trigger", "false-positive"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F02-S-PY-001",
+        "recipe_id": "f02-s-python-path-review-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f02-s-python-path-review.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["python3", "tools/validate_review.py", "review.json"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "review-seeded-recall",
+            "test_target": "HiddenSmallReviewTests.test_seeded_recall"
+          },
+          {
+            "check_id": "review-trigger-valid",
+            "test_target": "HiddenSmallReviewTests.test_trigger_valid"
+          },
+          {
+            "check_id": "review-impact-severity",
+            "test_target": "HiddenSmallReviewTests.test_impact_severity"
+          },
+          {
+            "check_id": "review-evidence-line",
+            "test_target": "HiddenSmallReviewTests.test_evidence_line"
+          },
+          {
+            "check_id": "review-false-positive",
+            "test_target": "HiddenSmallReviewTests.test_false_positive"
+          }
+        ],
+        "online_evaluator_id": "f02-s-python-review-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F02-M-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:2458ec755c5c1198f87643a08a0c1829e4870448bddf2099fc419fb49af00dcd",
+        "source_type": "fixture",
+        "family": "code-review",
+        "size": "M",
+        "profile_id": "M-coupled-seeded-review-python",
+        "variant_group_id": "F02-M-PY",
+        "descriptors": {
+          "context_surface": "four-python-modules-and-multi-file-diff",
+          "artifact_surface": "ranked-multi-finding-review",
+          "coupling": "filesystem-and-cleanup-contract",
+          "validation_depth": ["schema", "seeded-defect", "exploit-replay"],
+          "environment_setup": "temporary-filesystem",
+          "failure_distance": "cross-module",
+          "statefulness": "filesystem-ownership-state",
+          "language_toolchain": ["python", "json"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "findings",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["partial-recall", "interaction-omission", "false-positive"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F02-M-PY-001",
+        "recipe_id": "f02-m-python-isolation-review-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f02-m-python-isolation-review.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["python3", "tools/validate_review.py", "review.json"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "review-symlink-recall",
+            "test_target": "HiddenMediumReviewTests.test_symlink_recall"
+          },
+          {
+            "check_id": "review-ownership-recall",
+            "test_target": "HiddenMediumReviewTests.test_ownership_recall"
+          },
+          {
+            "check_id": "review-interaction",
+            "test_target": "HiddenMediumReviewTests.test_interaction"
+          },
+          {
+            "check_id": "review-ranking",
+            "test_target": "HiddenMediumReviewTests.test_ranking"
+          },
+          {
+            "check_id": "review-evidence",
+            "test_target": "HiddenMediumReviewTests.test_evidence"
+          },
+          {
+            "check_id": "review-false-positive",
+            "test_target": "HiddenMediumReviewTests.test_false_positive"
+          }
+        ],
+        "online_evaluator_id": "f02-m-python-review-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F02-L-PYBASHJS-001",
+        "revision": 1,
+        "capsule_digest": "sha256:cfae31a9caae417953e194a3ed0ec282ba6d3846ce6b829e79b42f4ac0f2325e",
+        "source_type": "fixture",
+        "family": "code-review",
+        "size": "L",
+        "profile_id": "L-cross-boundary-lifecycle-review",
+        "variant_group_id": "F02-L-PYBASHJS",
+        "descriptors": {
+          "context_surface": "bash-python-javascript-container-lifecycle-diff",
+          "artifact_surface": "ranked-findings-with-lifecycle-evidence",
+          "coupling": "cross-language-lifecycle-and-cleanup",
+          "validation_depth": ["schema", "seeded-defect", "lifecycle-replay", "restart"],
+          "environment_setup": "simulated-container-lifecycle",
+          "failure_distance": "restart-delayed",
+          "statefulness": "persistent-state-and-cleanup-ownership",
+          "language_toolchain": ["bash", "python", "javascript", "docker", "json"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "structured",
+        "decomposability": "independent",
+        "artifact_type": "findings",
+        "risk": "high",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["boundary-omission", "restart-omission", "ownership-omission", "false-positive"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F02-L-PYBASHJS-001",
+        "recipe_id": "f02-l-hook-lifecycle-review-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f02-l-hook-lifecycle-review.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["bash", "tests/replay-review-surface.sh"],
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["bash", "-c", "node --test extension/test/*.test.js"],
+          ["python3", "tools/validate_review.py", "review.json"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "review-redaction-order",
+            "test_target": "HiddenLargeReviewTests.test_redaction_order"
+          },
+          {
+            "check_id": "review-stale-restart",
+            "test_target": "HiddenLargeReviewTests.test_stale_restart"
+          },
+          {
+            "check_id": "review-cleanup-owner",
+            "test_target": "HiddenLargeReviewTests.test_cleanup_owner"
+          },
+          {
+            "check_id": "review-lifecycle-model",
+            "test_target": "HiddenLargeReviewTests.test_lifecycle_model"
+          },
+          {
+            "check_id": "review-ranking-impact",
+            "test_target": "HiddenLargeReviewTests.test_ranking_impact"
+          },
+          {
+            "check_id": "review-evidence-integrity",
+            "test_target": "HiddenLargeReviewTests.test_evidence_integrity"
+          },
+          {
+            "check_id": "review-false-positive",
+            "test_target": "HiddenLargeReviewTests.test_false_positive"
+          }
+        ],
+        "online_evaluator_id": "f02-l-hook-lifecycle-review-v1",
+        "gold_visibility": "harness-only"
+      }
+    }
+  ]
+}

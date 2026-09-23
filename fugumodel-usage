@@ -1,0 +1,154 @@
+Sakana AI の **Fugu** は、いまは一般提供されている **OpenAI互換APIのマルチエージェントモデル**です。2026年6月22日のリリースでは、モデルは主に **`fugu`** と **`fugu-ultra`** の2つで、どちらも単一APIから使えます。`fugu` は低レイテンシ寄りの日常用途、`fugu-ultra` は難しい多段階推論・研究・コードレビュー向けです。([Sakana AI][1])
+
+## まず使う手順
+
+1. Sakana AI Console で API key を作る
+2. 環境変数に入れる
+3. OpenAI SDK の `base_url` を Sakana API に変える
+4. `model="fugu"` または `model="fugu-ultra"` で呼ぶ
+
+公式ドキュメントでは API endpoint は `https://api.sakana.ai`、OpenAI互換の Chat Completions / Responses / Models API をサポートし、生成には Responses API が推奨されています。([Sakana][2])
+
+## Python 例
+
+```bash
+pip install openai
+export SAKANA_API_KEY="your_api_key"
+```
+
+```python
+import os
+from openai import OpenAI
+
+client = OpenAI(
+    base_url="https://api.sakana.ai/v1",
+    api_key=os.environ["SAKANA_API_KEY"],
+)
+
+response = client.responses.create(
+    model="fugu",  # 高速・日常用途
+    input="PythonでCSVを読み込み、欠損値を確認するコードを書いてください。",
+)
+
+print(response.output_text)
+```
+
+重いタスクなら `model="fugu-ultra"` にします。
+
+```python
+response = client.responses.create(
+    model="fugu-ultra",
+    input="この機械学習論文の手法を再現実装するための実験計画を立ててください。",
+    timeout=120.0,
+)
+print(response.output_text)
+```
+
+`fugu-ultra` は複雑なタスクで時間がかかる場合があるため、公式例でも client-side timeout を長めにする注記があります。([Sakana][2])
+
+## curl 例
+
+```bash
+export SAKANA_API_KEY="your_api_key"
+
+curl -X POST https://api.sakana.ai/v1/chat/completions \
+  -H "Content-Type: application/json" \
+  -H "Authorization: Bearer $SAKANA_API_KEY" \
+  -d '{
+    "model": "fugu",
+    "messages": [
+      {"role": "user", "content": "Sakana Fuguの特徴を3行で説明して"}
+    ]
+  }'
+```
+
+## モデルの選び方
+
+| 用途                          | モデル                   |
+| --------------------------- | --------------------- |
+| 普段のチャット、軽いコード生成、コードレビュー     | `fugu`                |
+| 論文調査、Kaggle、複雑な設計、長いコードレビュー | `fugu-ultra`          |
+| バージョン固定したい                  | `fugu-ultra-20260615` |
+
+公式の supported model ID は `fugu`、`fugu-ultra`、`fugu-ultra-20260615` です。([Sakana][3])
+
+## Codex CLI で使う場合
+
+公式の簡単セットアップは以下です。([Sakana][2])
+
+```bash
+curl -fsSL https://sakana.ai/fugu/install | bash
+```
+
+起動:
+
+```bash
+codex-fugu
+```
+
+手動設定では provider の `base_url` を次のようにします。
+
+```toml
+[model_providers.sakana]
+name = "Sakana API"
+base_url = "https://api.sakana.ai/v1"
+env_key = "SAKANA_API_KEY"
+wire_api = "responses"
+```
+
+## この環境での `fugu` コマンド
+
+この devcontainer では、プロジェクトを変更せずに PATH 上のラッパーとして次を配置しています。
+
+```bash
+/home/devuser/.local/bin/fugu
+```
+
+`/home/devuser/.local/bin` は PATH に入っているため、terminal からはそのまま `fugu` と打てます。
+
+```bash
+fugu exec "READMEを要約して"
+fugu exec --json "この差分をレビューして"
+fugu --model fugu exec "軽めのタスク"
+fugu --model fugu-ultra exec "重めのレビュー"
+```
+
+既定モデルは `fugu-ultra` です。`--model fugu` または `--model fugu-ultra` で切り替えられます。
+
+API key は次の優先順で使います。
+
+1. 環境変数 `SAKANA_API_KEY`
+2. `/workspace/fugu-api`
+3. `--api-key-file PATH` で指定したファイル
+
+実体は Codex CLI に Sakana provider 設定を付けて起動しています。
+
+```bash
+codex \
+  --disable image_generation \
+  --model fugu-ultra \
+  --config 'model_provider="sakana"' \
+  --config 'model_providers.sakana.name="Sakana API"' \
+  --config 'model_providers.sakana.base_url="https://api.sakana.ai/v1"' \
+  --config 'model_providers.sakana.env_key="SAKANA_API_KEY"' \
+  --config 'model_providers.sakana.wire_api="responses"'
+```
+
+`--disable image_generation` は必要です。Codex CLI が `image_generation` tool を送ると、Sakana API 側で `Invalid value: 'image_generation'. Supported values are: 'function' and 'custom'.` というエラーになるためです。
+
+動作確認:
+
+```bash
+fugu exec --skip-git-repo-check --json "Reply exactly: fugu-ok"
+```
+
+上記は Sakana API まで到達し、最終メッセージとして `fugu-ok` が返ることを確認済みです。
+
+## 注意点
+
+EU/EEA では現在利用不可と明記されています。また、`fugu-ultra` のオーケストレーション用トークンも実際の課金対象として扱われるため、重いタスクでは利用量を確認しながら使うのが安全です。([Sakana AI][4])
+
+[1]: https://sakana.ai/fugu-release/ "Sakana Fugu: One Model to Command Them All"
+[2]: https://console.sakana.ai/get-started "Get started"
+[3]: https://console.sakana.ai/models "Models"
+[4]: https://sakana.ai/fugu/ "Sakana Fugu — Multi-Agent System as a Model"

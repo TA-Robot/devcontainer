@@ -1,0 +1,178 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ "${MIRA_COMPANION_ENABLED:-1}" == "0" ]]; then
+  echo "mira-companion: disabled"
+  exit 0
+fi
+
+if [[ "${MIRA_COMPANION_INSTALL:-1}" == "0" ]]; then
+  echo "mira-companion: automatic extension installation is disabled"
+  exit 0
+fi
+
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+repo_root="$(cd -- "$script_dir/.." && pwd -P)"
+extension_id="asakura.mira-companion"
+extension_version="$(python3 -c 'import json,sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["version"])' "$repo_root/extensions/mira-companion/package.json")"
+
+configured_editor_cli="${MIRA_COMPANION_EDITOR_CLI:-}"
+mira_wait_seconds="${MIRA_COMPANION_EDITOR_CLI_WAIT_SECONDS:-0}"
+if [[ ! "$mira_wait_seconds" =~ ^[0-9]+$ ]] || (( mira_wait_seconds > 60 )); then
+  echo "mira-companion: MIRA_COMPANION_EDITOR_CLI_WAIT_SECONDS must be an integer from 0 to 60" >&2
+  exit 2
+fi
+
+editor_cli=""
+editor_cli_args=()
+
+select_usable_cli() {
+  local candidate_path="$1"
+  shift
+  if [[ ! -x "$candidate_path" ]]; then
+    return 1
+  fi
+  if ! "$candidate_path" "$@" --list-extensions --show-versions >/dev/null 2>&1; then
+    return 1
+  fi
+  editor_cli="$candidate_path"
+  editor_cli_args=("$@")
+  return 0
+}
+
+use_server_cli() {
+  local candidate_path="$1"
+  local server_data_dir="$2"
+  select_usable_cli "$candidate_path" --server-data-dir "$server_data_dir"
+}
+
+detect_active_server_cli() {
+  local process_line token
+  while IFS= read -r process_line; do
+    for token in $process_line; do
+      case "$token" in
+        */bin/code-server)
+          if use_server_cli "$token" "${VSCODE_SERVER_DATA_DIR:-$HOME/.vscode-server}"; then
+            return 0
+          fi
+          ;;
+        */bin/cursor-server)
+          if use_server_cli "$token" "${CURSOR_SERVER_DATA_DIR:-$HOME/.cursor-server}"; then
+            return 0
+          fi
+          ;;
+      esac
+    done
+  done < <(ps -eo args= 2>/dev/null || true)
+  return 1
+}
+
+detect_installed_server_cli() {
+  local candidate_path
+  for candidate_path in \
+    "$HOME"/.vscode-server/bin/*/bin/code-server \
+    /vscode/vscode-server/bin/linux-x64/*/bin/code-server; do
+    if use_server_cli "$candidate_path" "${VSCODE_SERVER_DATA_DIR:-$HOME/.vscode-server}"; then
+      return 0
+    fi
+  done
+  for candidate_path in \
+    "$HOME"/.cursor-server/bin/linux-x64/*/bin/cursor-server \
+    "$HOME"/.cursor-server/bin/*/bin/cursor-server \
+    /cursor/cursor-server/bin/linux-x64/*/bin/cursor-server; do
+    if use_server_cli "$candidate_path" "${CURSOR_SERVER_DATA_DIR:-$HOME/.cursor-server}"; then
+      return 0
+    fi
+  done
+  return 1
+}
+
+mira_attempt=0
+mira_attempt_limit=$((mira_wait_seconds + 1))
+while (( mira_attempt < mira_attempt_limit )); do
+  if [[ -n "$configured_editor_cli" ]]; then
+    candidate_path="$(command -v "$configured_editor_cli" 2>/dev/null || true)"
+    if [[ -n "$candidate_path" ]]; then
+      select_usable_cli "$candidate_path" || true
+    fi
+  else
+    # Prefer the CLI injected by the active remote editor. A host may have both
+    # VS Code and Cursor commands on PATH, but only the remote CLI installs the
+    # workspace extension into the current server.
+    for candidate in code cursor codium; do
+      candidate_path="$(command -v "$candidate" 2>/dev/null || true)"
+      if [[ -n "${VSCODE_IPC_HOOK_CLI:-}${VSCODE_CLIENT_COMMAND:-}" ]] && \
+        { [[ "$candidate_path" == *"remote-cli"* ]] || \
+          [[ "$candidate_path" == *".vscode-server"* ]] || \
+          [[ "$candidate_path" == *".cursor-server"* ]]; }; then
+        if select_usable_cli "$candidate_path"; then
+          break
+        fi
+      fi
+    done
+
+    if [[ -z "$editor_cli" ]] && ! detect_active_server_cli; then
+      detect_installed_server_cli || true
+    fi
+
+    if [[ -z "$editor_cli" ]]; then
+      for candidate in code cursor codium; do
+        candidate_path="$(command -v "$candidate" 2>/dev/null || true)"
+        if [[ -n "$candidate_path" ]] && select_usable_cli "$candidate_path"; then
+          break
+        fi
+      done
+    fi
+  fi
+
+  if [[ -n "$editor_cli" ]]; then
+    break
+  fi
+  mira_attempt=$((mira_attempt + 1))
+  if (( mira_attempt < mira_attempt_limit )); then
+    if (( mira_attempt == 1 )); then
+      echo "mira-companion: waiting for the remote editor CLI (${mira_wait_seconds}s max)"
+    fi
+    sleep 1
+  fi
+done
+
+if [[ -z "$editor_cli" ]]; then
+  if [[ -n "$configured_editor_cli" ]]; then
+    echo "mira-companion: configured editor CLI was not found or did not respond: $configured_editor_cli" >&2
+  else
+    echo "mira-companion: no responsive code/cursor CLI was found; run scripts/install-mira-vscode-extension from the remote editor terminal later" >&2
+  fi
+  if [[ "${MIRA_COMPANION_REQUIRE_EDITOR_CLI:-0}" == "1" ]]; then
+    exit 1
+  fi
+  exit 0
+fi
+
+if [[ "${MIRA_COMPANION_FORCE_INSTALL:-0}" != "1" ]]; then
+  while IFS= read -r installed; do
+    if [[ "$installed" == "$extension_id@$extension_version" ]]; then
+      echo "mira-companion: $extension_id@$extension_version is already installed"
+      exit 0
+    fi
+  done < <("$editor_cli" "${editor_cli_args[@]}" --list-extensions --show-versions 2>/dev/null || true)
+fi
+
+temporary_dir="$(mktemp -d)"
+trap 'rm -rf -- "$temporary_dir"' EXIT HUP INT TERM
+vsix_path="$temporary_dir/mira-companion-$extension_version.vsix"
+"$script_dir/build-mira-vsix" "$vsix_path" >/dev/null
+"$editor_cli" "${editor_cli_args[@]}" --install-extension "$vsix_path" --force
+
+installed_expected=0
+while IFS= read -r installed; do
+  if [[ "$installed" == "$extension_id@$extension_version" ]]; then
+    installed_expected=1
+    break
+  fi
+done < <("$editor_cli" "${editor_cli_args[@]}" --list-extensions --show-versions 2>/dev/null || true)
+if (( installed_expected != 1 )); then
+  echo "mira-companion: editor CLI returned success but $extension_id@$extension_version is still absent" >&2
+  exit 1
+fi
+echo "mira-companion: installed $extension_id@$extension_version with $editor_cli"

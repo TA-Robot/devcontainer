@@ -1,0 +1,90 @@
+{
+  "batch_id": "wave8b-c0-sol-f06-threshold",
+  "catalog_digest": "sha256:e4615beeb71c3e5a03f5175f515cb83d5e56166c9f1240d3eadbb61c0bb9d2d3",
+  "created_at": "2026-08-27T17:20:00.000Z",
+  "entries": [
+    {
+      "block_id": "wave8b-c0-sol-f06-threshold",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "medium",
+      "evaluator_timeout_seconds": 180.0,
+      "model": "gpt-5.6-sol",
+      "order": 1,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-001-3cd9fe6d929371d9",
+      "timeout_seconds": 1200.0
+    },
+    {
+      "block_id": "wave8b-c0-sol-f06-threshold",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 180.0,
+      "model": "gpt-5.6-sol",
+      "order": 2,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-002-46430a0474beb068",
+      "timeout_seconds": 1200.0
+    },
+    {
+      "block_id": "wave8b-c0-sol-f06-threshold",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 180.0,
+      "model": "gpt-5.6-sol",
+      "order": 3,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-003-381b813a59f8814c",
+      "timeout_seconds": 1200.0
+    },
+    {
+      "block_id": "wave8b-c0-sol-f06-threshold",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "medium",
+      "evaluator_timeout_seconds": 180.0,
+      "model": "gpt-5.6-sol",
+      "order": 4,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-004-59e5af32a70bc37d",
+      "timeout_seconds": 1200.0
+    },
+    {
+      "block_id": "wave8b-c0-sol-f06-threshold",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "medium",
+      "evaluator_timeout_seconds": 180.0,
+      "model": "gpt-5.6-sol",
+      "order": 5,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-005-2af424313de15b59",
+      "timeout_seconds": 1200.0
+    },
+    {
+      "block_id": "wave8b-c0-sol-f06-threshold",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 180.0,
+      "model": "gpt-5.6-sol",
+      "order": 6,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-006-601139d14b6b621a",
+      "timeout_seconds": 1200.0
+    }
+  ],
+  "purpose": "finite explicit C0 observations; repeat=3; rotation-seed=20260828; no routing recommendation or default winner",
+  "safety": {
+    "artifact_retention": "task-artifacts",
+    "automatic_retry": false,
+    "concurrency": 1,
+    "continue_after_quality_fail": true,
+    "deadline_seconds": 10800.0,
+    "max_runs": 6
+  },
+  "schema_version": 1,
+  "study_id": "duration-atlas-wave8-identifiable"
+}

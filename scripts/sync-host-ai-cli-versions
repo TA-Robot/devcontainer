@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+sync_switch="${DEVCONTAINER_AI_CLI_SYNC:-}"
+channel="${DEVCONTAINER_AI_CLI_CHANNEL:-stable}"
+
+if [[ "$sync_switch" == "0" ]]; then
+  echo "devcontainer: host AI CLI version sync is disabled"
+  exit 0
+fi
+
+# DEVCONTAINER_AI_CLI_SYNC=1 was the old public switch. Keep it as an explicit
+# edge opt-in during migration, while an unset value now means stable.
+if [[ "$sync_switch" == "1" ]]; then
+  channel="edge"
+fi
+
+case "$channel" in
+  stable)
+    echo "devcontainer: stable AI CLI channel; keeping image-pinned versions"
+    exit 0
+    ;;
+  edge)
+    ;;
+  *)
+    echo "error: DEVCONTAINER_AI_CLI_CHANNEL must be stable or edge (got: $channel)" >&2
+    exit 2
+    ;;
+esac
+
+version_file="${DEVCONTAINER_AI_CLI_VERSION_FILE:-/opt/devcontainer-host-ai-cli/versions.env}"
+install_prefix="${DEVCONTAINER_AI_CLI_PREFIX:-/opt/devcontainer-ai-cli}"
+npm_bin="${DEVCONTAINER_AI_CLI_NPM_BIN:-npm}"
+
+if [[ ! -f "$version_file" ]]; then
+  echo "devcontainer: edge channel host manifest not found; keeping image versions"
+  exit 0
+fi
+
+declare -A desired_versions=()
+while IFS='=' read -r key value; do
+  case "$key" in
+    CODEX_CLI_VERSION|CLAUDE_CODE_VERSION|GEMINI_CLI_VERSION|GROK_CLI_VERSION|OPENCODE_CLI_VERSION)
+      if [[ ! "$value" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
+        echo "error: invalid $key in $version_file: $value" >&2
+        exit 1
+      fi
+      desired_versions["$key"]="$value"
+      ;;
+  esac
+done <"$version_file"
+
+if [[ ${#desired_versions[@]} -eq 0 ]]; then
+  echo "devcontainer: host has no supported AI CLI version to sync; keeping image versions"
+  exit 0
+fi
+
+# The helper owns locking, isolated preparation, executable checks and one
+# atomic publication. Keep channel/manifest policy here for compatibility.
+script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
+requests=()
+for key in CODEX_CLI_VERSION CLAUDE_CODE_VERSION GEMINI_CLI_VERSION GROK_CLI_VERSION OPENCODE_CLI_VERSION; do
+  if [[ -n "${desired_versions[$key]:-}" ]]; then
+    requests+=("$key=${desired_versions[$key]}")
+  fi
+done
+exec python3 "$script_dir/sync_host_ai_cli_versions.py" "$install_prefix" "$npm_bin" "${requests[@]}"

@@ -1,0 +1,33 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if (( $# < 2 )); then
+  echo "usage: render-robot-soccer-trace TRACE.jsonl OUTPUT.mp4 [renderer options]" >&2
+  exit 2
+fi
+
+repo_root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
+image=${ROBOT_SOCCER_RENDERER_IMAGE:-robot-soccer-renderer:dev}
+trace=$(realpath "$1")
+output=$2
+shift 2
+
+if [[ ! -f "$trace" ]]; then
+  echo "trace does not exist: $trace" >&2
+  exit 2
+fi
+
+output_dir=$(realpath -m "$(dirname "$output")")
+output_name=$(basename "$output")
+mkdir -p "$output_dir"
+
+if ! docker image inspect "$image" >/dev/null 2>&1; then
+  "$repo_root/scripts/build-robot-soccer-renderer" >/dev/null
+fi
+
+exec docker run --rm \
+  --user "$(id -u):$(id -g)" \
+  --volume "$trace:/input/events.jsonl:ro" \
+  --volume "$output_dir:/output" \
+  "$image" \
+  /input/events.jsonl "/output/$output_name" "$@"

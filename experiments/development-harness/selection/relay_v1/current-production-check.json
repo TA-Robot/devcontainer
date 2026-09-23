@@ -1,0 +1,17 @@
+{
+  "kind": "current-production-lifecycle-gap-check-v1",
+  "not_live_candidate_regrading": true,
+  "source_sha256": {
+    "scripts/manage-agent-project": "0fb84e4e0981a5cff44e85ee566637d8a95c7d60c10b823cb5915a851f31b5c0",
+    "scripts/test-manage-agent-project.py": "10aaad148ad3a7c6faba64f0b3b2df3d93d0ee01fe575d73f76313c8408535d1"
+  },
+  "tests": [
+    "LifecycleTests.test_adoption_binary_modes_names_and_repeated_noop",
+    "LifecycleTests.test_adoption_rejects_every_mismatch_without_partial_ownership",
+    "LifecycleTests.test_root_and_double_slash_overlap_are_rejected_before_inventory"
+  ],
+  "passed": 3,
+  "skipped": 0,
+  "seconds": 4.434,
+  "decision": "archived defects already addressed by current production CLI; no duplicate repair"
+}

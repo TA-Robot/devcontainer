@@ -1,0 +1,367 @@
+{
+  "block_id": "c0-sol-high-family-coverage",
+  "case": {
+    "capsule_digest": "sha256:62c94e37eaf560b7579b022b488831e52a3ce5f8fdd3e1545a36df8f6178537c",
+    "case_id": "F04-S-PY-001",
+    "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
+    "family": "bounded-implementation",
+    "profile_id": "S-local-deterministic-python",
+    "revision": 1,
+    "size": "S",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 367.873,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "hidden-separator-normalization",
+          "duration_ms": 367.687,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "hidden-ascii-filtering",
+          "duration_ms": 417.743,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "hidden-empty-result",
+          "duration_ms": 417.86,
+          "exit_code": 1,
+          "scope": "hidden",
+          "status": "fail"
+        },
+        {
+          "check_id": "hidden-length-bound",
+          "duration_ms": 417.545,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f04-s-python-hidden-v2",
+      "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+      "isolation_profile": "network-disabled-read-only-container",
+      "score": {
+        "all_checks_required": true,
+        "failed_check_ids": [
+          "hidden-empty-result"
+        ],
+        "hidden_passed": 3,
+        "hidden_total": 4,
+        "passed": 4,
+        "public_passed": 1,
+        "public_total": 1,
+        "ratio": 0.8,
+        "resolution": "criterion",
+        "total": 5
+      },
+      "status": "fail"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 8,
+          "name": "item.completed"
+        },
+        {
+          "count": 4,
+          "name": "item.started"
+        },
+        {
+          "count": 1,
+          "name": "thread.started"
+        },
+        {
+          "count": 1,
+          "name": "turn.completed"
+        },
+        {
+          "count": 1,
+          "name": "turn.started"
+        }
+      ],
+      "event_failure_terms": [],
+      "exit_code": 0,
+      "failure_signals": [],
+      "failure_terms": [],
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [
+        {
+          "count": 4,
+          "name": "agent_message"
+        },
+        {
+          "count": 6,
+          "name": "command_execution"
+        },
+        {
+          "count": 2,
+          "name": "file_change"
+        }
+      ],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 6244,
+      "output_cap_bytes": 1048576,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "result_is_error": false,
+      "sandbox_preflight": {
+        "assurance": "probed",
+        "command_network": "denied",
+        "generation_request_performed": false,
+        "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+        "profile_digest": "sha256:e3b76b6d4d473e01898811a3933665dff68aacd1101e1e438734bca310655724",
+        "status": "pass",
+        "unrelated_read": "denied",
+        "workspace_write": "observed"
+      },
+      "status": "success",
+      "stderr_bytes": 0,
+      "task_network": "denied-by-permission-profile",
+      "terminal_event": "turn.completed",
+      "terminal_wall_ms": 64737.184,
+      "thread_id_digest": "sha256:b8a05240d12fc4113dba9956448d2aa4ff67ada1d0bbd13338830673b57fbcad",
+      "tool_error_count": 0,
+      "usage": {
+        "cached_input_tokens": 25856,
+        "input_tokens": 50349,
+        "output_tokens": 2087,
+        "reasoning_output_tokens": 1259
+      },
+      "workspace_changed_path_count": 2
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.007,
+    "online_validation": 2023.02,
+    "post_validation_tail": 0.033,
+    "provision": 2058.759,
+    "terminal_wall": 66810.307,
+    "user_result": 66810.297,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider"
+    ],
+    "unknown": [
+      "/participants/0/generation_settings/0/applied_value"
+    ]
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 94626513100917,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:45:45.219Z"
+    },
+    "P1": {
+      "monotonic_ns": 94628571859775,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:45:47.278Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 94628603934243,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:45:47.310Z"
+    },
+    "T1": {
+      "monotonic_ns": 94628603940986,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:45:47.310Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 94695414231391,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:46:54.121Z"
+    },
+    "TX": {
+      "monotonic_ns": 94695414241449,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:46:54.121Z"
+    },
+    "V0": {
+      "monotonic_ns": 94693391178147,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:46:52.098Z"
+    },
+    "V1": {
+      "monotonic_ns": 94695414198029,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T03:46:54.121Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 1800000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": "online-validation-failed",
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "fail",
+    "quality_basis": "online-fail",
+    "quality_pass": false,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "key": "effort",
+          "namespace": "codex.reasoning",
+          "requested_value": "high",
+          "status": "unknown"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "alias-only",
+        "requested_alias": "gpt-5.6-sol",
+        "requested_source": "flag"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:40a4841979bd64d5a991f19e59021cfe350e357f875c17d3456d96eef60ca2fb",
+        "observed_at": "2026-08-27T03:45:47.278Z",
+        "permission_mode": "automatic",
+        "provider": "codex"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "run-009-87ca73f14e652da7",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "a2118775cc5209fac540865f170f576446e33c35",
+    "bundle_digest": "sha256:412bf33ac5c012909d1f7cc82b5b1777f28bc9008c0056522c1a3846bbb6f131",
+    "fixture_revision": "f04-s-python-normalizer-v2-r1",
+    "instruction_set_digest": "sha256:83239308c474dce5e9bcdcf98bf70cdd5631410b63e77e2e16ccceb3782fa700"
+  },
+  "study_id": "duration-atlas-wave5-depth",
+  "workers": []
+}

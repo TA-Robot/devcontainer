@@ -1,0 +1,141 @@
+{
+  "schema_version": 1,
+  "release_id": "duration-atlas-current-20260828",
+  "base_release": {
+    "release_id": "duration-atlas-current-20260827",
+    "record_count": 108,
+    "run_set_digest": "sha256:402b7a5bb5efa351bd31f768a0058f296a2902a5586d327347bf8fac86244b3f"
+  },
+  "canonical_record_count": 139,
+  "canonical_case_count": 36,
+  "canonical_input_groups": [
+    {
+      "group": "base-release-minus-f06l-revision1-conflicting-identity",
+      "record_count": 104
+    },
+    {
+      "group": "wave8-f10-revision-floor-observations",
+      "record_count": 7,
+      "directories": [
+        "temp/multi-agent-duration-atlas/evidence/wave-8-grok-f10",
+        "temp/multi-agent-duration-atlas/evidence/wave-8b-grok-f10-r3",
+        "temp/multi-agent-duration-atlas/evidence/wave-8c-grok-f10-r4"
+      ]
+    },
+    {
+      "group": "wave8d-grok-f10-and-f12",
+      "record_count": 10,
+      "directories": [
+        "temp/multi-agent-duration-atlas/evidence/wave-8d-grok-f10-r5",
+        "temp/multi-agent-duration-atlas/evidence/wave-8d-grok-f12-r3"
+      ]
+    },
+    {
+      "group": "wave8d-sol-f06-f10-f12",
+      "record_count": 18,
+      "directories": [
+        "temp/multi-agent-duration-atlas/evidence/wave-8d-sol-f06",
+        "temp/multi-agent-duration-atlas/evidence/wave-8d-sol-f10-r5",
+        "temp/multi-agent-duration-atlas/evidence/wave-8d-sol-f12-r3"
+      ]
+    }
+  ],
+  "builder_contract": {
+    "atlas_schema_version": 2,
+    "explicit_run_allowlist": true,
+    "one_exact_identity_per_case_revision": true,
+    "disposition_is_not_an_atlas_input": true
+  },
+  "canonical_fixture_choice": {
+    "case_id": "F06-L-PYBASH-001",
+    "case_revision": 1,
+    "bundle_digest": "sha256:42b81fa1eca375a52f72bc824a06ee73add9b329b7c9c920485ea68221a9ab6b",
+    "reason_code": "artifact-retained-repeated-sol-series-selected-without-cross-identity-pooling",
+    "inference_use": "conditional-only"
+  },
+  "excluded_records": [
+    {
+      "run_id": "run-001-758f6d400a39baad",
+      "disposition": "noncanonical-conflicting-fixture-identity",
+      "reason_code": "f06l-revision1-hash-seed-dependent-bundle"
+    },
+    {
+      "run_id": "run-008-9d2df08335c0b277",
+      "disposition": "noncanonical-conflicting-fixture-identity",
+      "reason_code": "f06l-revision1-hash-seed-dependent-bundle"
+    },
+    {
+      "run_id": "run-005-8d34b88f024eda13",
+      "disposition": "noncanonical-conflicting-fixture-identity",
+      "reason_code": "f06l-revision1-hash-seed-dependent-bundle"
+    },
+    {
+      "run_id": "run-002-a5c7151046553dac",
+      "disposition": "noncanonical-conflicting-fixture-identity",
+      "reason_code": "f06l-revision1-hash-seed-dependent-bundle"
+    },
+    {
+      "run_id": "run-001-e2fa326496760503",
+      "disposition": "noncanonical-conflicting-fixture-identity",
+      "reason_code": "f06l-revision1-hash-seed-dependent-bundle"
+    },
+    {
+      "run_id": "run-002-6db4a58468ac97cd",
+      "disposition": "noncanonical-conflicting-fixture-identity",
+      "reason_code": "f06l-revision1-hash-seed-dependent-bundle"
+    },
+    {
+      "run_id": "run-003-8e90daf774b3ee5a",
+      "disposition": "noncanonical-conflicting-fixture-identity",
+      "reason_code": "f06l-revision1-hash-seed-dependent-bundle"
+    },
+    {
+      "run_id": "run-004-60f2056672331523",
+      "disposition": "noncanonical-conflicting-fixture-identity",
+      "reason_code": "f06l-revision1-hash-seed-dependent-bundle"
+    },
+    {
+      "run_id": "run-005-ae5541c875ace47d",
+      "disposition": "noncanonical-conflicting-fixture-identity",
+      "reason_code": "f06l-revision1-hash-seed-dependent-bundle"
+    },
+    {
+      "run_id": "run-006-1ccd96b6bd1b5474",
+      "disposition": "noncanonical-conflicting-fixture-identity",
+      "reason_code": "f06l-revision1-hash-seed-dependent-bundle"
+    }
+  ],
+  "unmeasured_blocks": [
+    {
+      "case_id": "F06-L-PYBASH-001",
+      "case_revision": 2,
+      "reason_code": "deterministic-repair-calibrated-live-remeasurement-not-run",
+      "provider_generation_started": false
+    },
+    {
+      "provider": "claude",
+      "planned_entries": 32,
+      "reason_code": "credential-freshness-unobservable",
+      "provider_generation_started": false
+    },
+    {
+      "provider": "grok",
+      "setting": "max",
+      "reason_code": "provider-wide-generation-setting-rejected",
+      "provider_generation_started": false
+    }
+  ],
+  "release_artifacts": {
+    "atlas_path": "generated/duration-atlas/current.json",
+    "atlas_sha256": "924bb1a8c3b459c72473934d1a81cc7e54a68cc6adb8b208bc8a0eb86f2a41db",
+    "atlas_run_set_digest": "sha256:9c600a65732a674735bf17a4149713a1c4fdc4cb865df6ff61b679261046a9b6",
+    "report_path": "docs/agents/duration-atlas/studies/current.md",
+    "report_sha256": "6324c1ffdbfe5127680cc911bfb049e9aec724446e138d1f9ff5736f9aea11ad",
+    "skill_snapshot_path": "project/.codex/skills/lookup-agent-duration/assets/current.json",
+    "skill_snapshot_sha256": "924bb1a8c3b459c72473934d1a81cc7e54a68cc6adb8b208bc8a0eb86f2a41db",
+    "validity_path": "generated/duration-atlas/current-validity.json",
+    "validity_sha256": "870d6226d113015e87473860eb7c53224fc6e89aa997dfa0f122a5cb4577f67f",
+    "skill_validity_path": "project/.codex/skills/lookup-agent-duration/assets/current-validity.json",
+    "skill_validity_sha256": "870d6226d113015e87473860eb7c53224fc6e89aa997dfa0f122a5cb4577f67f"
+  }
+}

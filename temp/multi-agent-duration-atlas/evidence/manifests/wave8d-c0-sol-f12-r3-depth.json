@@ -1,0 +1,114 @@
+{
+  "batch_id": "wave8d-c0-sol-f12-r3-depth",
+  "catalog_digest": "sha256:57955d2bc9471765fdc9338416b5acc5b02bb0302c208de95e474910994bd628",
+  "created_at": "2026-08-27T18:00:00.000Z",
+  "entries": [
+    {
+      "block_id": "wave8d-c0-sol-f12-r3-depth",
+      "case_id": "F12-L-MDJSON-001",
+      "effort": "medium",
+      "evaluator_timeout_seconds": 120.0,
+      "model": "gpt-5.6-sol",
+      "order": 1,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-001-1b2394755cc404aa",
+      "timeout_seconds": 1200.0
+    },
+    {
+      "block_id": "wave8d-c0-sol-f12-r3-depth",
+      "case_id": "F12-L-MDJSON-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 120.0,
+      "model": "gpt-5.6-sol",
+      "order": 2,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-002-55df6b53dfbf6dfb",
+      "timeout_seconds": 1200.0
+    },
+    {
+      "block_id": "wave8d-c0-sol-f12-r3-depth",
+      "case_id": "F12-L-MDJSON-001",
+      "effort": "xhigh",
+      "evaluator_timeout_seconds": 120.0,
+      "model": "gpt-5.6-sol",
+      "order": 3,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-003-54b64a03ec53aa9c",
+      "timeout_seconds": 1200.0
+    },
+    {
+      "block_id": "wave8d-c0-sol-f12-r3-depth",
+      "case_id": "F12-L-MDJSON-001",
+      "effort": "max",
+      "evaluator_timeout_seconds": 120.0,
+      "model": "gpt-5.6-sol",
+      "order": 4,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-004-d90656be6d218bf5",
+      "timeout_seconds": 1200.0
+    },
+    {
+      "block_id": "wave8d-c0-sol-f12-r3-depth",
+      "case_id": "F12-L-MDJSON-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 120.0,
+      "model": "gpt-5.6-sol",
+      "order": 5,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-005-2a388542bff44f29",
+      "timeout_seconds": 1200.0
+    },
+    {
+      "block_id": "wave8d-c0-sol-f12-r3-depth",
+      "case_id": "F12-L-MDJSON-001",
+      "effort": "xhigh",
+      "evaluator_timeout_seconds": 120.0,
+      "model": "gpt-5.6-sol",
+      "order": 6,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-006-8f37246da9333eef",
+      "timeout_seconds": 1200.0
+    },
+    {
+      "block_id": "wave8d-c0-sol-f12-r3-depth",
+      "case_id": "F12-L-MDJSON-001",
+      "effort": "max",
+      "evaluator_timeout_seconds": 120.0,
+      "model": "gpt-5.6-sol",
+      "order": 7,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-007-a8cda99d19237ee6",
+      "timeout_seconds": 1200.0
+    },
+    {
+      "block_id": "wave8d-c0-sol-f12-r3-depth",
+      "case_id": "F12-L-MDJSON-001",
+      "effort": "medium",
+      "evaluator_timeout_seconds": 120.0,
+      "model": "gpt-5.6-sol",
+      "order": 8,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-008-d9b421c80f47c341",
+      "timeout_seconds": 1200.0
+    }
+  ],
+  "purpose": "finite explicit C0 observations; repeat=2; rotation-seed=20260828; no routing recommendation or default winner",
+  "safety": {
+    "artifact_retention": "task-artifacts",
+    "automatic_retry": false,
+    "concurrency": 1,
+    "continue_after_quality_fail": true,
+    "deadline_seconds": 14400.0,
+    "max_runs": 8
+  },
+  "schema_version": 1,
+  "study_id": "duration-atlas-wave8-identifiable"
+}

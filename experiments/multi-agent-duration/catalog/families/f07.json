@@ -1,0 +1,250 @@
+{
+  "schema_version": 1,
+  "catalog_id": "duration-atlas-f07",
+  "revision": 1,
+  "published_at": "2026-08-27T00:00:00.000Z",
+  "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F07-S-MD-001",
+        "revision": 1,
+        "capsule_digest": "sha256:7bfe047d68fdc6cb4ec29f3102757ae92bfcd3d29a524290249e0fb1781d52e0",
+        "source_type": "fixture",
+        "family": "documentation-runbook",
+        "size": "S",
+        "profile_id": "S-local-executable-doc-markdown",
+        "variant_group_id": "F07-S-MD",
+        "descriptors": {
+          "context_surface": "one-cli-parser-readme-section-and-smoke-helper",
+          "artifact_surface": "one-documentation-section",
+          "coupling": "local-command-contract",
+          "validation_depth": ["link", "command-replay", "fact-check"],
+          "environment_setup": "none",
+          "failure_distance": "direct",
+          "statefulness": "stateless",
+          "language_toolchain": ["markdown", "python"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "runbook",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "obsolete-command",
+          "nonreplayable-example",
+          "unsupported-constraint",
+          "broken-link"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F07-S-MD-001",
+        "recipe_id": "f07-s-agentctl-doctor-doc-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f07-s-agentctl-doctor-doc.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "tests.test_cli", "-v"],
+          ["python3", "tools/check_docs.py", "README.md"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "doc-command-replay",
+            "test_target": "HiddenDoctorDocTests.test_command_replay"
+          },
+          {
+            "check_id": "doc-constraint-accurate",
+            "test_target": "HiddenDoctorDocTests.test_constraint_accurate"
+          },
+          {
+            "check_id": "doc-invalid-form-removed",
+            "test_target": "HiddenDoctorDocTests.test_invalid_form_removed"
+          },
+          {
+            "check_id": "doc-link-integrity",
+            "test_target": "HiddenDoctorDocTests.test_link_integrity"
+          }
+        ],
+        "online_evaluator_id": "f07-s-agentctl-doctor-doc-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F07-M-MDBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:50c00b817db762f4cda0202deb1d9fe791cbf365b15993779b2299ac140c2c58",
+        "source_type": "fixture",
+        "family": "documentation-runbook",
+        "size": "M",
+        "profile_id": "M-coupled-replayable-runbook",
+        "variant_group_id": "F07-M-MDBASH",
+        "descriptors": {
+          "context_surface": "state-validator-backup-recovery-service-wrapper-and-state-doc",
+          "artifact_surface": "runbook-and-structured-command-manifest",
+          "coupling": "diagnosis-and-recovery-ordering",
+          "validation_depth": ["fact-check", "command-replay", "failure-replay", "recovery"],
+          "environment_setup": "temporary-service-sandbox",
+          "failure_distance": "multi-step-failure-path",
+          "statefulness": "persistent-state-and-backup",
+          "language_toolchain": ["markdown", "bash", "python", "json"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "runbook",
+        "risk": "medium",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "unsafe-order",
+          "evidence-loss",
+          "invalid-backup-mutation",
+          "broad-restart",
+          "doc-manifest-drift",
+          "missing-postcondition"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F07-M-MDBASH-001",
+        "recipe_id": "f07-m-state-recovery-runbook-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f07-m-state-recovery-runbook.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "tools/check_runbook.py", "RUNBOOK.md", "runbook.json"],
+          ["bash", "tools/replay_runbook.sh", "runbook.json", "healthy"],
+          ["bash", "tools/replay_runbook.sh", "runbook.json", "corrupt"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "runbook-fact-accuracy",
+            "test_target": "HiddenStateRunbookTests.test_fact_accuracy"
+          },
+          {
+            "check_id": "runbook-order-safety",
+            "test_target": "HiddenStateRunbookTests.test_order_safety"
+          },
+          {
+            "check_id": "runbook-corrupt-recovery",
+            "test_target": "HiddenStateRunbookTests.test_corrupt_recovery"
+          },
+          {
+            "check_id": "runbook-invalid-backup",
+            "test_target": "HiddenStateRunbookTests.test_invalid_backup"
+          },
+          {
+            "check_id": "runbook-owned-restart",
+            "test_target": "HiddenStateRunbookTests.test_owned_restart"
+          },
+          {
+            "check_id": "runbook-doc-manifest-sync",
+            "test_target": "HiddenStateRunbookTests.test_doc_manifest_sync"
+          }
+        ],
+        "online_evaluator_id": "f07-m-state-recovery-runbook-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F07-L-MDPYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:6bbae94196fc484316bf77595f39c1b76f7fed5e0a85a1550b415248b2bf07c1",
+        "source_type": "fixture",
+        "family": "documentation-runbook",
+        "size": "L",
+        "profile_id": "L-cross-document-migration-runbook",
+        "variant_group_id": "F07-L-MDPYBASH",
+        "descriptors": {
+          "context_surface": "implementation-sources-three-document-targets-and-command-tooling",
+          "artifact_surface": "multi-document-set-and-index-manifest",
+          "coupling": "cross-document-lifecycle-consistency",
+          "validation_depth": ["fact-check", "link", "command-replay", "migration", "rollback"],
+          "environment_setup": "simulated-migration-sandbox",
+          "failure_distance": "rollback-restart-delayed",
+          "statefulness": "versioned-persistent-state",
+          "language_toolchain": ["markdown", "python", "bash", "json"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "structured",
+        "decomposability": "partial",
+        "artifact_type": "runbook",
+        "risk": "high",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "cross-document-contradiction",
+          "unsafe-migration-order",
+          "destructive-rollback",
+          "ownership-drift",
+          "broken-index-link",
+          "early-compat-removal"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F07-L-MDPYBASH-001",
+        "recipe_id": "f07-l-backend-migration-docs-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f07-l-backend-migration-docs.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "tools/check_docs_index.py", "docs-index.json"],
+          ["python3", "tools/check_links.py", "docs"],
+          ["bash", "tools/replay_migration_docs.sh", "docs-index.json"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "docs-current-target-facts",
+            "test_target": "HiddenMigrationDocsTests.test_current_target_facts"
+          },
+          {
+            "check_id": "docs-migration-order",
+            "test_target": "HiddenMigrationDocsTests.test_migration_order"
+          },
+          {
+            "check_id": "docs-rollback-nondestructive",
+            "test_target": "HiddenMigrationDocsTests.test_rollback_nondestructive"
+          },
+          {
+            "check_id": "docs-ownership-consistency",
+            "test_target": "HiddenMigrationDocsTests.test_ownership_consistency"
+          },
+          {
+            "check_id": "docs-command-replay",
+            "test_target": "HiddenMigrationDocsTests.test_command_replay"
+          },
+          {
+            "check_id": "docs-links-index",
+            "test_target": "HiddenMigrationDocsTests.test_links_index"
+          },
+          {
+            "check_id": "docs-no-early-removal",
+            "test_target": "HiddenMigrationDocsTests.test_no_early_removal"
+          }
+        ],
+        "online_evaluator_id": "f07-l-backend-migration-docs-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    }
+  ]
+}

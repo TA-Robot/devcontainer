@@ -1,0 +1,17 @@
+{
+  "scope": "Inert historical source for real-state migration regression; never shipped as current runtime",
+  "archives": [
+    {
+      "path": "baseline-source.tar.gz",
+      "sha256": "4c511262d1da23646bf5a91e4d8e85b94806aaefeea4e632ab80b337b1d1cd54",
+      "source": "common source at 464c6b6603c59d89e6877817d9505613e2d2fe18",
+      "all_regular_members_match_recorded_source": true
+    },
+    {
+      "path": "phase-2-source.tar.gz",
+      "sha256": "f80fb469c09048100780f5f06cc0b00c1795b78312458e072d4e358ce95375c8",
+      "source": "cycle-003 large-02 condition B phase-2 terminal snapshot",
+      "all_regular_members_match_recorded_source": true
+    }
+  ]
+}

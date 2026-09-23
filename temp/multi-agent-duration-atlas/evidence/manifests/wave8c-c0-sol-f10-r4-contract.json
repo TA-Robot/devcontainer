@@ -1,0 +1,66 @@
+{
+  "batch_id": "wave8c-c0-sol-f10-r4-contract",
+  "catalog_digest": "sha256:5bb6fff200412df126eb08fe0f7df63f71b8910085e62653aa3482d197b2cc8b",
+  "created_at": "2026-08-27T17:40:00.000Z",
+  "entries": [
+    {
+      "block_id": "wave8c-c0-sol-f10-r4-contract",
+      "case_id": "F10-S-PY-001",
+      "effort": "medium",
+      "evaluator_timeout_seconds": 60.0,
+      "model": "gpt-5.6-sol",
+      "order": 1,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-001-6c35903c13a45184",
+      "timeout_seconds": 600.0
+    },
+    {
+      "block_id": "wave8c-c0-sol-f10-r4-contract",
+      "case_id": "F10-S-PY-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 60.0,
+      "model": "gpt-5.6-sol",
+      "order": 2,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-002-6e455c493f91fbd8",
+      "timeout_seconds": 600.0
+    },
+    {
+      "block_id": "wave8c-c0-sol-f10-r4-contract",
+      "case_id": "F10-S-PY-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 60.0,
+      "model": "gpt-5.6-sol",
+      "order": 3,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-003-b451e78e554767a1",
+      "timeout_seconds": 600.0
+    },
+    {
+      "block_id": "wave8c-c0-sol-f10-r4-contract",
+      "case_id": "F10-S-PY-001",
+      "effort": "medium",
+      "evaluator_timeout_seconds": 60.0,
+      "model": "gpt-5.6-sol",
+      "order": 4,
+      "output_bytes_cap": 8388608,
+      "provider": "codex",
+      "run_id": "run-004-1d7e7e79cff2707e",
+      "timeout_seconds": 600.0
+    }
+  ],
+  "purpose": "finite explicit C0 observations; repeat=2; rotation-seed=20260828; no routing recommendation or default winner",
+  "safety": {
+    "artifact_retention": "task-artifacts",
+    "automatic_retry": false,
+    "concurrency": 1,
+    "continue_after_quality_fail": true,
+    "deadline_seconds": 3600.0,
+    "max_runs": 4
+  },
+  "schema_version": 1,
+  "study_id": "duration-atlas-wave8-identifiable"
+}

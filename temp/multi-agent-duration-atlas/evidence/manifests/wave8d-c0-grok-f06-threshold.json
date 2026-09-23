@@ -1,0 +1,90 @@
+{
+  "batch_id": "wave8d-c0-grok-f06-threshold",
+  "catalog_digest": "sha256:57955d2bc9471765fdc9338416b5acc5b02bb0302c208de95e474910994bd628",
+  "created_at": "2026-08-27T18:00:00.000Z",
+  "entries": [
+    {
+      "block_id": "wave8d-c0-grok-f06-threshold",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "medium",
+      "evaluator_timeout_seconds": 180.0,
+      "model": "grok-4.6",
+      "order": 1,
+      "output_bytes_cap": 8388608,
+      "provider": "grok",
+      "run_id": "run-001-e2fa326496760503",
+      "timeout_seconds": 600.0
+    },
+    {
+      "block_id": "wave8d-c0-grok-f06-threshold",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 180.0,
+      "model": "grok-4.6",
+      "order": 2,
+      "output_bytes_cap": 8388608,
+      "provider": "grok",
+      "run_id": "run-002-6db4a58468ac97cd",
+      "timeout_seconds": 600.0
+    },
+    {
+      "block_id": "wave8d-c0-grok-f06-threshold",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 180.0,
+      "model": "grok-4.6",
+      "order": 3,
+      "output_bytes_cap": 8388608,
+      "provider": "grok",
+      "run_id": "run-003-8e90daf774b3ee5a",
+      "timeout_seconds": 600.0
+    },
+    {
+      "block_id": "wave8d-c0-grok-f06-threshold",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "medium",
+      "evaluator_timeout_seconds": 180.0,
+      "model": "grok-4.6",
+      "order": 4,
+      "output_bytes_cap": 8388608,
+      "provider": "grok",
+      "run_id": "run-004-60f2056672331523",
+      "timeout_seconds": 600.0
+    },
+    {
+      "block_id": "wave8d-c0-grok-f06-threshold",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "medium",
+      "evaluator_timeout_seconds": 180.0,
+      "model": "grok-4.6",
+      "order": 5,
+      "output_bytes_cap": 8388608,
+      "provider": "grok",
+      "run_id": "run-005-ae5541c875ace47d",
+      "timeout_seconds": 600.0
+    },
+    {
+      "block_id": "wave8d-c0-grok-f06-threshold",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 180.0,
+      "model": "grok-4.6",
+      "order": 6,
+      "output_bytes_cap": 8388608,
+      "provider": "grok",
+      "run_id": "run-006-1ccd96b6bd1b5474",
+      "timeout_seconds": 600.0
+    }
+  ],
+  "purpose": "finite explicit C0 observations; repeat=3; rotation-seed=20260828; no routing recommendation or default winner",
+  "safety": {
+    "artifact_retention": "task-artifacts",
+    "automatic_retry": false,
+    "concurrency": 1,
+    "continue_after_quality_fail": true,
+    "deadline_seconds": 5400.0,
+    "max_runs": 6
+  },
+  "schema_version": 1,
+  "study_id": "duration-atlas-wave8-identifiable"
+}

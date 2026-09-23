@@ -1,0 +1,10 @@
+{
+  "image": "sha256:157f2a502f0c3f1e42ee7b5a3d19ee58e48f808682fc05ce527448ff1f86f91b",
+  "dockerfile_sha256": "73c4298e36fb976d5351db6bf9811c08a98acac8133fb352921b51beed471890",
+  "source_images": {
+    "tools": "sha256:760ecc736134756d8bb8d03312c01e97e1b865b58e12d40f7ca7328a6586e7f7",
+    "actor_base": "sha256:d17fe408310871f59526d8f651ef6c32ca63b79889a9f88b1b41677279821139"
+  },
+  "cli_version": "0.153.0",
+  "model_catalog_override": "multi_agent_version=null; target model and all other metadata preserved"
+}

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Collaboration Evidence Review"
+  short_description: "Review measured multi-agent evidence safely"
+  default_prompt: "Use $review-collaboration-evidence to inspect project-local collaboration evidence before changing the orchestration plan."

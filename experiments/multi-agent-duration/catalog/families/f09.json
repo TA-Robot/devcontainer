@@ -1,0 +1,259 @@
+{
+  "schema_version": 1,
+  "catalog_id": "duration-atlas-f09",
+  "revision": 1,
+  "published_at": "2026-08-27T00:00:00.000Z",
+  "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F09-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:d5f69e1314f77f79cf86fd20623aa7170e6a9b4e688534c5e74481b0ea99139a",
+        "source_type": "fixture",
+        "family": "security-isolation",
+        "size": "S",
+        "profile_id": "S-local-seeded-bypass-python",
+        "variant_group_id": "F09-S-PY",
+        "descriptors": {
+          "context_surface": "one-validator-one-decoder-caller-and-tests",
+          "artifact_surface": "finding-and-negative-test",
+          "coupling": "validation-normalization-order",
+          "validation_depth": ["unit", "seeded-exploit"],
+          "environment_setup": "temporary-filesystem",
+          "failure_distance": "direct-bypass",
+          "statefulness": "path-state",
+          "language_toolchain": ["python"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "findings",
+        "risk": "high",
+        "task_lane": "isolated",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "missed-encoding-bypass",
+          "validator-only-test",
+          "unbounded-impact-claim",
+          "unreachable-double-decode"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F09-S-PY-001",
+        "recipe_id": "f09-s-python-name-bypass-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f09-s-python-name-bypass.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["python3", "tools/check_security_regression.py", "security_regression.py", "--expected", "encoded-separator-escape"],
+          ["python3", "tools/validate_finding.py", "finding.json"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "security-bypass-recall",
+            "test_target": "HiddenNameBypassTests.test_bypass_recall"
+          },
+          {
+            "check_id": "security-negative-test",
+            "test_target": "HiddenNameBypassTests.test_negative_test"
+          },
+          {
+            "check_id": "security-root-order",
+            "test_target": "HiddenNameBypassTests.test_root_order"
+          },
+          {
+            "check_id": "security-impact-scope",
+            "test_target": "HiddenNameBypassTests.test_impact_scope"
+          },
+          {
+            "check_id": "security-no-double-decode",
+            "test_target": "HiddenNameBypassTests.test_no_double_decode"
+          }
+        ],
+        "online_evaluator_id": "f09-s-name-bypass-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F09-M-PYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:5c5fef60596257729f21756fb720f8f13b9b31bae9d612ac1af143d6a48a507a",
+        "source_type": "fixture",
+        "family": "security-isolation",
+        "size": "M",
+        "profile_id": "M-coupled-seeded-isolation-review",
+        "variant_group_id": "F09-M-PYBASH",
+        "descriptors": {
+          "context_surface": "python-resolver-bash-launcher-and-filesystem-fixtures",
+          "artifact_surface": "review-and-exploit-tests",
+          "coupling": "symlink-environment-containment-composition",
+          "validation_depth": ["unit", "integration", "seeded-exploit", "negative-test"],
+          "environment_setup": "temporary-filesystem-and-subprocess",
+          "failure_distance": "cross-boundary",
+          "statefulness": "filesystem-and-environment-state",
+          "language_toolchain": ["python", "bash"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "findings",
+        "risk": "high",
+        "task_lane": "isolated",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "single-layer-review",
+          "trusted-root-loss",
+          "post-resolution-escape",
+          "overrestrictive-control",
+          "privileged-reproducer"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F09-M-PYBASH-001",
+        "recipe_id": "f09-m-workspace-isolation-review-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f09-m-workspace-isolation-review.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["bash", "-n", "bin/run-task"],
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["python3", "tools/check_security_regression.py", "security_regression.py", "--expected", "symlink,env-root"],
+          ["python3", "tools/validate_security_review.py", "security-review.json"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "security-symlink-exploit",
+            "test_target": "HiddenWorkspaceIsolationTests.test_symlink_exploit"
+          },
+          {
+            "check_id": "security-env-root-exploit",
+            "test_target": "HiddenWorkspaceIsolationTests.test_env_root_exploit"
+          },
+          {
+            "check_id": "security-composition",
+            "test_target": "HiddenWorkspaceIsolationTests.test_composition"
+          },
+          {
+            "check_id": "security-negative-tests",
+            "test_target": "HiddenWorkspaceIsolationTests.test_negative_tests"
+          },
+          {
+            "check_id": "security-mitigation-invariants",
+            "test_target": "HiddenWorkspaceIsolationTests.test_mitigation_invariants"
+          },
+          {
+            "check_id": "security-no-false-positive",
+            "test_target": "HiddenWorkspaceIsolationTests.test_no_false_positive"
+          }
+        ],
+        "online_evaluator_id": "f09-m-workspace-isolation-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F09-L-PYBASHDOCKER-001",
+        "revision": 1,
+        "capsule_digest": "sha256:d8649db2998c9bbb3dfebd54e88d5709133b4732d8b3414bc4ca1faa60d97d89",
+        "source_type": "fixture",
+        "family": "security-isolation",
+        "size": "L",
+        "profile_id": "L-cross-boundary-threat-model",
+        "variant_group_id": "F09-L-PYBASHDOCKER",
+        "descriptors": {
+          "context_surface": "git-worktree-docker-launcher-credential-adapter-and-cleanup-supervisor",
+          "artifact_surface": "threat-model-attack-trees-and-negative-test-plan",
+          "coupling": "multi-boundary-trust-and-lifecycle-ownership",
+          "validation_depth": ["schema", "seeded-exploit", "negative-test", "threat", "cleanup", "recovery"],
+          "environment_setup": "simulated-docker-git-process-environment",
+          "failure_distance": "cross-boundary-and-cleanup-delayed",
+          "statefulness": "worktrees-containers-credentials-and-pids",
+          "language_toolchain": ["python", "bash", "docker", "git", "json", "markdown"]
+        },
+        "ambiguity": "open",
+        "oracle_strength": "calibrated",
+        "decomposability": "independent",
+        "artifact_type": "design",
+        "risk": "high",
+        "task_lane": "isolated",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": [
+          "topology-gap",
+          "missed-seeded-attack",
+          "single-control-bypass",
+          "cleanup-owner-confusion",
+          "missing-detection-recovery",
+          "unsupported-isolation-guarantee"
+        ],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F09-L-PYBASHDOCKER-001",
+        "recipe_id": "f09-l-worktree-container-threat-model-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f09-l-worktree-container-threat-model.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "tools/validate_threat_model.py", "threat-model.json", "THREAT-MODEL.md"],
+          ["bash", "scenarios/run-visible-attacks.sh", "threat-model.json"],
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "threat-assets-boundaries",
+            "test_target": "HiddenThreatModelTests.test_assets_boundaries"
+          },
+          {
+            "check_id": "threat-worktree-race",
+            "test_target": "HiddenThreatModelTests.test_worktree_race"
+          },
+          {
+            "check_id": "threat-bind-injection",
+            "test_target": "HiddenThreatModelTests.test_bind_injection"
+          },
+          {
+            "check_id": "threat-credential-scope",
+            "test_target": "HiddenThreatModelTests.test_credential_scope"
+          },
+          {
+            "check_id": "threat-cleanup-ownership",
+            "test_target": "HiddenThreatModelTests.test_cleanup_ownership"
+          },
+          {
+            "check_id": "threat-detection-recovery",
+            "test_target": "HiddenThreatModelTests.test_detection_recovery"
+          },
+          {
+            "check_id": "threat-control-counterexamples",
+            "test_target": "HiddenThreatModelTests.test_control_counterexamples"
+          },
+          {
+            "check_id": "threat-unknown-honesty",
+            "test_target": "HiddenThreatModelTests.test_unknown_honesty"
+          }
+        ],
+        "online_evaluator_id": "f09-l-threat-model-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    }
+  ]
+}

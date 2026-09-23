@@ -1,0 +1,4 @@
+interface:
+  display_name: "Agent Duration Lookup"
+  short_description: "Query measured agent duration evidence safely"
+  default_prompt: "Use $lookup-agent-duration to look up measured duration evidence for this task profile without inventing missing estimates."

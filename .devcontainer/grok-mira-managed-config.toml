@@ -1,0 +1,46 @@
+# Container-owned, additive Grok lifecycle hooks for Mira Companion.
+# This managed layer does not replace user/project hooks, permissions, or auth.
+
+[[hooks.SessionStart]]
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.SessionEnd]]
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.UserPromptSubmit]]
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.PreToolUse]]
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.PostToolUse]]
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.PostToolUseFailure]]
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.PermissionDenied]]
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.Notification]]
+matcher = "permission_prompt"
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.Notification]]
+matcher = "idle_prompt"
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.SubagentStart]]
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.SubagentStop]]
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.Stop]]
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.StopFailure]]
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]
+
+[[hooks.StopCancelled]]
+hooks = [{ type = "command", command = "/usr/local/bin/mira-grok-hook", timeout = 2 }]

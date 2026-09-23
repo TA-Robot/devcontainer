@@ -1,0 +1,73 @@
+{
+  "capability_id": "wave05-devcontainer-offline-grok-20260826",
+  "coverage": {
+    "limitations": [
+      "model-default-unresolved",
+      "model-inventory-unobserved",
+      "no-generation-request",
+      "setting-application-unobserved",
+      "setting-values-unadvertised"
+    ],
+    "model_inventory": "not-observed",
+    "runtime_identity": "exact",
+    "setting_advertisement": "partial",
+    "setting_application": "not-observed"
+  },
+  "model_identity": {
+    "identity_confidence": "default-unspecified",
+    "requested_source": "unknown"
+  },
+  "model_inventory": [],
+  "observed_at": "2026-08-26T10:47:49.521Z",
+  "probe": {
+    "commands": [
+      {
+        "command_id": "version",
+        "duration_ms": 59.144,
+        "evidence_source": "version-output",
+        "exit_code": 0,
+        "status": "observed"
+      },
+      {
+        "command_id": "root-help",
+        "duration_ms": 44.932,
+        "evidence_source": "root-help",
+        "exit_code": 0,
+        "status": "observed"
+      }
+    ],
+    "generation_request_performed": false,
+    "metadata_scope": "not-requested",
+    "mode": "passive-cli",
+    "provider_metadata_request_attempted": false,
+    "raw_output_persisted": false
+  },
+  "runtime_identity": {
+    "build_hint": "1a29d5bc12",
+    "cli_name": "grok",
+    "cli_source": "container-image",
+    "cli_version": "1.0.3",
+    "environment_kind": "devcontainer",
+    "execution_surface": "capability-probe",
+    "image_digest": "sha256:3f58b6614a86e40bd3adfa49f9a9b5711bcf24b8a28fe574dec8ea1e0872cc9d",
+    "observed_at": "2026-08-26T10:47:49.521Z",
+    "permission_mode": "unknown",
+    "provider": "grok"
+  },
+  "schema_version": 2,
+  "setting_probes": [],
+  "setting_surfaces": [
+    {
+      "advertisement": "flag-only",
+      "application_observability": "not-observed",
+      "evidence_source": "root-help",
+      "key": "effort",
+      "namespace": "grok.reasoning"
+    }
+  ],
+  "surfaces": {
+    "permission_mode": "unknown",
+    "progress_artifact": "unknown",
+    "synthesis_envelope": "unknown"
+  }
+}

@@ -1,0 +1,489 @@
+{
+  "record_kind": "provider-free-candidate-calibration",
+  "recorded_on": "2026-09-06",
+  "source_commit": "b7d113441ba06e20221ff338d7d52e705789edf2",
+  "source_scope": "unchanged catalog, capsules, recipes, evaluator and corpus audit runtime; planning documents edited separately",
+  "catalog_file_sha256": "7857d2436d1a9ed5167e31bf37bc5915fa75849b6379b4cc23ad967f64b26f54",
+  "python_version": "3.12.10",
+  "execution": "local corpus audit without --isolated-image; no live provider calls",
+  "command": [
+    "scripts/audit-agent-duration-corpus",
+    "--catalog",
+    "experiments/multi-agent-duration/catalog/cases.json",
+    "--case-id",
+    "F03-L-PYBASH-001",
+    "--case-id",
+    "F02-M-PY-001",
+    "--case-id",
+    "F12-L-MDJSON-001",
+    "--case-id",
+    "F04-L-PYBASH-001",
+    "--max-cases",
+    "4",
+    "--continue-on-failure",
+    "--output",
+    "/tmp/devcontainer-replan-corpus-20260906.json"
+  ],
+  "cap_role": "cost cap for this four-candidate preparation audit, not a global case-count default",
+  "update_owner": "primary/integrator",
+  "invalidation": "candidate selection, catalog/capsule/recipe/evaluator identity changes require a new audit record",
+  "limitations": [
+    "Calibration does not establish multi-agent effectiveness.",
+    "No live adapter or multi-participant Docker stop boundary was tested.",
+    "Only declared valid alternatives and mutants were exercised.",
+    "F03-L discloses the causal event order; current revision is unsuitable for measuring cause-discovery consultation."
+  ],
+  "audit": {
+    "cases": [
+      {
+        "case_id": "F02-M-PY-001",
+        "checks": [
+          {
+            "check_id": "capsule-digest",
+            "duration_ms": 0.956,
+            "status": "pass"
+          },
+          {
+            "check_id": "recipe-registry",
+            "duration_ms": 3.465,
+            "status": "pass"
+          },
+          {
+            "check_id": "initial-fail",
+            "duration_ms": 2365.092,
+            "status": "pass"
+          },
+          {
+            "check_id": "known-good-full-pass",
+            "duration_ms": 1267.948,
+            "status": "pass"
+          },
+          {
+            "check_id": "snapshot-reproducibility",
+            "duration_ms": 2637.541,
+            "status": "pass"
+          }
+        ],
+        "duration_ms": 14105.413,
+        "family": "code-review",
+        "mutants": [
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 2699.29,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.007,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 2699.317,
+            "mutant_id": "logging-false-positive",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 2627.913,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.004,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 2627.931,
+            "mutant_id": "symlink-only",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 2503.047,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.004,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 2503.063,
+            "mutant_id": "two-findings-no-interaction",
+            "status": "pass"
+          }
+        ],
+        "status": "pass",
+        "valid_alternatives": []
+      },
+      {
+        "case_id": "F03-L-PYBASH-001",
+        "checks": [
+          {
+            "check_id": "capsule-digest",
+            "duration_ms": 5.15,
+            "status": "pass"
+          },
+          {
+            "check_id": "recipe-registry",
+            "duration_ms": 3.061,
+            "status": "pass"
+          },
+          {
+            "check_id": "initial-fail",
+            "duration_ms": 2417.343,
+            "status": "pass"
+          },
+          {
+            "check_id": "known-good-full-pass",
+            "duration_ms": 5675.96,
+            "status": "pass"
+          },
+          {
+            "check_id": "snapshot-reproducibility",
+            "duration_ms": 2321.357,
+            "status": "pass"
+          }
+        ],
+        "duration_ms": 33528.762,
+        "family": "failing-test-diagnosis",
+        "mutants": [
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 6086.206,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.003,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 6086.218,
+            "mutant_id": "broad-process-cleanup",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 6259.791,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.004,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 6259.813,
+            "mutant_id": "json-corruption-cause",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 3408.285,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.005,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 3408.308,
+            "mutant_id": "timing-guess-reproducer",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 7351.455,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.005,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 7351.477,
+            "mutant_id": "unsupported-exactly-once",
+            "status": "pass"
+          }
+        ],
+        "status": "pass",
+        "valid_alternatives": []
+      },
+      {
+        "case_id": "F04-L-PYBASH-001",
+        "checks": [
+          {
+            "check_id": "capsule-digest",
+            "duration_ms": 5.184,
+            "status": "pass"
+          },
+          {
+            "check_id": "recipe-registry",
+            "duration_ms": 0.087,
+            "status": "pass"
+          },
+          {
+            "check_id": "initial-fail",
+            "duration_ms": 2537.312,
+            "status": "pass"
+          },
+          {
+            "check_id": "known-good-full-pass",
+            "duration_ms": 2490.696,
+            "status": "pass"
+          },
+          {
+            "check_id": "snapshot-reproducibility",
+            "duration_ms": 1895.633,
+            "status": "pass"
+          }
+        ],
+        "duration_ms": 10994.323,
+        "family": "bounded-implementation",
+        "mutants": [
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 2487.006,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.003,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 2487.021,
+            "mutant_id": "repeat-ack-increments",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 1578.269,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.003,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 1578.282,
+            "mutant_id": "wrapper-first-argument",
+            "status": "pass"
+          }
+        ],
+        "status": "pass",
+        "valid_alternatives": []
+      },
+      {
+        "case_id": "F12-L-MDJSON-001",
+        "checks": [
+          {
+            "check_id": "capsule-digest",
+            "duration_ms": 0.434,
+            "status": "pass"
+          },
+          {
+            "check_id": "recipe-registry",
+            "duration_ms": 28.878,
+            "status": "pass"
+          },
+          {
+            "check_id": "initial-fail",
+            "duration_ms": 4190.053,
+            "status": "pass"
+          },
+          {
+            "check_id": "known-good-full-pass",
+            "duration_ms": 2056.764,
+            "status": "pass"
+          },
+          {
+            "check_id": "snapshot-reproducibility",
+            "duration_ms": 4155.912,
+            "status": "pass"
+          }
+        ],
+        "duration_ms": 51993.429,
+        "family": "evidence-synthesis",
+        "mutants": [
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 4205.252,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.003,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 4205.267,
+            "mutant_id": "b-immediate-ignores-migration",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 4746.129,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.006,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 4746.157,
+            "mutant_id": "d-recovery-owner-assumed",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 5372.564,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.005,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 5372.59,
+            "mutant_id": "decision-without-evidence-trace",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 5192.073,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.004,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 5192.089,
+            "mutant_id": "hybrid-without-gates",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 4176.949,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.003,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 4176.964,
+            "mutant_id": "incidents-as-appendix",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 4425.758,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.005,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 4425.78,
+            "mutant_id": "invalid-pooled-throughput",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 4558.122,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.003,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 4558.136,
+            "mutant_id": "outside-contract",
+            "status": "pass"
+          },
+          {
+            "checks": [
+              {
+                "check_id": "mutant-rejected",
+                "duration_ms": 4739.822,
+                "status": "pass"
+              },
+              {
+                "check_id": "expected-failed-checks-subset",
+                "duration_ms": 0.005,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 4739.843,
+            "mutant_id": "warm-median-only",
+            "status": "pass"
+          }
+        ],
+        "status": "pass",
+        "valid_alternatives": [
+          {
+            "alternative_id": "controlled-a-target",
+            "checks": [
+              {
+                "check_id": "valid-alternative-full-pass",
+                "duration_ms": 4144.453,
+                "status": "pass"
+              }
+            ],
+            "duration_ms": 4144.462,
+            "status": "pass"
+          }
+        ]
+      }
+    ],
+    "duration_ms": 110622.031,
+    "schema_version": 1,
+    "status": "pass"
+  }
+}

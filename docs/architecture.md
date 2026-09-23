@@ -2,10 +2,11 @@
 
 ## Positioning
 
-このリポジトリは、次の 2 つを提供する基盤です。
+このリポジトリは、次を提供する基盤です。
 
 - 高権限 devcontainer
-- セカンドエージェント実行ラッパー（共通エンジン `second-agent` + バックエンド別シム `codex-second-agent` / `claude-second-agent`）
+- native-first multi-agent実行方針と、新しいcontrol plane入口`agentctl`
+- feature-frozenなlegacy second-agent wrapper（移行期間のみ）
 
 目的は **trusted local development を速くすること** であり、未検証コードを隔離する sandbox を提供することではありません。
 
@@ -14,14 +15,102 @@
 この基盤の前提は次のとおりです。
 
 - devcontainer はホスト資格情報をマウントする
-- AI 認証情報は CLI の標準パスへ直接 bind mount して使う（Claude Code は `~/.claude` に加えて `~/.claude.json` も mount する）
+- AI 認証情報は CLI の標準パスへ直接 bind mount して使う（Claude Code は `~/.claude` と `~/.claude.json`、Grok Buildは`~/.grok`をmountする）
+- optional API key環境変数は`remoteEnv`でeditor/terminal processへ渡し、build済みimage ENVには保存しない
+- AI CLI本体はホストからmountしない。stableはimage pinを使い、edgeだけ検出したhost versionをcontainer向けnpm packageまたは公式binaryとして起動時導入する
 - devcontainer は `docker-in-docker` 前提の高権限設定で動く
-- devcontainer 内の通常 `codex` / `claude` は wrapper 経由で既定の確認プロンプトをスキップする（codex: `--dangerously-bypass-approvals-and-sandbox` / claude: `--dangerously-skip-permissions`）
+- 通常`codex` / `claude` / `grok`はapproval / sandboxを維持し、`codex-trusted` / `claude-trusted` / `grok-trusted`だけが明示的にbypassする
 - セカンドエージェントも常に権限バイパスを付ける
 
 したがって、「安全」は **強い隔離** ではなく **信頼済み環境の中でスコープ事故を減らす** という意味に限定されます。
 
-## Scope Model
+## Stable / Edge Toolchain
+
+認証情報のbind mountとCLI配布は別レイヤーです。Cursor / VS Codeでのローカル起動はedgeが既定で、hostのCLI versionへ同期します。Dockerfileから直接起動するimageと、明示的に選択したstableは、起動時にhost CLIをprobeせずpackage installもしません。
+
+```text
+DEVCONTAINER_AI_CLI_CHANNEL=edge
+  -> host CLI --version
+  -> ~/.cache/devcontainer-ai-cli/versions.env
+  -> read-only bind mount
+  -> postStartCommand
+  -> /opt/devcontainer-ai-cli (container OS/CPU向け npm package / Grok binary)
+  -> /usr/local/bin/codex|claude|grok wrapper
+```
+
+ホストのpackage directoryやexecutableを直接共有しない理由は、hostとcontainerでOS / CPU / Node.js配置が異なり得るためです。stableの正本はDockerfileとFeature lockです。edgeはcanaryであり、`agentctl doctor --json`のcapability probeに合格したCLIだけを利用します。詳細は[`toolchain.md`](toolchain.md)を参照してください。
+
+## Target Multi-agent Architecture
+
+対話、planning、read-only fan-outはprovider-native subagentを使います。通常writeは同一container内のjob単位worktree、強い隔離が必要なtaskはoptional isolated runtimeへrouteします。共通層はconversationを再実装せず、job / attempt、immutable base SHA、workspace/process/resource lease、structured resultだけを所有します。
+
+正本は[`ADR-0001`](adr/0001-native-first-multi-agent-execution.md)、比較scenarioは[`representative-scenarios.md`](agents/representative-scenarios.md)です。
+
+### Collaboration semantics
+
+laneは実行境界、roleは責務、relationはagent同士の関係、lifecycleは時間上の起動形です。primaryは期待するvalue mechanismとbinding constraintから`solo / delegate / consult / compete / verify`またはproject固有のrelationを選びます。これらはclosed enumではなく、人数・interaction・candidate数を暗黙に決めません。relation選択、継続判断、synthesisはprimary / provider-native layer、finite write jobは`agentctl`、将来のtrigger / dedupe / budgetはscheduler layerが所有します。`agentctl`へdebate transcriptやconversation graphを入れません。
+
+正本は[`collaboration-model.md`](agents/collaboration-model.md)、target projectの運用は[`project/docs/agents/collaboration-playbook.md`](../project/docs/agents/collaboration-playbook.md)です。scheduled / event-driven runtimeはまだ実装しておらず、guidanceだけから利用可能とみなしません。
+
+provider hookと`agentctl` lifecycle eventは、human inputなしでcontent-free episode factsを専用named volumeへ有限保存します。transientなMira UI stateやagentctl correctness DBとは保存先を分け、container rebuildをまたいでも残します。これはconversation ownershipを共通層へ移すものではなく、semantic relation、quality、human review時間を推測しません。schemaと分析境界は[`collaboration-observation.md`](agents/collaboration-observation.md)を参照してください。
+
+### Project contract (Phase 2)
+
+target projectのcopy sourceは`project/`です。
+
+```text
+project/
+├─ AGENTS.md
+├─ CLAUDE.md                  # @AGENTS.md bridge
+├─ .agent/
+│  ├─ config.json
+│  ├─ roles/{researcher,implementer,reviewer}.md
+│  ├─ schemas/{task,result}.schema.json
+│  └─ examples/
+├─ .codex/
+│  ├─ config.toml
+│  └─ agents/*.toml
+├─ .claude/agents/*.md
+├─ .grok/agents/*.md
+└─ docs/agents/runbook.md
+```
+
+`.agent`はprovider-neutralなsource of truthです。Codex / Claude / Grok定義はnative discovery pathへ置くthin mappingで、project policyを複製しません。Claude Codeは`AGENTS.md`を直接loadしないため、`CLAUDE.md`が先頭で`@AGENTS.md`をimportします。
+
+定義形式の根拠はCodex公式の[Subagents](https://learn.chatgpt.com/docs/agent-configuration/subagents.md)、Claude Code公式の[Create custom subagents](https://code.claude.com/docs/en/sub-agents)と[project memory](https://code.claude.com/docs/en/memory)、xAI公式の[Grok Build subagents](https://docs.x.ai/build/features/subagents)と[project rules](https://docs.x.ai/build/features/project-rules)です。providerのformatが変化した場合は、このthin mappingとcapability testだけを更新します。
+
+task / resultはJSON Schema draft 2020-12、`schema_version = 1`です。taskはfull `base_sha`、lane、permission profile、relative scope、acceptanceを固定します。resultはstatus、full `head_sha`、changed paths、dirty state、checks、risks、followupsを返します。brokerはprovider申告を信頼せずGitからSHA / path / dirty stateを再計算します。
+
+共有ローダー`scripts/agent_contracts.py:load_json`は、同じJSON object内の重複property名を曖昧な入力として拒否します。配列内を含む全階層が対象で、名前はJSON escapeのdecode後に比較します（`"name"`と`"\u006eame"`は重複）。大文字小文字の同一視やUnicode正規化は行わず、別objectでの同名propertyは許可します。`validate_file`はinstanceとschemaの両方へこの規則を適用します。
+
+重複時は入力ファイルpathと重複による曖昧さを示す`ContractValidationError`を返し、診断へproperty値やdocument本文を含めません。入力ファイルは変更せず、通常のJSON値と型（top-level array / scalarを含む）は保持します。非有限数literal、float overflow、JSON構文エラー、file I/Oエラーの拒否も維持します。
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate-agent-contracts.py
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-agent-contracts.py
+```
+
+failure recoveryとsingle-writer integrationは`project/docs/agents/runbook.md`、legacy wrapper操作は`docs/agents/legacy-second-agent-runbook.md`へ分離します。
+
+### Job / process fabric (Phase 3a–3e)
+
+`agentctl 0.7`はproject UUID、SQLite job / attempt state、immutable base SHA、job-ID branch、private worktree lease、Codex / Claude / Grok adapter、result/Git照合、明示clean retryを実装します。foregroundに加えて、owner-only Unix socketのlocal supervisor、専用runner、detach、PID/start-time照合、heartbeat、process-group cancel、startup orphan reconciliationを持ちます。さらにresource class別capacity lease、priority + aging付きのdurable queue、job固有Compose namespace、integration port lease、validated dependencyを順に集めるread-only integration report、bounded/redacted log view、terminal log retention evidence、conservative GC inventoryを同じtransactional stateへ統合します。stateとjob worktreeはnamed volume`/var/lib/agentctl`へ置き、repository runtime fileとcontainer rebuildから分離します。
+
+queue metadataは永続化しますが、provider credentialを含み得るdispatch environmentはagentdのmemoryだけに保持します。agentd再起動後のqueued jobは`awaiting_resubmit`として可視化し、同じdetach commandの再送で起動情報を補充します。secretをDBへ保存して完全自動resumeしたふりはしません。
+
+`job collect`はmerge/pushを行いません。target SHAに対するcommit候補、dependency order、path overlap、checks/risksとstructural blockerをimmutable reportへ固定し、integration方法と意味的競合の判断はsingle writerへ残します。
+
+`job logs`はcanonical attempt pathから最大1 MiB / 1000行までのtailだけを読み、known token、authorization header、secret名付きassignment、現在processが保持するsecret値をbest-effortでredactします。raw log自体をredactしたとは主張しません。正常にproviderが閉じた時点でraw logを最大8 MiB、detached runner終了後は1 MiBのtailへ原子的に制限し、別々のretention evidenceへ元サイズと保持結果を記録します。supervisor logはstdout/stderrのinodeを維持したまま2 MiBのlive tailへ回します。未解決なのは実行中provider logの一時的な増加です。
+
+`gc --dry-run`は削除commandではありません。validated state、terminal attempt、process/lease不在、canonical worktree/branch/Git common-dir identity、clean tree、canonical evidence、明示的なcollection integration proof、Compose project labelの残存resource不在を全て満たしたjobだけへ候補actionを返します。registered workspaceが移動済み、Dockerを照合できない、pathやDB evidenceが矛盾する場合はjob単位でblockし、global inventory自体は継続します。
+
+### Isolated runtime pilot (Phase 4a)
+
+Lane Iはstable adapter未選定で、capacity既定値を0のまま維持します。`benchmark-isolated-runtime-pilot.py`はstandalone `sbx`とDocker Agent pluginをread-only probeし、未導入を成功扱いしません。比較可能なlocal fixtureとして、committed Git bundleだけを入力し、outer network/credential/workspace/host socketを渡さないdisposable private-DinD containerからresult bundleを回収します。5 sampleはp95約4.3秒で完走しましたが、outer containerが`--privileged`でhost kernelを共有するためsecurity boundaryとしては不採用です。測定値と次の`sbx --clone` gateは[`isolated-runtime-pilot-2026-08-12.md`](agents/isolated-runtime-pilot-2026-08-12.md)を正本とします。
+
+Codexのsafe sandboxではlinked worktree外のGit common metadataがread-onlyになることを実測しました。common dirをwritable rootに足す代わりに、providerは`ready_for_commit`とdirty pathを返し、brokerがscope / HEAD / pathを再計算してverified pathだけをcommitします。詳細は[`agentctl.md`](agentctl.md)です。
+
+## Legacy Scope Model (feature-frozen compatibility)
 
 セカンドエージェント（`codex-second-agent` / `claude-second-agent`）の sub-agent (`--agent` が `default` 以外) は、configured workspace を基準に動かします。スコープ制御は共通エンジン `second-agent` に実装され、両バックエンドで共有されます。
 
@@ -35,7 +124,7 @@
 
 これは wrapper レベルの **運用境界** です。OS-level isolation ではありません。
 
-## Recommended Target-Project Layout
+## Legacy Target-Project Layout (do not copy for new projects)
 
 target project 側では、sub-agent が読む運用情報を **workspace 内** に置きます。
 
@@ -61,7 +150,9 @@ target project 側では、sub-agent が読む運用情報を **workspace 内** 
 - `--add-dir` で workspace 外を追加する必要がない
 - manager と sub-agent で参照する正本がズレにくい
 
-## Preferred Operating Modes
+## Legacy Operating Modes
+
+以下は既存stateの互換説明です。通常手順の正本は[`legacy-second-agent-runbook.md`](agents/legacy-second-agent-runbook.md)であり、新規projectは上のPhase 2 contractを使います。
 
 どちらの例も `codex-second-agent` を `claude-second-agent` に置き換えれば Claude バックエンドで同じように動きます（CLI 表面は共通）。
 
@@ -108,7 +199,8 @@ codex-second-agent --agent implementer "..." -- --cd packages/api
 - **状態は対象 repo の作業ツリー内に同居させる（意図的な設計）**: `.<be>-second-agent/` 等を target workspace 配下に置く。これは「その repo の開発に必要なデータを、その repo に同居させる」という方針であり、中央集約（例: `~/.local/state`）にしない。集約は際限なく貯まって管理不能になりやすく、どのデータがどの repo のものか追えなくなるため。誤コミットは `workspace init` の `.gitignore` 自動補完で防ぐ。
 - **セッション同一性はパスの sha256**: repo を移動/rename すると key が変わり既存セッションが孤立する。シンボリックリンク経由など別パスで同一 repo を指すと resume 共有が壊れ得る。
 - **固定モデルはコード直書きの既定**: 陳腐化し得る（`<PREFIX>_MODEL` で上書き可）。
-- **ログは無制限・機微を含み得る**: ローテーションなし。prompt/response 全文を保存。`umask 077` で所有者限定にはする。
+- **edge CLI version同期は起動時**: edge実行中のcontainerはhost CLI updateを即時検知しない。stableは起動時同期を行わない。
+- **legacy wrapperのログは無制限・機微を含み得る**: ローテーションなし。prompt/response 全文を保存。`umask 077` で所有者限定にはする。`agentctl`側の別contractは上記Phase 3eと`docs/agentctl.md`を参照する。
 - **バックエンド抽象はアドホック**: 変数群 + `case` 分岐。3 つ目を足す前にアダプタ化を検討する余地がある。
 - **中核ロジックが bash**: パス正規化・スコープ判定など間違えてはいけない処理を bash で実装している。将来はパス計算を別言語ヘルパへ切り出す候補。
 - **並行性**: 同一 agent の同時実行は `flock` で直列化（flock が無い環境はベストエフォート）。

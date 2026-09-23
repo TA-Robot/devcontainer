@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "job_id": "01K2E9YQ7Q3R6V8M1N4P5T6W7X",
+  "base_sha": "0123456789abcdef0123456789abcdef01234567",
+  "objective": "Add regression coverage for the parser without changing its public API.",
+  "role": "implementer",
+  "lane": "write",
+  "permission_profile": "safe",
+  "resource_class": "write",
+  "priority": "normal",
+  "scope": {
+    "allowed_paths": ["src/parser/", "tests/parser/"],
+    "forbidden_paths": [".devcontainer/", "package-lock.json"]
+  },
+  "acceptance": [
+    {
+      "kind": "command",
+      "value": "npm test -- parser",
+      "cwd": "."
+    },
+    {
+      "kind": "manual",
+      "value": "The public parser API is unchanged."
+    }
+  ],
+  "constraints": [
+    "Do not add dependencies.",
+    "Do not push or merge."
+  ],
+  "context_paths": ["docs/agents/decisions.md"],
+  "dependency_job_ids": []
+}

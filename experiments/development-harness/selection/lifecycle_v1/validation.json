@@ -1,0 +1,25 @@
+{
+  "kind": "lifecycle-selection-validation-v1",
+  "tests": 10,
+  "failures": 0,
+  "skipped": 0,
+  "reported_seconds": 16.7,
+  "image": "sha256:df8eb7a18e1d462af44d23e9d9c0d32c2c960a49452c61fa17e0d215c821a9e0",
+  "command": "PYTHONDONTWRITEBYTECODE=1 LIFECYCLE_SELECTION_IMAGE=sha256:df8eb7a18e1d462af44d23e9d9c0d32c2c960a49452c61fa17e0d215c821a9e0 python3 -m unittest scripts/test-lifecycle-selection.py",
+  "source_sha256": {
+    "experiments/development-harness/selection/lifecycle_v1/calibrate.py": "418ca429c0512ed37fbcd87d86c5c4f28fb996847a20e63c676a4e71b3ea818d",
+    "experiments/development-harness/selection/lifecycle_v1/calibration_probe.py": "7b296c88b75756525dab21cf31269c9c119beed72c3f64267d6f44231da8f184",
+    "experiments/development-harness/selection/lifecycle_v1/adapter.py": "e42184e8712961a638281b0e25e3a0354c4fec35e48f76a1f954845262c0f081",
+    "experiments/development-harness/selection/lifecycle_v1/TASK.md": "691cac28618d53c19855591b247e5eacc476085155b94dc9768b2b683f27ff1a",
+    "experiments/development-harness/selection/lifecycle_v1/Probe.Dockerfile": "c16f1850c91efa5718546f4315c68c0aa052ace135754f7df57b34a72e3342d4",
+    "experiments/development-harness/selection/lifecycle_v1/probe-image.json": "21976e962ac73f0f1890553527393dd53d23130f27e76819b6cfe4b99cd2c7bb",
+    "scripts/test-lifecycle-selection.py": "1373c46836a58bad67d804a7c006c3e348790f66b58a76c50e2f251b1d450ce6"
+  },
+  "calibration_sha256": "aa44e975e613179295ba9967b4eed0f4eb44c12884aa447cd9009943bac08d6e",
+  "private_evidence_directory": "/home/asakura/.local/state/devcontainer-evaluations/lifecycle-selection-calibration-20260907-01",
+  "live_provider_calls": 0,
+  "preliminary_devcontainer_tests": "8 passed, then review found installed reference CLI exposure; superseded for information-boundary validation",
+  "current_environment_quality_regraded": false,
+  "collaboration_effect_measured": false,
+  "source_commit": "b252e47e85675dbbb13a99b6187c931c6137db4a"
+}

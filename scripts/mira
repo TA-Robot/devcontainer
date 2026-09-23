@@ -1,0 +1,200 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+usage() {
+  cat <<'EOF'
+Usage: mira <codex|claude|gemini|grok|opencode> [--add] [CLI args...]
+       mira list
+
+Start or reattach to a trusted AI CLI in a persistent Byobu session.
+Sessions are reused per provider and Git worktree. --add starts another session.
+Detach with F6; exiting the AI CLI ends its session. "mira list" selects a
+session on a terminal and prints the list when output is redirected.
+EOF
+}
+
+die() {
+  echo "mira: $*" >&2
+  exit 1
+}
+
+socket="${MIRA_SOCKET:-mira}"
+[[ "$socket" =~ ^[A-Za-z0-9][A-Za-z0-9._-]*$ ]] || die "invalid Byobu socket name: $socket"
+byobu="${MIRA_BYOBU_BIN:-byobu-tmux}"
+command -v "$byobu" >/dev/null 2>&1 || die "byobu-tmux is not installed"
+
+mux() {
+  "$byobu" -L "$socket" "$@"
+}
+
+provider_binary() {
+  local binary
+  case "$1" in
+    codex) binary="${MIRA_CODEX_BIN:-codex-trusted}" ;;
+    claude) binary="${MIRA_CLAUDE_BIN:-claude-trusted}" ;;
+    gemini) binary="${MIRA_GEMINI_BIN:-gemini}" ;;
+    grok) binary="${MIRA_GROK_BIN:-grok-trusted}" ;;
+    opencode) binary="${MIRA_OPENCODE_BIN:-opencode}" ;;
+    *) die "unknown provider: $1" ;;
+  esac
+  binary="$(command -v "$binary")" || die "$1 CLI is not installed"
+  realpath -- "$binary"
+}
+
+workspace_root() {
+  local root
+  root="$(git rev-parse --show-toplevel 2>/dev/null)" || root="$PWD"
+  (cd -- "$root" && pwd -P)
+}
+
+session_name() {
+  local digest
+  digest="$(printf '%s' "$2" | sha256sum)"
+  printf 'mira_%s_%s\n' "$1" "${digest:0:16}"
+}
+
+has_session() {
+  mux has-session -t "=$1" 2>/dev/null
+}
+
+existing_session() {
+  local base="$1" name suffix
+  if has_session "$base"; then
+    printf '%s\n' "$base"
+    return
+  fi
+  while IFS= read -r name; do
+    [[ "$name" == "$base"_* ]] || continue
+    suffix="${name#"$base"_}"
+    if [[ "$suffix" =~ ^[0-9]+$ ]]; then
+      printf '%s\n' "$name"
+      return
+    fi
+  done < <(mux list-sessions -F '#{session_name}' 2>/dev/null)
+  return 1
+}
+
+attach() {
+  local session="$1"
+  if [[ ! -t 0 || ! -t 1 ]]; then
+    echo "mira: $session is running; use a terminal to attach"
+    return
+  fi
+  if [[ -n "${TMUX:-}" && "${TMUX%%,*}" == */"$socket" ]]; then
+    mux switch-client -t "$session"
+  else
+    env -u TMUX "$byobu" -L "$socket" attach-session -t "$session"
+  fi
+}
+
+list_sessions() {
+  local name provider workspace instance raw
+  local -a names=()
+  raw="$(mux list-sessions -F '#{session_name}' 2>/dev/null)" || raw=""
+  while IFS= read -r name; do
+    [[ "$name" == mira_* ]] && names+=("$name")
+  done <<< "$raw"
+  if [[ ${#names[@]} -eq 0 ]]; then
+    echo "mira: no running sessions"
+    return
+  fi
+  local i=0
+  for name in "${names[@]}"; do
+    ((i+=1))
+    provider="$(mux show-option -qv -t "$name" @mira_provider)"
+    workspace="$(mux show-option -qv -t "$name" @mira_workspace)"
+    instance="$(mux show-option -qv -t "$name" @mira_instance)"
+    workspace="${workspace//$'\n'/ }"
+    printf '%2d  %-9s #%s  %s\n' "$i" "${provider:-unknown}" "${instance:-1}" "${workspace:-$name}"
+  done
+  if [[ ! -t 0 || ! -t 1 ]]; then
+    return
+  fi
+  local choice
+  printf 'Select session [1-%d, Enter to cancel]: ' "${#names[@]}" > /dev/tty
+  IFS= read -r choice < /dev/tty || return
+  [[ -n "$choice" ]] || return
+  [[ "$choice" =~ ^[0-9]+$ ]] || die "select a session number"
+  choice=$((10#$choice))
+  ((choice >= 1 && choice <= ${#names[@]})) || die "session number out of range"
+  attach "${names[choice-1]}"
+}
+
+start_session() {
+  local session="$1" instance="$2" binary self command_line
+  shift 2
+  binary="$(provider_binary "$provider")" || return 1
+  self="$(realpath -- "$0")" || return 1
+  command_line="$(python3 -c 'import shlex,sys; print("exec " + shlex.join(sys.argv[1:]))' \
+    "$self" --launch "$provider" "$binary" "$@")" || return 1
+  mux new-session -d -s "$session" -c "$workspace" "$command_line" || return 1
+  if has_session "$session"; then
+    mux set-option -t "$session" @mira_provider "$provider"
+    mux set-option -t "$session" @mira_workspace "$workspace"
+    mux set-option -t "$session" @mira_instance "$instance"
+  fi
+}
+
+launch() {
+  local provider="$1" binary="$2"
+  shift 2
+  export AGENTCTL_PERMISSION_PROFILE=trusted-fast
+  case "$provider" in
+    codex|claude|grok) exec "$binary" "$@" ;;
+    gemini) exec "$binary" --approval-mode=yolo --no-sandbox "$@" ;;
+    opencode) exec "$binary" --auto "$@" ;;
+    *) die "unknown provider: $provider" ;;
+  esac
+}
+
+case "${1:-}" in
+  -h|--help|"") usage ;;
+  --launch)
+    [[ $# -ge 3 ]] || die "invalid launcher invocation"
+    shift
+    launch "$@"
+    ;;
+  list)
+    [[ $# -eq 1 ]] || die "mira list does not take arguments"
+    list_sessions
+    ;;
+  codex|claude|gemini|grok|opencode)
+    provider="$1"
+    shift
+    add=false
+    if [[ "${1:-}" == --add ]]; then
+      add=true
+      shift
+    fi
+    workspace="$(workspace_root)"
+    base="$(session_name "$provider" "$workspace")"
+    if [[ "$add" == true ]]; then
+      instance=1
+      while :; do
+        session="$base"
+        if ((instance > 1)); then session="${base}_${instance}"; fi
+        if has_session "$session"; then
+          ((instance+=1))
+          continue
+        fi
+        if start_session "$session" "$instance" "$@"; then break; fi
+        has_session "$session" || die "could not create Byobu session $session"
+        ((instance+=1))
+      done
+    else
+      if session="$(existing_session "$base")"; then
+        if [[ $# -gt 0 ]]; then
+          echo "mira: existing $provider session; startup arguments were not applied" >&2
+        fi
+      else
+        session="$base"
+        if ! start_session "$session" 1 "$@"; then
+          has_session "$session" || die "could not create Byobu session $session"
+        fi
+      fi
+    fi
+    has_session "$session" || die "$provider exited before it could be attached"
+    attach "$session"
+    ;;
+  *) usage >&2; exit 2 ;;
+esac

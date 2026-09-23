@@ -1,0 +1,323 @@
+{
+  "block_id": "codex-primary-calibration",
+  "case": {
+    "capsule_digest": "sha256:62c94e37eaf560b7579b022b488831e52a3ce5f8fdd3e1545a36df8f6178537c",
+    "case_id": "F04-S-PY-001",
+    "catalog_digest": "sha256:5e1f6f6f3d29ab4e9d0e73bacb870d2bec32d05d6edabcebe784a15e445f6c79",
+    "family": "bounded-implementation",
+    "profile_id": "S-local-deterministic-python",
+    "revision": 1,
+    "size": "S",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 416.667,
+          "exit_code": 0,
+          "status": "pass"
+        },
+        {
+          "check_id": "f04-s-python-hidden-v1",
+          "duration_ms": 417.077,
+          "exit_code": 1,
+          "status": "fail"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f04-s-python-hidden-v1",
+      "image_digest": "sha256:3f58b6614a86e40bd3adfa49f9a9b5711bcf24b8a28fe574dec8ea1e0872cc9d",
+      "isolation_profile": "network-disabled-read-only-container",
+      "status": "fail"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 8,
+          "name": "item.completed"
+        },
+        {
+          "count": 5,
+          "name": "item.started"
+        },
+        {
+          "count": 1,
+          "name": "thread.started"
+        },
+        {
+          "count": 1,
+          "name": "turn.completed"
+        },
+        {
+          "count": 1,
+          "name": "turn.started"
+        }
+      ],
+      "exit_code": 0,
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [
+        {
+          "count": 3,
+          "name": "agent_message"
+        },
+        {
+          "count": 8,
+          "name": "command_execution"
+        },
+        {
+          "count": 2,
+          "name": "file_change"
+        }
+      ],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 7293,
+      "output_cap_bytes": 8388608,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "sandbox_preflight": {
+        "command_network": "denied",
+        "generation_request_performed": false,
+        "image_digest": "sha256:3f58b6614a86e40bd3adfa49f9a9b5711bcf24b8a28fe574dec8ea1e0872cc9d",
+        "profile_digest": "sha256:e3b76b6d4d473e01898811a3933665dff68aacd1101e1e438734bca310655724",
+        "status": "pass",
+        "unrelated_read": "denied",
+        "workspace_write": "observed"
+      },
+      "status": "success",
+      "stderr_bytes": 0,
+      "task_network": "denied-by-permission-profile",
+      "terminal_wall_ms": 51896.551,
+      "thread_id_digest": "sha256:bba6b9cf3150350a4c149a26b68cf7b4d4acebc92a909b70fa902bbc497a9398",
+      "usage": {
+        "cached_input_tokens": 34816,
+        "input_tokens": 58561,
+        "output_tokens": 1439,
+        "reasoning_output_tokens": 486
+      },
+      "workspace_changed_path_count": 2
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.004,
+    "online_validation": 854.335,
+    "post_validation_tail": 0.03,
+    "provision": 1360.13,
+    "terminal_wall": 52766.608,
+    "user_result": 52766.603,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:3f58b6614a86e40bd3adfa49f9a9b5711bcf24b8a28fe574dec8ea1e0872cc9d",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider"
+    ],
+    "unknown": [
+      "/participants/0/generation_settings/0/applied_value"
+    ]
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 38203565002601,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T11:37:21.215Z"
+    },
+    "P1": {
+      "monotonic_ns": 38204925133005,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T11:37:22.575Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 38204926508131,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T11:37:22.576Z"
+    },
+    "T1": {
+      "monotonic_ns": 38204926512026,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T11:37:22.576Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 38257693111199,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T11:38:15.343Z"
+    },
+    "TX": {
+      "monotonic_ns": 38257693116092,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T11:38:15.343Z"
+    },
+    "V0": {
+      "monotonic_ns": 38256838746487,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T11:38:14.489Z"
+    },
+    "V1": {
+      "monotonic_ns": 38257693081525,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-26T11:38:15.343Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 300000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": "online-validation-failed",
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "fail",
+    "quality_basis": "online-fail",
+    "quality_pass": false,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "key": "effort",
+          "namespace": "codex.reasoning",
+          "requested_value": "low",
+          "status": "unknown"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "alias-only",
+        "requested_alias": "gpt-5.6-sol",
+        "requested_source": "flag"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:3f58b6614a86e40bd3adfa49f9a9b5711bcf24b8a28fe574dec8ea1e0872cc9d",
+        "observed_at": "2026-08-26T11:37:22.575Z",
+        "permission_mode": "automatic",
+        "provider": "codex"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "codex-f04-s-sol-low-20260826-r04",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "a2118775cc5209fac540865f170f576446e33c35",
+    "bundle_digest": "sha256:412bf33ac5c012909d1f7cc82b5b1777f28bc9008c0056522c1a3846bbb6f131",
+    "fixture_revision": "f04-s-python-normalizer-v1-r1",
+    "instruction_set_digest": "sha256:83239308c474dce5e9bcdcf98bf70cdd5631410b63e77e2e16ccceb3782fa700"
+  },
+  "study_id": "duration-atlas-wave1",
+  "workers": []
+}

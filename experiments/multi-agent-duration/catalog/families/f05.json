@@ -1,0 +1,223 @@
+{
+  "schema_version": 1,
+  "catalog_id": "duration-atlas-f05",
+  "revision": 1,
+  "published_at": "2026-08-27T00:00:00.000Z",
+  "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F05-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:276166b476d504579bf8749edfa209116362792d82b00016be7e214bdeed5e29",
+        "source_type": "fixture",
+        "family": "refactor-migration",
+        "size": "S",
+        "profile_id": "S-local-equivalence-refactor-python",
+        "variant_group_id": "F05-S-PY",
+        "descriptors": {
+          "context_surface": "one-python-module-and-tests",
+          "artifact_surface": "local-refactor-patch",
+          "coupling": "shared-private-logic",
+          "validation_depth": ["unit", "behavior-equivalence"],
+          "environment_setup": "none",
+          "failure_distance": "direct",
+          "statefulness": "stateless",
+          "language_toolchain": ["python"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "patch",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["behavioral", "validation-order", "duplicate-helper", "api-drift"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F05-S-PY-001",
+        "recipe_id": "f05-s-python-helper-refactor-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f05-s-python-helper-refactor.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["python3", "tools/compare_behavior.py"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "refactor-equivalence-output",
+            "test_target": "HiddenSmallRefactorTests.test_equivalence_output"
+          },
+          {
+            "check_id": "refactor-equivalence-errors",
+            "test_target": "HiddenSmallRefactorTests.test_equivalence_errors"
+          },
+          {
+            "check_id": "refactor-helper-shared",
+            "test_target": "HiddenSmallRefactorTests.test_helper_shared"
+          },
+          {
+            "check_id": "refactor-api-stable",
+            "test_target": "HiddenSmallRefactorTests.test_api_stable"
+          }
+        ],
+        "online_evaluator_id": "f05-s-python-equivalence-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F05-M-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:4e93974668ce5719b2b52f07d19b5be28cd26be01add5b7ab05763e7c313e9d7",
+        "source_type": "fixture",
+        "family": "refactor-migration",
+        "size": "M",
+        "profile_id": "M-coupled-interface-migration-python",
+        "variant_group_id": "F05-M-PY",
+        "descriptors": {
+          "context_surface": "codec-three-callers-compatibility-and-tests",
+          "artifact_surface": "interface-migration-patch",
+          "coupling": "caller-and-compatibility-contract",
+          "validation_depth": ["unit", "caller", "compatibility"],
+          "environment_setup": "none",
+          "failure_distance": "cross-module",
+          "statefulness": "configuration-object-state",
+          "language_toolchain": ["python"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "patch",
+        "risk": "medium",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["missed-caller", "policy-lifecycle", "compatibility-bytes", "warning-count", "api-drift"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F05-M-PY-001",
+        "recipe_id": "f05-m-python-codec-migration-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f05-m-python-codec-migration.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["python3", "tools/check_callers.py"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "migration-all-callers",
+            "test_target": "HiddenMediumMigrationTests.test_all_callers"
+          },
+          {
+            "check_id": "migration-policy-lifecycle",
+            "test_target": "HiddenMediumMigrationTests.test_policy_lifecycle"
+          },
+          {
+            "check_id": "migration-compat-bytes",
+            "test_target": "HiddenMediumMigrationTests.test_compat_bytes"
+          },
+          {
+            "check_id": "migration-warning-once",
+            "test_target": "HiddenMediumMigrationTests.test_warning_once"
+          },
+          {
+            "check_id": "migration-api-surface",
+            "test_target": "HiddenMediumMigrationTests.test_api_surface"
+          }
+        ],
+        "online_evaluator_id": "f05-m-python-codec-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F05-L-PYBASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:4e1314a06bb7893b13a14c39e85c1f6c0c98512a23eff242cc36a0a3d1636db6",
+        "source_type": "fixture",
+        "family": "refactor-migration",
+        "size": "L",
+        "profile_id": "L-cross-boundary-backend-schema-migration",
+        "variant_group_id": "F05-L-PYBASH",
+        "descriptors": {
+          "context_surface": "backend-file-migrator-cli-and-bash-wrapper",
+          "artifact_surface": "migration-set-plus-rollback-and-recovery",
+          "coupling": "backend-and-schema-compatibility",
+          "validation_depth": ["unit", "contract", "migration", "rollback", "restart"],
+          "environment_setup": "fresh-process-lifecycle",
+          "failure_distance": "migration-and-restart-delayed",
+          "statefulness": "persistent-versioned-state",
+          "language_toolchain": ["python", "bash", "json", "markdown"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "patch",
+        "risk": "high",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["v1-incompatibility", "backend-leak", "non-atomic-commit", "resume-duplication", "destructive-rollback", "wrapper-selection"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F05-L-PYBASH-001",
+        "recipe_id": "f05-l-backend-schema-migration-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f05-l-backend-schema-migration.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["bash", "-n", "bin/jobctl"],
+          ["bash", "tests/migration-lifecycle.sh"],
+          ["python3", "tools/check_docs.py", "MIGRATION.md"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "migration-v1-compat",
+            "test_target": "HiddenLargeMigrationTests.test_v1_compat"
+          },
+          {
+            "check_id": "migration-backend-boundary",
+            "test_target": "HiddenLargeMigrationTests.test_backend_boundary"
+          },
+          {
+            "check_id": "migration-atomic-order",
+            "test_target": "HiddenLargeMigrationTests.test_atomic_order"
+          },
+          {
+            "check_id": "migration-resume",
+            "test_target": "HiddenLargeMigrationTests.test_resume"
+          },
+          {
+            "check_id": "migration-rollback",
+            "test_target": "HiddenLargeMigrationTests.test_rollback"
+          },
+          {
+            "check_id": "migration-operations-doc",
+            "test_target": "HiddenLargeMigrationTests.test_operations_doc"
+          }
+        ],
+        "online_evaluator_id": "f05-l-backend-schema-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    }
+  ]
+}

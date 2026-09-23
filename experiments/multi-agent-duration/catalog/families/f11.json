@@ -1,0 +1,178 @@
+{
+  "schema_version": 1,
+  "catalog_id": "duration-atlas-f11",
+  "revision": 1,
+  "published_at": "2026-08-27T00:00:00.000Z",
+  "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F11-S-BASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:bd8f792101fe4771222d69f3ab8a95929831a4ccc127964bdd616a8e8f345247",
+        "source_type": "fixture",
+        "family": "devcontainer-operations",
+        "size": "S",
+        "profile_id": "S-local-static-operations-bash",
+        "variant_group_id": "F11-S-BASH",
+        "descriptors": {
+          "context_surface": "one-bash-script-and-smoke-test",
+          "artifact_surface": "minimal-patch",
+          "coupling": "local-syntax",
+          "validation_depth": ["bash-static", "smoke"],
+          "environment_setup": "none",
+          "failure_distance": "parse-time",
+          "statefulness": "stateless",
+          "language_toolchain": ["bash"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "patch",
+        "risk": "low",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["syntax", "behavioral", "over-edit"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F11-S-BASH-001",
+        "recipe_id": "f11-s-bash-case-syntax-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f11-s-bash-case-syntax.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["bash", "-n", "sync-version.sh"],
+          ["bash", "tests/smoke.sh"]
+        ],
+        "hidden_validation_targets": [
+          {"check_id": "ops-static-pass", "test_target": "HiddenSmallOperationsTests.test_static_pass"},
+          {"check_id": "ops-behavior-matrix", "test_target": "HiddenSmallOperationsTests.test_behavior_matrix"},
+          {"check_id": "ops-minimal-diff", "test_target": "HiddenSmallOperationsTests.test_minimal_diff"}
+        ],
+        "online_evaluator_id": "f11-s-bash-operations-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F11-M-BASH-001",
+        "revision": 1,
+        "capsule_digest": "sha256:380c36ba746ff4efaa2256f421f797f1aed7afeb9bd0aff7919d21662bf94ca4",
+        "source_type": "fixture",
+        "family": "devcontainer-operations",
+        "size": "M",
+        "profile_id": "M-coupled-lifecycle-operations-bash",
+        "variant_group_id": "F11-M-BASH",
+        "descriptors": {
+          "context_surface": "initialize-metadata-post-start-installer-and-lifecycle-tests",
+          "artifact_surface": "bash-patch-plus-recovery-evidence",
+          "coupling": "host-container-version-and-ready-marker-contract",
+          "validation_depth": ["static", "unit", "restart", "lifecycle-smoke"],
+          "environment_setup": "fresh-subprocess-lifecycle",
+          "failure_distance": "post-start-and-restart",
+          "statefulness": "persistent-version-and-ready-markers",
+          "language_toolchain": ["bash", "json"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "patch",
+        "risk": "medium",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["normalization", "false-ready", "reinstall-loop", "restart", "overbroad-cleanup"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F11-M-BASH-001",
+        "recipe_id": "f11-m-post-start-version-recovery-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f11-m-post-start-version-recovery.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["bash", "-n", "initialize-host.sh", "post-start.sh", "install-cli", "tests/lifecycle.sh"],
+          ["bash", "tests/lifecycle.sh"]
+        ],
+        "hidden_validation_targets": [
+          {"check_id": "ops-version-normalization", "test_target": "HiddenMediumOperationsTests.test_version_normalization"},
+          {"check_id": "ops-idempotent-install", "test_target": "HiddenMediumOperationsTests.test_idempotent_install"},
+          {"check_id": "ops-ready-after-verify", "test_target": "HiddenMediumOperationsTests.test_ready_after_verify"},
+          {"check_id": "ops-restart-recovery", "test_target": "HiddenMediumOperationsTests.test_restart_recovery"},
+          {"check_id": "ops-state-cleanup", "test_target": "HiddenMediumOperationsTests.test_state_cleanup"}
+        ],
+        "online_evaluator_id": "f11-m-bash-lifecycle-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F11-L-BASHDOCKER-001",
+        "revision": 1,
+        "capsule_digest": "sha256:51ab723de0f8cb7ac6970963b1482015e9563e2738e07c4c55ba7608606ee364",
+        "source_type": "fixture",
+        "family": "devcontainer-operations",
+        "size": "L",
+        "profile_id": "L-cross-boundary-rebuild-recovery",
+        "variant_group_id": "F11-L-BASHDOCKER",
+        "descriptors": {
+          "context_surface": "devcontainer-bash-python-persistence-and-extension-marker",
+          "artifact_surface": "cross-boundary-patch-and-recovery-runbook",
+          "coupling": "rebuild-persistence-and-host-extension-ownership",
+          "validation_depth": ["static", "unit", "rebuild", "migration", "restart", "residual-inventory"],
+          "environment_setup": "simulated-rebuild-reopen-with-persistent-volume",
+          "failure_distance": "rebuild-and-restart-delayed",
+          "statefulness": "persistent-volume-and-host-container-markers",
+          "language_toolchain": ["bash", "python", "docker", "json", "markdown"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "independent",
+        "artifact_type": "patch",
+        "risk": "high",
+        "task_lane": "write",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["destructive-migration", "stale-marker", "false-ready", "restart-loss", "destructive-rollback", "residual-resource"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F11-L-BASHDOCKER-001",
+        "recipe_id": "f11-l-devcontainer-rebuild-recovery-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f11-l-devcontainer-rebuild-recovery.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["bash", "-n", "initialize-host.sh", "post-create.sh", "post-start.sh", "tests/rebuild.sh"],
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["bash", "tests/rebuild.sh", "--scenario", "visible-all"],
+          ["python3", "tools/check_recovery_docs.py", "RECOVERY.md"]
+        ],
+        "hidden_validation_targets": [
+          {"check_id": "ops-lifecycle-ownership", "test_target": "HiddenLargeOperationsTests.test_lifecycle_ownership"},
+          {"check_id": "ops-migration-fault-cuts", "test_target": "HiddenLargeOperationsTests.test_migration_fault_cuts"},
+          {"check_id": "ops-reopen-resume", "test_target": "HiddenLargeOperationsTests.test_reopen_resume"},
+          {"check_id": "ops-marker-verification", "test_target": "HiddenLargeOperationsTests.test_marker_verification"},
+          {"check_id": "ops-rollback-export", "test_target": "HiddenLargeOperationsTests.test_rollback_export"},
+          {"check_id": "ops-recovery-doc", "test_target": "HiddenLargeOperationsTests.test_recovery_doc"},
+          {"check_id": "ops-residual-inventory", "test_target": "HiddenLargeOperationsTests.test_residual_inventory"}
+        ],
+        "online_evaluator_id": "f11-l-rebuild-recovery-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    }
+  ]
+}

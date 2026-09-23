@@ -1,0 +1,4 @@
+interface:
+  display_name: "Develop Evaluated Optimization"
+  short_description: "Run robust, evidence-driven optimization searches"
+  default_prompt: "Use $develop-evaluated-optimization to improve this measurable system without overfitting the development evaluator."

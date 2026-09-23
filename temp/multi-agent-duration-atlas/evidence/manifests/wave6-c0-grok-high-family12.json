@@ -1,0 +1,161 @@
+{
+  "batch_id": "wave6-c0-grok-high-family12",
+  "catalog_digest": "sha256:c89c127d5b02d0e72989508f6a7d7c0b9d1ed828ca61aa616db41ad90cb0f7d0",
+  "created_at": "2026-08-27T12:00:00.000Z",
+  "entries": [
+    {
+      "block_id": "wave6-c0-grok-high-family12",
+      "case_id": "F05-M-PY-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 300.0,
+      "model": "grok-4.6",
+      "order": 1,
+      "output_bytes_cap": 1048576,
+      "provider": "grok",
+      "run_id": "run-001-9c16b4749bbfca63",
+      "timeout_seconds": 1800.0
+    },
+    {
+      "block_id": "wave6-c0-grok-high-family12",
+      "case_id": "F06-L-PYBASH-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 300.0,
+      "model": "grok-4.6",
+      "order": 2,
+      "output_bytes_cap": 1048576,
+      "provider": "grok",
+      "run_id": "run-002-a5c7151046553dac",
+      "timeout_seconds": 1800.0
+    },
+    {
+      "block_id": "wave6-c0-grok-high-family12",
+      "case_id": "F04-S-PY-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 300.0,
+      "model": "grok-4.6",
+      "order": 3,
+      "output_bytes_cap": 1048576,
+      "provider": "grok",
+      "run_id": "run-003-01b8985244ba715d",
+      "timeout_seconds": 1800.0
+    },
+    {
+      "block_id": "wave6-c0-grok-high-family12",
+      "case_id": "F02-M-PY-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 300.0,
+      "model": "grok-4.6",
+      "order": 4,
+      "output_bytes_cap": 1048576,
+      "provider": "grok",
+      "run_id": "run-004-cb1f76abd54ed185",
+      "timeout_seconds": 1800.0
+    },
+    {
+      "block_id": "wave6-c0-grok-high-family12",
+      "case_id": "F03-L-PYBASH-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 300.0,
+      "model": "grok-4.6",
+      "order": 5,
+      "output_bytes_cap": 1048576,
+      "provider": "grok",
+      "run_id": "run-005-a16270dc591bde8a",
+      "timeout_seconds": 1800.0
+    },
+    {
+      "block_id": "wave6-c0-grok-high-family12",
+      "case_id": "F07-S-MD-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 300.0,
+      "model": "grok-4.6",
+      "order": 6,
+      "output_bytes_cap": 1048576,
+      "provider": "grok",
+      "run_id": "run-006-6029cdb4396a27bf",
+      "timeout_seconds": 1800.0
+    },
+    {
+      "block_id": "wave6-c0-grok-high-family12",
+      "case_id": "F08-M-MDJSON-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 300.0,
+      "model": "grok-4.6",
+      "order": 7,
+      "output_bytes_cap": 1048576,
+      "provider": "grok",
+      "run_id": "run-007-6ba767ed3c7f3033",
+      "timeout_seconds": 1800.0
+    },
+    {
+      "block_id": "wave6-c0-grok-high-family12",
+      "case_id": "F12-L-MDJSON-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 300.0,
+      "model": "grok-4.6",
+      "order": 8,
+      "output_bytes_cap": 1048576,
+      "provider": "grok",
+      "run_id": "run-008-13a21f3548bff40a",
+      "timeout_seconds": 1800.0
+    },
+    {
+      "block_id": "wave6-c0-grok-high-family12",
+      "case_id": "F01-S-PY-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 300.0,
+      "model": "grok-4.6",
+      "order": 9,
+      "output_bytes_cap": 1048576,
+      "provider": "grok",
+      "run_id": "run-009-c02f4a4c4f9d3ffe",
+      "timeout_seconds": 1800.0
+    },
+    {
+      "block_id": "wave6-c0-grok-high-family12",
+      "case_id": "F11-M-BASH-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 300.0,
+      "model": "grok-4.6",
+      "order": 10,
+      "output_bytes_cap": 1048576,
+      "provider": "grok",
+      "run_id": "run-010-b7f2aefde4b0d672",
+      "timeout_seconds": 1800.0
+    },
+    {
+      "block_id": "wave6-c0-grok-high-family12",
+      "case_id": "F09-L-PYBASHDOCKER-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 300.0,
+      "model": "grok-4.6",
+      "order": 11,
+      "output_bytes_cap": 1048576,
+      "provider": "grok",
+      "run_id": "run-011-2af82cf0bd3c0e93",
+      "timeout_seconds": 1800.0
+    },
+    {
+      "block_id": "wave6-c0-grok-high-family12",
+      "case_id": "F10-S-PY-001",
+      "effort": "high",
+      "evaluator_timeout_seconds": 300.0,
+      "model": "grok-4.6",
+      "order": 12,
+      "output_bytes_cap": 1048576,
+      "provider": "grok",
+      "run_id": "run-012-598bdb7aa67e5c56",
+      "timeout_seconds": 1800.0
+    }
+  ],
+  "purpose": "finite explicit C0 observations; repeat=1; rotation-seed=67; no routing recommendation or default winner",
+  "safety": {
+    "automatic_retry": false,
+    "concurrency": 1,
+    "continue_after_quality_fail": true,
+    "deadline_seconds": 43200.0,
+    "max_runs": 12
+  },
+  "schema_version": 1,
+  "study_id": "duration-atlas-wave6-provider"
+}

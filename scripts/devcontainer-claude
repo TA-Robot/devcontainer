@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-real_claude_bin="${DEVCONTAINER_CLAUDE_REAL_BIN:-/usr/local/bin/claude-real}"
+ai_cli_prefix="${DEVCONTAINER_AI_CLI_PREFIX:-/opt/devcontainer-ai-cli}"
+real_claude_bin="${DEVCONTAINER_CLAUDE_REAL_BIN:-$ai_cli_prefix/bin/claude}"
+provider_sandbox_bin="${DEVCONTAINER_PROVIDER_SANDBOX_BIN:-/usr/local/lib/provider-sandbox}"
 dangerous_flag="--dangerously-skip-permissions"
 
 if [[ ! -x "$real_claude_bin" ]]; then
@@ -9,9 +11,7 @@ if [[ ! -x "$real_claude_bin" ]]; then
   exit 127
 fi
 
-if [[ "${DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT:-1}" == "0" ]]; then
-  exec "$real_claude_bin" "$@"
-fi
+export PATH="$provider_sandbox_bin:$PATH"
 
 for argument in "$@"; do
   if [[ "$argument" == "$dangerous_flag" ]]; then
@@ -19,4 +19,11 @@ for argument in "$@"; do
   fi
 done
 
-exec "$real_claude_bin" "$dangerous_flag" "$@"
+# Safe is the default. The environment switch is retained only as an explicit
+# compatibility opt-in for existing automation; new callers should use
+# `claude-trusted`, whose name makes the missing permission boundary visible.
+if [[ "${DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT:-0}" == "1" ]]; then
+  exec "$real_claude_bin" "$dangerous_flag" "$@"
+fi
+
+exec "$real_claude_bin" "$@"

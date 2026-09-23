@@ -1,0 +1,49 @@
+{
+  "status": "completed",
+  "source_sha256": {
+    "probe.py": "52b53de3495d6b8ddb4b8fa126b6938c6a7bf101e4cdb58da438c7fe94515411",
+    "run.py": "5878d80d7e6d0399509444d8f1e0d5e1f82a24136e47ee2a22dd1c462482f9af"
+  },
+  "cases": [
+    {
+      "raw_root": "/home/asakura/.local/state/devcontainer-evaluations/native-preemption-probe-20260909-03",
+      "result_sha256": "fad5576bc2d5bc9be5f18b0b06b7e3555066b603659798cc77da81d0dd02cda2",
+      "control": false,
+      "notification_hypothesis_reproduced": false,
+      "control_passed": null,
+      "actor_status": "completed",
+      "native_returncode": 0,
+      "removed": true,
+      "recorded_usage": {
+        "input_tokens": 120,
+        "cached_input_tokens": 0,
+        "output_tokens": 30,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 150
+      }
+    },
+    {
+      "raw_root": "/home/asakura/.local/state/devcontainer-evaluations/native-preemption-probe-control-20260909-03",
+      "result_sha256": "53cc87baa853b9f3fdfc74a611b4c8f240efa47981bd8dac7994f6f01e43af5c",
+      "control": true,
+      "notification_hypothesis_reproduced": null,
+      "control_passed": true,
+      "actor_status": "completed",
+      "native_returncode": 0,
+      "removed": true,
+      "recorded_usage": {
+        "input_tokens": 40,
+        "cached_input_tokens": 0,
+        "output_tokens": 10,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 50
+      }
+    }
+  ],
+  "initial_missing_terminal_fixture": "/home/asakura/.local/state/devcontainer-evaluations/native-preemption-probe-20260909-01",
+  "earlier_unreproduced_attempt": "/home/asakura/.local/state/devcontainer-evaluations/native-preemption-probe-20260909-02",
+  "notification_alone_established_as_cause": false,
+  "live_provider_calls": 0
+}

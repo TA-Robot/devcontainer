@@ -1,0 +1,90 @@
+{
+  "capability_id": "wave05-wsl-host-current-grok-20260826",
+  "coverage": {
+    "limitations": [
+      "no-generation-request",
+      "setting-application-unobserved",
+      "setting-values-unadvertised"
+    ],
+    "model_inventory": "exact",
+    "runtime_identity": "exact",
+    "setting_advertisement": "partial",
+    "setting_application": "not-observed"
+  },
+  "model_identity": {
+    "identity_confidence": "alias-only",
+    "requested_alias": "grok-4.6",
+    "requested_source": "runtime-default"
+  },
+  "model_inventory": [
+    {
+      "catalog_status": "advertised-default",
+      "identity_confidence": "alias-only",
+      "model_id": "grok-4.6"
+    },
+    {
+      "catalog_status": "available",
+      "identity_confidence": "alias-only",
+      "model_id": "grok-4.5"
+    }
+  ],
+  "observed_at": "2026-08-26T10:47:49.283Z",
+  "probe": {
+    "commands": [
+      {
+        "command_id": "version",
+        "duration_ms": 48.455,
+        "evidence_source": "version-output",
+        "exit_code": 0,
+        "status": "observed"
+      },
+      {
+        "command_id": "root-help",
+        "duration_ms": 43.0,
+        "evidence_source": "root-help",
+        "exit_code": 0,
+        "status": "observed"
+      },
+      {
+        "command_id": "model-catalog",
+        "duration_ms": 755.852,
+        "evidence_source": "model-list-text",
+        "exit_code": 0,
+        "status": "observed"
+      }
+    ],
+    "generation_request_performed": false,
+    "metadata_scope": "provider-current",
+    "mode": "passive-cli",
+    "provider_metadata_request_attempted": true,
+    "raw_output_persisted": false
+  },
+  "runtime_identity": {
+    "build_hint": "5115b46bc9",
+    "cli_name": "grok",
+    "cli_source": "unknown",
+    "cli_version": "1.0.5",
+    "environment_kind": "host",
+    "execution_surface": "capability-probe",
+    "observed_at": "2026-08-26T10:47:49.283Z",
+    "permission_mode": "unknown",
+    "provider": "grok",
+    "release_channel": "stable"
+  },
+  "schema_version": 2,
+  "setting_probes": [],
+  "setting_surfaces": [
+    {
+      "advertisement": "flag-only",
+      "application_observability": "not-observed",
+      "evidence_source": "root-help",
+      "key": "effort",
+      "namespace": "grok.reasoning"
+    }
+  ],
+  "surfaces": {
+    "permission_mode": "unknown",
+    "progress_artifact": "unknown",
+    "synthesis_envelope": "unknown"
+  }
+}

@@ -1,0 +1,254 @@
+{
+  "status": "passed",
+  "tests": 5,
+  "skips": 0,
+  "elapsed_seconds": 80.411,
+  "source_sha256": {
+    "experiments/development-harness/scheduling/adaptive_pair_v1/adaptive.md": "2d67d794e8bf5b5c54c2b15354afba0566e03bd658363a6c6ee532fb312b47ad",
+    "experiments/development-harness/scheduling/adaptive_pair_v1/solo.md": "6213bf16e772bd7d1e9a9e13f73eff1ee6d8097a78b2c9399d15a79566e9f563",
+    "experiments/development-harness/scheduling/continuation_pair_v1/INITIAL.md": "44138f4e0a130c3dd6ec9842328eb73d19c66ae736d6bfec63b9f7fe4cb71fc1",
+    "experiments/development-harness/scheduling/continuation_pair_v1/adapter.py": "eed2c295513aa8ee658b27395f86542b4b03d52b40b3c4d39bd9527f8737972d",
+    "experiments/development-harness/scheduling/continuation_pair_v1/assessment.py": "8bbc0ad8a06d4441735cf3f4f52072d8bf0f4f6bc53d67029c2efd1957dea903",
+    "experiments/development-harness/scheduling/continuation_pair_v1/calibrate.py": "6c62bda595c487822c806619c5722ed203dd42460c1cc142155a448f729878c4",
+    "experiments/development-harness/scheduling/continuation_pair_v1/config.json": "19f414fce08a9472120f9756c1822e2aaa63c61ad89bff03a101a26fe55b77f5",
+    "experiments/development-harness/scheduling/continuation_pair_v1/initial-policy.txt": "24c82c7e2fbc98edb73a384170074da8bf0240eb5203179aa253cbe9a5055424",
+    "experiments/development-harness/scheduling/continuation_pair_v1/probe.py": "b3438c794cce19913e424748909aa4be4737ed986f58cb0e5c9870ce9af1aade",
+    "experiments/development-harness/scheduling/continuation_pair_v1/protocol.md": "4144db4d2e80e808931aa95cdb6848532be952576ae949d458b8dc173fd5d284",
+    "experiments/development-harness/scheduling/continuation_pair_v1/report.py": "bcc0b49bfbab55510750be245c6e7ccf96254b6e2f37b637d7417dcbea085f77",
+    "experiments/development-harness/scheduling/continuation_pair_v1/run.py": "9dd83964b672c4c1ea1336a6a21299669f834d60dc42f568f1528d72c7b3bbb1",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/Actor.Dockerfile": "73c4298e36fb976d5351db6bf9811c08a98acac8133fb352921b51beed471890",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/TASK.md": "6fe9fe5ae925692c480a862680e6713ba44dee4f4a5a6f2e8c9f096e62a4fa83",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/fifo.py": "553714f929e0bd78dc1fcb79b85af74dcec9b2b79bafb65a31970105fa28460b",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/image.json": "82a59b2bb49646785649cc52754a695b275a6c2d8d5736276a47294a0bc71a04",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/model-catalog.json": "0f50535b7ae228b47ef48b75e9a59f0f0881980a547585e0da5e7de157dd3cd4",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/policy.json": "ad606772f2a6ab4b2758b7529dd7f9e1a5b900e7e8a26212d70db952bc618fc9",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/projection.py": "c86c6678407adf768c92d1dbe1204a0f47efc9894dbde43886971bf6942363cd",
+    "experiments/development-harness/scheduling/dynamic_solo_v1/public_check.py": "4ab262c1bc02ccb900026eaee5633160f8eea401e931c711dd308a8c0969f4a8",
+    "experiments/development-harness/scheduling/dynamic_v1/TASK.md": "af5d163af3015fed756a0eec8f4a7846e4d62075bc25c7b4995f23363ec573f8",
+    "experiments/development-harness/scheduling/dynamic_v1/runtime.py": "541a5c1337b2a1fd404bd210fd90e3f6fb3b830e222afee19cc36b6f4781568f",
+    "experiments/development-harness/scheduling/dynamic_v1/transport.py": "e679a83c2bae513902f3710083b1d0a1d7dfdcce9cb31b4e29bff48d02d8d18b",
+    "experiments/development-harness/scheduling/dynamic_v1/workloads.py": "2da5084a7df1e05f5f97d6cc55c08fb6c567f5f258a1a9c6555a653f36ece094",
+    "experiments/development-harness/scheduling/native_actor_v1/TASK.md": "b92efe4487372218788da2f4f71c292b74315a34a5a6c3bdda92e514f77d9f30",
+    "experiments/development-harness/scheduling/native_actor_v1/accounting.py": "e35b2d4142be5a61fd6efd97abfda5ad93ce8eb121ddbd091017790148c9be08",
+    "experiments/development-harness/scheduling/native_actor_v1/actor.py": "a2e4e9cffa68a7708d324a356c6003a2e12c13b03306055cf11dde2043f146c2",
+    "experiments/development-harness/scheduling/native_actor_v1/entry.py": "acc8c9b5ff3689bc816d263a4e455f264118edf024160e00d9f02f32f735ddb9",
+    "experiments/development-harness/scheduling/native_actor_v1/fake_adaptive.py": "69e9d8ed5cea5fc89b8e742bb0cf27d314bbdabef10b2767549d1ec7bdd39302",
+    "experiments/development-harness/scheduling/native_actor_v1/fake_solo.py": "bdf776c698ad918d89f3bce9840df1b2a63f64b2df296bc7dbc54da9c544d11c",
+    "experiments/development-harness/scheduling/native_recovery_v1/actor.py": "69ecbfd8ed32b2d5d7a4600454b2cb504dc0fe423d95026d68e1f2f73df78bb5",
+    "experiments/development-harness/scheduling/native_recovery_v1/assess.py": "b7ad690b11aca111ef95f59f70be78296773d9c5183774e3bb4c52ca41627e19",
+    "experiments/development-harness/scheduling/native_recovery_v1/entry.py": "b6306886a616ba71c4373030f5685948936f6430ccd79ef2d05fc6882e846524",
+    "experiments/development-harness/scheduling/native_recovery_v1/notice_probe.py": "1c0ef89aff290bae7551608004b321389246483f6462112c10431d0eba68ca04",
+    "experiments/development-harness/scheduling/native_recovery_v1/observations.py": "9675ac3f058e63533504f5905da50fa5eb3d8a43800e8623d3c20e68367064e4",
+    "experiments/development-harness/scheduling/native_recovery_v1/validation.json": "135c35378a94de7180ca1bd45e435905c33b66e98433413bba4b04092afadbd3",
+    "experiments/development-harness/scheduling/refinement_cohort_v1/populations.py": "46af7d64b5911e04df0d4bd3076adb96a50d22f6b2627a890c1fd3b400abe970",
+    "experiments/development-harness/scheduling/timing_diagnostic_v1/TASK.md": "6d3e1d30c49bc62b8df2053481d91e21eaad1e6e84b7e08a52f7f9fd65036a1a",
+    "experiments/development-harness/scheduling/timing_diagnostic_v1/evaluate.py": "75a1b922faf72d93e8ae783fb4173ab1ee929a86e07f6ee8039554bf7466dbab",
+    "experiments/development-harness/scheduling/timing_diagnostic_v1/runtime.py": "541a5c1337b2a1fd404bd210fd90e3f6fb3b830e222afee19cc36b6f4781568f",
+    "experiments/development-harness/scheduling/timing_diagnostic_v1/transport.py": "bdca10b6e93a0c7513ee73eb97b5aca69624c941c1ac1d7e1d111677f4bf13e2",
+    "scripts/agent_contracts.py": "545ff0a549699c409139990bffad6ff4dd259e4eaef255da505981a9c4b80a97",
+    "scripts/agent_duration_cases/__init__.py": "f8d31e2d8176152fe1f4c55fc06217d112ac2a5ccedbd929d1d2d423afa45da5",
+    "scripts/agent_duration_fixtures.py": "428930b045121adf1b76860d39298721326dcdf775795d03ece53b9f506267c9",
+    "scripts/agent_duration_live.py": "5f65783bf63d6dc733b0f8044e01629dcc7b85588d40b465e43a98037ce820de",
+    "scripts/agent_duration_study.py": "be3c36871d66f481a4a550209e14f5068169ffa3434715f68b1588fc9867307d",
+    "scripts/report-dynamic-solo-profile.py": "587b767ca6a32c617bdf5363a526842c8a5e79a240bf92cd41074a1e6f834772",
+    "scripts/test-native-recovery.py": "aab021474b32d2b67de71e8b5e714b28798dbbe0e5a784a853a44bf23c8908d8",
+    "scripts/test-scheduling-continuation.py": "852f44ca14ac14539924bf4a5128fd783c30181c060902b467467c65d2dd1a2b"
+  },
+  "command": "SCHEDULING_CONTINUATION_DOCKER=1 SCHEDULING_CONTINUATION_EVIDENCE=/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-scheduling-continuation.py",
+  "evidence_paths": [
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02-interrupted",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-public-calibration-20260909-01"
+  ],
+  "profiles": {
+    "normal": {
+      "status": "completed",
+      "recovery": {
+        "solo": true,
+        "adaptive": true
+      },
+      "returncode": 0,
+      "quality_status": "measured",
+      "output_budget_admission": "admitted",
+      "elapsed_seconds": 21.255556205986068
+    },
+    "missing": {
+      "status": "completed",
+      "recovery": {
+        "solo": true,
+        "adaptive": true
+      },
+      "returncode": 0,
+      "quality_status": "measured",
+      "output_budget_admission": "withhold",
+      "elapsed_seconds": 20.995374648016877
+    },
+    "cost": {
+      "status": "completed",
+      "recovery": {
+        "solo": true,
+        "adaptive": true
+      },
+      "returncode": 0,
+      "quality_status": "measured",
+      "output_budget_admission": "withhold",
+      "elapsed_seconds": 21.01796937198378
+    },
+    "timeout": {
+      "status": "withhold",
+      "recovery": {
+        "solo": true
+      },
+      "returncode": 1,
+      "quality_status": "withhold",
+      "output_budget_admission": "withhold",
+      "elapsed_seconds": 10.55312363000121
+    },
+    "interrupted": {
+      "status": "withhold",
+      "recovery": {
+        "solo": true
+      },
+      "failure": "StopRequested",
+      "quality_status": "withhold",
+      "output_budget_admission": "withhold",
+      "elapsed_seconds": 2.839164332021028
+    }
+  },
+  "public_calibration": {
+    "status": "passed",
+    "source_sha256": {
+      "experiments/development-harness/scheduling/adaptive_pair_v1/adaptive.md": "2d67d794e8bf5b5c54c2b15354afba0566e03bd658363a6c6ee532fb312b47ad",
+      "experiments/development-harness/scheduling/adaptive_pair_v1/solo.md": "6213bf16e772bd7d1e9a9e13f73eff1ee6d8097a78b2c9399d15a79566e9f563",
+      "experiments/development-harness/scheduling/continuation_pair_v1/INITIAL.md": "44138f4e0a130c3dd6ec9842328eb73d19c66ae736d6bfec63b9f7fe4cb71fc1",
+      "experiments/development-harness/scheduling/continuation_pair_v1/adapter.py": "eed2c295513aa8ee658b27395f86542b4b03d52b40b3c4d39bd9527f8737972d",
+      "experiments/development-harness/scheduling/continuation_pair_v1/assessment.py": "8bbc0ad8a06d4441735cf3f4f52072d8bf0f4f6bc53d67029c2efd1957dea903",
+      "experiments/development-harness/scheduling/continuation_pair_v1/calibrate.py": "6c62bda595c487822c806619c5722ed203dd42460c1cc142155a448f729878c4",
+      "experiments/development-harness/scheduling/continuation_pair_v1/config.json": "19f414fce08a9472120f9756c1822e2aaa63c61ad89bff03a101a26fe55b77f5",
+      "experiments/development-harness/scheduling/continuation_pair_v1/initial-policy.txt": "24c82c7e2fbc98edb73a384170074da8bf0240eb5203179aa253cbe9a5055424",
+      "experiments/development-harness/scheduling/continuation_pair_v1/probe.py": "b3438c794cce19913e424748909aa4be4737ed986f58cb0e5c9870ce9af1aade",
+      "experiments/development-harness/scheduling/continuation_pair_v1/protocol.md": "4144db4d2e80e808931aa95cdb6848532be952576ae949d458b8dc173fd5d284",
+      "experiments/development-harness/scheduling/continuation_pair_v1/report.py": "bcc0b49bfbab55510750be245c6e7ccf96254b6e2f37b637d7417dcbea085f77",
+      "experiments/development-harness/scheduling/continuation_pair_v1/run.py": "9dd83964b672c4c1ea1336a6a21299669f834d60dc42f568f1528d72c7b3bbb1",
+      "experiments/development-harness/scheduling/dynamic_solo_v1/Actor.Dockerfile": "73c4298e36fb976d5351db6bf9811c08a98acac8133fb352921b51beed471890",
+      "experiments/development-harness/scheduling/dynamic_solo_v1/TASK.md": "6fe9fe5ae925692c480a862680e6713ba44dee4f4a5a6f2e8c9f096e62a4fa83",
+      "experiments/development-harness/scheduling/dynamic_solo_v1/fifo.py": "553714f929e0bd78dc1fcb79b85af74dcec9b2b79bafb65a31970105fa28460b",
+      "experiments/development-harness/scheduling/dynamic_solo_v1/image.json": "82a59b2bb49646785649cc52754a695b275a6c2d8d5736276a47294a0bc71a04",
+      "experiments/development-harness/scheduling/dynamic_solo_v1/model-catalog.json": "0f50535b7ae228b47ef48b75e9a59f0f0881980a547585e0da5e7de157dd3cd4",
+      "experiments/development-harness/scheduling/dynamic_solo_v1/policy.json": "ad606772f2a6ab4b2758b7529dd7f9e1a5b900e7e8a26212d70db952bc618fc9",
+      "experiments/development-harness/scheduling/dynamic_solo_v1/projection.py": "c86c6678407adf768c92d1dbe1204a0f47efc9894dbde43886971bf6942363cd",
+      "experiments/development-harness/scheduling/dynamic_solo_v1/public_check.py": "4ab262c1bc02ccb900026eaee5633160f8eea401e931c711dd308a8c0969f4a8",
+      "experiments/development-harness/scheduling/dynamic_v1/TASK.md": "af5d163af3015fed756a0eec8f4a7846e4d62075bc25c7b4995f23363ec573f8",
+      "experiments/development-harness/scheduling/dynamic_v1/runtime.py": "541a5c1337b2a1fd404bd210fd90e3f6fb3b830e222afee19cc36b6f4781568f",
+      "experiments/development-harness/scheduling/dynamic_v1/transport.py": "e679a83c2bae513902f3710083b1d0a1d7dfdcce9cb31b4e29bff48d02d8d18b",
+      "experiments/development-harness/scheduling/dynamic_v1/workloads.py": "2da5084a7df1e05f5f97d6cc55c08fb6c567f5f258a1a9c6555a653f36ece094",
+      "experiments/development-harness/scheduling/native_actor_v1/TASK.md": "b92efe4487372218788da2f4f71c292b74315a34a5a6c3bdda92e514f77d9f30",
+      "experiments/development-harness/scheduling/native_actor_v1/accounting.py": "e35b2d4142be5a61fd6efd97abfda5ad93ce8eb121ddbd091017790148c9be08",
+      "experiments/development-harness/scheduling/native_actor_v1/actor.py": "a2e4e9cffa68a7708d324a356c6003a2e12c13b03306055cf11dde2043f146c2",
+      "experiments/development-harness/scheduling/native_actor_v1/entry.py": "acc8c9b5ff3689bc816d263a4e455f264118edf024160e00d9f02f32f735ddb9",
+      "experiments/development-harness/scheduling/native_actor_v1/fake_adaptive.py": "69e9d8ed5cea5fc89b8e742bb0cf27d314bbdabef10b2767549d1ec7bdd39302",
+      "experiments/development-harness/scheduling/native_actor_v1/fake_solo.py": "bdf776c698ad918d89f3bce9840df1b2a63f64b2df296bc7dbc54da9c544d11c",
+      "experiments/development-harness/scheduling/native_recovery_v1/actor.py": "69ecbfd8ed32b2d5d7a4600454b2cb504dc0fe423d95026d68e1f2f73df78bb5",
+      "experiments/development-harness/scheduling/native_recovery_v1/assess.py": "b7ad690b11aca111ef95f59f70be78296773d9c5183774e3bb4c52ca41627e19",
+      "experiments/development-harness/scheduling/native_recovery_v1/entry.py": "b6306886a616ba71c4373030f5685948936f6430ccd79ef2d05fc6882e846524",
+      "experiments/development-harness/scheduling/native_recovery_v1/notice_probe.py": "1c0ef89aff290bae7551608004b321389246483f6462112c10431d0eba68ca04",
+      "experiments/development-harness/scheduling/native_recovery_v1/observations.py": "9675ac3f058e63533504f5905da50fa5eb3d8a43800e8623d3c20e68367064e4",
+      "experiments/development-harness/scheduling/native_recovery_v1/validation.json": "135c35378a94de7180ca1bd45e435905c33b66e98433413bba4b04092afadbd3",
+      "experiments/development-harness/scheduling/refinement_cohort_v1/populations.py": "46af7d64b5911e04df0d4bd3076adb96a50d22f6b2627a890c1fd3b400abe970",
+      "experiments/development-harness/scheduling/timing_diagnostic_v1/TASK.md": "6d3e1d30c49bc62b8df2053481d91e21eaad1e6e84b7e08a52f7f9fd65036a1a",
+      "experiments/development-harness/scheduling/timing_diagnostic_v1/evaluate.py": "75a1b922faf72d93e8ae783fb4173ab1ee929a86e07f6ee8039554bf7466dbab",
+      "experiments/development-harness/scheduling/timing_diagnostic_v1/runtime.py": "541a5c1337b2a1fd404bd210fd90e3f6fb3b830e222afee19cc36b6f4781568f",
+      "experiments/development-harness/scheduling/timing_diagnostic_v1/transport.py": "bdca10b6e93a0c7513ee73eb97b5aca69624c941c1ac1d7e1d111677f4bf13e2",
+      "scripts/agent_contracts.py": "545ff0a549699c409139990bffad6ff4dd259e4eaef255da505981a9c4b80a97",
+      "scripts/agent_duration_cases/__init__.py": "f8d31e2d8176152fe1f4c55fc06217d112ac2a5ccedbd929d1d2d423afa45da5",
+      "scripts/agent_duration_fixtures.py": "428930b045121adf1b76860d39298721326dcdf775795d03ece53b9f506267c9",
+      "scripts/agent_duration_live.py": "5f65783bf63d6dc733b0f8044e01629dcc7b85588d40b465e43a98037ce820de",
+      "scripts/agent_duration_study.py": "be3c36871d66f481a4a550209e14f5068169ffa3434715f68b1588fc9867307d",
+      "scripts/report-dynamic-solo-profile.py": "587b767ca6a32c617bdf5363a526842c8a5e79a240bf92cd41074a1e6f834772",
+      "scripts/test-native-recovery.py": "aab021474b32d2b67de71e8b5e714b28798dbbe0e5a784a853a44bf23c8908d8",
+      "scripts/test-scheduling-continuation.py": "852f44ca14ac14539924bf4a5128fd783c30181c060902b467467c65d2dd1a2b"
+    },
+    "input_seal": {
+      "public": {
+        "ACTOR_ONLY": "7fb62bd9cd6264e44acb9cb3b2b9c2f25b0e72f430844742928393f3f4ed3716",
+        "INITIAL.md": "44138f4e0a130c3dd6ec9842328eb73d19c66ae736d6bfec63b9f7fe4cb71fc1",
+        "RUNTIME.md": "804d5c9530928471dbf97654d9aa3934f492af7f9775f1a02aed93487b4df26c",
+        "TASK.md": "b92efe4487372218788da2f4f71c292b74315a34a5a6c3bdda92e514f77d9f30",
+        "development.json": "98b2e01451e86928a02fdb4d46ddfa377a5ecf8c49d120c47bd15a6b0a84c193",
+        "fifo.py": "553714f929e0bd78dc1fcb79b85af74dcec9b2b79bafb65a31970105fa28460b",
+        "initial.py": "24c82c7e2fbc98edb73a384170074da8bf0240eb5203179aa253cbe9a5055424",
+        "probe.json": "731c79e29c172daa78c4846862d013f4a1dce3794511056850784ec6d5fc44a1",
+        "public_check.py": "4ab262c1bc02ccb900026eaee5633160f8eea401e931c711dd308a8c0969f4a8",
+        "runtime.py": "541a5c1337b2a1fd404bd210fd90e3f6fb3b830e222afee19cc36b6f4781568f",
+        "transport.py": "bdca10b6e93a0c7513ee73eb97b5aca69624c941c1ac1d7e1d111677f4bf13e2"
+      },
+      "assessment_sha256": "8eb0d5afce0beb922f7faaadca8a1da4c20541656562c3d3ff1df1a6b4353217",
+      "population": "scheduling-continuation-pair-20260909-01"
+    },
+    "live_provider_calls": 0,
+    "qualification_scored": false,
+    "public_cases_measured": {
+      "fifo": 24,
+      "initial": 24
+    },
+    "public_execution_matches_external": true,
+    "all_containers_removed": true,
+    "assessments": {
+      "fifo": {
+        "external_status": "measured",
+        "cleanup": "confirmed",
+        "public": {
+          "status": "measured",
+          "container": "continuation-public-cafbcc4f4e544967bac39a1d310913f9",
+          "removed": true,
+          "image": "sha256:157f2a502f0c3f1e42ee7b5a3d19ee58e48f808682fc05ce527448ff1f86f91b",
+          "returncode": 0
+        }
+      },
+      "initial": {
+        "external_status": "measured",
+        "cleanup": "confirmed",
+        "public": {
+          "status": "measured",
+          "container": "continuation-public-cddaa357100a4722945add944935f22d",
+          "removed": true,
+          "image": "sha256:157f2a502f0c3f1e42ee7b5a3d19ee58e48f808682fc05ce527448ff1f86f91b",
+          "returncode": 0
+        }
+      }
+    }
+  },
+  "raw_result_sha256": {
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/normal/actors/solo/result.json": "a098dbf9ea52aaa57b1566b1be4c6480f2843876dbc1703f94180ea55c0f6bea",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/normal/actors/adaptive/result.json": "c0efada1936b79968576fc7c0fbc8e1a4384805772dc25d46d26932b72d9427e",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/normal/assessment-initial/result.json": "9fb4d431d9cea0c0bd8d41478261a6f54bd240c20bded5d9e2be31169b78af9d",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/normal/assessment-solo/result.json": "fe9a09de791a4aaa70122d816e0e45e274adb541e9cace23aeb57c15c0d8369d",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/normal/assessment-adaptive/result.json": "26ae8dbdda21ff224b7d3b5e59236b833ae1e42622401bab670d1b6ab7446d73",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/missing/actors/solo/result.json": "fc842326288e30343bae3ec100f6b431ff0aeea8bbd4558cc1db7bde5126641b",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/missing/actors/adaptive/result.json": "16ac57921ac1d600e00401a2e1097e5d895cf212ae32b850a659d75216469e07",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/missing/assessment-initial/result.json": "a32b012de72e269a49e1270edab235ad8c2a729ccf65febf48fbce0ee161cd0a",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/missing/assessment-solo/result.json": "a1fcbe516c3cd87df23974cd53d5b8df57e66a1e7d823afc0ad5f7bead2b9ae4",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/missing/assessment-adaptive/result.json": "fa62f7e1523f0f83aefe54dd8a827395d9008de2dc90077d6576020ca6d6e027",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/cost/actors/solo/result.json": "3dec6a54550f8f6d25f72189a594c8fe2cf80b72dc14dae26bc7fab17dfd7dab",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/cost/actors/adaptive/result.json": "443500ed212a42ea77c3ff20108e1e290c63eb260964172822b764c55c22aaec",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/cost/assessment-initial/result.json": "fec3f8201f4c3081360d6c10606e71125f981ff9fe29bc2429a846a54177e5f8",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/cost/assessment-solo/result.json": "dc9346c18ed613b5026c522e5279fece07017cab477bc0cd7c34c0039330bf4f",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/cost/assessment-adaptive/result.json": "2d25d0092b2a3d294894fea324ba499e78ae95f86b28f9d479997b04eca25021",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02/timeout/actors/solo/result.json": "2255c6e3faa1a517dbb52a7d685b5d9b71604bbc26f80709708dc8817613ca6d",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-02-interrupted/actors/solo/result.json": "f8f18b4c29386b04b5608d7c4ebbfc3a913a2ac89a2817d94c7ae7f4df7718ba",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-public-calibration-20260909-01/external-fifo/result.json": "4603b9c4034bf6c665fe6bf0167a519290fb3bc2469a4df74f1ea9da49003fc4",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-public-calibration-20260909-01/actor-public-fifo/public-result.json": "4163eb20ff38e0c3b796136b3f8f19774487c5e6e5f284a438e7c9fcaffcfb49",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-public-calibration-20260909-01/actor-public-fifo/controller.json": "1f6bb5e1e3bd7ee5540adf0ad4909f8257b1fe16af43b460ce4ecf7b8b7216f1",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-public-calibration-20260909-01/external-initial/result.json": "d29cadcd544846c1263a48b0eb1986659b29b772f738dabadfff24a56115ca5b",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-public-calibration-20260909-01/actor-public-initial/public-result.json": "b4643469017805855c425402c6da5d7885a0ca7b5d6988ad06c4e236b9ee14ff",
+    "/home/asakura/.local/state/devcontainer-evaluations/continuation-public-calibration-20260909-01/actor-public-initial/controller.json": "e39fe1a72c511d31aae2c68f4e642a040f9e27cd85faf92af50b877a42f57207"
+  },
+  "live_provider_calls": 0,
+  "actors_removed": 8,
+  "probe_graders_removed": 9,
+  "public_graders_removed": 48,
+  "public_execution_containers_removed": 2,
+  "scope": "synthetic-provider continuation capability, finite lifecycle and source-matched public FIFO/initial calibration; no private qualification scored",
+  "earlier_failed_preflight": "/home/asakura/.local/state/devcontainer-evaluations/continuation-pair-preflight-20260909-01",
+  "earlier_failure": "synthetic fault-injection command quoting; preserved and not used as passing admission evidence"
+}

@@ -1,0 +1,123 @@
+{
+  "schemaVersion": 1,
+  "character": "mira",
+  "frame": {
+    "width": 256,
+    "height": 256,
+    "format": "png",
+    "colorType": "rgba",
+    "rendering": "pixelated",
+    "anchor": {
+      "x": 128,
+      "baselineY": 248
+    }
+  },
+  "frameCount": 80,
+  "worlds": {
+    "workshop": {
+      "background": "worlds/workshop.png",
+      "width": 1536,
+      "height": 192,
+      "rendering": "pixelated",
+      "baselineY": 166,
+      "destinations": {
+        "research": 31,
+        "planning": 41,
+        "workshop": 52,
+        "testing": 63,
+        "dispatch": 72
+      }
+    }
+  },
+  "sets": {
+    "core-motion": {
+      "sourceSheet": "spritesheets/mira-core-motion-alpha.png",
+      "animations": {
+        "idle": { "fps": 2, "loop": true, "frames": ["sprites/core-motion/idle-01.png", "sprites/core-motion/idle-02.png", "sprites/core-motion/idle-03.png", "sprites/core-motion/idle-04.png"] },
+        "walk-right": { "fps": 6, "loop": true, "frames": ["sprites/core-motion/walk-right-01.png", "sprites/core-motion/walk-right-02.png", "sprites/core-motion/walk-right-03.png", "sprites/core-motion/walk-right-04.png"] },
+        "walk-left": { "fps": 6, "loop": true, "frames": ["sprites/core-motion/walk-left-01.png", "sprites/core-motion/walk-left-02.png", "sprites/core-motion/walk-left-03.png", "sprites/core-motion/walk-left-04.png"] },
+        "wave": { "fps": 5, "loop": false, "frames": ["sprites/core-motion/wave-01.png", "sprites/core-motion/wave-02.png", "sprites/core-motion/wave-03.png", "sprites/core-motion/wave-04.png"] }
+      }
+    },
+    "work-actions": {
+      "sourceSheet": "spritesheets/mira-work-actions-alpha.png",
+      "animations": {
+        "typing": { "fps": 6, "loop": true, "frames": ["sprites/work-actions/typing-01.png", "sprites/work-actions/typing-02.png", "sprites/work-actions/typing-03.png", "sprites/work-actions/typing-04.png"] },
+        "terminal": { "fps": 5, "loop": true, "frames": ["sprites/work-actions/terminal-01.png", "sprites/work-actions/terminal-02.png", "sprites/work-actions/terminal-03.png", "sprites/work-actions/terminal-04.png"] },
+        "research": { "fps": 4, "loop": true, "frames": ["sprites/work-actions/research-01.png", "sprites/work-actions/research-02.png", "sprites/work-actions/research-03.png", "sprites/work-actions/research-04.png"] },
+        "testing": { "fps": 4, "loop": true, "frames": ["sprites/work-actions/testing-01.png", "sprites/work-actions/testing-02.png", "sprites/work-actions/testing-03.png", "sprites/work-actions/testing-04.png"] }
+      }
+    },
+    "status-emotions": {
+      "sourceSheet": "spritesheets/mira-status-emotions-alpha.png",
+      "poses": {
+        "thinking": "sprites/status-emotions/thinking.png",
+        "discovery": "sprites/status-emotions/discovery.png",
+        "point": "sprites/status-emotions/point.png",
+        "excited": "sprites/status-emotions/excited.png",
+        "approval": "sprites/status-emotions/approval.png",
+        "concerned": "sprites/status-emotions/concerned.png",
+        "nervous": "sprites/status-emotions/nervous.png",
+        "waiting": "sprites/status-emotions/waiting.png",
+        "success-jump": "sprites/status-emotions/success-jump.png",
+        "peace": "sprites/status-emotions/peace.png",
+        "relief": "sprites/status-emotions/relief.png",
+        "thumbs-up": "sprites/status-emotions/thumbs-up.png",
+        "error": "sprites/status-emotions/error.png",
+        "slump": "sprites/status-emotions/slump.png",
+        "retry": "sprites/status-emotions/retry.png",
+        "ready": "sprites/status-emotions/ready.png"
+      }
+    },
+    "orchestration": {
+      "sourceSheet": "spritesheets/mira-orchestration-alpha.png",
+      "poses": {
+        "plan-inspect": "sprites/orchestration/plan-inspect.png",
+        "plan-draw": "sprites/orchestration/plan-draw.png",
+        "critical-path": "sprites/orchestration/critical-path.png",
+        "plan-point": "sprites/orchestration/plan-point.png",
+        "delegate-one": "sprites/orchestration/delegate-one.png",
+        "delegate-two": "sprites/orchestration/delegate-two.png",
+        "delegate-dispatch": "sprites/orchestration/delegate-dispatch.png",
+        "delegate-watch": "sprites/orchestration/delegate-watch.png",
+        "report-receive": "sprites/orchestration/report-receive.png",
+        "report-compare": "sprites/orchestration/report-compare.png",
+        "review-checklist": "sprites/orchestration/review-checklist.png",
+        "integrate": "sprites/orchestration/integrate.png",
+        "resolve-conflict": "sprites/orchestration/resolve-conflict.png",
+        "validate": "sprites/orchestration/validate.png",
+        "complete": "sprites/orchestration/complete.png",
+        "celebrate-team": "sprites/orchestration/celebrate-team.png"
+      }
+    },
+    "companions": {
+      "sourceSheet": "spritesheets/mira-companions-alpha.png",
+      "roles": {
+        "researcher": {
+          "idle": "sprites/companions/researcher-idle.png",
+          "walk": "sprites/companions/researcher-walk.png",
+          "active": "sprites/companions/researcher-inspect.png",
+          "done": "sprites/companions/researcher-report.png"
+        },
+        "implementer": {
+          "idle": "sprites/companions/implementer-idle.png",
+          "walk": "sprites/companions/implementer-walk.png",
+          "active": "sprites/companions/implementer-type.png",
+          "done": "sprites/companions/implementer-commit.png"
+        },
+        "reviewer": {
+          "idle": "sprites/companions/reviewer-idle.png",
+          "walk": "sprites/companions/reviewer-walk.png",
+          "active": "sprites/companions/reviewer-review.png",
+          "done": "sprites/companions/reviewer-warning.png"
+        },
+        "tester": {
+          "idle": "sprites/companions/tester-idle.png",
+          "walk": "sprites/companions/tester-walk.png",
+          "active": "sprites/companions/tester-run.png",
+          "done": "sprites/companions/tester-pass.png"
+        }
+      }
+    }
+  }
+}

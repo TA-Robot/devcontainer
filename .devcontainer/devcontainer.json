@@ -15,21 +15,30 @@
   // ユーザー設定
   "remoteUser": "devuser",
 
-  // bind mount するホスト側ファイル/ディレクトリを事前作成する。
-  // Claude Code は対話モードで ~/.claude だけでなく ~/.claude.json も読むため、
-  // ファイル mount 元が無い状態でコンテナ作成に進まないようにする。
-  // 空ファイル（0 byte）は Claude Code が「corrupted」と見なして onboarding/login に戻るため、
-  // 欠落時だけでなく空のときも `{}` で初期化する（-s で size>0 を判定）。中身のある既存ファイルは保持する。
-  "initializeCommand": "sh -c 'set -eu; mkdir -p \"$HOME/.codex\" \"$HOME/.config/gemini\" \"$HOME/.claude\"; if [ -d \"$HOME/.claude.json\" ]; then echo \"error: $HOME/.claude.json must be a file, but is a directory\" >&2; exit 1; fi; [ -s \"$HOME/.claude.json\" ] || printf \"{}\\n\" > \"$HOME/.claude.json\"'",
+  // ローカル開発はhost CLI versionへ同期する。stableを明示すればimage pinを使う。
+  // 実行ファイルは共有せず、container向けの同一versionを導入する。
+  "initializeCommand": "sh \"${localWorkspaceFolder}/.devcontainer/initialize-host.sh\"",
   
   // 機能追加（必要に応じてコメントアウト解除）
   "features": {
     // Docker-in-Docker サポート
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "29.7.2",
+      "mobyBuildxVersion": "0.36.1",
+      // Featureのv2指定はbuild時latest解決なので、ComposeはDockerfileで直接固定する
+      "dockerDashComposeVersion": "none",
+      // aptで固定したmoby-buildxを使い、GitHub latest downloadを抑止する
+      "installDockerBuildx": false
+    },
     // Git設定
-    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/git:1": {
+      "version": "os-provided"
+    },
     // GitHub CLI
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {
+      "version": "2.97.0",
+      "installDirectlyFromGitHubRelease": true
+    }
   },
   
   // 拡張機能（Cursorで使いたい拡張機能を追加）
@@ -59,20 +68,51 @@
     "source=${localEnv:HOME}/.codex,target=/home/devuser/.codex,type=bind",
     "source=${localEnv:HOME}/.config/gemini,target=/home/devuser/.config/gemini,type=bind",
     "source=${localEnv:HOME}/.claude.json,target=/home/devuser/.claude.json,type=bind",
-    "source=${localEnv:HOME}/.claude,target=/home/devuser/.claude,type=bind"
+    "source=${localEnv:HOME}/.claude,target=/home/devuser/.claude,type=bind",
+    "source=${localEnv:HOME}/.grok,target=/home/devuser/.grok,type=bind",
+    "source=${localEnv:HOME}/.config/opencode,target=/home/devuser/.config/opencode,type=bind",
+    "source=${localEnv:HOME}/.local/share/opencode,target=/home/devuser/.local/share/opencode,type=bind",
+    // agentctl metadata, bounded evidence, and job worktrees survive container rebuilds.
+    // Projects are partitioned by a UUID stored in each repository's local Git config.
+    "source=devcontainer-agentctl-state,target=/var/lib/agentctl,type=volume",
+    // Content-free collaboration episodes survive rebuilds independently of transient Mira UI state.
+    // Every record carries an opaque workspace key; no prompt, code, command, or path is stored.
+    "source=devcontainer-mira-observations,target=/var/lib/mira-observations,type=volume",
+    // initializeCommand が生成したバージョン番号だけを共有する（credential は含まない）
+    "source=${localEnv:HOME}/.cache/devcontainer-ai-cli,target=/opt/devcontainer-host-ai-cli,type=bind,readonly"
   ],
   
   // 環境変数
   "containerEnv": {
     "DISPLAY": "${localEnv:DISPLAY}",
     "WAYLAND_DISPLAY": "${localEnv:WAYLAND_DISPLAY}",
-    // APIキー（ホストに設定されていれば引き継ぐ）
+    "MIRA_COMPANION_STATE_DIR": "/home/devuser/.local/state/mira-companion",
+    "MIRA_COMPANION_EPISODE_DIR": "/var/lib/mira-observations",
+    // 0 にするとmanaged hookと拡張の自動導入を無効化できる
+    "MIRA_COMPANION_ENABLED": "${localEnv:MIRA_COMPANION_ENABLED}",
+    // 0 にするとMira Companion拡張の自動package/installを無効化できる
+    "MIRA_COMPANION_INSTALL": "${localEnv:MIRA_COMPANION_INSTALL}",
+    // ローカル起動はedgeが既定。stableを明示すると起動時更新なし
+    "DEVCONTAINER_AI_CLI_CHANNEL": "${localEnv:DEVCONTAINER_AI_CLI_CHANNEL:edge}",
+    // legacy switch: 1はedge opt-in、0は同期/host probe無効
+    "DEVCONTAINER_AI_CLI_SYNC": "${localEnv:DEVCONTAINER_AI_CLI_SYNC}"
+  },
+
+  // API keyはbuild時のimage ENVへ焼かず、remote editor/terminal processだけへ渡す。
+  // Codex / Claude / Grokの通常認証は上記credential mountを使う。
+  "remoteEnv": {
     "OPENAI_API_KEY": "${localEnv:OPENAI_API_KEY}",
+    "SAKANA_API_KEY": "${localEnv:SAKANA_API_KEY}",
     "GEMINI_API_KEY": "${localEnv:GEMINI_API_KEY}",
-    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}"
+    "ANTHROPIC_API_KEY": "${localEnv:ANTHROPIC_API_KEY}",
+    "XAI_API_KEY": "${localEnv:XAI_API_KEY}"
   },
   
   "postCreateCommand": "echo '✅ Dev Container is ready!' && git --version && node --version 2>/dev/null || true",
+  "postStartCommand": "bash /workspace/scripts/devcontainer-post-start",
+  // local VSIXの導入はremote editor CLIが準備されたattach後に行う。
+  // editor attachではCLI欠損をerrorにし、headless `devcontainer up`ではvalid skipにする。
+  "postAttachCommand": "bash /workspace/scripts/devcontainer-post-attach",
   
   // 追加のrunArgs（必要に応じて調整）
   "runArgs": [

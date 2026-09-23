@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "cycle": "005",
+  "status": "pre-live calibration passed",
+  "source_runtime_changed": false,
+  "image": "sha256:c7f904a12d7e7c63a2c7e46bc6654c8304b497a2836ecb08fb5bea0118f679ea",
+  "provider": "synthetic fixtures only; no development model requests in calibration",
+  "fixed_quality_cases": 13,
+  "public_cases": 9,
+  "suite": {
+    "tests": 96,
+    "passed": 96,
+    "skipped": 0,
+    "elapsed_seconds": 186.085,
+    "breakdown": {
+      "sync_oracle_and_adapter": 8,
+      "feedback": 19,
+      "terminal": 27,
+      "legacy": 42
+    },
+    "log_sha256": "5e4becff1ee963ced063c10a37a336fd40ce8096a0e3b9c09e5eb811896506ce"
+  },
+  "earlier_calibrations": [
+    {
+      "tests": 7,
+      "passed": 7,
+      "elapsed_seconds": 18.424,
+      "log_sha256": "be51be3c9d0f429f847940e5547db14593c28fcd03e2db0de400fa6e7674f472"
+    },
+    {
+      "tests": 26,
+      "passed": 26,
+      "elapsed_seconds": 77.962,
+      "log_sha256": "fccab744042b5b2f5be2150120879ff63275a68a1c129ea254b2f44c21b1b2b6"
+    }
+  ],
+  "source_sha256": {
+    "experiments/development-harness/cycle-005/reference_sync.py": "65536fbff3113e3363b391f59bcaf22792bc8abe02e9484f53e1ab0bd92ddb73",
+    "experiments/development-harness/cycle-005/sync_fixture.py": "ddf333eeff380399dd38c346b0a52f3aae2e3fa272e5f681f5b6be3f5a9313c1",
+    "experiments/development-harness/cycle-005/evaluate_sync.py": "6c7126317d20cb1e44ea7c801e9742d1014e0bd6aaa0c0683f5be1a315cca9da",
+    "scripts/test-cli-sync-evaluator.py": "47442ad6991fcb95f9bc9bee3f9b28a5cc08505965baa4f8c7a60546981047fb",
+    "experiments/development-harness/feedback/workflow.py": "cd761ecaceccc15fc9d68bc8759a180d43af73832a718ce34cbd3647bba3d75d",
+    "experiments/development-harness/feedback/task_evaluation.py": "152018a3b5468ca1d7d6aa510214dd1f2c8ec0f0470003e1617d8fab1963896f"
+  },
+  "baseline_sync_sha256": "c44ee3ad7cfda4c14e7296976c8010ecbf0db7a82c0de7ef1065be89ebba4006",
+  "limits": [
+    "This is a limited single-path development task, not a staged large-project comparison.",
+    "Calibration identifies correct fixture behavior and selected defects; it does not measure development-method effectiveness.",
+    "Reference code and hidden evaluator must be absent from developer checkouts.",
+    "Synthetic installer failures do not prove every registry/npm/system-crash behavior."
+  ]
+}

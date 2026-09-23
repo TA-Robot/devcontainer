@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devcontainer.local/schemas/collaboration-outcome-v1.schema.json",
+  "title": "Collaboration Outcome Packet v1",
+  "description": "Content-free post-execution measurement linked to a collaboration decision packet.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version", "plan_id", "candidate_id", "decision_digest", "status", "timing",
+    "topology", "quality", "coordination", "stop_reason", "coverage", "learning_delta"
+  ],
+  "properties": {
+    "schema_version": {"const": 1},
+    "plan_id": {"$ref": "#/$defs/local_id"},
+    "candidate_id": {"$ref": "#/$defs/local_id"},
+    "decision_digest": {"type": "string", "pattern": "^sha256:[0-9a-f]{64}$"},
+    "status": {"enum": ["completed", "failed", "blocked", "cancelled", "partial"]},
+    "timing": {"$ref": "#/$defs/timing"},
+    "topology": {"$ref": "#/$defs/topology"},
+    "quality": {"$ref": "#/$defs/quality"},
+    "coordination": {"$ref": "#/$defs/coordination"},
+    "stop_reason": {"enum": ["objective-met", "marginal-value-low", "hard-limit", "failure", "blocked", "cancelled", "unknown"]},
+    "coverage": {"$ref": "#/$defs/coverage"},
+    "learning_delta": {"$ref": "#/$defs/learning_delta"}
+  },
+  "$defs": {
+    "local_id": {
+      "type": "string", "minLength": 1, "maxLength": 128,
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+    },
+    "nullable_ms": {"type": ["integer", "null"], "minimum": 0},
+    "nullable_count": {"type": ["integer", "null"], "minimum": 0},
+    "timing": {
+      "type": "object", "additionalProperties": false,
+      "required": ["terminal_wall_ms", "aggregate_worker_ms", "synthesis_tail_ms", "integration_validation_ms"],
+      "properties": {
+        "terminal_wall_ms": {"$ref": "#/$defs/nullable_ms"},
+        "aggregate_worker_ms": {"$ref": "#/$defs/nullable_ms"},
+        "synthesis_tail_ms": {"$ref": "#/$defs/nullable_ms"},
+        "integration_validation_ms": {"$ref": "#/$defs/nullable_ms"}
+      }
+    },
+    "topology": {
+      "type": "object", "additionalProperties": false,
+      "required": ["participants_planned", "participants_dispatched", "workers_started", "peak_parallel_workers", "waves"],
+      "properties": {
+        "participants_planned": {"$ref": "#/$defs/nullable_count"},
+        "participants_dispatched": {"$ref": "#/$defs/nullable_count"},
+        "workers_started": {"$ref": "#/$defs/nullable_count"},
+        "peak_parallel_workers": {"$ref": "#/$defs/nullable_count"},
+        "waves": {"$ref": "#/$defs/nullable_count"}
+      }
+    },
+    "quality": {
+      "type": "object", "additionalProperties": false,
+      "required": ["artifact", "checks", "review_proxy"],
+      "properties": {
+        "artifact": {"enum": ["valid", "missing", "invalid", "unknown"]},
+        "checks": {"enum": ["passed", "failed", "mixed", "not-run", "unknown"]},
+        "review_proxy": {"enum": ["available", "unavailable", "not-applicable", "unknown"]}
+      }
+    },
+    "coordination": {
+      "type": "object", "additionalProperties": false,
+      "required": ["conflicts", "primary_edit_events", "test_recoveries", "adopted_artifacts", "duplicate_work"],
+      "properties": {
+        "conflicts": {"$ref": "#/$defs/nullable_count"},
+        "primary_edit_events": {"$ref": "#/$defs/nullable_count"},
+        "test_recoveries": {"$ref": "#/$defs/nullable_count"},
+        "adopted_artifacts": {"$ref": "#/$defs/nullable_count"},
+        "duplicate_work": {"$ref": "#/$defs/nullable_count"}
+      }
+    },
+    "coverage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["decision_linked", "terminal_observed", "quality_observed", "coordination_observed"],
+      "properties": {
+        "decision_linked": {"type": "boolean"},
+        "terminal_observed": {"type": "boolean"},
+        "quality_observed": {"type": "boolean"},
+        "coordination_observed": {"type": "boolean"}
+      }
+    },
+    "learning_delta": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mechanism_result", "prediction_result", "routing_prior"],
+      "properties": {
+        "mechanism_result": {"enum": ["supported", "contradicted", "inconclusive", "unmeasured"]},
+        "prediction_result": {"enum": ["supported", "contradicted", "inconclusive", "unmeasured"]},
+        "routing_prior": {"enum": ["strengthen", "weaken", "unchanged", "insufficient-evidence"]}
+      }
+    }
+  }
+}

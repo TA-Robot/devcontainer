@@ -1,0 +1,46 @@
+{
+  "status": "passed",
+  "scope": "synthetic provider with actual pinned CLI and Docker; not live comparison admission",
+  "image": "sha256:157f2a502f0c3f1e42ee7b5a3d19ee58e48f808682fc05ce527448ff1f86f91b",
+  "source_sha256": {
+    "experiments/development-harness/scheduling/native_probe_v1/probe.py": "179fc2aff05a72e29be390c487c4bc9d9a1c5eeff23b0d438459b5d1d005deae",
+    "experiments/development-harness/scheduling/native_probe_v1/run.py": "512162df0e8f720807bce0f0a8c8b05ffc2d2b17bd835b81047529875c9eecca",
+    "experiments/development-harness/scheduling/native_probe_v1/accounting.py": "37995413ba88c801c2dc6bfe9b3240b16607876c3894c471ad778a411584c477",
+    "scripts/test-native-collaboration-accounting.py": "2835a46c2570f20da609e95d16761a7c2a36558a460c7066a81065ba8d1d3198"
+  },
+  "validation": {
+    "command": "NATIVE_ACCOUNTING_DOCKER=1 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-native-collaboration-accounting.py",
+    "tests": 11,
+    "skipped": 0,
+    "seconds": 35.146,
+    "docker_modes": [
+      "fork_none",
+      "fork_all",
+      "missing_usage",
+      "startup_timeout",
+      "child_timeout"
+    ]
+  },
+  "normal_fixture": {
+    "root_responses": 6,
+    "child_responses": 3,
+    "child_turns": 2,
+    "root_stdout_input_tokens": 120,
+    "all_input_tokens": 180,
+    "all_cached_input_tokens": 63,
+    "all_output_tokens": 45
+  },
+  "missing_later_child_usage": {
+    "status": "withhold",
+    "usage": null,
+    "observed_input_tokens": 160
+  },
+  "live_provider_calls": 0,
+  "limits": [
+    "single child, including followup and full-history fork",
+    "not a provider billing audit",
+    "not a streaming all-participant budget guard",
+    "live actor collection, compaction, concurrent children and grandchildren remain unvalidated"
+  ],
+  "evidence_note": "Final source validated by the test command; integration test directories were temporary. Earlier exploratory raw runs are not a final-source calibration seal."
+}

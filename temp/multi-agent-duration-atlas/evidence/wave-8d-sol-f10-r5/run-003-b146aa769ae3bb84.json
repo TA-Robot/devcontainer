@@ -1,0 +1,403 @@
+{
+  "artifact_snapshot": {
+    "completeness": "complete",
+    "files": [
+      {
+        "byte_count": 2554,
+        "content_digest": "sha256:9f77d9dd7a74d78deb095179f34f099dced00717546583db41b08c8caa7ba8b4",
+        "content_status": "retained",
+        "content_utf8": "{\n  \"claim_scope\": {\n    \"elapsed_time\": \"not-used-as-portable-gold\",\n    \"environment\": \"fixture-local\",\n    \"generalization\": \"none\"\n  },\n  \"command\": \"python3 bench.py --json\",\n  \"diagnosis\": {\n    \"candidates\": [\n      {\n        \"candidate\": \"repeated-canonical-json\",\n        \"observed_calls\": [\n          8,\n          64,\n          512\n        ],\n        \"primary\": true,\n        \"scales_with\": \"field_count (one call per output field)\"\n      },\n      {\n        \"candidate\": \"field-sort\",\n        \"observed_calls\": [\n          1,\n          1,\n          1\n        ],\n        \"primary\": false,\n        \"scales_with\": \"run count (one sort per run, independent of field_count)\"\n      }\n    ],\n    \"primary\": {\n      \"candidate\": \"repeated-canonical-json\",\n      \"counter\": \"canonical_json_calls\",\n      \"relation\": \"one-call-per-output-field\",\n      \"source\": {\n        \"line\": 26,\n        \"path\": \"report.py\",\n        \"snippet\": \"output[field] = canonical_json(value, counters).decode(\\\"utf-8\\\")\",\n        \"symbol\": \"render_report\"\n      }\n    }\n  },\n  \"observation_digest\": \"sha256:1e77e0627b18b780feeec6935420a67ca368cb0c38d9ca7341d5e025b32d6a66\",\n  \"observations\": [\n    {\n      \"counters\": {\n        \"canonical_json_bytes\": 384,\n        \"canonical_json_calls\": 8,\n        \"sort_calls\": 1,\n        \"sort_items\": 8\n      },\n      \"field_count\": 8,\n      \"output_fields\": 8,\n      \"output_value_digest\": \"sha256:7ea19fd646f715e1fb0aebe3352efdf67872ce091d288eb3546936b5733c31a0\",\n      \"virtual_work_units\": 392\n    },\n    {\n      \"counters\": {\n        \"canonical_json_bytes\": 3072,\n        \"canonical_json_calls\": 64,\n        \"sort_calls\": 1,\n        \"sort_items\": 64\n      },\n      \"field_count\": 64,\n      \"output_fields\": 64,\n      \"output_value_digest\": \"sha256:7ea19fd646f715e1fb0aebe3352efdf67872ce091d288eb3546936b5733c31a0\",\n      \"virtual_work_units\": 3136\n    },\n    {\n      \"counters\": {\n        \"canonical_json_bytes\": 24576,\n        \"canonical_json_calls\": 512,\n        \"sort_calls\": 1,\n        \"sort_items\": 512\n      },\n      \"field_count\": 512,\n      \"output_fields\": 512,\n      \"output_value_digest\": \"sha256:7ea19fd646f715e1fb0aebe3352efdf67872ce091d288eb3546936b5733c31a0\",\n      \"virtual_work_units\": 25088\n    }\n  ],\n  \"optimization\": {\n    \"condition\": \"only-after-output-equivalence-tests-pass\",\n    \"portable_speedup_claim\": null,\n    \"preserves\": [\n      \"canonical-json-bytes\",\n      \"field-order\",\n      \"output-field-count\"\n    ],\n    \"strategy\": \"cache-canonical-bytes-once-per-input-object\"\n  },\n  \"schema_version\": 1\n}\n",
+        "git_status": "??",
+        "path": "performance.json"
+      }
+    ],
+    "manifest_digest": "sha256:9acf7fe1a1faf57ae86cefba52a6e5574d306badc8b32675ac0d99e2e017bc0f",
+    "policy": "synthetic-task-artifacts-v1",
+    "total_bytes": 2554,
+    "unexpected_change_summary": {
+      "deleted": 0,
+      "total": 0,
+      "tracked": 0,
+      "untracked": 0
+    },
+    "unexpected_changed_path_count": 0
+  },
+  "block_id": "wave8d-c0-sol-f10-r5-contract",
+  "case": {
+    "capsule_digest": "sha256:d488ba8a084a3f8c25e608043670f419383052ab5f9fe923c08a09ccced94766",
+    "case_id": "F10-S-PY-001",
+    "catalog_digest": "sha256:57955d2bc9471765fdc9338416b5acc5b02bb0302c208de95e474910994bd628",
+    "family": "performance-resource",
+    "profile_id": "S-local-benchmark-diagnosis-python",
+    "revision": 5,
+    "size": "S",
+    "source_type": "fixture",
+    "strong_online_oracle": true
+  },
+  "configuration": {
+    "configuration_id": "C0",
+    "independence_policy": "fresh-ephemeral-session",
+    "lane": "isolated",
+    "nested_delegation": "disabled",
+    "participant_plan": "primary-only",
+    "participants_actual": 1,
+    "peak_concurrent": 0,
+    "relation": "primary-only",
+    "workers_actual": 0
+  },
+  "correlation": {
+    "agentctl_job_ids": [],
+    "attempt_ids": [],
+    "episode_ids": []
+  },
+  "coverage": {
+    "clock_landmarks": [
+      "P0",
+      "P1",
+      "T0",
+      "T1",
+      "V0",
+      "V1",
+      "T6",
+      "TX"
+    ],
+    "duration_catalog_version": 1,
+    "first_artifact_resolution": "not-observed",
+    "nested_worker_detected": false,
+    "synthesis_resolution": "not-applicable",
+    "worker_tree": "exact"
+  },
+  "diagnostics": {
+    "evaluator": {
+      "checks": [
+        {
+          "check_id": "workspace-1",
+          "duration_ms": 569.439,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "workspace-2",
+          "duration_ms": 623.689,
+          "exit_code": 0,
+          "scope": "public",
+          "status": "pass"
+        },
+        {
+          "check_id": "perf-repro-command",
+          "duration_ms": 617.798,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "perf-scaling-evidence",
+          "duration_ms": 668.156,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "perf-root-cause",
+          "duration_ms": 567.777,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "perf-distractor-rejected",
+          "duration_ms": 667.583,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        },
+        {
+          "check_id": "perf-claim-bounded",
+          "duration_ms": 619.388,
+          "exit_code": 0,
+          "scope": "hidden",
+          "status": "pass"
+        }
+      ],
+      "control_bundle_mounted": false,
+      "credential_mounts": false,
+      "evaluator_id": "f10-s-canonical-json-performance-v5",
+      "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+      "isolation_profile": "network-disabled-read-only-container",
+      "score": {
+        "all_checks_required": true,
+        "failed_check_ids": [],
+        "hidden_passed": 5,
+        "hidden_total": 5,
+        "passed": 7,
+        "public_passed": 2,
+        "public_total": 2,
+        "ratio": 1.0,
+        "resolution": "criterion",
+        "total": 7
+      },
+      "status": "pass"
+    },
+    "provider": {
+      "credential_path_persisted": false,
+      "event_counts": [
+        {
+          "count": 16,
+          "name": "item.completed"
+        },
+        {
+          "count": 11,
+          "name": "item.started"
+        },
+        {
+          "count": 1,
+          "name": "thread.started"
+        },
+        {
+          "count": 1,
+          "name": "turn.completed"
+        },
+        {
+          "count": 1,
+          "name": "turn.started"
+        }
+      ],
+      "event_failure_terms": [],
+      "exit_code": 0,
+      "failure_signals": [],
+      "failure_terms": [],
+      "final_message_observed": true,
+      "generation_request_performed": true,
+      "invalid_event_lines": 0,
+      "item_type_counts": [
+        {
+          "count": 5,
+          "name": "agent_message"
+        },
+        {
+          "count": 20,
+          "name": "command_execution"
+        },
+        {
+          "count": 2,
+          "name": "file_change"
+        }
+      ],
+      "nested_delegation": "disabled-by-feature",
+      "output_bytes": 21581,
+      "output_cap_bytes": 8388608,
+      "prompt_persisted": false,
+      "raw_output_persisted": false,
+      "raw_stderr_persisted": false,
+      "result_is_error": false,
+      "sandbox_preflight": {
+        "assurance": "probed",
+        "command_network": "denied",
+        "generation_request_performed": false,
+        "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+        "profile_digest": "sha256:e3b76b6d4d473e01898811a3933665dff68aacd1101e1e438734bca310655724",
+        "status": "pass",
+        "unrelated_read": "denied",
+        "workspace_write": "observed"
+      },
+      "status": "success",
+      "stderr_bytes": 0,
+      "task_network": "denied-by-permission-profile",
+      "terminal_event": "turn.completed",
+      "terminal_wall_ms": 69417.951,
+      "thread_id_digest": "sha256:6a3139b9470027378154f49dcc73d871686646c07e536191b27bce5caf988a85",
+      "tool_error_count": 0,
+      "usage": {
+        "cached_input_tokens": 90112,
+        "input_tokens": 110439,
+        "output_tokens": 2974,
+        "reasoning_output_tokens": 754
+      },
+      "workspace_changed_path_count": 1
+    }
+  },
+  "dialogue_exchanges": [],
+  "durations_ms": {
+    "aggregate_worker": 0.0,
+    "dispatch_delay": 0.012,
+    "online_validation": 4362.648,
+    "post_validation_tail": 0.04,
+    "provision": 3513.209,
+    "terminal_wall": 73861.095,
+    "user_result": 73861.085,
+    "worker_active_union": 0.0
+  },
+  "environment": {
+    "compaction": "unknown",
+    "competing_load": "unknown",
+    "dependency_cache": "not-applicable",
+    "docker_cache": "warm",
+    "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+    "machine_class": "docker-limited-2cpu-2g",
+    "provider_prompt_cache": "unknown",
+    "repository_cache": "not-applicable",
+    "session_context": "fresh",
+    "timezone": "UTC"
+  },
+  "field_provenance": {
+    "declared_by_harness": [
+      "/case",
+      "/snapshot",
+      "/configuration/relation",
+      "/environment",
+      "/limits"
+    ],
+    "derived": [
+      "/durations_ms",
+      "/configuration/participants_actual",
+      "/configuration/workers_actual",
+      "/configuration/peak_concurrent",
+      "/outcome/quality_pass",
+      "/outcome/quality_basis",
+      "/coverage"
+    ],
+    "evaluated": [
+      "/diagnostics/evaluator",
+      "/outcome/online_acceptance"
+    ],
+    "observed": [
+      "/landmarks",
+      "/workers",
+      "/dialogue_exchanges",
+      "/diagnostics/provider",
+      "/artifact_snapshot"
+    ],
+    "unknown": [
+      "/participants/0/generation_settings/0/applied_value"
+    ]
+  },
+  "landmarks": {
+    "P0": {
+      "monotonic_ns": 145212961330345,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:02:58.029Z"
+    },
+    "P1": {
+      "monotonic_ns": 145216474538876,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:03:01.542Z"
+    },
+    "S0": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "S1": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T0": {
+      "monotonic_ns": 145216525936762,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:03:01.593Z"
+    },
+    "T1": {
+      "monotonic_ns": 145216525948532,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:03:01.593Z"
+    },
+    "T2": {
+      "provenance": "declared-by-harness",
+      "status": "not-observed"
+    },
+    "T3": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T4": {
+      "provenance": "declared-by-harness",
+      "status": "not-applicable"
+    },
+    "T6": {
+      "monotonic_ns": 145290387022030,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:04:19.617Z"
+    },
+    "TX": {
+      "monotonic_ns": 145290387031989,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:04:19.617Z"
+    },
+    "V0": {
+      "monotonic_ns": 145286024334419,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:04:15.254Z"
+    },
+    "V1": {
+      "monotonic_ns": 145290386982087,
+      "provenance": "observed",
+      "status": "observed",
+      "wall_time": "2026-08-27T18:04:19.617Z"
+    }
+  },
+  "limits": {
+    "retry_policy": "none",
+    "role": "safety-censoring-cap",
+    "wall_clock_ms": 600000
+  },
+  "outcome": {
+    "artifact": "valid",
+    "failure_class": null,
+    "infrastructure": "success",
+    "offline_score": "not-run",
+    "online_acceptance": "pass",
+    "quality_basis": "strong-online-oracle",
+    "quality_pass": true,
+    "stop_reason": "result-ready"
+  },
+  "participants": [
+    {
+      "generation_settings": [
+        {
+          "key": "effort",
+          "namespace": "codex.reasoning",
+          "requested_value": "high",
+          "status": "unknown"
+        }
+      ],
+      "model_identity": {
+        "identity_confidence": "alias-only",
+        "requested_alias": "gpt-5.6-sol",
+        "requested_source": "flag"
+      },
+      "participant_id": "primary",
+      "role": "implementer",
+      "runtime_identity": {
+        "cli_name": "codex",
+        "cli_source": "container-image",
+        "cli_version": "0.146.0",
+        "execution_surface": "isolated-provider-container",
+        "image_digest": "sha256:7c1791e3651fa16fb586c6732a94908ffd5e9300a8ce49f0140262bcf2a208c4",
+        "observed_at": "2026-08-27T18:03:01.542Z",
+        "permission_mode": "automatic",
+        "provider": "codex"
+      }
+    }
+  ],
+  "quality": {
+    "evaluator_id": null,
+    "metrics": []
+  },
+  "run_id": "run-003-b146aa769ae3bb84",
+  "schema_version": 2,
+  "snapshot": {
+    "base_sha": "ba18f532f1afc42e34dd3f78747204c7ea292410",
+    "bundle_digest": "sha256:a88782020deea0e44ac9f8de26a45064dad930058bd7d4694ca0bb0612310dde",
+    "fixture_revision": "f10-s-python-canonical-json-perf-v5-r5",
+    "instruction_set_digest": "sha256:515e1f39556360f1ddfbd903ca45e438a5053cebd86306dc6ac82fae3d1d8fb2"
+  },
+  "study_id": "duration-atlas-wave8-identifiable",
+  "workers": []
+}

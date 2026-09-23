@@ -1,16 +1,13 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-real_codex_bin="${DEVCONTAINER_CODEX_REAL_BIN:-/usr/local/bin/codex-real}"
+ai_cli_prefix="${DEVCONTAINER_AI_CLI_PREFIX:-/opt/devcontainer-ai-cli}"
+real_codex_bin="${DEVCONTAINER_CODEX_REAL_BIN:-$ai_cli_prefix/bin/codex}"
 dangerous_flag="--dangerously-bypass-approvals-and-sandbox"
 
 if [[ ! -x "$real_codex_bin" ]]; then
   echo "error: codex real binary not found or not executable: $real_codex_bin" >&2
   exit 127
-fi
-
-if [[ "${DEVCONTAINER_CODEX_DANGEROUS_DEFAULT:-1}" == "0" ]]; then
-  exec "$real_codex_bin" "$@"
 fi
 
 for argument in "$@"; do
@@ -19,4 +16,11 @@ for argument in "$@"; do
   fi
 done
 
-exec "$real_codex_bin" "$dangerous_flag" "$@"
+# Safe is the default. The environment switch is retained only as an explicit
+# compatibility opt-in for existing automation; new callers should use
+# `codex-trusted`, whose name makes the missing sandbox boundary visible.
+if [[ "${DEVCONTAINER_CODEX_DANGEROUS_DEFAULT:-0}" == "1" ]]; then
+  exec "$real_codex_bin" "$dangerous_flag" "$@"
+fi
+
+exec "$real_codex_bin" "$@"

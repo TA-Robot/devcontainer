@@ -1,0 +1,4874 @@
+{
+  "schema_version": 1,
+  "task": "duplicates-v1",
+  "scale": "small",
+  "mode": "prospective",
+  "quality_scope": "fixed executable requirements; release acceptance not inferred",
+  "human_grading": false,
+  "conditions": {
+    "control": {
+      "submitted_within_observed_budget": false,
+      "final_quality_accepted": true,
+      "development_seconds": 1200.873,
+      "output_tokens": 16537,
+      "usage_complete": true,
+      "usage_by_session": [
+        [
+          {
+            "input_tokens": 3925010,
+            "cached_input_tokens": 3838208,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 16537,
+            "reasoning_output_tokens": 4470
+          }
+        ]
+      ],
+      "requested_model": "gpt-6-astra",
+      "requested_effort": "high",
+      "cli_version": "0.153.0",
+      "applied_model": null,
+      "applied_effort": null,
+      "monetary_cost": null,
+      "quality_and_budget_passed": false,
+      "terminal": {
+        "condition": "control",
+        "key": "control-session-00-terminal",
+        "phase": 1,
+        "seconds": 1200.873,
+        "kind": "terminal",
+        "requested_seconds": null,
+        "archive_sha256": "8f35c81e065d5dd6e9bb31a8ccd457511d4ca9e3aaff12adaf063b05218400cc",
+        "quality": {
+          "accepted": true,
+          "source_unchanged": true,
+          "measurement": "complete",
+          "checks": [
+            {
+              "name": "duplicate-root",
+              "phase": 1,
+              "dimension": "ambiguity",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "duplicate-nested",
+              "phase": 1,
+              "dimension": "ambiguity",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "duplicate-array-object",
+              "phase": 1,
+              "dimension": "ambiguity",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "escaped-equivalent-key",
+              "phase": 1,
+              "dimension": "ambiguity",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "equal-values-still-duplicate",
+              "phase": 1,
+              "dimension": "ambiguity",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "empty-key-duplicate",
+              "phase": 1,
+              "dimension": "ambiguity",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "siblings-allowed",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "case-sensitive-names",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "unicode-distinct-names",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "ordinary-types",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "top-level-scalar",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "top-level-array",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "nonfinite-nan",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "nonfinite-infinity",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "overflowing-float",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "syntax-diagnostic",
+              "phase": 1,
+              "dimension": "diagnostics",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "io-diagnostic",
+              "phase": 1,
+              "dimension": "diagnostics",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "duplicate-values-private",
+              "phase": 1,
+              "dimension": "diagnostics",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "schema-duplicate",
+              "phase": 1,
+              "dimension": "validation-entrypoints",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "instance-duplicate",
+              "phase": 1,
+              "dimension": "validation-entrypoints",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "schema-type-still-enforced",
+              "phase": 1,
+              "dimension": "validation-entrypoints",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "valid-instance-still-accepted",
+              "phase": 1,
+              "dimension": "validation-entrypoints",
+              "status": "passed",
+              "detail": null
+            }
+          ]
+        },
+        "observer_seconds": 6.452
+      },
+      "observations": [
+        {
+          "condition": "control",
+          "key": "control-session-00-terminal",
+          "phase": 1,
+          "seconds": 1200.873,
+          "kind": "terminal",
+          "requested_seconds": null,
+          "archive_sha256": "8f35c81e065d5dd6e9bb31a8ccd457511d4ca9e3aaff12adaf063b05218400cc",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 6.452
+        },
+        {
+          "condition": "control",
+          "key": "control-checkpoint-000",
+          "phase": 1,
+          "seconds": 120.19829017203301,
+          "kind": "checkpoint",
+          "requested_seconds": 120,
+          "archive_sha256": "cbd670be6910263594a022c40f8762cb475513eadbb133f8d7eac12a43e4472d",
+          "quality": {
+            "accepted": false,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "failed",
+                "detail": "input path missing from diagnostic"
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 6.376
+        },
+        {
+          "condition": "control",
+          "key": "control-checkpoint-001",
+          "phase": 1,
+          "seconds": 240.16548984200926,
+          "kind": "checkpoint",
+          "requested_seconds": 240,
+          "archive_sha256": "aeb89ac450f4c8b1e990910a6b1c8bc8dcf0c594c0a660c929f6f614857388d5",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 1.779
+        },
+        {
+          "condition": "control",
+          "key": "control-checkpoint-002",
+          "phase": 1,
+          "seconds": 360.02263553399825,
+          "kind": "checkpoint",
+          "requested_seconds": 360,
+          "archive_sha256": "d0f73f035814aead1a6a05e25e1475db58473b418064fcaa051e2e9d4333a1ca",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 1.755
+        },
+        {
+          "condition": "control",
+          "key": "control-checkpoint-003",
+          "phase": 1,
+          "seconds": 480.07053328701295,
+          "kind": "checkpoint",
+          "requested_seconds": 480,
+          "archive_sha256": "d5f364c43c454ed6d5de0202da4c6ba0535c52b083b392dee45ed32a247b1017",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 1.945
+        },
+        {
+          "condition": "control",
+          "key": "control-checkpoint-004",
+          "phase": 1,
+          "seconds": 600.2267180790077,
+          "kind": "checkpoint",
+          "requested_seconds": 600,
+          "archive_sha256": "d5f364c43c454ed6d5de0202da4c6ba0535c52b083b392dee45ed32a247b1017",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 1.861
+        },
+        {
+          "condition": "control",
+          "key": "control-checkpoint-005",
+          "phase": 1,
+          "seconds": 720.1193396979943,
+          "kind": "checkpoint",
+          "requested_seconds": 720,
+          "archive_sha256": "d5f364c43c454ed6d5de0202da4c6ba0535c52b083b392dee45ed32a247b1017",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 2.167
+        },
+        {
+          "condition": "control",
+          "key": "control-checkpoint-006",
+          "phase": 1,
+          "seconds": 840.1791187049821,
+          "kind": "checkpoint",
+          "requested_seconds": 840,
+          "archive_sha256": "d5f364c43c454ed6d5de0202da4c6ba0535c52b083b392dee45ed32a247b1017",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 2.026
+        },
+        {
+          "condition": "control",
+          "key": "control-checkpoint-007",
+          "phase": 1,
+          "seconds": 960.1559026360046,
+          "kind": "checkpoint",
+          "requested_seconds": 960,
+          "archive_sha256": "4c181db7e7cba7fb8129b77f4a28783c5c9cd4d9c4a45e84202b045c8ec0be2d",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 2.099
+        },
+        {
+          "condition": "control",
+          "key": "control-checkpoint-008",
+          "phase": 1,
+          "seconds": 1080.1862764569814,
+          "kind": "checkpoint",
+          "requested_seconds": 1080,
+          "archive_sha256": "f599e9e603704b435e449445d3dd8a51d628850135b4529114e3e256c92ccc68",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 2.044
+        }
+      ],
+      "development_seconds_kind": "observed_with_shutdown",
+      "recovered_artifact": null,
+      "interruption": null
+    },
+    "improved": {
+      "submitted_within_observed_budget": false,
+      "final_quality_accepted": null,
+      "development_seconds": 1200.0,
+      "output_tokens": 0,
+      "usage_complete": false,
+      "usage_by_session": [],
+      "requested_model": "gpt-6-astra",
+      "requested_effort": "high",
+      "cli_version": "0.153.0",
+      "applied_model": null,
+      "applied_effort": null,
+      "monetary_cost": null,
+      "quality_and_budget_passed": false,
+      "terminal": null,
+      "observations": [
+        {
+          "condition": "improved",
+          "key": "improved-checkpoint-000",
+          "phase": 1,
+          "seconds": 120.14523292495869,
+          "kind": "checkpoint",
+          "requested_seconds": 120,
+          "archive_sha256": "962f398671e693417052799e75d19504198b1464a13d4445c7571ffed339e2e3",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 2.564
+        },
+        {
+          "condition": "improved",
+          "key": "improved-checkpoint-001",
+          "phase": 1,
+          "seconds": 257.00630315800663,
+          "kind": "checkpoint",
+          "requested_seconds": 240,
+          "archive_sha256": "962f398671e693417052799e75d19504198b1464a13d4445c7571ffed339e2e3",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 2.484
+        },
+        {
+          "condition": "improved",
+          "key": "improved-checkpoint-002",
+          "phase": 1,
+          "seconds": 377.7388215129613,
+          "kind": "checkpoint",
+          "requested_seconds": 360,
+          "archive_sha256": "a2e8dd0aa24fdc4c1c1126d2ba18fbb7935541764d9489d199ae1f96c49bc4c5",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 2.427
+        },
+        {
+          "condition": "improved",
+          "key": "improved-checkpoint-003",
+          "phase": 1,
+          "seconds": 513.0856072989991,
+          "kind": "checkpoint",
+          "requested_seconds": 480,
+          "archive_sha256": "7aeb49883905cbed1f432dbf647c6322594106a6c05bcfe0f062dc1d5817a35d",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 2.42
+        },
+        {
+          "condition": "improved",
+          "key": "improved-checkpoint-004",
+          "phase": 1,
+          "seconds": 618.8850621460006,
+          "kind": "checkpoint",
+          "requested_seconds": 600,
+          "archive_sha256": "7aeb49883905cbed1f432dbf647c6322594106a6c05bcfe0f062dc1d5817a35d",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 3.393
+        },
+        {
+          "condition": "improved",
+          "key": "improved-recovered",
+          "phase": 1,
+          "seconds": null,
+          "kind": "recovered",
+          "requested_seconds": null,
+          "archive_sha256": "faa2f68df18670736caa56396cbd5eeca72feafd52a369de0506f9620116fd99",
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          },
+          "observer_seconds": 3.295
+        }
+      ],
+      "development_seconds_kind": "conservative_reservation",
+      "recovered_artifact": {
+        "condition": "improved",
+        "key": "improved-recovered",
+        "phase": 1,
+        "seconds": null,
+        "kind": "recovered",
+        "requested_seconds": null,
+        "archive_sha256": "faa2f68df18670736caa56396cbd5eeca72feafd52a369de0506f9620116fd99",
+        "quality": {
+          "accepted": true,
+          "source_unchanged": true,
+          "measurement": "complete",
+          "checks": [
+            {
+              "name": "duplicate-root",
+              "phase": 1,
+              "dimension": "ambiguity",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "duplicate-nested",
+              "phase": 1,
+              "dimension": "ambiguity",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "duplicate-array-object",
+              "phase": 1,
+              "dimension": "ambiguity",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "escaped-equivalent-key",
+              "phase": 1,
+              "dimension": "ambiguity",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "equal-values-still-duplicate",
+              "phase": 1,
+              "dimension": "ambiguity",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "empty-key-duplicate",
+              "phase": 1,
+              "dimension": "ambiguity",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "siblings-allowed",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "case-sensitive-names",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "unicode-distinct-names",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "ordinary-types",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "top-level-scalar",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "top-level-array",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "nonfinite-nan",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "nonfinite-infinity",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "overflowing-float",
+              "phase": 1,
+              "dimension": "compatibility",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "syntax-diagnostic",
+              "phase": 1,
+              "dimension": "diagnostics",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "io-diagnostic",
+              "phase": 1,
+              "dimension": "diagnostics",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "duplicate-values-private",
+              "phase": 1,
+              "dimension": "diagnostics",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "schema-duplicate",
+              "phase": 1,
+              "dimension": "validation-entrypoints",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "instance-duplicate",
+              "phase": 1,
+              "dimension": "validation-entrypoints",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "schema-type-still-enforced",
+              "phase": 1,
+              "dimension": "validation-entrypoints",
+              "status": "passed",
+              "detail": null
+            },
+            {
+              "name": "valid-instance-still-accepted",
+              "phase": 1,
+              "dimension": "validation-entrypoints",
+              "status": "passed",
+              "detail": null
+            }
+          ]
+        },
+        "observer_seconds": 3.295
+      },
+      "interruption": {
+        "session": "session-00",
+        "phase": "phase-1",
+        "reserved_seconds": 1200,
+        "started_unix": 1788609003.6049435
+      },
+      "output_tokens_kind": "completed_sessions_only; interrupted session usage unknown"
+    }
+  },
+  "common_time_quality": [
+    {
+      "requested_seconds": 120,
+      "common_phase": 1,
+      "conditions": {
+        "control": {
+          "actual_seconds": 120.19829017203301,
+          "carried_final": false,
+          "quality": {
+            "accepted": false,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "failed",
+                "detail": "input path missing from diagnostic"
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "failed",
+                "detail": "invalid or ambiguous input accepted"
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          }
+        },
+        "improved": {
+          "actual_seconds": 120.14523292495869,
+          "carried_final": false,
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "requested_seconds": 240,
+      "common_phase": 1,
+      "conditions": {
+        "control": {
+          "actual_seconds": 240.16548984200926,
+          "carried_final": false,
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          }
+        },
+        "improved": {
+          "actual_seconds": 257.00630315800663,
+          "carried_final": false,
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "requested_seconds": 360,
+      "common_phase": 1,
+      "conditions": {
+        "control": {
+          "actual_seconds": 360.02263553399825,
+          "carried_final": false,
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          }
+        },
+        "improved": {
+          "actual_seconds": 377.7388215129613,
+          "carried_final": false,
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "requested_seconds": 480,
+      "common_phase": 1,
+      "conditions": {
+        "control": {
+          "actual_seconds": 480.07053328701295,
+          "carried_final": false,
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          }
+        },
+        "improved": {
+          "actual_seconds": 513.0856072989991,
+          "carried_final": false,
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "requested_seconds": 600,
+      "common_phase": 1,
+      "conditions": {
+        "control": {
+          "actual_seconds": 600.2267180790077,
+          "carried_final": false,
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          }
+        },
+        "improved": {
+          "actual_seconds": 618.8850621460006,
+          "carried_final": false,
+          "quality": {
+            "accepted": true,
+            "source_unchanged": true,
+            "measurement": "complete",
+            "checks": [
+              {
+                "name": "duplicate-root",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-nested",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-array-object",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "escaped-equivalent-key",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "equal-values-still-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "empty-key-duplicate",
+                "phase": 1,
+                "dimension": "ambiguity",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "siblings-allowed",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "case-sensitive-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "unicode-distinct-names",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "ordinary-types",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-scalar",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "top-level-array",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-nan",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "nonfinite-infinity",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "overflowing-float",
+                "phase": 1,
+                "dimension": "compatibility",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "syntax-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "io-diagnostic",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "duplicate-values-private",
+                "phase": 1,
+                "dimension": "diagnostics",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "instance-duplicate",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "schema-type-still-enforced",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              },
+              {
+                "name": "valid-instance-still-accepted",
+                "phase": 1,
+                "dimension": "validation-entrypoints",
+                "status": "passed",
+                "detail": null
+              }
+            ]
+          }
+        }
+      }
+    },
+    {
+      "requested_seconds": 720,
+      "measurement": "unknown"
+    },
+    {
+      "requested_seconds": 840,
+      "measurement": "unknown"
+    },
+    {
+      "requested_seconds": 960,
+      "measurement": "unknown"
+    },
+    {
+      "requested_seconds": 1080,
+      "measurement": "unknown"
+    }
+  ],
+  "speed_ratio": null,
+  "seal_sha256": "b2078e154d90874b9a8f2ec80629f33a35a9f63e1c9a4fa76304b3d50d0d212a",
+  "finalization": {
+    "schema_version": 1,
+    "kind": "interrupted-artifact-finalization",
+    "started_unix": 1788610423.9468389,
+    "source_seal_sha256": "b2078e154d90874b9a8f2ec80629f33a35a9f63e1c9a4fa76304b3d50d0d212a",
+    "finalizer_sha256": "450264dffa66fd00c89cf1fae14e81e10df169c98a94ec7ccd10dcae4368ed62",
+    "original_state_sha256": {
+      "control": "50632ff7f5a7c546bf86f4bcda0241dfc9cfadda277cdc4b6cae2657379dff2e",
+      "improved": "58433bfc84c0255fd696486f307b21550ccd772052276cde7688f576c3419044"
+    },
+    "developer_stop_evidence": [
+      {
+        "container_id": "e05dd7513c72b25e7bf7b563a42a803c4a05c01695c25d585dde99def7455cfe",
+        "stopped": true,
+        "removed": false,
+        "finished_at": "2026-09-05T11:49:53.918406189Z"
+      },
+      {
+        "container_id": "dbcd893b8e40befcea28852f6dcfe1b582d46f34ffcdf010940a5ebfb17c8f9c",
+        "stopped": true,
+        "removed": false,
+        "finished_at": "2026-09-05T12:06:50.998439696Z"
+      }
+    ],
+    "model_restarts": 0,
+    "grading_contract": "unchanged sealed catalog, observer, and grade function",
+    "recovered_source_is_submission": false
+  },
+  "automatic_execution_completed": false,
+  "original_machine_result_sha256": "96fa2ee4aeed63b278c0126c0551d7368cdfc599b3349249c5745fdceca178b6"
+}

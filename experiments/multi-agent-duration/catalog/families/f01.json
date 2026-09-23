@@ -1,0 +1,224 @@
+{
+  "schema_version": 1,
+  "catalog_id": "duration-atlas-f01",
+  "revision": 1,
+  "published_at": "2026-08-27T00:00:00.000Z",
+  "entries": [
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F01-S-PY-001",
+        "revision": 1,
+        "capsule_digest": "sha256:6bb5179f7978f93e1d019d44d35e29a52b004bf7a9d801e8448cbd05bc449841",
+        "source_type": "fixture",
+        "family": "repository-trace",
+        "size": "S",
+        "profile_id": "S-local-gold-trace-python",
+        "variant_group_id": "F01-S-PY",
+        "descriptors": {
+          "context_surface": "two-python-modules-and-one-test",
+          "artifact_surface": "one-structured-trace-plus-evidence",
+          "coupling": "local-call-chain",
+          "validation_depth": ["schema", "gold-trace"],
+          "environment_setup": "none",
+          "failure_distance": "direct",
+          "statefulness": "read-only-filesystem-semantics",
+          "language_toolchain": ["python", "json"]
+        },
+        "ambiguity": "exact",
+        "oracle_strength": "deterministic",
+        "decomposability": "serial",
+        "artifact_type": "answer",
+        "risk": "low",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["missing-artifact", "causal-omission", "distractor-hop"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F01-S-PY-001",
+        "recipe_id": "f01-s-python-flag-trace-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f01-s-python-flag-trace.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["python3", "tools/validate_trace.py", "trace.json"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "trace-required-nodes",
+            "test_target": "HiddenSmallTraceTests.test_required_nodes"
+          },
+          {
+            "check_id": "trace-required-edges",
+            "test_target": "HiddenSmallTraceTests.test_required_edges"
+          },
+          {
+            "check_id": "trace-evidence-exists",
+            "test_target": "HiddenSmallTraceTests.test_evidence_exists"
+          },
+          {
+            "check_id": "trace-no-distractor",
+            "test_target": "HiddenSmallTraceTests.test_no_distractor"
+          }
+        ],
+        "online_evaluator_id": "f01-s-python-trace-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F01-M-PYJS-001",
+        "revision": 1,
+        "capsule_digest": "sha256:a8490b3cf30e52857c5edc7871d6cf181bfb2af5ba501c263f3ece99a8b9ef55",
+        "source_type": "fixture",
+        "family": "repository-trace",
+        "size": "M",
+        "profile_id": "M-coupled-gold-trace-python-js",
+        "variant_group_id": "F01-M-PYJS",
+        "descriptors": {
+          "context_surface": "four-python-modules-state-schema-and-two-js-modules",
+          "artifact_surface": "trace-graph-with-success-and-fail-open-branches",
+          "coupling": "cross-module-producer-consumer-contract",
+          "validation_depth": ["schema", "gold-trace", "branch-coverage"],
+          "environment_setup": "local-subprocess",
+          "failure_distance": "cross-language",
+          "statefulness": "atomic-json-state",
+          "language_toolchain": ["python", "javascript", "json"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "deterministic",
+        "decomposability": "partial",
+        "artifact_type": "answer",
+        "risk": "low",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["missing-artifact", "cross-language-truncation", "branch-conflation", "telemetry-detour"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F01-M-PYJS-001",
+        "recipe_id": "f01-m-hook-state-render-trace-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f01-m-hook-state-render-trace.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["node", "--test", "media/test/world.test.js"],
+          ["python3", "tools/validate_trace.py", "trace.json"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "trace-success-chain",
+            "test_target": "HiddenMediumTraceTests.test_success_chain"
+          },
+          {
+            "check_id": "trace-schema-boundary",
+            "test_target": "HiddenMediumTraceTests.test_schema_boundary"
+          },
+          {
+            "check_id": "trace-fail-open-branches",
+            "test_target": "HiddenMediumTraceTests.test_fail_open_branches"
+          },
+          {
+            "check_id": "trace-no-telemetry-detour",
+            "test_target": "HiddenMediumTraceTests.test_no_telemetry_detour"
+          },
+          {
+            "check_id": "trace-evidence-integrity",
+            "test_target": "HiddenMediumTraceTests.test_evidence_integrity"
+          }
+        ],
+        "online_evaluator_id": "f01-m-hook-state-render-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    },
+    {
+      "case": {
+        "schema_version": 2,
+        "case_id": "F01-L-PYBASHJS-001",
+        "revision": 1,
+        "capsule_digest": "sha256:1559861896e50ee5d7bb4c485f167cfa7bf21b0ead29c5b017d736b0c9815081",
+        "source_type": "fixture",
+        "family": "repository-trace",
+        "size": "L",
+        "profile_id": "L-cross-boundary-structured-trace-devcontainer",
+        "variant_group_id": "F01-L-PYBASHJS",
+        "descriptors": {
+          "context_surface": "devcontainer-bash-python-and-js-lifecycle",
+          "artifact_surface": "multi-boundary-graph-plus-recovery-paths",
+          "coupling": "lifecycle-and-trust-boundary-coupling",
+          "validation_depth": ["schema", "structured-trace", "lifecycle", "recovery"],
+          "environment_setup": "simulated-host-container-lifecycle",
+          "failure_distance": "restart-delayed-and-boundary-crossing",
+          "statefulness": "persistent-volume-plus-extension-state",
+          "language_toolchain": ["docker", "bash", "python", "javascript", "json"]
+        },
+        "ambiguity": "bounded-open",
+        "oracle_strength": "structured",
+        "decomposability": "partial",
+        "artifact_type": "answer",
+        "risk": "medium",
+        "task_lane": "read",
+        "environment_dependence": "local-tool",
+        "knowledge_locality": "repository-contained",
+        "expected_failure_modes": ["missing-artifact", "lifecycle-omission", "boundary-misownership", "legacy-detour", "recovery-omission"],
+        "strong_online_oracle": true
+      },
+      "fixture": {
+        "case_id": "F01-L-PYBASHJS-001",
+        "recipe_id": "f01-l-devcontainer-companion-trace-v1",
+        "recipe_revision": 1,
+        "capsule_path": "experiments/multi-agent-duration/capsules/f01-l-devcontainer-companion-trace.md",
+        "lane": "isolated",
+        "task_network_policy": "disabled",
+        "isolation_required": "workspace-only-container-mount",
+        "evaluator_isolation_required": "network-disabled-read-only-container",
+        "workspace_validation_commands": [
+          ["python3", "-m", "unittest", "discover", "-s", "tests", "-v"],
+          ["bash", "tests/lifecycle-smoke.sh"],
+          ["node", "--test", "extension/test/world.test.js"],
+          ["python3", "tools/validate_trace.py", "trace.json"]
+        ],
+        "hidden_validation_targets": [
+          {
+            "check_id": "trace-lifecycle-nodes",
+            "test_target": "HiddenLargeTraceTests.test_lifecycle_nodes"
+          },
+          {
+            "check_id": "trace-boundary-artifacts",
+            "test_target": "HiddenLargeTraceTests.test_boundary_artifacts"
+          },
+          {
+            "check_id": "trace-runtime-chain",
+            "test_target": "HiddenLargeTraceTests.test_runtime_chain"
+          },
+          {
+            "check_id": "trace-recovery-ownership",
+            "test_target": "HiddenLargeTraceTests.test_recovery_ownership"
+          },
+          {
+            "check_id": "trace-no-legacy-path",
+            "test_target": "HiddenLargeTraceTests.test_no_legacy_path"
+          },
+          {
+            "check_id": "trace-evidence-integrity",
+            "test_target": "HiddenLargeTraceTests.test_evidence_integrity"
+          }
+        ],
+        "online_evaluator_id": "f01-l-devcontainer-companion-hidden-v1",
+        "gold_visibility": "harness-only"
+      }
+    }
+  ]
+}

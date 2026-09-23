@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+grok_wrapper="${DEVCONTAINER_GROK_WRAPPER_BIN:-/usr/local/bin/grok}"
+
+if [[ ! -x "$grok_wrapper" ]]; then
+  echo "error: grok wrapper not found or not executable: $grok_wrapper" >&2
+  exit 127
+fi
+
+export AGENTCTL_PERMISSION_PROFILE=trusted-fast
+exec "$grok_wrapper" --permission-mode bypassPermissions --sandbox off "$@"

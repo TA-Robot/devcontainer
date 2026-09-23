@@ -1,0 +1,912 @@
+#!/usr/bin/env python3
+"""Conservative, file-owned project template lifecycle (Python stdlib, POSIX)."""
+
+from __future__ import annotations
+
+import argparse
+import base64
+import contextlib
+import difflib
+import fcntl
+import hashlib
+import json
+import os
+from pathlib import Path
+import re
+import stat
+import sys
+import uuid
+
+
+META = ".agent-project"
+STATE = META + "/state.json"
+IGNORE = META + "/.gitignore"
+IGNORE_BYTES = b"*\n"
+HEAD = META + "/head.json"
+DIR_FLAGS = os.O_RDONLY | os.O_DIRECTORY | os.O_NOFOLLOW
+
+
+class Invalid(ValueError):
+    pass
+
+
+def require(condition, message):
+    if not condition:
+        raise Invalid(message)
+
+
+def relative(path):
+    require(isinstance(path, str) and path and "\\" not in path and "\x00" not in path,
+            "invalid relative path")
+    parts = path.split("/")
+    require(all(p not in ("", ".", "..", ".git", META) for p in parts),
+            f"unsafe or reserved path: {path!r}")
+    require(not re.match(r"^[A-Za-z]:", path), f"absolute path: {path!r}")
+    return path
+
+
+def absolute(path):
+    require(isinstance(path, str) and path and "\x00" not in path, "invalid root")
+    # Do not normalize away a symlink/.. component before checking it.
+    require(".." not in path.split("/"), "root paths must not contain '..'")
+    return os.path.abspath(path)
+
+
+def decode(data):
+    def pairs(items):
+        result = {}
+        for key, value in items:
+            require(key not in result, f"duplicate JSON key: {key}")
+            result[key] = value
+        return result
+    return json.loads(data, object_pairs_hook=pairs,
+                      parse_constant=lambda value: require(False, f"invalid JSON: {value}"))
+
+
+def encoded(value):
+    return (json.dumps(value, sort_keys=True, ensure_ascii=True, indent=2) + "\n").encode()
+
+
+class Tree:
+    """Anchor every operation to descriptors; never follow a path symlink."""
+
+    def __init__(self, path):
+        self.path = absolute(path)
+        fd = os.open("/", DIR_FLAGS)
+        try:
+            for part in Path(self.path).parts[1:]:
+                next_fd = os.open(part, DIR_FLAGS, dir_fd=fd)
+                os.close(fd)
+                fd = next_fd
+        except BaseException:
+            os.close(fd)
+            raise
+        self.fd = fd
+
+    def close(self):
+        os.close(self.fd)
+
+    @contextlib.contextmanager
+    def parent(self, path):
+        fd = os.dup(self.fd)
+        try:
+            parts = path.split("/")
+            for part in parts[:-1]:
+                next_fd = os.open(part, DIR_FLAGS, dir_fd=fd)
+                os.close(fd)
+                fd = next_fd
+            yield fd, parts[-1]
+        finally:
+            os.close(fd)
+
+    def observe(self, path, payloads=None):
+        try:
+            with self.parent(path) as (fd, name):
+                info = os.stat(name, dir_fd=fd, follow_symlinks=False)
+                identity = {"dev": info.st_dev, "ino": info.st_ino}
+                if stat.S_ISDIR(info.st_mode):
+                    return {"type": "directory", "mode": stat.S_IMODE(info.st_mode), **identity}
+                require(stat.S_ISREG(info.st_mode), f"not a regular file/directory: {path}")
+                handle = os.open(name, os.O_RDONLY | os.O_NOFOLLOW | os.O_NONBLOCK, dir_fd=fd)
+                with os.fdopen(handle, "rb") as stream:
+                    before = os.fstat(stream.fileno())
+                    require(stat.S_ISREG(before.st_mode), f"not a regular file: {path}")
+                    data = stream.read()
+                    after = os.fstat(stream.fileno())
+                def stable(info):
+                    # A read may advance atime; only content/identity fields are preconditions.
+                    return (info.st_dev, info.st_ino, info.st_mode, info.st_size,
+                            info.st_mtime_ns, info.st_ctime_ns, info.st_nlink)
+                require(stable(before) == stable(after) == stable(info),
+                        f"file changed while reading: {path}")
+                require(not info.st_mode & 0o7000, f"special permission bits unsupported: {path}")
+                if payloads is not None:
+                    payloads[path] = data
+                return {"type": "file", **identity, "sha256": hashlib.sha256(data).hexdigest(),
+                        "mode": stat.S_IMODE(info.st_mode), "size": len(data),
+                        "mtime_ns": info.st_mtime_ns, "ctime_ns": info.st_ctime_ns,
+                        "nlink": info.st_nlink}
+        except FileNotFoundError:
+            return {"type": "missing"}
+        except NotADirectoryError:
+            return {"type": "blocked"}
+
+    def names(self, path=""):
+        if not path:
+            return sorted(os.listdir(self.fd))
+        with self.parent(path) as (fd, name):
+            child = os.open(name, DIR_FLAGS, dir_fd=fd)
+            try:
+                return sorted(os.listdir(child))
+            finally:
+                os.close(child)
+
+    def mkdir(self, path, mode=0o755):
+        with self.parent(path) as (fd, name):
+            os.mkdir(name, mode, dir_fd=fd)
+            os.fsync(fd)
+
+    def remove(self, path, directory=False):
+        with self.parent(path) as (fd, name):
+            (os.rmdir if directory else os.unlink)(name, dir_fd=fd)
+            os.fsync(fd)
+
+    def move(self, source, destination):
+        with self.parent(source) as (src_fd, src), self.parent(destination) as (dst_fd, dst):
+            os.replace(src, dst, src_dir_fd=src_fd, dst_dir_fd=dst_fd)
+            os.fsync(dst_fd)
+            os.fsync(src_fd)
+
+    def write_new(self, path, data, mode=0o600):
+        with self.parent(path) as (fd, name):
+            handle = os.open(name, os.O_WRONLY | os.O_CREAT | os.O_EXCL | os.O_NOFOLLOW,
+                             0o600, dir_fd=fd)
+            with os.fdopen(handle, "wb") as stream:
+                stream.write(data)
+                stream.flush()
+                os.fchmod(stream.fileno(), mode)
+                os.fsync(stream.fileno())
+            os.fsync(fd)
+
+
+def fingerprint(observation):
+    if observation["type"] != "file":
+        return None
+    return {key: observation[key] for key in ("sha256", "mode")}
+
+
+def validate_files(files):
+    require(isinstance(files, dict), "state files must be an object")
+    for path, entry in files.items():
+        relative(path)
+        require(isinstance(entry, dict) and set(entry) == {"sha256", "mode"}, "invalid file baseline")
+        require(isinstance(entry["sha256"], str) and re.fullmatch(r"[0-9a-f]{64}", entry["sha256"]),
+                "invalid baseline digest")
+        require(type(entry["mode"]) is int and 0 <= entry["mode"] <= 0o777, "invalid baseline mode")
+        require(not any("/".join(path.split("/")[:i]) in files
+                        for i in range(1, len(path.split("/")))), "overlapping managed file paths")
+
+
+def validate_bases(state):
+    # Phase-1 states remain readable. Missing historical bytes cannot be invented.
+    if "bases" not in state:
+        return
+    bases = state["bases"]
+    require(isinstance(bases, dict) and set(bases) == set(state["files"]),
+            "base inventory must match managed files")
+    for path, value in bases.items():
+        require(isinstance(value, str), "invalid encoded base")
+        data = base64.b64decode(value, validate=True)
+        require(base64.b64encode(data).decode("ascii") == value, "noncanonical encoded base")
+        require(hashlib.sha256(data).hexdigest() == state["files"][path]["sha256"],
+                f"base digest mismatch: {path}")
+
+
+def validate_state(state):
+    require(isinstance(state, dict) and set(state) - {"bases", "journal_version"} == {
+        "schema_version", "source", "files", "directories", "transaction_id"}, "invalid state fields")
+    require(type(state["schema_version"]) is int and state["schema_version"] == 1, "invalid state version")
+    require(absolute(state["source"]) == state["source"], "invalid state source")
+    require(isinstance(state["transaction_id"], str)
+            and re.fullmatch(r"[0-9a-f]{32}", state["transaction_id"]), "invalid transaction id")
+    if "journal_version" in state:
+        require(type(state["journal_version"]) is int and state["journal_version"] == 1,
+                "invalid state journal version")
+    validate_files(state["files"])
+    validate_bases(state)
+    directories = state["directories"]
+    require(isinstance(directories, list) and all(isinstance(p, str) for p in directories),
+            "invalid state directories")
+    require(directories == sorted(set(directories)), "duplicate/unsorted state directories")
+    for path in directories:
+        relative(path)
+        require(path not in state["files"], "file/directory overlap in state")
+    for path in list(state["files"]) + directories:
+        require(all("/".join(path.split("/")[:i]) in directories
+                    for i in range(1, len(path.split("/")))), "missing parent in state")
+    return state
+
+
+def read_state(target, allow_pending=False):
+    records, meta = read_records(target)
+    pending = pending_record(records)
+    require(allow_pending or pending is None,
+            "incomplete transaction; run recover before planning or mutating")
+    observation, data = private_file(target, STATE, optional=True)
+    state = validate_state(decode(data)) if data is not None else None
+    if state is not None and "journal_version" in state:
+        require(any(r["id"] == state["transaction_id"] for r in records), "missing transaction journal")
+    if state is None and records:
+        require(any(r["before_state"] is None for r in records), "missing ownership state")
+        require(not any(r["status"] == "completed" for r in records), "missing ownership state")
+    return state, {"directory": meta, "file": observation,
+                   "history": hashlib.sha256(encoded(records)).hexdigest()}
+
+
+def inventory(source):
+    observations, payloads = {}, {}
+
+    def walk(prefix=""):
+        for name in source.names(prefix):
+            path = relative(prefix + "/" + name if prefix else name)
+            observation = source.observe(path, payloads)
+            require(observation["type"] in ("file", "directory"), f"source disappeared: {path}")
+            observations[path] = observation
+            if observation["type"] == "directory":
+                walk(path)
+    walk()
+    return dict(sorted(observations.items())), payloads
+
+
+def root_identity(tree):
+    info = os.fstat(tree.fd)
+    return {"dev": info.st_dev, "ino": info.st_ino, "mode": stat.S_IMODE(info.st_mode)}
+
+
+def merge_text(base, local, upstream):
+    """Merge disjoint line edits; ambiguous overlap is a conflict, never markers."""
+    for data in (base, local, upstream):
+        if any(byte < 32 and byte not in (9, 10, 13) or byte == 127 for byte in data):
+            return None
+        try:
+            data.decode("utf-8")
+        except UnicodeDecodeError:
+            return None
+
+    def lines(data):
+        # Split only at LF and preserve every byte, including CRLF and no-final-LF.
+        parts = data.split(b"\n")
+        return [line + b"\n" for line in parts[:-1]] + ([parts[-1]] if parts[-1] else [])
+
+    original = lines(base)
+
+    def edits(data):
+        updated = lines(data)
+        matcher = difflib.SequenceMatcher(None, original, updated, autojunk=False)
+        return [(i, j, updated[a:b]) for tag, i, j, a, b in matcher.get_opcodes()
+                if tag != "equal"]
+
+    left, right = edits(local), edits(upstream)
+    for start, end, replacement in left:
+        for other_start, other_end, other_replacement in right:
+            if (start, end, replacement) == (other_start, other_end, other_replacement):
+                continue
+            if start == end or other_start == other_end:
+                overlap = (other_start <= start <= other_end if start == end
+                           else start <= other_start <= end)
+            else:
+                overlap = max(start, other_start) < min(end, other_end)
+            if overlap:
+                return None
+    combined = left + [edit for edit in right if edit not in left]
+    result, position = [], 0
+    for start, end, replacement in sorted(combined, key=lambda edit: (edit[0], edit[1])):
+        result.extend(original[position:start])
+        result.extend(replacement)
+        position = end
+    result.extend(original[position:])
+    return b"".join(result)
+
+
+def merge_file(old, new, current, base, local, upstream):
+    """Content and ordinary POSIX mode are independent three-way values."""
+    if current["mode"] == old["mode"]:
+        mode = new["mode"]
+    elif new["mode"] in (old["mode"], current["mode"]):
+        mode = current["mode"]
+    else:
+        return None
+    if current["sha256"] == old["sha256"]:
+        data = upstream
+    elif new["sha256"] in (old["sha256"], current["sha256"]):
+        data = local
+    elif base is not None:
+        data = merge_text(base, local, upstream)
+    else:
+        return None
+    return (data, mode) if data is not None else None
+
+
+def separate(source, target):
+    # Tree opens from the POSIX root; abspath may retain exactly two leading
+    # slashes. Normalize only this comparison, preserving legacy stored paths.
+    source_path = "/" + source.path.lstrip("/")
+    target_path = "/" + target.path.lstrip("/")
+    require(source_path != target_path
+            and not source_path.startswith(target_path.rstrip("/") + "/")
+            and not target_path.startswith(source_path.rstrip("/") + "/"),
+            "source and target must be separate trees")
+
+
+def compute(source, target):
+    separate(source, target)
+    upstream, payloads = inventory(source)
+    bases = {p: base64.b64encode(data).decode("ascii") for p, data in payloads.items()}
+    state, metadata = read_state(target)
+    baseline = state["files"] if state else {}
+    files = {p: fingerprint(o) for p, o in upstream.items() if o["type"] == "file"}
+    directories = sorted(p for p, o in upstream.items() if o["type"] == "directory")
+    paths = set(upstream) | set(baseline)
+    for path in list(paths):
+        paths.update("/".join(path.split("/")[:i]) for i in range(1, len(path.split("/"))))
+    local_payloads = {}
+    observed = {p: target.observe(p, local_payloads) for p in sorted(paths)}
+    actions = []
+    for path in sorted(set(upstream) | set(baseline)):
+        current = observed[path]
+        old, new = baseline.get(path), files.get(path)
+        result = None
+        if path in directories:
+            if old is not None or current["type"] not in ("directory", "missing"):
+                kind, reason = "conflict", "directory_obstructed_or_type_changed"
+            else:
+                kind = "add" if current["type"] == "missing" else "keep"
+                reason = "directory"
+        elif current["type"] in ("directory", "blocked"):
+            kind, reason = "conflict", "file_obstructed_or_type_changed"
+        elif old is None:
+            kind = "add" if current["type"] == "missing" else "conflict"
+            reason = "new_file" if kind == "add" else "unmanaged_file_exists"
+        elif new is None:
+            kind = "delete" if fingerprint(current) == old else "conflict"
+            reason = "upstream_deleted" if kind == "delete" else "local_change_upstream_deleted"
+        elif new == old:
+            kind, reason = "keep", "unchanged" if fingerprint(current) == old else "local_change_retained"
+        elif fingerprint(current) == old:
+            kind, reason = "update", "upstream_changed"
+        elif fingerprint(current) == new:
+            kind, reason = "keep", "local_and_upstream_converged"
+        else:
+            saved = state.get("bases", {}).get(path)
+            merged = (merge_file(old, new, current,
+                                 base64.b64decode(saved) if saved is not None else None,
+                                 local_payloads[path], payloads[path])
+                      if current["type"] == "file" else None)
+            if merged is None:
+                kind, reason = "conflict", "local_and_upstream_changed"
+                if saved is None and current["type"] == "file":
+                    reason = "common_base_unavailable_or_incompatible_mode"
+            else:
+                data, mode = merged
+                result = {"sha256": hashlib.sha256(data).hexdigest(), "mode": mode}
+                payloads[path] = data
+                kind = "keep" if result == fingerprint(current) else "update"
+                reason = "compatible_changes_merged"
+        action = {"path": path, "kind": kind, "reason": reason,
+                  "entry_type": "directory" if path in directories else "file"}
+        if new is not None and kind in ("add", "update"):
+            action["result"] = result if result is not None else new
+        actions.append(action)
+    plan = {"schema_version": 1,
+            "status": "conflict" if any(a["kind"] == "conflict" for a in actions) else "ready",
+            "source": source.path, "target": target.path, "actions": actions,
+            "preconditions": {"source_root": root_identity(source), "target_root": root_identity(target),
+                              "source": upstream, "target": observed, "metadata": metadata},
+            "next_state": {"source": source.path, "files": files, "directories": directories}}
+    return plan, {"outputs": payloads, "bases": bases}
+
+
+def check_plan(plan, target):
+    require(isinstance(plan, dict) and type(plan.get("schema_version")) is int
+            and plan["schema_version"] == 1, "invalid plan schema")
+    require(plan.get("status") == "ready", "plan is not ready")
+    require(plan.get("target") == target.path, "plan target mismatch")
+    require(isinstance(plan.get("actions"), list), "invalid actions")
+    seen = set()
+    for action in plan["actions"]:
+        require(isinstance(action, dict), "invalid action")
+        path = relative(action.get("path"))
+        require(path not in seen, "duplicate action path")
+        seen.add(path)
+        require(action.get("kind") in ("add", "update", "delete", "keep"), "invalid action kind")
+    require(isinstance(plan.get("source"), str), "invalid source")
+
+
+def apply(plan, target):
+    check_plan(plan, target)
+    with contextlib.closing(Tree(plan["source"])) as source:
+        actual, prepared = compute(source, target)
+        require(encoded(actual) == encoded(plan), "stale, malformed, or altered plan; replan")
+        state, _ = read_state(target)
+        changed = [a for a in actual["actions"] if a["kind"] in ("add", "update", "delete")]
+        next_state = actual["next_state"]
+        if not changed and state is not None and all(state[k] == v for k, v in next_state.items()):
+            return {"schema_version": 1, "status": "noop", "transaction_id": None}
+        # Re-read after collecting bytes; all preconditions precede any target mutation.
+        verified, _ = compute(source, target)
+        require(encoded(verified) == encoded(actual), "filesystem changed during verification; replan")
+
+    return commit(target, actual, prepared, state, changed)
+
+
+def adoption(source, target):
+    """Prepare explicit registration without installing or altering project files."""
+    separate(source, target)
+    upstream, payloads = inventory(source)
+    state, metadata = read_state(target)
+    files = {p: fingerprint(o) for p, o in upstream.items() if o["type"] == "file"}
+    directories = sorted(p for p, o in upstream.items() if o["type"] == "directory")
+    observed = {p: target.observe(p) for p in upstream}
+    for path, entry in upstream.items():
+        current = observed[path]
+        if entry["type"] == "directory":
+            require(current["type"] in ("directory", "missing"),
+                    f"adoption directory obstructed: {path}")
+        else:
+            require(current["type"] == "file" and current["sha256"] == entry["sha256"]
+                    and (current["mode"] & 0o111) == (entry["mode"] & 0o111),
+                    f"adoption requires identical bytes and executable mode: {path}")
+    next_state = {"source": source.path, "files": files, "directories": directories}
+    require(state is None or all(state[k] == v for k, v in next_state.items()),
+            "conflicting ownership; use plan/apply for an existing registration")
+    record = {"schema_version": 1, "operation": "adopt", "actions": [],
+              "source": source.path, "target": target.path, "next_state": next_state,
+              "preconditions": {"source_root": root_identity(source), "target_root": root_identity(target),
+                                "source": upstream, "target": observed, "metadata": metadata}}
+    return record, {"outputs": {}, "bases": {
+        p: base64.b64encode(data).decode("ascii") for p, data in payloads.items()}}, state
+
+
+def adopt(source, target):
+    actual, prepared, state = adoption(source, target)
+    verified, _, _ = adoption(source, target)
+    require(encoded(actual) == encoded(verified), "filesystem changed during adoption; retry")
+    if state is not None:
+        return {"schema_version": 1, "status": "noop", "transaction_id": None}
+    return commit(target, actual, prepared, state, [])
+
+
+def private_file(target, path, optional=False):
+    payload = {}
+    observed = target.observe(path, payload)
+    if optional and observed["type"] == "missing":
+        return observed, None
+    require(observed["type"] == "file" and observed["nlink"] == 1,
+            f"metadata must be a regular, unlinked file: {path}")
+    return observed, payload[path]
+
+
+def transaction_id(value):
+    require(isinstance(value, str) and re.fullmatch(r"[0-9a-f]{32}", value),
+            "invalid transaction ID")
+    return value
+
+
+def image_data(value):
+    if value is None:
+        return None
+    require(isinstance(value, dict) and set(value) == {"sha256", "mode", "data"},
+            "invalid transaction image / missing backup")
+    validate_files({"image": {k: value[k] for k in ("sha256", "mode")}})
+    require(isinstance(value["data"], str), "invalid backup encoding")
+    data = base64.b64decode(value["data"], validate=True)
+    require(base64.b64encode(data).decode("ascii") == value["data"]
+            and hashlib.sha256(data).hexdigest() == value["sha256"], "backup digest mismatch")
+    return data
+
+
+def file_image(data, mode):
+    return {"sha256": hashlib.sha256(data).hexdigest(), "mode": mode,
+            "data": base64.b64encode(data).decode("ascii")}
+
+
+def capture(target, path):
+    payload = {}
+    observed = target.observe(path, payload)
+    require(observed["type"] in ("file", "missing"), f"unsafe affected path: {path}")
+    return file_image(payload[path], observed["mode"]) if observed["type"] == "file" else None
+
+
+def image_matches(target, path, expected):
+    observed = target.observe(path)
+    return (observed["type"] == "missing" if expected is None else
+            fingerprint(observed) == {k: expected[k] for k in ("sha256", "mode")})
+
+
+def record_path(record):
+    return META + "/" + transaction_id(record["id"]) + ".json"
+
+
+def atomic_write(target, path, data, mode=0o600):
+    # One reusable scratch file under the locked, private metadata directory.
+    scratch = META + "/scratch"
+    observed, _ = private_file(target, scratch, optional=True)
+    if observed["type"] != "missing":
+        target.remove(scratch)
+    target.write_new(scratch, data, mode)
+    target.move(scratch, path)
+
+
+def save_record(target, record):
+    body = encoded(record)
+    atomic_write(target, record_path(record), encoded({
+        "record": record, "sha256": hashlib.sha256(body).hexdigest()}))
+
+
+def save_head(target, record):
+    atomic_write(target, HEAD, encoded({"version": 1, "id": record["id"],
+                                       "sequence": record["sequence"]}))
+
+
+def validate_record(record, target):
+    require(isinstance(record, dict) and set(record) == {
+        "version", "id", "sequence", "target", "root", "status", "cursor", "restore_cursor",
+        "before_state", "after_state", "entries", "directories"}, "invalid journal fields")
+    require(type(record["version"]) is int and record["version"] == 1, "invalid journal version")
+    transaction_id(record["id"])
+    require(record["target"] == target.path and record["root"] == root_identity(target),
+            "journal target identity mismatch")
+    require(type(record["sequence"]) is int and record["sequence"] > 0, "invalid journal sequence")
+    require(record["status"] in ("pending", "completed", "recovering", "rolling_back",
+                                 "recovered", "rolled_back"), "invalid journal status")
+    states = []
+    for key in ("before_state", "after_state"):
+        data = image_data(record[key])
+        states.append(validate_state(decode(data)) if data is not None else None)
+    before, after = states
+    require(after is not None and after["transaction_id"] == record["id"], "invalid after ownership")
+    entries = record["entries"]
+    require(isinstance(entries, list), "invalid journal entries")
+    paths = []
+    for entry in entries:
+        require(isinstance(entry, dict) and set(entry) == {"path", "before", "after"},
+                "invalid journal entry")
+        path = relative(entry["path"])
+        paths.append(path)
+        for key in ("before", "after"):
+            image_data(entry[key])
+        require(entry["before"] != entry["after"], "unchanged journal entry")
+        require(path in after["files"] or before is not None and path in before["files"],
+                "journal path outside ownership")
+        require((entry["after"] is not None) == (path in after["files"]),
+                "journal output/ownership mismatch")
+        require(entry["before"] is None or before is not None and path in before["files"],
+                "journal cannot overwrite an unmanaged file")
+    require(paths == sorted(set(paths)), "duplicate or unsorted journal paths")
+    validate_files({entry["path"]: {k: (entry["after"] or entry["before"])[k]
+                                    for k in ("sha256", "mode")} for entry in entries})
+    for key in ("cursor", "restore_cursor"):
+        require(type(record[key]) is int and 0 <= record[key] <= len(entries), "invalid journal cursor")
+    if record["status"] == "completed":
+        require(record["cursor"] == len(entries) and record["restore_cursor"] == 0,
+                "invalid completed journal")
+    if record["status"] in ("recovered", "rolled_back"):
+        require(record["restore_cursor"] == len(entries), "invalid restored journal")
+    directories = record["directories"]
+    require(isinstance(directories, dict), "invalid journal directories")
+    for path, observation in directories.items():
+        relative(path)
+        require(path not in paths, "journal file/directory overlap")
+        require(isinstance(observation, dict) and
+                (observation == {"type": "missing"} or
+                 set(observation) == {"type", "dev", "ino", "mode"}
+                 and observation["type"] == "directory"
+                 and all(type(observation[k]) is int for k in ("dev", "ino", "mode"))),
+                "invalid journal directory precondition")
+    for path in paths + list(directories):
+        require(all("/".join(path.split("/")[:i]) in directories
+                    for i in range(1, len(path.split("/")))), "missing journal parent")
+
+
+def read_records(target):
+    meta = target.observe(META)
+    if meta["type"] == "missing":
+        return [], meta
+    require(meta["type"] == "directory", "metadata must be a directory")
+    records = []
+    names = target.names(META)
+    require(set(names) - {".gitignore"},
+            "empty metadata directory; preserve it for manual inspection")
+    for name in names:
+        path = META + "/" + name
+        require(name in ("state.json", "head.json", "scratch", ".gitignore") or re.fullmatch(r"[0-9a-f]{32}\.json", name),
+                "unknown metadata entry; preserve it for manual inspection")
+        _, data = private_file(target, path)
+        if name == ".gitignore":
+            require(data == IGNORE_BYTES, "invalid private metadata ignore file")
+            continue
+        if name in ("state.json", "head.json", "scratch"):
+            continue
+        envelope = decode(data)
+        require(isinstance(envelope, dict) and set(envelope) == {"record", "sha256"},
+                "invalid journal envelope")
+        record = envelope["record"]
+        require(hashlib.sha256(encoded(record)).hexdigest() == envelope["sha256"],
+                "journal checksum mismatch; preserve metadata and backups for manual resolution")
+        validate_record(record, target)
+        require(name == record["id"] + ".json", "journal filename mismatch")
+        records.append(record)
+    records.sort(key=lambda r: r["sequence"])
+    require([r["sequence"] for r in records] == list(range(1, len(records) + 1)),
+            "missing or duplicate transaction history")
+    _, head_data = private_file(target, HEAD, optional=True)
+    if head_data is not None:
+        head = decode(head_data)
+        require(isinstance(head, dict) and set(head) == {"version", "id", "sequence"}
+                and type(head["version"]) is int and head["version"] == 1
+                and type(head["sequence"]) is int, "invalid transaction head")
+        transaction_id(head["id"])
+        require(any(r["id"] == head["id"] and r["sequence"] == head["sequence"] for r in records),
+                "missing latest transaction journal / recovery backups")
+        require(head["sequence"] == len(records) or
+                head["sequence"] == len(records) - 1 and
+                records[-1]["status"] in ("pending", "recovering", "recovered"),
+                "contradictory transaction head")
+    elif records:
+        require(len(records) == 1 and records[0]["status"] in ("pending", "recovering", "recovered"),
+                "missing transaction head")
+    pending = [r for r in records if r["status"] in ("pending", "recovering", "rolling_back")]
+    require(len(pending) <= 1 and (not pending or pending[0] == records[-1]),
+            "contradictory pending transactions")
+    return records, meta
+
+
+def pending_record(records):
+    return next((r for r in records if r["status"] in ("pending", "recovering", "rolling_back")), None)
+
+
+def check_directories(target, record):
+    for path, expected in record["directories"].items():
+        observed = target.observe(path)
+        require(observed == expected if expected["type"] == "directory" else
+                observed["type"] in ("directory", "missing"),
+                f"affected directory changed: {path}; restore original directory before recovery")
+
+
+def restore_preflight(target, record):
+    # Validate the whole write set before even publishing recovery intent.
+    check_directories(target, record)
+    conflicts = []
+    for index, entry in enumerate(record["entries"]):
+        before, after = entry["before"], entry["after"]
+        if index < record["restore_cursor"]:
+            allowed = [before]
+        elif record["status"] in ("completed", "rolling_back"):
+            allowed = [after]
+        elif index < record["cursor"]:
+            allowed = [after]
+        elif index == record["cursor"]:
+            allowed = [before, after]  # Crash between rename and cursor publication.
+        else:
+            allowed = [before]
+        if record["status"] in ("recovering", "rolling_back") and index == record["restore_cursor"]:
+            allowed.append(before)  # Crash between restore rename and cursor publication.
+        if not any(image_matches(target, entry["path"], value) for value in allowed):
+            conflicts.append(entry["path"])
+    require(not conflicts, "affected paths edited since transaction: " + ", ".join(conflicts) +
+            "; save edits elsewhere and restore the expected before/after image, then retry")
+    require(any(image_matches(target, STATE, record[key]) for key in ("before_state", "after_state")),
+            "ownership changed since transaction; restore expected state before recovery")
+
+
+def put_image(target, path, value):
+    if image_matches(target, path, value):
+        return
+    if value is None:
+        target.remove(path)
+    else:
+        atomic_write(target, path, image_data(value), value["mode"])
+
+
+def restore(target, record, rollback=False):
+    crash = fault_count("AGENT_PROJECT_TEST_CRASH_AFTER_RESTORE")
+    replacements = 0
+    restore_preflight(target, record)
+    save_head(target, record)
+    record["status"] = "rolling_back" if rollback else "recovering"
+    save_record(target, record)
+    for index in range(record["restore_cursor"], len(record["entries"])):
+        entry = record["entries"][index]
+        changed = not image_matches(target, entry["path"], entry["before"])
+        put_image(target, entry["path"], entry["before"])
+        replacements += int(changed)
+        if changed and crash == replacements:
+            os._exit(99)
+        record["restore_cursor"] = index + 1
+        save_record(target, record)
+    put_image(target, STATE, record["before_state"])
+    record["status"] = "rolled_back" if rollback else "recovered"
+    save_record(target, record)
+    return {"schema_version": 1, "status": record["status"], "transaction_id": record["id"]}
+
+
+def recover(target):
+    records, _ = read_records(target)
+    read_state(target, allow_pending=True)
+    pending = pending_record(records)
+    if pending is None:
+        return {"schema_version": 1, "status": "noop", "transaction_id": None}
+    return restore(target, pending, rollback=pending["status"] == "rolling_back")
+
+
+def rollback(target, identifier):
+    transaction_id(identifier)
+    records, _ = read_records(target)
+    read_state(target)
+    record = next((r for r in records if r["id"] == identifier), None)
+    require(record is not None, "unknown transaction ID (legacy transactions have no recovery images)")
+    require(record == records[-1], "cannot rollback across a later transaction")
+    if record["status"] == "rolled_back":
+        return {"schema_version": 1, "status": "noop", "transaction_id": None}
+    require(record["status"] == "completed", "transaction is not completed")
+    require(image_matches(target, STATE, record["after_state"]), "ownership changed since transaction")
+    return restore(target, record, rollback=True)
+
+
+def fault_count(name):
+    value = os.environ.get(name)
+    require(value is None or re.fullmatch(r"[1-9][0-9]*", value),
+            f"{name} must be a positive integer")
+    return int(value) if value is not None else None
+
+
+def commit(target, actual, prepared, state, changed):
+    crash = fault_count("AGENT_PROJECT_TEST_CRASH_AFTER_REPLACE")
+    records, meta = read_records(target)
+    require(pending_record(records) is None, "incomplete transaction; run recover")
+    identifier = uuid.uuid4().hex
+    new_state = {"schema_version": 1, "journal_version": 1, **actual["next_state"], "bases": prepared["bases"],
+                 "transaction_id": identifier}
+    entries = []
+    for action in changed:
+        if action["entry_type"] == "file":
+            path = action["path"]
+            entries.append({"path": path, "before": capture(target, path),
+                            "after": None if action["kind"] == "delete" else
+                            file_image(prepared["outputs"][path], action["result"]["mode"])})
+    record = {"version": 1, "id": identifier, "sequence": len(records) + 1,
+              "target": target.path, "root": root_identity(target), "status": "pending",
+              "cursor": 0, "restore_cursor": 0, "before_state": capture(target, STATE),
+              "after_state": file_image(encoded(new_state), 0o600), "entries": entries,
+              "directories": {p: o for p, o in actual["preconditions"]["target"].items()
+                              if o["type"] == "directory" or p in new_state["directories"]}}
+    validate_record(record, target)
+    # Every payload and precondition is staged in the durable journal before writes.
+    require(all(target.observe(p) == o for p, o in actual["preconditions"]["target"].items()),
+            "target changed during staging; replan")
+    prior_head = capture(target, HEAD)
+    created_meta = meta["type"] == "missing"
+    made_dirs = []
+    published = False
+    try:
+        if created_meta:
+            target.mkdir(META, 0o700)
+            atomic_write(target, IGNORE, IGNORE_BYTES)
+        save_record(target, record)
+        published = True
+        save_head(target, record)
+        for action in sorted(changed, key=lambda a: (a["path"].count("/"), a["path"])):
+            if action["entry_type"] == "directory":
+                target.mkdir(action["path"])
+                made_dirs.append(action["path"])
+        for index, entry in enumerate(entries):
+            require(image_matches(target, entry["path"], entry["before"]),
+                    f"target changed during apply: {entry['path']}")
+            put_image(target, entry["path"], entry["after"])
+            if actual.get("operation") != "adopt" and crash is not None and index + 1 == crash:
+                os._exit(99)
+            record["cursor"] = index + 1
+            save_record(target, record)
+        put_image(target, STATE, record["after_state"])
+        record["status"] = "completed"
+        save_record(target, record)
+    except Exception:
+        if published:
+            # Use the durable record, not an in-memory cursor that may not have published.
+            disk_records, _ = read_records(target)
+            durable = next(r for r in disk_records if r["id"] == identifier)
+            restore(target, durable)
+            put_image(target, HEAD, prior_head)
+            target.remove(record_path(record))
+        scratch = META + "/scratch"
+        observed, _ = private_file(target, scratch, optional=True)
+        if observed["type"] != "missing":
+            target.remove(scratch)
+        for path in reversed(made_dirs):
+            if not target.names(path):
+                target.remove(path, directory=True)
+        if created_meta and target.observe(META)["type"] == "directory":
+            if target.names(META) == [".gitignore"] and private_file(target, IGNORE)[1] == IGNORE_BYTES:
+                target.remove(IGNORE)
+            if not target.names(META):
+                target.remove(META, directory=True)
+        raise
+    return {"schema_version": 1, "status": "applied", "transaction_id": identifier}
+
+
+
+def status(target):
+    records, _ = read_records(target)
+    pending = pending_record(records)
+    state, _ = read_state(target, allow_pending=True)
+    files = state["files"] if state else {}
+    local_changes = []
+    for path, baseline in sorted(files.items()):
+        current = target.observe(path)
+        if fingerprint(current) != baseline:
+            local_changes.append({"path": path, "reason": "modified" if current["type"] == "file"
+                                  else current["type"], "baseline": baseline, "current": fingerprint(current)})
+    return {"schema_version": 1, "status": "managed" if state else "unmanaged",
+            "pending_transaction": pending["id"] if pending else None,
+            "managed_paths": sorted(files), "local_changes": local_changes,
+            "common_base_available": bool(state is not None and "bases" in state),
+            "source": state["source"] if state else None,
+            "transaction_id": state["transaction_id"] if state else None}
+
+
+def default_source():
+    executable = Path(__file__).resolve()
+    if executable.parent.name == "scripts":
+        return str(executable.parent.parent / "project")
+    return str(executable.parent.parent / "share/agent-project/template")
+
+
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    commands = parser.add_subparsers(dest="command", required=True)
+    for command in ("plan", "apply", "status", "adopt", "recover", "rollback"):
+        sub = commands.add_parser(command)
+        sub.add_argument("--target", required=True, help="existing project directory")
+        sub.add_argument("--json", action="store_true", help="emit JSON (also the default)")
+        if command in ("plan", "adopt"):
+            sub.add_argument("--source", help="template directory; default is relative to this executable")
+        if command == "rollback":
+            sub.add_argument("--transaction", required=True, help="latest completed transaction ID")
+        if command == "apply":
+            sub.add_argument("--plan", required=True, help="saved JSON plan file")
+    args = parser.parse_args()
+    try:
+        with contextlib.closing(Tree(args.target)) as target:
+            # Linux/POSIX directory advisory lock: no lock file or read-only writes.
+            fcntl.flock(target.fd, (fcntl.LOCK_EX if args.command in ("apply", "adopt", "recover", "rollback") else fcntl.LOCK_SH)
+                        | fcntl.LOCK_NB)
+            if args.command == "plan":
+                with contextlib.closing(Tree(args.source or default_source())) as source:
+                    result, _ = compute(source, target)
+            elif args.command == "adopt":
+                with contextlib.closing(Tree(args.source or default_source())) as source:
+                    result = adopt(source, target)
+            elif args.command == "apply":
+                plan_path = absolute(args.plan)
+                with contextlib.closing(Tree(os.path.dirname(plan_path))) as plan_tree:
+                    payload = {}
+                    name = os.path.basename(plan_path)
+                    require(plan_tree.observe(name, payload)["type"] == "file",
+                            "plan must be a regular file")
+                    plan = decode(payload[name])
+                result = apply(plan, target)
+            elif args.command == "recover":
+                result = recover(target)
+            elif args.command == "rollback":
+                result = rollback(target, args.transaction)
+            else:
+                result = status(target)
+        print(encoded(result).decode(), end="")
+        return 0
+    except (Invalid, OSError, ValueError, TypeError, KeyError, RecursionError) as error:
+        print(encoded({"schema_version": 1, "status": "error", "error": str(error)}).decode(), end="")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

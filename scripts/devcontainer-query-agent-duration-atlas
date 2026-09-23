@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+runtime_root=/usr/local/lib/mira-duration-atlas-runtime
+runtime_scripts="$runtime_root/scripts"
+query_entrypoint="$runtime_scripts/query_agent_duration_atlas.py"
+
+if [[ ! -r "$query_entrypoint" ]]; then
+  echo "error: duration atlas query runtime is incomplete: $query_entrypoint" >&2
+  exit 127
+fi
+
+# Do not inherit a target project's Python module search path. The runtime is a
+# root-owned, dependency-free bundle with its schema paths anchored to itself.
+unset PYTHONHOME
+export PYTHONPATH="$runtime_scripts"
+
+exec /usr/bin/python3 "$query_entrypoint" "$@"

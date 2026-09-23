@@ -1,0 +1,31 @@
+{
+  "kind": "provider-free-consultation-flow-validation",
+  "recorded_on": "2026-09-06",
+  "source_sha256": {
+    "experiments/development-harness/consultation/flow_v1.py": "39cb190b57e922d0149ae09edda5073486060c3165fc5c7bea1d898ec0360c9c",
+    "scripts/test-consultation-flow.py": "27d92ee24fc675b4b3bd7e03addabc3b50137747e9d3bbb079599ad6549041ea"
+  },
+  "test_command": "CONSULTATION_FLOW_IMAGE=sha256:c7f904a12d7e7c63a2c7e46bc6654c8304b497a2836ecb08fb5bea0118f679ea PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-consultation-flow.py",
+  "tests": 9,
+  "failures": 0,
+  "skipped": 0,
+  "reported_seconds": 27.549,
+  "docker_cases": [
+    "three distinct participant containers, normal transfer and external evaluation",
+    "hanging advisor stopped; maker and remaining condition not started"
+  ],
+  "boundaries": [
+    "all participant stop proofs before hidden evaluation",
+    "advice sourced from hashed terminal archive",
+    "observed usage sums include advisor and maker",
+    "unknown usage, invalid advice, or failed stop prevents dependent dispatch",
+    "no replay, no automatic retry, no solo fallback",
+    "bounded explicit exclusion of transport handoff from task score"
+  ],
+  "limitations": [
+    "deterministic injected transports only; live adapter absent",
+    "serial advice then fresh maker; interactive consultation and primary context continuation untested",
+    "no quality, speed, or cost-effect claim from synthetic outputs",
+    "live environment equivalence and credential capability probes remain unimplemented"
+  ]
+}

@@ -1,14 +1,28 @@
 # Cursor Dev Container
 
-Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツール（Codex CLI、Gemini CLI、Claude Code）を統合し、**信頼済みのローカル開発環境**で素早く作業するための基盤を提供します。
+Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツール（Codex CLI、Gemini CLI、Claude Code、Grok Build、OpenCode）を統合し、**信頼済みのローカル開発環境**で素早く作業するための基盤を提供します。
 
 ## 特徴
 
 - **Ubuntu 22.04** ベース
 - **Node.js 22.x** プリインストール
-- **AI ツール統合**: Codex CLI、Fugu wrapper、Gemini CLI、Claude Code がすぐに使える
+- **AI ツール統合**: Codex CLI、Fugu wrapper、Gemini CLI、Claude Code、Grok Build、OpenCode がすぐに使える
+- **再現可能なstable toolchain**: Feature、Node、global npm tool、AI CLIを固定し、起動時installなし
+- **ローカル起動はedge channel**: ホストのCodex / Gemini / Claude Code / Grok / OpenCode versionへ自動同期。固定版を使う場合はstableを指定
 - **Docker-in-Docker**: コンテナ内でDockerを利用可能
 - **ホスト設定の引き継ぎ**: SSH鍵、Git設定、認証情報を自動マウント
+- **Mira Companion v2**: Codex / Claude / Grokのinteractive sessionとagentctl-managed jobが小さなpixel-art世界の動きになるbottom-panel companionを自動導入
+- **Adaptive collaboration playbook**: 期待する効果と律速要因からagent同士の関係を組み立て、人数・interaction・候補数はprojectごとの観測で調整
+- **Zero-input collaboration observation**: provider hookとagentctl lifecycleからsolo / delegated episodeの時間・worker・test・rework proxyを内容抜きで自動保存
+- **Agent duration atlas**: 12 family × S/M/Lの有限corpus、quality/censoring付き実測record、exact-match query skillを提供
+
+ミラのpersonaは `AGENTS.md`、再利用templateは `AGENTS_TEMPLATE.md`、companion architectureは [`docs/mira/architecture.md`](docs/mira/architecture.md)、visual asset contractは [`docs/mira/assets.md`](docs/mira/assets.md) を参照してください。
+
+この基盤は、強い単独AIでも解法の探索・判断・実装が行き詰まる難題を出発点に、相談・多様な案・複数実装の比較・検証と統合によって到達できる成果を広げることを目指します。単独の未達を校正し、難題での最終成果と全費用を自動評価して、指示・情報提供・実行制御を改善し、未使用の難題で再評価します。[現行計画と現在地](docs/project-plan.md)、[方式別の比較設計](docs/agents/collaboration-experiment-plan.md)を参照してください。
+
+評価は[小規模・大規模の両方](docs/agents/development-harness-evaluation.md)を対象とします。Cycle 001〜005と動的schedulingの比較を実施済みですが、強い単独を超える安定した能力拡張は未達です。現在は[既存の実リポジトリ難題を使う計画](docs/project-plan.md)へ進め方を改訂しています。
+
+GPT-6 Sol / Grok 4.7 / Claude Opus 5.5に向けたCLI更新、モデル指定と検証範囲は[2026-09-23の更新記録](docs/agents/model-refresh-2026-09-23.md)を参照してください。通常のnative agentはモデル継承を維持し、過去の実験結果は当時の条件のまま保存します。
 
 ## クイックスタート
 
@@ -17,7 +31,7 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 ホスト側に以下のディレクトリを作成しておく（存在しない場合）:
 
 ```bash
-mkdir -p ~/.codex ~/.config/gemini ~/.claude
+mkdir -p ~/.codex ~/.config/gemini ~/.claude ~/.grok ~/.config/opencode ~/.local/share/opencode
 [ -s ~/.claude.json ] || printf '{}\n' > ~/.claude.json
 ```
 
@@ -30,17 +44,17 @@ Cursor / VS Code でこのフォルダを開き、「Reopen in Container」を�
 ### 3. AI ツールを使う
 
 ```bash
-# Codex CLI（devcontainer 内では既定で確認スキップ）
+# Codex CLI（safe既定: providerのapproval / sandboxを維持）
 codex "ファイルを整理して"
 
-# Codex CLI（互換 alias: 明示的な自動承認モード）
-codex-auto "テストを書いて"
+# Codex CLI（trusted-fast: sandbox / approvalを明示的に迂回）
+codex-trusted "テストを書いて"
 
 # Codex CLI（フルオートモード）
 codex-full "リファクタリングして"
 
-# Codex CLI（確認を戻したい場合）
-codex-ask "差分を確認しながら進めて"
+# 旧aliasは移行互換として残る
+codex-auto "テストを書いて"
 
 # Fugu（Codex CLI + Sakana provider、既定モデルは fugu-ultra）
 fugu exec "READMEを要約して"
@@ -49,15 +63,134 @@ fugu --model fugu exec "軽めのタスク"
 # Gemini CLI
 gemini
 
-# Claude Code（devcontainer 内では既定で権限確認スキップ）
+# Claude Code（safe既定）
 claude
 
-# Claude Code（互換 alias: 明示的な権限確認スキップモード）
+# Claude Code（trusted-fast: permission checkを明示的に迂回）
+claude-trusted "テストを書いて"
+
+# 旧aliasは移行互換として残る
 claude-yolo "テストを書いて"
 
-# Claude Code（確認を戻したい場合）
-claude-ask "差分を確認しながら進めて"
+# Grok Build（safe既定）
+grok
+
+# Grok Build（trusted-fast: permission / sandboxを明示的に迂回）
+grok-trusted -p "テストを書いて"
+
+# 旧aliasは移行互換として残る
+grok-yolo -p "テストを書いて"
+
+# OpenCode（Goを使う場合はTUI内の /connect でOpenCode Goを選ぶ）
+opencode
+
+# stable toolchain / provider capability / auth readiness / legacy stateを診断
+agentctl doctor
+agentctl doctor --json
 ```
+
+### Mira terminal sessions
+
+`mira` はByobu上で権限確認を省いたCLIを起動します。同じGit worktreeで同じCLIをもう一度指定すると、起動済みのセッションへ戻ります。
+
+```bash
+mira codex
+mira codex --add    # 同じworktreeにCodexをもう1つ起動
+mira claude
+mira gemini
+mira grok
+mira opencode
+mira list       # 一覧から番号で選んで接続
+```
+
+Codex / Claude / Grokは既存の`*-trusted`、Geminiは`--approval-mode=yolo --no-sandbox`、OpenCodeは`--auto`で起動します。OpenCodeの明示的なdeny設定は`--auto`でも有効です。`--add`は各CLIの直後に指定でき、毎回新しいセッションを作ります。`mira list`では同じCLIのセッションを`#1`、`#2`のように区別できます。通常の`mira <CLI>`は既存のセッションへ戻り、複数あるときは`#1`を優先します。起動時だけ各CLIの引数を渡せます。Byobu内でF6を押すとCLIを動かしたまま切断し、`mira list`または`mira <CLI>`で戻れます。SSH接続が切れてもコンテナが動いている間はセッションが残り、CLIを終了すると一覧から消えます。コンテナの停止・再作成を越えてプロセスを保存する機能ではありません。
+
+image内Codexはversion pin / stable-edge同期をこのrepositoryが所有するため、system configでstartup update checkを無効化しています。通常の`codex`はproject trustを自動変更しません。明示的な`codex-trusted`だけは、full-access opt-inと同じscopeで起動時のcurrent working directoryをそのinvocation中だけtrusted projectとして渡し、headless goal投入前のonboarding promptを避けます。別directoryを対象にする場合は、起動前に移動するか`DEVCONTAINER_CODEX_TRUSTED_PROJECT_DIR`へabsolute pathを指定します。
+
+### 4. Native multi-agent contractをprojectへ導入する
+
+新規projectではこのrepositoryの`project/`をtemplate sourceとして、`scripts/manage-agent-project`で導入・更新できます。`plan --source project --target TARGET --json`の出力をJSONファイルへ保存し、確認後に`apply --target TARGET --plan PLAN_JSON --json`で適用します。TARGETは既存の別project directoryを指定してください。既存の未管理`AGENTS.md`やprovider設定は内容が一致していても衝突となり、全体の適用を停止します。所有履歴は`.agent-project/`へ保存し、`status --target TARGET --json`で管理pathとlocal変更を確認できます。使用例と更新・復旧の制約は[`project lifecycle guide`](docs/agent-project-lifecycle.md)を参照してください。導入後に`<<...>>`をproject固有値へ置き換えた内容はlocal変更として保持されます。`AGENTS_TEMPLATE.md`は同じcontractをmanager向け説明込みで展開した版です。
+
+imageには`manage-agent-project`と既定templateを同梱しています。checkoutをmountしなくても任意のcwdから`manage-agent-project plan --target TARGET --json`を使えます。checkoutの`scripts/manage-agent-project`はこのrepositoryの`project/`を既定にし、どちらも`--source`で明示指定できます。以前copyしたprojectは、全template fileのbytesと実行bitが一致する歴史的sourceで`adopt --source SOURCE --target TARGET --json`し、退避したlocal変更を戻して更新できます。更新時は共通baseから重ならないUTF-8の行変更と互換なmode変更をmergeし、競合は全体の適用前に停止します。
+
+中断時は`status`の`pending_transaction`を確認し、`recover --target TARGET --json`で変更前へ復旧します。直近の完了transactionは`rollback --target TARGET --transaction ID --json`で戻せます。どちらも対象への後続編集があれば全体を拒否し、無関係なfileは保持します。`.agent-project/`にはprivateな変更前の内容も保存されます。新しい管理ディレクトリは内部の`.gitignore`で通常のGit操作から除外し、project自身の`.gitignore`は変更しません。旧状態の除外、手動競合解決、crash test、mountなしcontainer smokeの手順は[lifecycle guide](docs/agent-project-lifecycle.md)に記載しています。
+
+```text
+AGENTS.md                         project共通のscope / lane / permission / integration
+CLAUDE.md                        Claude CodeからAGENTS.mdをimport
+.agent/                          provider-neutralなrole、task / result schema、examples
+.codex/agents/*.toml             Codex native custom agents
+.codex/skills/                   adaptive orchestration / evidence / duration workflow
+.claude/agents/*.md              Claude Code native subagents
+.grok/agents/*.md                Grok Build native custom agents
+docs/agents/runbook.md           failure recovery / integration / GC
+```
+
+同一providerで通常の調査とreviewを行う時は`researcher` / `reviewer` native subagentへfan-outします。cross-providerまたはdurableなstructured resultが必要なら、`agentctl`のsafe read jobでCodex / Claude / Grokを選びます。実装用`implementer`は、primaryがimmutable base SHAから専用worktreeを割り当てた後だけ使います。untrusted codeや破壊的Docker操作は同一containerへ混ぜずisolated laneへ送ります。
+
+agent同士の関係はlane、role、時間上のlifecycleとは別に設計します。soloより改善するmechanismと今回のbinding constraintを先に確認し、`solo / delegate / consult / compete / verify`を現在のrelation aliasとして必要な協働を組み立てます。人数、interaction、candidate数、blindnessはglobal defaultにせず、独立artifact、固有の観点、識別可能な案、検査したいfailure modeとproject-local evidenceから決めます。定期・event駆動workは無期限sessionではなく有限jobとして扱い、scheduler runtimeが未実装の間は存在を仮定しません。選択手順、parameterの意味、安全なstop conditionは[`collaboration model`](docs/agents/collaboration-model.md)とtarget copyの[`collaboration playbook`](project/docs/agents/collaboration-playbook.md)を参照してください。
+
+人間へ日報やform入力を要求しません。Codex / Claude / Grok hookと`agentctl` eventは、prompt、code、command、pathを保存せず、solo / delegated turnのduration、worker start / stop、peak concurrency、test outcome、rework / post-worker-tail proxyを`$MIRA_COMPANION_EPISODE_DIR/collaboration-episodes.json`へ自動保存します。このdevcontainerではrebuild後も残るnamed volume上の`/var/lib/mira-observations`です。optionalなdecision contractをtaskへ添付した`agentctl` jobだけは、IDをopaque化してrelation、lifecycle、expected mechanism、binding constraintと相関できます。`report-agent-collaboration-evidence`とtargetの`$review-collaboration-evidence`はepisode本文を出さずworkspace-localな記述統計を返します。欠測は推測せず`unknown / unmeasured`です。schema、coverage、retention、privacyは[`zero-input collaboration observation`](docs/agents/collaboration-observation.md)を参照してください。
+
+Controlled corpusの所要時間は別のduration atlasへ保存します。36 caseの存在はmodel/provider/relationの全組合せを測定済みという意味ではなく、単一観測、quality-fail、requested-only effort、timeoutを分離したままexact条件で参照します。Dev Container内では`query-agent-duration-atlas`、target projectでは`project/.codex/skills/lookup-agent-duration/`を利用できます。計測、有限batch、resume、欠測の読み方は[`duration atlas operator guide`](docs/agents/duration-atlas/README.md)が正本です。
+
+協働方式の限定した比較結果は[`配布用の実測snapshot`](project/docs/agents/collaboration-study-evidence.md)から参照できます。原集計もtemplateへ同梱し、通常のorchestration skill/playbookから条件・費用・未測定を確認できます。別projectの実測や、協働一般の改善率としては扱いません。
+
+native childはparent sessionのlive permissionを継承し得ます。read-only agent fileを置いただけで強いruntime overrideが弱まるとはみなしません。safe Lane Rならparentもsafeにします。session / workspace全体へ`trusted-fast`を明示許可した場合だけ、boundedなconsult / verify childを同じtrusted permissionで動かせます。この場合はLane Rや強制read-onlyと呼ばず、`trusted advisory`として記録します。
+
+templateとschemaの整合性確認:
+
+```bash
+PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate-agent-contracts.py
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-agent-contracts.py
+```
+
+Phase 3a–3eのwrite fabricはforegroundとsupervisor-managed detachの両方を利用できます。
+
+```bash
+agentctl project register
+agentctl job create --task docs/agents/tasks/task-0001.json
+agentctl job run <job-id> --provider codex   # または claude / grok
+agentctl job run <job-id> --provider codex --detach
+agentctl job cancel <job-id>
+agentctl job validate <job-id>                 # 従来のprovider報告 + Git検証
+agentctl job check <job-id> --timeout 60 --json # immutable taskのcommandを独立実行
+agentctl job checks <job-id> --json            # 再実行せずfresh / in_progressを確認
+agentctl job validate <job-id> --require-checks --json
+agentctl job collect <job-id> --json
+agentctl job logs <job-id> --lines 80
+agentctl gc --dry-run --job <job-id> --json
+```
+
+write providerはGit common metadataへ直接commitせず、`ready_for_commit`を返します。brokerがscope、HEAD、dirty pathsをGitから照合してjob branchへcommitするため、Codexのsafe sandboxを崩さずlinked worktreeを使えます。state、attempt evidence、worktreeは`/var/lib/agentctl`のnamed volumeへ保存されます。detachはowner-only Unix socketのlocal supervisorへ渡され、PID＋process start time、heartbeat、process-group cancel、restart時orphan判定に加え、resource class別capacity、priority queue、Compose namespace、integration port leaseを持ちます。validated jobは`collect`でdependency順・commit候補・path overlap・checks/risksをimmutable reportへ集約しますが、merge/pushは行いません。運用時のlog viewはboundedかつbest-effortでsecretをredactし、provider終了後のraw logは8 MiB、runner logは1 MiB、live supervisor logは2 MiBのtailへ制限します。`gc --dry-run`はcanonical path、Git identity、integration evidence、job固有Docker labelまで再確認しますが、削除は一切行いません。jobの開始・成功・失敗・cancel・orphanはprovider / roleだけのsanitized eventとしてMira Worldへ自動反映されます。CLI、state、failure semanticsは[`docs/agentctl.md`](docs/agentctl.md)を参照してください。
+
+Lane Iはまだstable runtimeを持たず、同一containerへfallbackしません。optional runtimeの導入前probeと、model request/image pullなしのprivate-daemon比較は`python3 scripts/benchmark-isolated-runtime-pilot.py --probe-only` / `--repetitions 5`で実行できます。現時点の結果と「privileged DinDをsecurity boundaryにはしない」という判断は[`docs/agents/isolated-runtime-pilot-2026-08-12.md`](docs/agents/isolated-runtime-pilot-2026-08-12.md)にあります。
+
+長時間のオーケストレーション評価は、専用のnested-Docker volumeとauth readiness検査を固定する`scripts/benchmark-devcontainer.py`で起動できます。普段どおり`tmux`から`/goal`を投入し、独自schedulerは挟みません。手順とevidence境界は[`docs/agents/orchestration-benchmark-runbook.md`](docs/agents/orchestration-benchmark-runbook.md)を参照してください。
+
+独立チェックはproviderや認証を起動せず、呼び出し元の権限で元のtask commandを実行します。同じattemptの重複実行は即時拒否し、過去のpassより最新の失敗・中断・実行中の状態を優先します。SIGTERM時の子process cleanup、強制終了後の`--recover-incomplete`手順、64 KiB/commandのbounded evidence方針は[`運用・復旧手順`](docs/agentctl.md#unattended-checking-interruption-and-recovery)を参照してください。
+
+設計判断は[`ADR-0001`](docs/adr/0001-native-first-multi-agent-execution.md)、target contractの全体像は[`AGENTS_TEMPLATE.md`](AGENTS_TEMPLATE.md)、実行fabricは[`docs/agentctl.md`](docs/agentctl.md)、失敗時の正本は[`project/docs/agents/runbook.md`](project/docs/agents/runbook.md)です。
+
+### 5. Mira Companionを有効にする
+
+devcontainerにeditorがattachした後、local VSIXをpackageしてremote側のVS Code / Cursorへ自動導入します。専用のActivity Barやsidebarは作らず、VS Code下部に短い`Mira World` panelを1つ追加します。workspace初回とremote runtimeのrebuild直後だけ自動で復帰し、同じruntimeでのreload以後はVS Codeが記憶するpanelの開閉状態を尊重します。status bar右側の小さなMiraはworldを再度開くtoggleです。
+
+Codex / Claude / Grok連携はimage内のcontainer-managed hookで行います。配置先はそれぞれ`/etc/codex/requirements.toml`、`/etc/claude-code/managed-settings.d/50-mira-companion.json`、`/etc/grok/managed_config.toml`です。Codexのcentrally managed lifecycle defaultは`/etc/codex/config.toml`へ分離しています。Claude / Grok側も既存hookへ加算され、bind mountした`~/.claude` / `~/.grok`、認証、permission、sandboxを変更しません。対象projectへhookをコピーしたり、projectごとに信頼したりする必要もありません。さらに`agentctl`経由のCodex / Claude / Grok jobは共通brokerから同じbridgeへ接続され、provider別人数とresearcher / reviewer / implementerのrole spriteとして表示されます。調査なら資料庫、planningなら作戦卓、編集やshellなら工房、testならsignal gate、delegationならdispatch dockへミラが自動で歩き、到着後に状態別animationへ変わります。idle中も低頻度でmap内を散歩します。
+
+状態ファイルをまだ一度も受信していない場合は、HUDへ`activity未接続`と表示します。imageを更新した直後はeditorをreloadし、新しいCodex / Claude / Grok sessionを開始してください。正常に接続され、active workがなければ`待機中`になります。direct CLIではprovider自身のlifecycleとnative subagent、`agentctl`ではdurable job transitionを観測します。
+
+ハイタッチ、なでる、常設menuはありません。長い作業の完了、test recovery、badge獲得など自然な区切りにだけ、ミラの近くへ45秒で消えるone-click popが現れます。押さなくても損はなく、clickによるXP差もありません。motionは`auto` / `subtle` / `full` / `off`、status toggleは表示 / 非表示を選べます。
+
+自動導入されなかった場合:
+
+```bash
+scripts/install-mira-vscode-extension
+```
+
+新規containerでremote editor CLIが準備される前に導入処理が走らないよう、AI CLI同期は`postStartCommand`、Mira導入は`postAttachCommand`に分離しています。PATH上にremote CLIがないlifecycle shellでは`code-server` / `cursor-server`を直接使い、install後に期待versionが一覧へ現れたことまで確認します。editor attach中は30秒以内にCLIが見つからなければlifecycle errorにします。一方、CLIだけで行うheadless `devcontainer up`は正しいorchestration runtimeなので、待機せずMira導入だけをskipして成功します。判定を明示したい時は`MIRA_COMPANION_ATTACH_MODE=editor|headless`を使えます。
+
+Command Paletteの`ミラ: Mira Worldを開く`でも再表示できます。Mira全体を止める場合は、devcontainerを開く前にホスト側で`MIRA_COMPANION_ENABLED=0`を設定します。hookは残して拡張の自動導入だけを止める場合は`MIRA_COMPANION_INSTALL=0`を使います。
 
 ## Trust Model
 
@@ -66,7 +199,8 @@ claude-ask "差分を確認しながら進めて"
 - ホストの SSH / Git / AI 認証情報をマウントします
 - AI 認証情報は **ホスト側ディレクトリ/ファイルを直接 bind mount** します。ホスト側の更新はコンテナへ即時反映され、コンテナ側の更新もホスト側へ書き戻されます
 - `docker-in-docker` を前提にした高権限設定です
-- devcontainer 内の `codex` / `claude` は wrapper により既定で確認プロンプトをスキップします
+- devcontainer 内の通常 `codex` / `claude` / `grok` はproviderのapproval / sandboxを維持します
+- `codex-trusted` / `claude-trusted` / `grok-trusted`だけが明示的に権限バイパスを付けます
 - `codex-second-agent` / `claude-second-agent` も常に権限バイパス用フラグを付けます
 
 使いどころ:
@@ -79,11 +213,20 @@ claude-ask "差分を確認しながら進めて"
 - ホスト資格情報をコンテナへ渡したくない場合
 - 強いマルチテナント隔離が必要な場合
 
-設計方針と推奨レイアウトは [docs/architecture.md](/home/asakura/devcontainer/docs/architecture.md) を参照してください。
+設計方針は [`docs/architecture.md`](docs/architecture.md)、toolchain更新手順は
+[`docs/toolchain.md`](docs/toolchain.md) を参照してください。
 
-## Cursorエージェント向け: セカンドエージェント用ツール（Codex / Claude）
+## Legacy compatibility: second-agent wrapper
+
+> **Legacy / feature frozen:** この節のwrapperは並行移行中の互換surfaceです。
+> security、data-loss、CLI compatibility以外の機能は追加しません。新設計と
+> 非破壊inventoryは [`ADR-0001`](docs/adr/0001-native-first-multi-agent-execution.md) と
+> [`legacy-second-agent.md`](docs/agents/legacy-second-agent.md) を参照してください。既存jobの継続・回収・削除手順は
+> [`legacy-second-agent-runbook.md`](docs/agents/legacy-second-agent-runbook.md)が正本です。
 
 このリポジトリには、**非対話で呼べる“セカンドエージェント”口**を同梱しています。Codex 用の `codex-second-agent` と Claude Code 用の `claude-second-agent` があり、どちらも共通エンジン `second-agent`（`scripts/second-agent`）の薄いシムです。CLI 表面（サブコマンド/オプション）は共通なので、`codex-second-agent` を `claude-second-agent` に置き換えるだけでバックエンドを切り替えられます。
+
+Grokはこのfeature-frozen wrapperへ追加しません。新規のGrok jobはnative `.grok/agents/`と`agentctl --provider grok`を使い、3つ目のbackendを旧bash engineへ増築しない方針です。
 
 セッションIDは **ツール側が target workspace ごとの state ディレクトリに保存**するため、CursorエージェントがIDを覚えておく必要がありません。
 
@@ -95,14 +238,14 @@ claude-ask "差分を確認しながら進めて"
 | 権限バイパス | `--dangerously-bypass-approvals-and-sandbox --search` | `--dangerously-skip-permissions` |
 | 作業ディレクトリ | `--cd <path>` を渡す | flag が無いため wrapper が `cd` する |
 | セッション継続 | `codex exec resume <id>` | `claude -r <id>` |
-| 固定モデル | `gpt-5.5`（`CODEX_SA_MODEL` で上書き可） | `opus`（`CLAUDE_SA_MODEL` で上書き可） |
+| 固定モデル | `gpt-6-sol`（`CODEX_SA_MODEL` で上書き可） | `opus`（`CLAUDE_SA_MODEL` で上書き可） |
 | 環境変数プレフィックス | `CODEX_SA_*` | `CLAUDE_SA_*` |
 | state ディレクトリ | `.codex-second-agent` | `.claude-second-agent` |
 | worktree ブランチ | `agent/<name>` | `claude-agent/<name>` |
 
-### 使い方（Cursorエージェント向け）
+### 互換wrapperの参照先
 
-この基盤リポジトリ自身の開発ルールは `AGENTS.md`、別プロジェクトでの運用手順は `AGENTS_TEMPLATE.md` と `project/AGENTS.md` を参照してください。
+新規projectの運用手順をこの節からcopyしないでください。native-first templateは`AGENTS_TEMPLATE.md`と`project/`、既存wrapperの具体的なrecovery操作は`docs/agents/legacy-second-agent-runbook.md`を参照します。
 
 ### 内部の挙動（実装の要点）
 
@@ -152,7 +295,7 @@ claude-ask "差分を確認しながら進めて"
 - 権限バイパスは危険です。隔離環境ではなく、信頼済みホスト上の高権限運用として扱ってください
 - **workspace スコープ制限は「事故低減」であって隔離（security boundary）ではありません。** 実行は常にホスト権限フルです
 - 既定エージェント（`default`）も `--cd`/`--add-dir` は**既定で実行対象 repo の中だけ**に制限されます。外を触らせたいときだけ `--allow-outside-workspace`（または `<PREFIX>_ALLOW_OUTSIDE=1`）を付けてください。なお worktree 隔離・セッション分離が欲しいサブエージェント運用では `--agent <name>` を使います
-- 使用モデルは固定です（codex: 既定 `gpt-5.5`、`CODEX_SA_MODEL` で上書き可 / claude: 既定 `opus`、`CLAUDE_SA_MODEL` で上書き可）。既定値はコード直書きのため陳腐化し得ます（env でピン留め推奨）
+- wrapperはモデル指定を固定します（codex: 既定 `gpt-6-sol`、`CODEX_SA_MODEL` で上書き可 / claude: 既定 `opus`、`CLAUDE_SA_MODEL` で上書き可）。`opus`の解決先はCLI・providerで変わるため、再現性が必要なら完全なモデルIDをenvで指定してください。
   - `--model` などのモデル選択系オプションは passthrough から除去されます
   - codex は `--config model=...` / `--oss` / `--local-provider` も無視します
   - claude は `--output-format` / `--input-format` / `--permission-mode` / `-p` / `-r` / `--session-id` など、wrapper が固定する実行フラグを passthrough から除去します
@@ -166,12 +309,12 @@ claude-ask "差分を確認しながら進めて"
 
 ## プリインストールツール
 
-AI CLI のバージョンは Dockerfile で固定しています（再ビルド時の挙動差分を減らすため）。
+Dockerfileのversionがstableの正本です。stable起動時はhost CLIをprobeせず、npm packageも更新しません。host versionへ追従するのはedgeを明示した場合だけです。
 
 | カテゴリ | ツール |
 |----------|--------|
 | **ランタイム** | Node.js 22.x, Python 3 |
-| **AI CLI** | @openai/codex, @google/gemini-cli, @anthropic-ai/claude-code |
+| **AI CLI** | @openai/codex, @google/gemini-cli, @anthropic-ai/claude-code, Grok Build, @opencode/cli |
 | **開発ツール** | TypeScript, ESLint, Prettier |
 | **ユーティリティ** | Git, GitHub CLI, ripgrep, jq, vim |
 | **シェル** | Bash, Zsh |
@@ -206,43 +349,96 @@ API key は次の順で使います。
 | `~/.config/gemini` | `/home/devuser/.config/gemini` | Gemini CLI設定 |
 | `~/.claude.json` | `/home/devuser/.claude.json` | Claude Codeグローバル設定・アカウント情報 |
 | `~/.claude` | `/home/devuser/.claude` | Claude Code認証情報・設定 |
+| `~/.grok` | `/home/devuser/.grok` | Grok Build認証情報・設定・session |
+| `~/.config/opencode` | `/home/devuser/.config/opencode` | OpenCode設定 |
+| `~/.local/share/opencode` | `/home/devuser/.local/share/opencode` | OpenCode Go認証情報・session |
+| `~/.cache/devcontainer-ai-cli` | `/opt/devcontainer-host-ai-cli` | CLI version manifest（read-only、credential なし） |
 
 AI CLI の認証ディレクトリ/ファイルは CLI の標準パスへ直接 mount するため、ホスト側でログインし直した token 更新はコンテナ内からそのまま見えます。
 コンテナ内でログイン・token refresh が発生した場合も、同じホスト側パスへ書き戻されます。
 
+## Stable / edge AI CLI channel
+
+このrepositoryをCursor / VS Codeで開くと、既定のedgeがホスト側CLIのversionへ同期します。Dockerfileから直接起動するimageはstableのままです。`grok` wrapperはbackground self-updateも抑止し、更新の所有権をstable/edge channelへ一本化します。
+
+```bash
+agentctl doctor --json
+```
+
+起動時の同期を止めてimageの固定版を使う場合は、hostで次を設定し、その環境を引き継いでCursor / VS Codeを起動します。
+
+```bash
+export DEVCONTAINER_AI_CLI_CHANNEL=stable
+```
+
+edgeでは次の順でhost側versionを反映します。
+
+1. ホストの `initializeCommand` が `codex --version` / `gemini --version` / `claude --version` / `grok --version` / `opencode --version` を検出し、`~/.cache/devcontainer-ai-cli/versions.env` にバージョン番号だけを保存
+2. cache ディレクトリをコンテナへ read-only mount
+3. `postStartCommand` が差分のあるnpm packageとGrok公式binaryを作業用prefixへ導入し、要求された全CLIの実行結果とversionを検証してから `/opt/devcontainer-ai-cli/bin` を一括で切り替える
+
+公開前の同期失敗・中断では直前のCLIを保持します。切替後に呼出元が停止した場合も、公開済みの完全な世代を使い、再試行で要求版を確認できます。原因を解消し、前の実行groupが停止してから同じedge環境で `scripts/sync-host-ai-cli-versions` を再実行してください。同じprefixへの同時同期はretry案内付きで失敗し、lock fileの手動削除は不要です。世代の保持と復旧の詳細は [`docs/toolchain.md`](docs/toolchain.md) を参照してください。
+
+ホストの実行ファイル自体は mount しません。Codex などには OS / CPU 別の native package が含まれるため、バージョンだけを合わせてコンテナ向け package を導入します。
+
+host側でCLIをupdateした後はdevcontainerを開き直してください。edge同期にはnpm registryと`x.ai`への接続が必要です。stableへ戻すには上記を指定し、image-pinned prefixへ戻すためcontainerをrebuildします。既に起動したエディタの別terminalでexportするだけでは起動環境は変わりません。設定を変えた場合はエディタを終了して、その環境から起動し直してください。
+
+確認:
+
+```bash
+codex --version
+gemini --version
+claude --version
+grok --version
+opencode --version
+fugu --version  # Fugu は Codex CLI を利用するため、Codex と同じ version
+```
+
+hostに存在しないCLIはimage versionを維持します。OpenCode GoはCLIとは別の契約プロバイダーで、利用には[公式手順](https://opencode.ai/v2/docs/console/go)に従ってAPI keyを取得し、OpenCode内の`/connect`で登録します。認証データは上記mountでホストと共有されます。OpenCodeは直接CLIとして提供し、`agentctl`のproviderには追加していません。旧`DEVCONTAINER_AI_CLI_SYNC=1`はedge opt-in、`=0`はhost probe/sync無効として移行期間だけ維持します。詳細と更新手順は [`docs/toolchain.md`](docs/toolchain.md) を参照してください。
+
+`fugu`自体はnpm packageではなく、このrepositoryの`scripts/fugu`を呼ぶwrapperです。実行engineのCodex versionは選択中のstable / edge channelに従います。
+
 ## 環境変数
 
-ホスト側で以下の環境変数が設定されていれば、コンテナに引き継がれます:
+ホスト側で以下の環境変数が設定されていれば、remote editorとintegrated terminalのprocessへ引き継がれます。stable imageのENVには保存しません:
 
 - `OPENAI_API_KEY`
 - `SAKANA_API_KEY`
 - `GEMINI_API_KEY`
 - `ANTHROPIC_API_KEY`
+- `XAI_API_KEY`
 
-devcontainer 内の `codex` / `claude` は wrapper 経由で次のフラグを自動付与します。
+通常の`codex` / `claude` / `grok`は危険flagを自動付与しません。明示的なtrusted commandだけが次を付けます。
 
-- `codex`: `--dangerously-bypass-approvals-and-sandbox`
-- `claude`: `--dangerously-skip-permissions`
+- `codex-trusted`: `--dangerously-bypass-approvals-and-sandbox`
+- `claude-trusted`: `--dangerously-skip-permissions`
+- `grok-trusted`: `--permission-mode bypassPermissions --sandbox off`
 
-一時的に確認を戻したい場合は、次のいずれかを使います。
+旧automationを一時的に互換動作させる環境変数も残していますが、新規利用ではtrusted commandを使ってください。
 
 ```bash
-DEVCONTAINER_CODEX_DANGEROUS_DEFAULT=0 codex
-DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT=0 claude
+DEVCONTAINER_CODEX_DANGEROUS_DEFAULT=1 codex
+DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT=1 claude
+DEVCONTAINER_GROK_DANGEROUS_DEFAULT=1 grok
 ```
 
-実体の CLI は `/usr/local/bin/codex-real` / `/usr/local/bin/claude-real` に退避しています。
+実体の CLI は `/opt/devcontainer-ai-cli/bin/codex` / `/opt/devcontainer-ai-cli/bin/claude` / `/opt/devcontainer-ai-cli/bin/grok` に置き、`/usr/local/bin` の wrapper から呼び出します。
 
 ## エイリアス
 
 | エイリアス | 展開 |
 |------------|------|
-| `codex-auto` | `codex --dangerously-bypass-approvals-and-sandbox` |
+| `codex-trusted` | explicit trusted-fast executable |
+| `codex-auto` | `codex-trusted`（legacy alias） |
 | `codex-full` | `codex --full-auto` |
-| `codex-ask` | `DEVCONTAINER_CODEX_DANGEROUS_DEFAULT=0 codex` |
+| `codex-ask` | `codex`（legacy alias） |
 | `fugu-ultra` | `fugu --model fugu-ultra` |
-| `claude-yolo` | `claude --dangerously-skip-permissions` |
-| `claude-ask` | `DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT=0 claude` |
+| `claude-trusted` | explicit trusted-fast executable |
+| `claude-yolo` | `claude-trusted`（legacy alias） |
+| `claude-ask` | `claude`（legacy alias） |
+| `grok-trusted` | explicit trusted-fast executable |
+| `grok-yolo` | `grok-trusted`（legacy alias） |
+| `grok-ask` | `grok`（legacy alias） |
 
 ## カスタマイズ
 
@@ -264,8 +460,8 @@ DEVCONTAINER_CLAUDE_DANGEROUS_DEFAULT=0 claude
 
 ```dockerfile
 RUN npm install -g \
-    typescript \
-    ts-node \
+    typescript@<exact-version> \
+    ts-node@<exact-version> \
     # 追加したいパッケージ
 ```
 
@@ -280,7 +476,7 @@ RUN npm install -g \
 ホスト側にディレクトリが存在しない可能性があります:
 
 ```bash
-mkdir -p ~/.codex ~/.config/gemini ~/.claude
+mkdir -p ~/.codex ~/.config/gemini ~/.claude ~/.grok
 [ -s ~/.claude.json ] || printf '{}\n' > ~/.claude.json
 ```
 
@@ -291,10 +487,23 @@ mkdir -p ~/.codex ~/.config/gemini ~/.claude
    codex  # 初回は認証フローが走る
    gemini # 初回は認証フローが走る
    claude # 初回は認証フローが走る
+   grok   # 初回は認証フローが走る
    ```
-2. それでも反映されない場合は、ホスト側の `~/.codex` / `~/.config/gemini` / `~/.claude` / `~/.claude.json` が存在することを確認し、devcontainer を開き直してください
+2. それでも反映されない場合は、ホスト側の `~/.codex` / `~/.config/gemini` / `~/.claude` / `~/.claude.json` / `~/.grok` が存在することを確認し、devcontainer を開き直してください
 3. Claude Code の対話モードだけが login を求める場合は、`~/.claude.json` が `/home/devuser/.claude.json` に mount されているか確認してください
 4. `~/.claude.json` が 0 byte だと Claude Code は「corrupted」と判定し onboarding/login に戻ります。空なら `printf '{}\n' > ~/.claude.json` で初期化してください（`initializeCommand` が自動で行いますが、手動でも可）
+
+### ホストと AI CLI のバージョンが合わない
+
+まず選択中のchannelを確認してください。`stable`ではimage固定版を使うため、ホストとのversion差は正常です。
+以下は`edge`でホストへ同期する場合の手順です。エディタ起動時の環境で`DEVCONTAINER_AI_CLI_CHANNEL=stable`や
+`DEVCONTAINER_AI_CLI_SYNC=0`を指定している場合、initialize/postStartを繰り返してもホスト同期は行いません。
+
+1. ホスト側で `.devcontainer/initialize-host.sh` を実行し、`~/.cache/devcontainer-ai-cli/versions.env` を更新する
+2. devcontainer を開き直す
+3. 起動ログの `devcontainer: syncing ...` または `already matches the host` を確認する
+
+純粋な `docker restart` ではホスト側の `initializeCommand` は実行されない実装もあります。その場合もedgeの同期が有効なら、上記の手動実行後に再起動すれば、`postStartCommand` が同期します。
 
 ### 権限エラー
 
