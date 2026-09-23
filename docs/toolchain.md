@@ -280,6 +280,46 @@ Normal `codex`, `claude`, and `grok` preserve provider approvals/sandboxing. Use
 when the speed tradeoff is intentional. The current privileged container and
 credential mounts remain outside any strong security boundary in either profile.
 
+## Optional browser tools
+
+Product-experience verification needs a real browser: the target-template skill
+`$verify-product-experience` drives the running product, captures screenshots,
+and gives the end-user lens observed evidence instead of code-reading guesses.
+The Chromium OS libraries are the part a project cannot easily add by itself in
+this image, so the base repository offers them as an **opt-in, image-pinned**
+layer.
+
+```bash
+# host, before starting the editor; then "Dev Containers: Rebuild Container"
+export DEVCONTAINER_BROWSER_TOOLS=1
+```
+
+- `devcontainer.json` passes `${localEnv:DEVCONTAINER_BROWSER_TOOLS:0}` as a build
+  argument. The default `0` leaves the image unchanged and ships no browser.
+- `1` installs the exact `PLAYWRIGHT_VERSION` from the Dockerfile into
+  `/opt/devcontainer-browser-tools`, plus one headless Chromium shell and its
+  apt dependencies through `playwright install --with-deps --only-shell`. The
+  build verifies the CLI version. Stable startup performs no download.
+- Only `with-browser-tools COMMAND...` sets `PLAYWRIGHT_BROWSERS_PATH`,
+  `NODE_PATH`, and `PATH` for one command. No image-wide ENV redirects a
+  project's own Playwright dependency, which keeps its default browser cache and
+  install behavior. Without the layer the wrapper exits 127 with enablement
+  guidance and never downloads anything.
+- Impact: a larger image and one more pinned third-party package when enabled.
+  The value `0 | 1` is validated at build time.
+- Alternatives considered: always installing (penalizes projects without a UI),
+  installing at startup (breaks the no-startup-install stable contract), and
+  requiring every project to add Playwright (still needs root-installed OS
+  libraries, so the wrapper-free path stays available for projects that prefer
+  their own dependency).
+- Update: bump `PLAYWRIGHT_VERSION` in a dedicated canary change, rebuild with
+  `--build-arg DEVCONTAINER_BROWSER_TOOLS=1`, and run
+  `scripts/test-devcontainer-browser-tools.sh IMAGE 1`.
+- Removal: delete the Dockerfile layer, the `with-browser-tools` wrapper and its
+  test, the build argument, and the fallback text in the
+  `verify-product-experience` skill. Projects that depend on the wrapper should
+  first add Playwright as their own dependency.
+
 ## Repository development compatibility
 
 `python3-tomli` supports the native-agent template validator on Ubuntu 22.04's

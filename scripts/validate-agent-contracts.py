@@ -16,14 +16,86 @@ except ModuleNotFoundError:
     # TOML reader; Python >= 3.11 needs no compatibility dependency.
     import tomli as tomllib
 
-from agent_contracts import ContractValidationError, load_json, validate_file
+from agent_contracts import (
+    SKILL_MIRRORS,
+    SKILL_SOURCE,
+    ContractValidationError,
+    load_json,
+    skill_mirror_differences,
+    validate_file,
+)
 
 
 EXPECTED_ROLE_MODES = {
     "researcher": ("read", "read-only", "plan"),
     "implementer": ("write", "workspace-write", "default"),
     "reviewer": ("read", "read-only", "plan"),
+    "advisor": ("read", "read-only", "plan"),
 }
+
+
+REQUIRED_SKILLS = (
+    "develop-evaluated-optimization",
+    "kickoff-project",
+    "orchestrate-agent-collaboration",
+    "review-collaboration-evidence",
+    "review-product-direction",
+    "verify-product-experience",
+)
+
+
+PRODUCT_DOCUMENTS = (
+    "docs/product/brief.md",
+    "docs/product/assumptions.md",
+    "docs/product/roadmap.md",
+)
+
+
+PRODUCT_GUIDANCE_REQUIREMENTS = (
+    "docs/product/brief.md",
+    "docs/product/assumptions.md",
+    "docs/product/roadmap.md",
+    ".agent/lenses/",
+    "$kickoff-project",
+    "$review-product-direction",
+    "$verify-product-experience",
+    "fix-now / scheduled / accepted-risk / out-of-scope",
+)
+
+
+LENS_REQUIRED_SECTIONS = ("## Purpose", "## Use when", "## Questions", "## Return", "## Avoid")
+
+
+# Markdown under these template-owned roots is scanned for references that no
+# longer resolve. Project-owned code references are not checked.
+REFERENCE_SCAN_ROOTS = (
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".agent",
+    ".agents",
+    ".claude",
+    ".codex",
+    ".grok",
+    "docs/agents",
+    "docs/product",
+)
+TEMPLATE_REFERENCE_PREFIXES = (
+    "AGENTS.md",
+    "CLAUDE.md",
+    ".agent/",
+    ".agents/",
+    ".claude/",
+    ".codex/",
+    ".grok/",
+    "docs/agents/",
+    "docs/product/",
+    "scripts/",
+)
+# Documents that the template deliberately points to in the devcontainer base
+# repository rather than in the target project.
+BASE_REPOSITORY_REFERENCES = frozenset({"docs/agents/legacy-second-agent-runbook.md"})
+BACKTICK_PATH = re.compile(r"`([A-Za-z0-9_.][A-Za-z0-9_./-]*\.(?:md|json|toml|py|yaml))`")
+MARKDOWN_LINK = re.compile(r"\[[^\]]*\]\(([^)\s]+)\)")
 
 
 ADAPTIVE_GUIDANCE_REQUIREMENTS = {
@@ -148,13 +220,76 @@ def validate_operating_docs(root: Path) -> None:
         "docs/agents/collaboration-evidence-contracts.md" in agents,
         "AGENTS.md must reference the collaboration evidence contracts",
     )
-    require(
-        (root / ".codex/skills/review-collaboration-evidence/SKILL.md").is_file(),
-        "missing project-local collaboration evidence review skill",
-    )
     for relative, phrases in ADAPTIVE_GUIDANCE_REQUIREMENTS.items():
         path = root / relative
         validate_adaptive_guidance(path, path.read_text(encoding="utf-8"), phrases)
+
+
+def validate_product_layer(root: Path) -> None:
+    for relative in PRODUCT_DOCUMENTS:
+        require((root / relative).is_file(), f"missing product document: {root / relative}")
+    agents = (root / "AGENTS.md").read_text(encoding="utf-8")
+    for phrase in PRODUCT_GUIDANCE_REQUIREMENTS:
+        require(phrase in agents, f"AGENTS.md product guidance missing {phrase!r}")
+    lenses = root / ".agent/lenses"
+    require((lenses / "README.md").is_file(), f"missing lens catalog: {lenses / 'README.md'}")
+    cards = sorted(path for path in lenses.glob("*.md") if path.name != "README.md")
+    require(bool(cards), f"lens catalog has no lens cards: {lenses}")
+    for card in cards:
+        text = card.read_text(encoding="utf-8")
+        for section in LENS_REQUIRED_SECTIONS:
+            require(section in text, f"lens card missing {section!r}: {card}")
+
+
+def validate_skills(root: Path) -> None:
+    source = root / SKILL_SOURCE
+    for name in REQUIRED_SKILLS:
+        path = source / name / "SKILL.md"
+        require(path.is_file(), f"missing skill: {path}")
+    for path in sorted(source.glob("*/SKILL.md")):
+        metadata = parse_frontmatter(path)
+        require(metadata.get("name") == path.parent.name, f"skill name must match its directory: {path}")
+        require(bool(metadata.get("description")), f"skill description missing: {path}")
+    differences = skill_mirror_differences(root)
+    require(
+        not differences,
+        f"{', '.join(SKILL_MIRRORS)} must mirror {SKILL_SOURCE} (copy each skill without its agents/ "
+        f"directory, or run scripts/sync-project-skills): " + "; ".join(differences[:5]),
+    )
+
+
+def _scanned_markdown(root: Path) -> list[Path]:
+    paths: list[Path] = []
+    for relative in REFERENCE_SCAN_ROOTS:
+        base = root / relative
+        if base.is_file():
+            paths.append(base)
+        elif base.is_dir():
+            paths.extend(path for path in sorted(base.rglob("*.md")) if "__pycache__" not in path.parts)
+    return paths
+
+
+def validate_references(root: Path) -> None:
+    """Reject template references to files that the template does not ship."""
+    for path in _scanned_markdown(root):
+        text = path.read_text(encoding="utf-8")
+        for match in MARKDOWN_LINK.finditer(text):
+            target = match.group(1).split("#", 1)[0]
+            if not target or re.match(r"^[a-z][a-z0-9+.-]*:", target):
+                continue
+            require((path.parent / target).exists(), f"broken link {match.group(1)!r} in {path}")
+        for match in BACKTICK_PATH.finditer(text):
+            token = match.group(1)
+            if not token.startswith(TEMPLATE_REFERENCE_PREFIXES) or token in BASE_REPOSITORY_REFERENCES:
+                continue
+            require(
+                (root / token).exists() or (path.parent / token).exists(),
+                f"reference to missing template file {token!r} in {path}",
+            )
+        for pattern in UNSUPPORTED_GLOBAL_DEFAULTS:
+            found = pattern.search(text)
+            if found:
+                raise ContractValidationError(f"unsupported global collaboration default {found.group(0)!r}: {path}")
 
 
 def validate_schemas_and_examples(root: Path, config: dict[str, Any]) -> None:
@@ -228,6 +363,9 @@ def validate_grok_templates(root: Path) -> None:
 def validate_template(root: Path) -> None:
     config = validate_config(root)
     validate_operating_docs(root)
+    validate_product_layer(root)
+    validate_skills(root)
+    validate_references(root)
     validate_schemas_and_examples(root, config)
     validate_codex_templates(root)
     validate_claude_templates(root)

@@ -64,16 +64,28 @@ project/
 ├─ CLAUDE.md                  # @AGENTS.md bridge
 ├─ .agent/
 │  ├─ config.json
-│  ├─ roles/{researcher,implementer,reviewer}.md
-│  ├─ schemas/{task,result}.schema.json
+│  ├─ roles/{researcher,implementer,reviewer,advisor}.md
+│  ├─ lenses/*.md             # advisorへ渡すperspective brief
+│  ├─ schemas/{task,result,collaboration-*}.schema.json
 │  └─ examples/
+├─ .agents/skills/            # skill正本（Codex / Grok Build）
 ├─ .codex/
 │  ├─ config.toml
 │  └─ agents/*.toml
-├─ .claude/agents/*.md
+├─ .claude/
+│  ├─ agents/*.md
+│  └─ skills/                 # .agents/skillsのmirror（agents/ metadataを除く）
 ├─ .grok/agents/*.md
-└─ docs/agents/runbook.md
+└─ docs/
+   ├─ product/{brief,assumptions,roadmap}.md
+   └─ agents/runbook.md
 ```
+
+### Product direction layer
+
+実行fabricは「どう安全に速く作るか」を扱い、product layerは「何を、誰のために、なぜ作るか」を扱います。`docs/product/`はprimaryが保守するcontextで、instructionの優先順位を変えません。ユーザーが明示しなかった視点はroleを増やさず、read-onlyの`advisor` roleへ`.agent/lenses/`のlensを渡して持ち込みます。これによりprovider mappingは役割ごとに1 fileのまま保たれ、lensの追加はprovider定義を増やしません。lensの選択は名前の付いたriskから導き、catalog全体や参加者数をdefaultにしません。
+
+skillの正本は`.agents/skills/`です。Codex 0.156では`.agents/skills`と旧`.codex/skills`の両方の探索を実測し、Grok Buildは`.agents/skills`と`.claude/skills`を読み、Claude Codeは`.claude/skills`を読みます。Claude用mirrorは`scripts/sync-project-skills`で生成し、validatorが内容と実行bitの一致を検査します。判断の記録は[`ADR-0002`](adr/0002-product-direction-layer.md)です。
 
 `.agent`はprovider-neutralなsource of truthです。Codex / Claude / Grok定義はnative discovery pathへ置くthin mappingで、project policyを複製しません。Claude Codeは`AGENTS.md`を直接loadしないため、`CLAUDE.md`が先頭で`@AGENTS.md`をimportします。
 

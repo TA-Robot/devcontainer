@@ -84,7 +84,7 @@ resultの`checks`は実行したcommandだけを記録し、`passed`はinteger e
 ## Derive participants instead of choosing a count
 
 - delegate: non-overlapping shard、stage、artifactから導く。
-- consult: 固有のperspective、evidence source、failure modeから導く。
+- consult: 固有のperspective、evidence source、failure modeから導く。product判断では`advisor`へ、名前の付いたriskに対応する`.agent/lenses/`のlensを一つずつ渡す。
 - compete: 実質的に異なるapproachと識別可能な評価から導く。
 - verify: 独立させたいerror mode、probe、review surfaceから導く。
 

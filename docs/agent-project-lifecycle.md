@@ -105,6 +105,18 @@ File/directory type transitions are conservative conflicts. File hard links are
 copied as independent files; replacing a managed hard link does not change its
 other links.
 
+### Skill location migration
+
+Template skills moved from `.codex/skills/` to the cross-provider
+`.agents/skills/` (read by Codex and Grok Build) with a byte-identical
+`.claude/skills/` mirror for Claude Code. An update plan for a project installed
+from an older template therefore adds the new paths and marks the old
+`.codex/skills/**` files `delete` when they are unchanged. A locally edited old
+skill file is a `local_change_upstream_deleted` conflict: move the edit into
+`.agents/skills/<name>/` and the matching `.claude/skills/<name>/`, restore or
+remove the old file, and replan. Old empty directories remain because template
+deletion never removes directories.
+
 ## Explicit adoption of copied projects
 
 ```bash

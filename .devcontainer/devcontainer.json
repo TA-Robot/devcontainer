@@ -2,7 +2,11 @@
   "name": "Cursor Dev Container",
   "build": {
     "dockerfile": "Dockerfile",
-    "context": ".."
+    "context": "..",
+    "args": {
+      // 1にするとPlaywright + Chromiumをimageへ固定導入する（既定0。変更後はRebuild）
+      "DEVCONTAINER_BROWSER_TOOLS": "${localEnv:DEVCONTAINER_BROWSER_TOOLS:0}"
+    }
   },
 
   // Trusted local development profile: privileged container + direct host credential mounts.

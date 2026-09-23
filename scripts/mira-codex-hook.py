@@ -34,6 +34,8 @@ MAX_CONFIGURED_OBSERVATION_EPISODES = 4096
 AGENT_PROVIDERS = {"codex", "claude", "grok"}
 AGENT_ROLES = {"implementer", "researcher", "reviewer", "tester"}
 AGENT_ROLE_ALIASES = {
+    # Lens advisors think and critique like reviewers; reuse that sprite.
+    "advisor": "reviewer",
     "coder": "implementer",
     "general-purpose": "implementer",
     "implementation": "implementer",

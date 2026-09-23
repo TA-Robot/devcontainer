@@ -25,6 +25,12 @@
       "default_lane": "read",
       "resource_class": "light",
       "writes": false
+    },
+    "advisor": {
+      "definition": ".agent/roles/advisor.md",
+      "default_lane": "read",
+      "resource_class": "light",
+      "writes": false
     }
   },
   "lanes": {

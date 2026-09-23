@@ -466,6 +466,19 @@ class MiraCodexHookTest(unittest.TestCase):
         self.assertEqual(state["status"], "idle")
         self.assertEqual(state["activeSubagents"], 0)
 
+    def test_lens_advisor_jobs_render_as_reviewers(self) -> None:
+        state = self.emit(
+            {
+                "mira_source": "agentctl",
+                "session_id": "advisor-job",
+                "attempt_id": "advisor-attempt",
+                "hook_event_name": "AgentJobStart",
+                "provider": "claude",
+                "role": "advisor",
+            }
+        )
+        self.assertEqual(state["activeAgents"][0]["role"], "reviewer")
+
     def test_agentctl_jobs_are_provider_aware_and_sanitized(self) -> None:
         secret = "private-job-objective-must-not-persist"
         grok = self.emit(
