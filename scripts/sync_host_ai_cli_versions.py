@@ -25,8 +25,9 @@ TOOLS = {
     "CLAUDE_CODE_VERSION": ("claude", "@anthropic-ai/claude-code"),
     "GEMINI_CLI_VERSION": ("gemini", "@google/gemini-cli"),
     "GROK_CLI_VERSION": ("grok", None),
+    "OPENCODE_CLI_VERSION": ("opencode", None),
 }
-VERSION = re.compile(r"(?<![\w.+-])(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)(?![\w.+-])")
+VERSION = re.compile(r"(?<![\w.+-])v?(\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?)(?![\w.+-])")
 # A hung --version must not hold the startup lock forever. This is a per-probe
 # cost cap, not a provider performance assumption.
 PROBE_TIMEOUT = 20
@@ -52,6 +53,14 @@ def version(root, name, lock_fd):
         return None
     found = VERSION.search(result.stdout.strip())
     return found.group(1) if found else None
+
+
+def requested_tool(key, wanted):
+    name, package = TOOLS[key]
+    if key == "OPENCODE_CLI_VERSION":
+        # OpenCode 2 moved its npm distribution without changing the CLI name.
+        package = "@opencode/cli" if int(wanted.split(".", 1)[0]) >= 2 else "opencode-ai"
+    return name, package, wanted
 
 
 def remove(path):
@@ -236,14 +245,16 @@ def synchronize(prefix, npm, requests, lock_fd):
         snapshot(prefix, candidate)
         # Replace changed packages completely so files removed by a newer release
         # cannot survive an overlay. Unspecified packages remain in the snapshot.
-        for _, package, _ in changed:
-            if package:
-                path = candidate
-                relative = Path("lib/node_modules") / package
-                for part in relative.parent.parts:
-                    path = path / part
-                    private_directory(path)
-                remove(candidate / relative)
+        for name, package, _ in changed:
+            replaced = ("opencode-ai", "@opencode/cli") if name == "opencode" else (package,)
+            for old_package in replaced:
+                if old_package:
+                    path = candidate
+                    relative = Path("lib/node_modules") / old_package
+                    for part in relative.parent.parts:
+                        path = path / part
+                        private_directory(path)
+                    remove(candidate / relative)
         overlay(installed, candidate)
         relocate_links(candidate, [(installed, candidate)])
         verify(candidate, requests, lock_fd)
@@ -269,7 +280,7 @@ def synchronize(prefix, npm, requests, lock_fd):
 
 def main():
     prefix = Path(sys.argv[1]).resolve()
-    requests = [(*TOOLS[key], value) for key, value in
+    requests = [requested_tool(key, value) for key, value in
                 (entry.split("=", 1) for entry in sys.argv[3:])]
     prefix.mkdir(parents=True, exist_ok=True)
     lock_fd = os.open(prefix, os.O_RDONLY | os.O_DIRECTORY)

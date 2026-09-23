@@ -40,7 +40,7 @@ fi
 declare -A desired_versions=()
 while IFS='=' read -r key value; do
   case "$key" in
-    CODEX_CLI_VERSION|CLAUDE_CODE_VERSION|GEMINI_CLI_VERSION|GROK_CLI_VERSION)
+    CODEX_CLI_VERSION|CLAUDE_CODE_VERSION|GEMINI_CLI_VERSION|GROK_CLI_VERSION|OPENCODE_CLI_VERSION)
       if [[ ! "$value" =~ ^[0-9]+\.[0-9]+\.[0-9]+([-+][0-9A-Za-z.-]+)?$ ]]; then
         echo "error: invalid $key in $version_file: $value" >&2
         exit 1
@@ -59,7 +59,7 @@ fi
 # atomic publication. Keep channel/manifest policy here for compatibility.
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd -P)"
 requests=()
-for key in CODEX_CLI_VERSION CLAUDE_CODE_VERSION GEMINI_CLI_VERSION GROK_CLI_VERSION; do
+for key in CODEX_CLI_VERSION CLAUDE_CODE_VERSION GEMINI_CLI_VERSION GROK_CLI_VERSION OPENCODE_CLI_VERSION; do
   if [[ -n "${desired_versions[$key]:-}" ]]; then
     requests+=("$key=${desired_versions[$key]}")
   fi

@@ -42,7 +42,12 @@ cat >"$stub_dir/grok" <<'EOF'
 echo grok >>"${PROBE_LOG:?}"
 echo "grok 1.0.3 (fixture) [stable]"
 EOF
-chmod +x "$stub_dir/codex" "$stub_dir/claude" "$stub_dir/gemini" "$stub_dir/grok"
+cat >"$stub_dir/opencode" <<'EOF'
+#!/bin/sh
+echo opencode >>"${PROBE_LOG:?}"
+echo "opencode v2.0.14"
+EOF
+chmod +x "$stub_dir/codex" "$stub_dir/claude" "$stub_dir/gemini" "$stub_dir/grok" "$stub_dir/opencode"
 
 # Explicit stable must not execute host CLI probes.
 PROBE_LOG="$probe_log" HOME="$host_home" PATH="$stub_dir:/usr/bin:/bin" \
@@ -52,6 +57,8 @@ manifest="$host_home/.cache/devcontainer-ai-cli/versions.env"
 [[ ! -s "$probe_log" ]] || fail "stable initialize must not probe host AI CLIs"
 [[ "$(wc -l <"$manifest" | tr -d ' ')" == "1" ]] || fail "stable manifest should contain only its header"
 [[ "$(cat "$host_home/.claude.json")" == "{}" ]] || fail "Claude state file was not initialized"
+[[ -d "$host_home/.config/opencode" && -d "$host_home/.local/share/opencode" ]] \
+  || fail "OpenCode config and auth mount sources were not initialized"
 
 # The local editor launch defaults to edge and records only version numbers.
 : >"$probe_log"
@@ -61,7 +68,8 @@ grep -qx 'CODEX_CLI_VERSION=1.2.3' "$manifest" || fail "edge host Codex version 
 grep -qx 'CLAUDE_CODE_VERSION=4.5.6' "$manifest" || fail "edge host Claude version was not detected"
 grep -qx 'GEMINI_CLI_VERSION=7.8.9' "$manifest" || fail "edge host Gemini version was not detected"
 grep -qx 'GROK_CLI_VERSION=1.0.3' "$manifest" || fail "edge host Grok version was not detected"
-[[ "$(wc -l <"$probe_log" | tr -d ' ')" == "4" ]] || fail "edge should probe each supported host CLI"
+grep -qx 'OPENCODE_CLI_VERSION=2.0.14' "$manifest" || fail "edge host OpenCode version was not detected"
+[[ "$(wc -l <"$probe_log" | tr -d ' ')" == "5" ]] || fail "edge should probe each supported host CLI"
 
 # The opt-out must also suppress probes under the new local edge default and
 # replace an earlier populated manifest rather than retaining stale versions.
@@ -91,7 +99,7 @@ while [[ $# -gt 0 ]]; do
       prefix="$2"
       shift 2
       ;;
-    @*)
+    @*|opencode-ai@*)
       specs+=("$1")
       shift
       ;;
@@ -111,8 +119,13 @@ for spec in "${specs[@]}"; do
     @openai/codex) command_name=codex ;;
     @anthropic-ai/claude-code) command_name=claude ;;
     @google/gemini-cli) command_name=gemini ;;
+    @opencode/cli|opencode-ai) command_name=opencode ;;
   esac
-  printf '#!/bin/sh\necho "%s %s"\n' "$command_name" "$version" >"$package_dir/cli"
+  if [[ "$command_name" == opencode ]]; then
+    printf '#!/bin/sh\necho "opencode v%s"\n' "$version" >"$package_dir/cli"
+  else
+    printf '#!/bin/sh\necho "%s %s"\n' "$command_name" "$version" >"$package_dir/cli"
+  fi
   chmod 0755 "$package_dir/cli"
   mkdir -p "$prefix/bin"
   ln -sf "../lib/node_modules/$package_name/cli" "$prefix/bin/$command_name"
@@ -171,8 +184,11 @@ grep -q '@openai/codex@1.2.3' "$npm_log" || fail "Codex package was not synchron
 grep -q '@anthropic-ai/claude-code@4.5.6' "$npm_log" || fail "Claude package was not synchronized on edge"
 grep -q '@google/gemini-cli@7.8.9' "$npm_log" || fail "Gemini package was not synchronized on edge"
 grep -q 'grok-1.0.3-linux-' "$download_log" || fail "Grok binary was not synchronized on edge"
+grep -q '@opencode/cli@2.0.14' "$npm_log" || fail "OpenCode package was not synchronized on edge"
 [[ "$($prefix/bin/grok --version)" == "grok 1.0.3 (fixture) [stable]" ]] \
   || fail "Grok edge binary version was not installed"
+[[ "$($prefix/bin/opencode --version)" == "opencode v2.0.14" ]] \
+  || fail "OpenCode edge binary version was not installed"
 
 : >"$npm_log"
 : >"$download_log"

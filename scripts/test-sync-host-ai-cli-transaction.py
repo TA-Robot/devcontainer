@@ -13,9 +13,10 @@ import unittest
 
 SCRIPT = Path(__file__).resolve().with_name("sync-host-ai-cli-versions")
 PACKAGES = {"codex": "@openai/codex", "claude": "@anthropic-ai/claude-code",
-            "gemini": "@google/gemini-cli"}
+            "gemini": "@google/gemini-cli", "opencode": "@opencode/cli"}
 KEYS = {"codex": "CODEX_CLI_VERSION", "claude": "CLAUDE_CODE_VERSION",
-        "gemini": "GEMINI_CLI_VERSION", "grok": "GROK_CLI_VERSION"}
+        "gemini": "GEMINI_CLI_VERSION", "grok": "GROK_CLI_VERSION",
+        "opencode": "OPENCODE_CLI_VERSION"}
 INSTALLER = r'''#!/usr/bin/env python3
 import json, os, sys, time
 from pathlib import Path
@@ -27,16 +28,17 @@ with (root / 'calls').open('a') as log:
     log.write(json.dumps([kind, args]) + '\n')
 if kind == 'npm':
     prefix = Path(args[args.index('--prefix') + 1])
-    for spec in (a for a in args if a.startswith('@')):
+    for spec in (a for a in args if a.startswith('@') or a.startswith('opencode-ai@')):
         package, version = spec.rsplit('@', 1)
         name = {'@openai/codex':'codex', '@anthropic-ai/claude-code':'claude',
-                '@google/gemini-cli':'gemini'}[package]
+                '@google/gemini-cli':'gemini', '@opencode/cli':'opencode',
+                'opencode-ai':'opencode'}[package]
         directory = prefix / 'lib/node_modules' / package
         directory.mkdir(parents=True, exist_ok=True)
         (directory / 'package.json').write_text(json.dumps({'version': version}))
         binary = directory / 'cli'
         reported = '9.9.9' if mode == 'npm-wrong' else version
-        binary.write_text('#!/bin/sh\necho ' + name + ' ' + reported + '\n'
+        binary.write_text('#!/bin/sh\necho ' + name + (' v' if name == 'opencode' else ' ') + reported + '\n'
                           + ('exit 17\n' if mode == 'exit-fail' else ''))
         if mode == 'absolute-install-path':
             payload = directory / 'payload'
@@ -95,7 +97,7 @@ class TransactionTests(unittest.TestCase):
                     "../lib/node_modules/" + PACKAGES[name] + "/cli")
             else:
                 binary = self.prefix / "bin" / name
-            binary.write_text(f"#!/bin/sh\necho {name} 1.0.0\n")
+            binary.write_text(f"#!/bin/sh\necho {name} {'v' if name == 'opencode' else ''}1.0.0\n")
             binary.chmod(0o755)
         (self.prefix / "private file").write_text("keep this\n")
         (self.prefix / "private file").chmod(0o600)
@@ -148,7 +150,9 @@ class TransactionTests(unittest.TestCase):
                                               text=True).strip() for name in KEYS}
 
     def assert_versions(self, names=KEYS, version="2.3.4"):
-        self.assertEqual(self.versions(), {n: f"{n} {version if n in names else '1.0.0'}" for n in KEYS})
+        self.assertEqual(self.versions(), {
+            n: f"{n} {'v' if n == 'opencode' else ''}{version if n in names else '1.0.0'}"
+            for n in KEYS})
 
     def wait_entered(self, process):
         deadline = time.monotonic() + 5
@@ -170,6 +174,20 @@ class TransactionTests(unittest.TestCase):
         self.run_sync()
         self.assertEqual(tree(self.prefix), before)
         self.assertEqual((self.root / "calls").read_bytes(), calls)
+
+    def test_seeded_stable_generation(self):
+        stable = self.prefix / ".ai-cli-generation-stable"
+        stable.mkdir()
+        for name in ("bin", "lib"):
+            (self.prefix / name).rename(stable / name)
+            (self.prefix / name).symlink_to(f".ai-cli-generation-stable/{name}")
+        before = tree(self.prefix)
+        self.write_manifest(["gemini"])
+        self.run_sync("npm-fail", success=False)
+        self.assertEqual(tree(self.prefix), before)
+        self.run_sync()
+        self.assert_versions(["gemini"])
+        self.assertTrue((self.prefix / "bin").is_symlink())
 
     def test_failures_preserve_tree_and_retry(self):
         for mode in ("npm-fail", "curl-fail", "npm-wrong", "grok-wrong",
@@ -195,6 +213,22 @@ class TransactionTests(unittest.TestCase):
         self.run_sync()
         self.assert_versions(["codex", "grok"])
         self.assertNotIn('"npm"', (self.root / "calls").read_text())
+
+    def test_opencode_package_migration(self):
+        self.write_manifest(["opencode"], version="1.18.32")
+        self.run_sync()
+        self.assertEqual(self.versions()["opencode"], "opencode v1.18.32")
+        self.assertTrue((self.prefix / "lib/node_modules/opencode-ai").exists()
+                        or any(self.prefix.glob(".ai-cli-generation-*/lib/node_modules/opencode-ai")))
+        self.write_manifest(["opencode"], version="2.0.14")
+        self.run_sync()
+        self.assertEqual(self.versions()["opencode"], "opencode v2.0.14")
+        active = (self.prefix / "bin").resolve().parent
+        self.assertTrue((active / "lib/node_modules/@opencode/cli").exists())
+        self.assertFalse((active / "lib/node_modules/opencode-ai").exists())
+        calls = (self.root / "calls").read_text()
+        self.assertIn("opencode-ai@1.18.32", calls)
+        self.assertIn("@opencode/cli@2.0.14", calls)
 
     def test_metadata_is_not_an_executable_check(self):
         for package in PACKAGES.values():

@@ -2,7 +2,8 @@
 set -eu
 
 # bind mount sources must exist before the container is created.
-mkdir -p "$HOME/.codex" "$HOME/.config/gemini" "$HOME/.claude" "$HOME/.grok"
+mkdir -p "$HOME/.codex" "$HOME/.config/gemini" "$HOME/.claude" "$HOME/.grok" \
+  "$HOME/.config/opencode" "$HOME/.local/share/opencode"
 
 if [ -d "$HOME/.claude.json" ]; then
   echo "error: $HOME/.claude.json must be a file, but is a directory" >&2
@@ -62,6 +63,7 @@ if [ "$sync_switch" != "0" ] && [ "$channel" = "edge" ]; then
   write_version CLAUDE_CODE_VERSION claude
   write_version GEMINI_CLI_VERSION gemini
   write_version GROK_CLI_VERSION grok
+  write_version OPENCODE_CLI_VERSION opencode
 fi
 
 mv "$version_tmp" "$version_file"

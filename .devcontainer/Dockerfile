@@ -59,6 +59,7 @@ ARG CODEX_CLI_VERSION=0.156.0
 ARG GEMINI_CLI_VERSION=0.45.2
 ARG CLAUDE_CODE_VERSION=2.1.280
 ARG GROK_CLI_VERSION=1.0.41
+ARG OPENCODE_CLI_VERSION=2.0.14
 ARG GROK_CLI_LINUX_X64_SHA256=9ce03ed23e16ea01072b4496263d6213a27899e1e3e107f008d36edf82e70407
 ARG TYPESCRIPT_VERSION=5.9.3
 ARG TS_NODE_VERSION=10.9.2
@@ -107,6 +108,7 @@ ENV DEVCONTAINER_AI_CLI_PREFIX=/opt/devcontainer-ai-cli \
     DEVCONTAINER_GEMINI_CLI_VERSION=${GEMINI_CLI_VERSION} \
     DEVCONTAINER_CLAUDE_CODE_VERSION=${CLAUDE_CODE_VERSION} \
     DEVCONTAINER_GROK_CLI_VERSION=${GROK_CLI_VERSION} \
+    DEVCONTAINER_OPENCODE_CLI_VERSION=${OPENCODE_CLI_VERSION} \
     DEVCONTAINER_DOCKER_VERSION=29.7.2 \
     DEVCONTAINER_DOCKER_BUILDX_VERSION=0.36.1 \
     DEVCONTAINER_DOCKER_COMPOSE_VERSION=${DOCKER_COMPOSE_VERSION} \
@@ -115,7 +117,17 @@ RUN npm install -g --prefix "${DEVCONTAINER_AI_CLI_PREFIX}" \
     @openai/codex@${CODEX_CLI_VERSION} \
     @google/gemini-cli@${GEMINI_CLI_VERSION} \
     @anthropic-ai/claude-code@${CLAUDE_CODE_VERSION} \
+    @opencode/cli@${OPENCODE_CLI_VERSION} \
     && npm cache clean --force
+
+# Seed the same generation layout used by edge publication. Docker overlayfs
+# cannot exchange a lower-layer physical bin directory with an upper-layer link.
+RUN stable="${DEVCONTAINER_AI_CLI_PREFIX}/.ai-cli-generation-stable" \
+    && mkdir -p "$stable" \
+    && mv "${DEVCONTAINER_AI_CLI_PREFIX}/bin" "$stable/bin" \
+    && mv "${DEVCONTAINER_AI_CLI_PREFIX}/lib" "$stable/lib" \
+    && ln -s .ai-cli-generation-stable/bin "${DEVCONTAINER_AI_CLI_PREFIX}/bin" \
+    && ln -s .ai-cli-generation-stable/lib "${DEVCONTAINER_AI_CLI_PREFIX}/lib"
 
 # Codex 0.146 uses its digest-checked bundled bubblewrap when /usr/bin/bwrap is
 # absent. Ubuntu 22.04's older bwrap takes Codex's compatibility path and cannot
@@ -238,7 +250,8 @@ RUN chmod +x /usr/local/bin/codex /usr/local/bin/claude /usr/local/bin/grok \
     && ln -s /usr/local/lib/mira-companion/mira-codex-hook.py /usr/local/bin/mira-codex-hook \
     && ln -s /usr/local/lib/mira-companion/mira-codex-hook.py /usr/local/bin/mira-claude-hook \
     && ln -s /usr/local/lib/mira-companion/mira-codex-hook.py /usr/local/bin/mira-grok-hook \
-    && ln -s "${DEVCONTAINER_AI_CLI_PREFIX}/bin/gemini" /usr/local/bin/gemini
+    && ln -s "${DEVCONTAINER_AI_CLI_PREFIX}/bin/gemini" /usr/local/bin/gemini \
+    && ln -s "${DEVCONTAINER_AI_CLI_PREFIX}/bin/opencode" /usr/local/bin/opencode
 
 # Self-contained lifecycle CLI and immutable default template; no checkout required.
 COPY scripts/manage-agent-project /usr/local/bin/manage-agent-project
@@ -262,7 +275,7 @@ RUN chmod +x /usr/local/bin/second-agent /usr/local/bin/codex-second-agent /usr/
 # AI CLI aliases. `*-auto` / `*-yolo` remain compatibility spellings, while
 # new automation should use the explicit `*-trusted` executable names.
 USER $USERNAME
-RUN mkdir -p ~/.config ~/.codex ~/.claude ~/.grok \
+RUN mkdir -p ~/.config ~/.codex ~/.claude ~/.grok ~/.config/opencode ~/.local/share/opencode \
     && echo '# Codex CLI aliases' >> ~/.bashrc \
     && echo 'alias codex-auto="codex-trusted"' >> ~/.bashrc \
     && echo 'alias codex-full="codex --full-auto"' >> ~/.bashrc \

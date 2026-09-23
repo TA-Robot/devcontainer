@@ -70,6 +70,8 @@
     "source=${localEnv:HOME}/.claude.json,target=/home/devuser/.claude.json,type=bind",
     "source=${localEnv:HOME}/.claude,target=/home/devuser/.claude,type=bind",
     "source=${localEnv:HOME}/.grok,target=/home/devuser/.grok,type=bind",
+    "source=${localEnv:HOME}/.config/opencode,target=/home/devuser/.config/opencode,type=bind",
+    "source=${localEnv:HOME}/.local/share/opencode,target=/home/devuser/.local/share/opencode,type=bind",
     // agentctl metadata, bounded evidence, and job worktrees survive container rebuilds.
     // Projects are partitioned by a UUID stored in each repository's local Git config.
     "source=devcontainer-agentctl-state,target=/var/lib/agentctl,type=volume",
