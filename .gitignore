@@ -2,6 +2,8 @@
 .codex-second-agent/
 .claude-worktrees/
 .claude-second-agent/
+__pycache__/
+*.py[cod]
 scripts/__pycache__/
 scripts/agent_duration_cases/__pycache__/
 temp/multi-agent-duration-atlas/case-designs/__pycache__/
