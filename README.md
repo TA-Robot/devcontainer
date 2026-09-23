@@ -95,6 +95,7 @@ agentctl doctor --json
 
 ```bash
 mira codex
+mira codex --add    # 同じworktreeにCodexをもう1つ起動
 mira claude
 mira gemini
 mira grok
@@ -102,7 +103,7 @@ mira opencode
 mira list       # 一覧から番号で選んで接続
 ```
 
-Codex / Claude / Grokは既存の`*-trusted`、Geminiは`--approval-mode=yolo --no-sandbox`、OpenCodeは`--auto`で起動します。OpenCodeの明示的なdeny設定は`--auto`でも有効です。最初の起動時だけ各CLIの引数を渡せます。Byobu内でF6を押すとCLIを動かしたまま切断し、`mira list`または`mira <CLI>`で戻れます。SSH接続が切れてもコンテナが動いている間はセッションが残り、CLIを終了すると一覧から消えます。コンテナの停止・再作成を越えてプロセスを保存する機能ではありません。
+Codex / Claude / Grokは既存の`*-trusted`、Geminiは`--approval-mode=yolo --no-sandbox`、OpenCodeは`--auto`で起動します。OpenCodeの明示的なdeny設定は`--auto`でも有効です。`--add`は各CLIの直後に指定でき、毎回新しいセッションを作ります。`mira list`では同じCLIのセッションを`#1`、`#2`のように区別できます。通常の`mira <CLI>`は既存のセッションへ戻り、複数あるときは`#1`を優先します。起動時だけ各CLIの引数を渡せます。Byobu内でF6を押すとCLIを動かしたまま切断し、`mira list`または`mira <CLI>`で戻れます。SSH接続が切れてもコンテナが動いている間はセッションが残り、CLIを終了すると一覧から消えます。コンテナの停止・再作成を越えてプロセスを保存する機能ではありません。
 
 image内Codexはversion pin / stable-edge同期をこのrepositoryが所有するため、system configでstartup update checkを無効化しています。通常の`codex`はproject trustを自動変更しません。明示的な`codex-trusted`だけは、full-access opt-inと同じscopeで起動時のcurrent working directoryをそのinvocation中だけtrusted projectとして渡し、headless goal投入前のonboarding promptを避けます。別directoryを対象にする場合は、起動前に移動するか`DEVCONTAINER_CODEX_TRUSTED_PROJECT_DIR`へabsolute pathを指定します。
 
