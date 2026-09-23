@@ -1,0 +1,4 @@
+interface:
+  display_name: "Review Product Direction"
+  short_description: "Check direction at milestone boundaries"
+  default_prompt: "Use $review-product-direction to close the current milestone, surface missing perspectives, and propose the next milestone."

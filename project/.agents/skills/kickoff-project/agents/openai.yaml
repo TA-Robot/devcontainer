@@ -1,0 +1,4 @@
+interface:
+  display_name: "Kickoff Project"
+  short_description: "Turn an idea into a product brief and a verified skeleton"
+  default_prompt: "Use $kickoff-project to shape this product idea into an agreed direction, a walking skeleton, and the first milestone."

@@ -213,3 +213,50 @@ def validate_file(instance_path: Path, schema_path: Path) -> None:
     if not isinstance(schema, dict):
         raise ContractValidationError(f"schema root must be an object: {schema_path}")
     validate(instance, schema)
+
+
+# Skills are authored once under the cross-provider `.agents/skills` directory
+# (read by Codex and Grok Build) and mirrored for Claude Code, which reads only
+# `.claude/skills`. `agents/` inside a skill holds Codex-only UI metadata.
+SKILL_SOURCE = ".agents/skills"
+SKILL_MIRRORS = (".claude/skills",)
+_SKILL_MIRROR_EXCLUDED_DIRECTORIES = {"__pycache__"}
+
+
+def _skill_tree(base: Path, mirror_filter: bool) -> dict[str, tuple[bytes, bool]]:
+    files: dict[str, tuple[bytes, bool]] = {}
+    if not base.is_dir():
+        return files
+    for path in sorted(base.rglob("*")):
+        relative = path.relative_to(base)
+        if _SKILL_MIRROR_EXCLUDED_DIRECTORIES & set(relative.parts):
+            continue
+        if mirror_filter and len(relative.parts) > 1 and relative.parts[1] == "agents":
+            continue
+        if path.is_file() and not path.is_symlink():
+            executable = bool(path.stat().st_mode & 0o111)
+            files[relative.as_posix()] = (path.read_bytes(), executable)
+    return files
+
+
+def expected_skill_mirror(root: Path) -> dict[str, tuple[bytes, bool]]:
+    """Return the files every mirror must contain, keyed by skill-relative path."""
+    return _skill_tree(root / SKILL_SOURCE, mirror_filter=True)
+
+
+def skill_mirror_differences(root: Path) -> list[str]:
+    """Describe how each provider mirror deviates from the canonical skills."""
+    expected = expected_skill_mirror(root)
+    differences: list[str] = []
+    for mirror in SKILL_MIRRORS:
+        actual = _skill_tree(root / mirror, mirror_filter=False)
+        for relative in sorted(set(expected) | set(actual)):
+            if relative not in actual:
+                differences.append(f"{mirror}/{relative}: missing")
+            elif relative not in expected:
+                differences.append(f"{mirror}/{relative}: not in {SKILL_SOURCE}")
+            elif actual[relative][0] != expected[relative][0]:
+                differences.append(f"{mirror}/{relative}: content differs")
+            elif actual[relative][1] != expected[relative][1]:
+                differences.append(f"{mirror}/{relative}: executable bit differs")
+    return differences

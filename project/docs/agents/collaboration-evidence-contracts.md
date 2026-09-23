@@ -78,7 +78,7 @@ projectionがないdirect provider turnや旧taskは、semanticsを`unknown`、c
 通常はSkillを使います。
 
 ```bash
-python3 .codex/skills/review-collaboration-evidence/scripts/report_evidence.py \
+python3 .agents/skills/review-collaboration-evidence/scripts/report_evidence.py \
   --format markdown --max-groups 20 --max-output-bytes 32768
 ```
 

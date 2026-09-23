@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify Product Experience"
+  short_description: "Exercise the running product and capture evidence"
+  default_prompt: "Use $verify-product-experience to run the product and verify the user-visible journeys with evidence."

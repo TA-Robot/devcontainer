@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import json
+import os
 import re
+import shutil
+import subprocess
 import sys
 import tempfile
 import unittest
@@ -30,7 +33,7 @@ def load_template_validator():
 def load_collaboration_report_wrapper():
     path = (
         REPO_ROOT
-        / "project/.codex/skills/review-collaboration-evidence/scripts/report_evidence.py"
+        / "project/.agents/skills/review-collaboration-evidence/scripts/report_evidence.py"
     )
     spec = spec_from_file_location("collaboration_report_wrapper", path)
     assert spec is not None and spec.loader is not None
@@ -241,7 +244,7 @@ class AgentContractTests(unittest.TestCase):
         self.assertIn("do not ask the user", template.read_text(encoding="utf-8"))
 
     def test_read_job_guidance_requires_clean_checkpoint_boundary(self) -> None:
-        skill = (self.template / ".codex/skills/orchestrate-agent-collaboration/SKILL.md").read_text(
+        skill = (self.template / ".agents/skills/orchestrate-agent-collaboration/SKILL.md").read_text(
             encoding="utf-8"
         )
         playbook = (self.template / "docs/agents/collaboration-playbook.md").read_text(
@@ -255,7 +258,7 @@ class AgentContractTests(unittest.TestCase):
 
     def test_native_full_history_fork_guidance_avoids_incompatible_override(self) -> None:
         skill = (
-            self.template / ".codex/skills/orchestrate-agent-collaboration/SKILL.md"
+            self.template / ".agents/skills/orchestrate-agent-collaboration/SKILL.md"
         ).read_text(encoding="utf-8")
         playbook = (
             self.template / "docs/agents/collaboration-playbook.md"
@@ -291,7 +294,7 @@ class AgentContractTests(unittest.TestCase):
         wrapper = load_collaboration_report_wrapper()
         with tempfile.TemporaryDirectory() as raw:
             project = Path(raw) / "target"
-            skill_directory = project / ".codex/skills/review-collaboration-evidence"
+            skill_directory = project / ".agents/skills/review-collaboration-evidence"
             skill_directory.mkdir(parents=True)
             (project / ".agent").mkdir()
             (project / ".agent/config.json").write_text("{}\n", encoding="utf-8")
@@ -310,6 +313,112 @@ class AgentContractTests(unittest.TestCase):
             with self.subTest(statement=statement):
                 with self.assertRaises(ContractValidationError):
                     validator.validate_adaptive_guidance(path, statement, ())
+
+    def copied_template(self, directory: str) -> Path:
+        root = Path(directory) / "template"
+        shutil.copytree(self.template, root, ignore=shutil.ignore_patterns("__pycache__"))
+        return root
+
+    def test_advisor_is_a_read_only_role_in_every_provider(self) -> None:
+        validator = load_template_validator()
+        self.assertEqual(validator.EXPECTED_ROLE_MODES["advisor"], ("read", "read-only", "plan"))
+        config = load_json(self.template / ".agent/config.json")
+        self.assertIs(config["roles"]["advisor"]["writes"], False)
+        with tempfile.TemporaryDirectory() as raw:
+            root = self.copied_template(raw)
+            path = root / ".claude/agents/advisor.md"
+            path.write_text(path.read_text(encoding="utf-8").replace("tools: Read,", "tools: Edit, Read,"),
+                            encoding="utf-8")
+            with self.assertRaisesRegex(ContractValidationError, "write tool exposed"):
+                validator.validate_claude_templates(root)
+
+    def test_skill_mirror_must_match_canonical_skills(self) -> None:
+        validator = load_template_validator()
+        mirrored = sorted(path.parent.name for path in (self.template / ".claude/skills").glob("*/SKILL.md"))
+        self.assertEqual(mirrored, sorted(validator.REQUIRED_SKILLS))
+        self.assertFalse(any((self.template / ".claude/skills").glob("*/agents")))
+        for mutate, expected in (
+            (lambda root: (root / ".claude/skills/kickoff-project/SKILL.md").write_text("---\nname: x\n---\n"),
+             "content differs"),
+            (lambda root: (root / ".claude/skills/verify-product-experience/SKILL.md").unlink(), "missing"),
+            (lambda root: (root / ".claude/skills/kickoff-project/extra.md").write_text("extra\n"),
+             "not in .agents/skills"),
+            (lambda root: (root / ".claude/skills/review-collaboration-evidence/scripts/report_evidence.py")
+             .chmod(0o644), "executable bit differs"),
+        ):
+            with self.subTest(expected=expected), tempfile.TemporaryDirectory() as raw:
+                root = self.copied_template(raw)
+                mutate(root)
+                with self.assertRaisesRegex(ContractValidationError, expected):
+                    validator.validate_skills(root)
+
+    def test_sync_project_skills_rebuilds_the_provider_mirror(self) -> None:
+        script = SCRIPT_DIR / "sync-project-skills"
+        env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
+        with tempfile.TemporaryDirectory() as raw:
+            root = self.copied_template(raw)
+            mirror = root / ".claude/skills"
+            (mirror / "kickoff-project/SKILL.md").write_text("stale\n", encoding="utf-8")
+            (mirror / "retired-skill").mkdir()
+            (mirror / "retired-skill/SKILL.md").write_text("retired\n", encoding="utf-8")
+            check = [sys.executable, str(script), "--template-root", str(root), "--check"]
+            self.assertEqual(subprocess.run(check, capture_output=True, env=env).returncode, 1)
+            subprocess.run([sys.executable, str(script), "--template-root", str(root)],
+                           check=True, capture_output=True, env=env)
+            self.assertEqual(subprocess.run(check, capture_output=True, env=env).returncode, 0)
+            self.assertFalse((mirror / "retired-skill").exists())
+            self.assertFalse((mirror / "kickoff-project/agents").exists())
+            self.assertTrue(os.access(mirror / "review-collaboration-evidence/scripts/report_evidence.py", os.X_OK))
+            load_template_validator().validate_template(root)
+
+    def test_reference_check_rejects_files_the_template_does_not_ship(self) -> None:
+        validator = load_template_validator()
+        for relative, text in (
+            (".agents/skills/orchestrate-agent-collaboration/SKILL.md",
+             "\nRead `docs/agents/collaboration-study-evidence.md`.\n"),
+            (".agent/lenses/README.md", "\nSee [missing](missing-lens.md).\n"),
+            ("docs/product/roadmap.md", "\nSee `.agent/roles/planner.md`.\n"),
+        ):
+            with self.subTest(relative=relative), tempfile.TemporaryDirectory() as raw:
+                root = self.copied_template(raw)
+                path = root / relative
+                path.write_text(path.read_text(encoding="utf-8") + text, encoding="utf-8")
+                with self.assertRaisesRegex(ContractValidationError, "missing|broken link"):
+                    validator.validate_references(root)
+        with tempfile.TemporaryDirectory() as raw:
+            root = self.copied_template(raw)
+            path = root / "docs/product/brief.md"
+            path.write_text(path.read_text(encoding="utf-8")
+                            + "\nProject code such as `src/app.py` and base-repository "
+                            "`docs/agents/legacy-second-agent-runbook.md` are not template files.\n",
+                            encoding="utf-8")
+            validator.validate_references(root)
+
+    def test_product_layer_and_lenses_are_required(self) -> None:
+        validator = load_template_validator()
+        for mutate, expected in (
+            (lambda root: (root / "docs/product/roadmap.md").unlink(), "missing product document"),
+            (lambda root: (root / "AGENTS.md").write_text(
+                (root / "AGENTS.md").read_text(encoding="utf-8").replace("$kickoff-project", "kickoff"),
+                encoding="utf-8"), "product guidance missing"),
+            (lambda root: (root / ".agent/lenses/pre-mortem.md").write_text("# Lens\n\n## Purpose\n"),
+             "lens card missing"),
+        ):
+            with self.subTest(expected=expected), tempfile.TemporaryDirectory() as raw:
+                root = self.copied_template(raw)
+                mutate(root)
+                with self.assertRaisesRegex(ContractValidationError, expected):
+                    validator.validate_product_layer(root)
+
+    def test_product_and_lens_guidance_rejects_unsupported_global_defaults(self) -> None:
+        validator = load_template_validator()
+        with tempfile.TemporaryDirectory() as raw:
+            root = self.copied_template(raw)
+            path = root / ".agent/lenses/README.md"
+            path.write_text(path.read_text(encoding="utf-8") + "\nlens reviewは通常3 agentsで行う。\n",
+                            encoding="utf-8")
+            with self.assertRaisesRegex(ContractValidationError, "unsupported global collaboration default"):
+                validator.validate_references(root)
 
     def test_valid_fixtures(self) -> None:
         validate(load_json(self.fixtures / "task.valid.json"), self.task_schema)

@@ -9,6 +9,8 @@ Read `AGENTS.md` and `docs/agents/collaboration-playbook.md`. Keep the primary r
 
 When project-local measurements could inform the choice, use `$review-collaboration-evidence`. Match the task and workflow before using a finding, and retain explicit user requests and project review requirements.
 
+For product-direction questions (what to build, for whom, which trade-off), the relevant consult participants are `advisor` agents given a lens from `.agent/lenses/`; derive each lens from a named risk or open assumption in `docs/product/`, not from the lens catalog size.
+
 ## Build the current decision
 
 1. State the artifact or decision, acceptance evidence, scope, risk, and binding constraint.
