@@ -7,9 +7,7 @@ description: Plan and adapt multi-agent collaboration for a nontrivial developme
 
 Read `AGENTS.md` and `docs/agents/collaboration-playbook.md`. Keep the primary responsible for decisions, synthesis, integration, and user-facing conclusions.
 
-When prior measurements could inform the choice, read `docs/agents/collaboration-study-evidence.md`.
-It includes shipped observations, their conditions, and unmeasured effects; these are separate from project-local episode facts.
-Read the linked result only when its details matter. Match the task and workflow before using a finding, and retain explicit user requests and project review requirements.
+When project-local measurements could inform the choice, use `$review-collaboration-evidence`. Match the task and workflow before using a finding, and retain explicit user requests and project review requirements.
 
 ## Build the current decision
 
