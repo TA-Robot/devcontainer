@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Run a command with the image's opt-in Playwright + Chromium toolchain.
+#
+#   with-browser-tools playwright screenshot URL out.png
+#   with-browser-tools node flow.cjs        # require("playwright")
+#
+# The environment is scoped to this invocation so a project's own Playwright
+# version keeps its default browser cache and install behavior.
+set -euo pipefail
+
+prefix="${DEVCONTAINER_BROWSER_TOOLS_PREFIX:-/opt/devcontainer-browser-tools}"
+
+if [[ ! -x "$prefix/bin/playwright" || ! -d "$prefix/browsers" ]]; then
+  cat >&2 <<'EOF'
+with-browser-tools: browser tools are not installed in this image.
+Enable them by setting DEVCONTAINER_BROWSER_TOOLS=1 in the host environment that
+starts the editor, then run "Dev Containers: Rebuild Container". Alternatively,
+add Playwright to the project under its dependency policy.
+EOF
+  exit 127
+fi
+
+if [[ $# -eq 0 ]]; then
+  echo "usage: with-browser-tools COMMAND [ARG...]" >&2
+  exit 2
+fi
+
+export PLAYWRIGHT_BROWSERS_PATH="$prefix/browsers"
+export PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
+export NODE_PATH="$prefix/lib/node_modules${NODE_PATH:+:$NODE_PATH}"
+export PATH="$prefix/bin:$PATH"
+exec "$@"

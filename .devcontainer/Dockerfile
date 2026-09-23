@@ -176,6 +176,30 @@ RUN sed -i \
     -e 's|http://security.ubuntu.com/ubuntu|https://security.ubuntu.com/ubuntu|g' \
     /etc/apt/sources.list
 
+# Optional product-experience verification tools (off by default). Enabling
+# them adds a pinned Playwright CLI, one Chromium build, and its OS libraries,
+# so agents can drive and screenshot the product instead of relying on unit
+# tests alone. Nothing is downloaded at startup. The environment is applied only
+# through `with-browser-tools`, leaving project-owned Playwright installs alone.
+ARG DEVCONTAINER_BROWSER_TOOLS=0
+ARG PLAYWRIGHT_VERSION=1.63.0
+ENV DEVCONTAINER_BROWSER_TOOLS=${DEVCONTAINER_BROWSER_TOOLS} \
+    DEVCONTAINER_PLAYWRIGHT_VERSION=${PLAYWRIGHT_VERSION}
+RUN case "${DEVCONTAINER_BROWSER_TOOLS}" in \
+      0) ;; \
+      1) prefix=/opt/devcontainer-browser-tools \
+         && npm install -g --prefix "$prefix" "playwright@${PLAYWRIGHT_VERSION}" \
+         && PLAYWRIGHT_BROWSERS_PATH="$prefix/browsers" \
+           "$prefix/bin/playwright" install --with-deps --only-shell chromium \
+         && npm cache clean --force \
+         && rm -rf /var/lib/apt/lists/* \
+         && chmod -R a+rX "$prefix" \
+         && "$prefix/bin/playwright" --version | grep -F "${PLAYWRIGHT_VERSION}" ;; \
+      *) echo "DEVCONTAINER_BROWSER_TOOLS must be 0 or 1" >&2; exit 1 ;; \
+    esac
+COPY scripts/devcontainer-with-browser-tools /usr/local/bin/with-browser-tools
+RUN chmod 0755 /usr/local/bin/with-browser-tools
+
 # Normal Codex / Claude / Grok commands preserve provider approvals and sandboxing.
 # Explicit `*-trusted` commands expose the legacy-equivalent bypass profile.
 COPY scripts/devcontainer-codex /usr/local/bin/codex
