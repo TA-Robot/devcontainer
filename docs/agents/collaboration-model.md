@@ -3,7 +3,6 @@
 Status: guidance accepted; effectiveness and runtime extensions remain evidence-gated
 Updated: 2026-08-26
 
-実測に基づく条件付きの採否と限界は[協働の実測ガイド](collaboration-evidence.md)を参照する。
 方式の説明だけから改善率や既定の参加者構成を導かない。
 
 ## Purpose
@@ -12,7 +11,7 @@ Updated: 2026-08-26
 
 read / write / isolated laneはworkspace、permission、resource boundaryを決めます。roleは責務を決めます。relationはagent同士の関係、lifecycleは時間上の起動形です。これらを分離し、人数、exchange数、candidate数、durationをglobal defaultとして固定しません。
 
-探索catalogは[`temp/multi-agent-collaboration/`](../../temp/multi-agent-collaboration/)、Grok 4.6 / Claude Opus 5の独立reviewとprimary synthesisは[`04-cross-provider-synthesis.md`](../../temp/multi-agent-collaboration/04-cross-provider-synthesis.md)、target project向け手順は[`project/docs/agents/collaboration-playbook.md`](../../project/docs/agents/collaboration-playbook.md)にあります。
+target project向け手順は[`project/docs/agents/collaboration-playbook.md`](../../project/docs/agents/collaboration-playbook.md)にあります。
 
 ## Core principle
 

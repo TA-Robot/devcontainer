@@ -63,7 +63,6 @@ APIのeffort一覧とCLIを混ぜず、solo条件ではtool公開とmodel metada
 今回観測したCodex CLI catalogのcontext_windowは272000だった。APIのmodel pageの上限を
 CLIの実効値として上書きしない。要求値・掲載値・適用値は区別して残す。
 
-旧duration atlas、旧実験のmodel指定、費用・得点は移植しない。
 新モデルに対応する測定がなければ`unmeasured`。全caseの再実行は今回行わない。
 
 ## 検証

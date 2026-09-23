@@ -44,7 +44,7 @@ DEVCONTAINER_AI_CLI_CHANNEL=edge
 
 対話、planning、read-only fan-outはprovider-native subagentを使います。通常writeは同一container内のjob単位worktree、強い隔離が必要なtaskはoptional isolated runtimeへrouteします。共通層はconversationを再実装せず、job / attempt、immutable base SHA、workspace/process/resource lease、structured resultだけを所有します。
 
-正本は[`ADR-0001`](adr/0001-native-first-multi-agent-execution.md)、比較scenarioは[`representative-scenarios.md`](agents/representative-scenarios.md)です。
+正本は[`ADR-0001`](adr/0001-native-first-multi-agent-execution.md)です。
 
 ### Collaboration semantics
 
@@ -104,9 +104,9 @@ queue metadataは永続化しますが、provider credentialを含み得るdispa
 
 `gc --dry-run`は削除commandではありません。validated state、terminal attempt、process/lease不在、canonical worktree/branch/Git common-dir identity、clean tree、canonical evidence、明示的なcollection integration proof、Compose project labelの残存resource不在を全て満たしたjobだけへ候補actionを返します。registered workspaceが移動済み、Dockerを照合できない、pathやDB evidenceが矛盾する場合はjob単位でblockし、global inventory自体は継続します。
 
-### Isolated runtime pilot (Phase 4a)
+### Isolated runtime (Phase 4a)
 
-Lane Iはstable adapter未選定で、capacity既定値を0のまま維持します。`benchmark-isolated-runtime-pilot.py`はstandalone `sbx`とDocker Agent pluginをread-only probeし、未導入を成功扱いしません。比較可能なlocal fixtureとして、committed Git bundleだけを入力し、outer network/credential/workspace/host socketを渡さないdisposable private-DinD containerからresult bundleを回収します。5 sampleはp95約4.3秒で完走しましたが、outer containerが`--privileged`でhost kernelを共有するためsecurity boundaryとしては不採用です。測定値と次の`sbx --clone` gateは[`isolated-runtime-pilot-2026-08-12.md`](agents/isolated-runtime-pilot-2026-08-12.md)を正本とします。
+Lane Iはstable adapter未選定で、capacity既定値を0のまま維持します。現在の`--privileged`コンテナをsecurity boundaryとは扱いません。
 
 Codexのsafe sandboxではlinked worktree外のGit common metadataがread-onlyになることを実測しました。common dirをwritable rootに足す代わりに、providerは`ready_for_commit`とdirty pathを返し、brokerがscope / HEAD / pathを再計算してverified pathだけをcommitします。詳細は[`agentctl.md`](agentctl.md)です。
 

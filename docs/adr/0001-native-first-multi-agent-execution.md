@@ -3,7 +3,6 @@
 - Status: Accepted for phased implementation
 - Date: 2026-08-12
 - Owners: repository maintainers
-- Decision source: `temp/multi-agent-refresh/03-recommendation-and-roadmap.md`
 
 ## Context
 
