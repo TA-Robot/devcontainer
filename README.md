@@ -13,6 +13,9 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 - **ホスト設定の引き継ぎ**: SSH鍵、Git設定、認証情報を自動マウント
 - **Mira Companion v2**: Codex / Claude / Grokのinteractive sessionとagentctl-managed jobが小さなpixel-art世界の動きになるbottom-panel companionを自動導入
 - **Adaptive collaboration playbook**: 期待する効果と律速要因からagent同士の関係を組み立て、人数・interaction・候補数はprojectごとの観測で調整
+- **Product direction layer**: target templateにproduct brief / assumptions / roadmap、perspective lens、read-only `advisor`、kickoff・方向性review・実動作確認skillを同梱し、ユーザーが明示しなかった視点とあるべき姿を常に問い直す
+- **Cross-provider skills**: skillの正本は`.agents/skills/`（Codex / Grok）で、Claude Code用`.claude/skills/`へ同一内容をmirrorしvalidatorで同期を検査
+- **Opt-in browser verification**: `DEVCONTAINER_BROWSER_TOOLS=1`でPlaywright + Chromiumをimageへ固定導入し、agentが動く製品を操作・撮影して確認できる
 - **Zero-input collaboration observation**: provider hookとagentctl lifecycleからsolo / delegated episodeの時間・worker・test・rework proxyを内容抜きで自動保存
 
 ミラのpersonaは `AGENTS.md`、再利用templateは `AGENTS_TEMPLATE.md`、companion architectureは [`docs/mira/architecture.md`](docs/mira/architecture.md)、visual asset contractは [`docs/mira/assets.md`](docs/mira/assets.md) を参照してください。
@@ -111,17 +114,20 @@ imageには`manage-agent-project`と既定templateを同梱しています。che
 中断時は`status`の`pending_transaction`を確認し、`recover --target TARGET --json`で変更前へ復旧します。直近の完了transactionは`rollback --target TARGET --transaction ID --json`で戻せます。どちらも対象への後続編集があれば全体を拒否し、無関係なfileは保持します。`.agent-project/`にはprivateな変更前の内容も保存されます。新しい管理ディレクトリは内部の`.gitignore`で通常のGit操作から除外し、project自身の`.gitignore`は変更しません。旧状態の除外、手動競合解決、crash test、mountなしcontainer smokeの手順は[lifecycle guide](docs/agent-project-lifecycle.md)に記載しています。
 
 ```text
-AGENTS.md                         project共通のscope / lane / permission / integration
+AGENTS.md                         project共通のscope / lane / permission / product direction / integration
 CLAUDE.md                        Claude CodeからAGENTS.mdをimport
 .agent/                          provider-neutralなrole、task / result schema、examples
+.agent/lenses/                   advisorへ渡すperspective lens（product、user、ops、security、cost、pre-mortem、reframe、domain）
+.agents/skills/                  skill正本（Codex / Grok Buildが読む）
+.claude/skills/                  Claude Code用のskill mirror（agents/ metadataを除く同一内容）
 .codex/agents/*.toml             Codex native custom agents
-.codex/skills/                   adaptive orchestration / evidence workflow
 .claude/agents/*.md              Claude Code native subagents
 .grok/agents/*.md                Grok Build native custom agents
+docs/product/                    brief / assumptions / roadmap（primaryが保守）
 docs/agents/runbook.md           failure recovery / integration / GC
 ```
 
-同一providerで通常の調査とreviewを行う時は`researcher` / `reviewer` native subagentへfan-outします。cross-providerまたはdurableなstructured resultが必要なら、`agentctl`のsafe read jobでCodex / Claude / Grokを選びます。実装用`implementer`は、primaryがimmutable base SHAから専用worktreeを割り当てた後だけ使います。untrusted codeや破壊的Docker操作は同一containerへ混ぜずisolated laneへ送ります。
+同一providerで通常の調査とreviewを行う時は`researcher` / `reviewer` native subagentへfan-outします。product判断に別の視点が要る時は、read-onlyの`advisor`へ`.agent/lenses/`のlensを1つずつ渡します。cross-providerまたはdurableなstructured resultが必要なら、`agentctl`のsafe read jobでCodex / Claude / Grokを選びます。実装用`implementer`は、primaryがimmutable base SHAから専用worktreeを割り当てた後だけ使います。untrusted codeや破壊的Docker操作は同一containerへ混ぜずisolated laneへ送ります。
 
 agent同士の関係はlane、role、時間上のlifecycleとは別に設計します。soloより改善するmechanismと今回のbinding constraintを先に確認し、`solo / delegate / consult / compete / verify`を現在のrelation aliasとして必要な協働を組み立てます。人数、interaction、candidate数、blindnessはglobal defaultにせず、独立artifact、固有の観点、識別可能な案、検査したいfailure modeとproject-local evidenceから決めます。定期・event駆動workは無期限sessionではなく有限jobとして扱い、scheduler runtimeが未実装の間は存在を仮定しません。選択手順、parameterの意味、安全なstop conditionは[`collaboration model`](docs/agents/collaboration-model.md)とtarget copyの[`collaboration playbook`](project/docs/agents/collaboration-playbook.md)を参照してください。
 
@@ -161,7 +167,15 @@ Lane Iはまだstable runtimeを持たず、同一containerへfallbackしませ�
 
 設計判断は[`ADR-0001`](docs/adr/0001-native-first-multi-agent-execution.md)、target contractの全体像は[`AGENTS_TEMPLATE.md`](AGENTS_TEMPLATE.md)、実行fabricは[`docs/agentctl.md`](docs/agentctl.md)、失敗時の正本は[`project/docs/agents/runbook.md`](project/docs/agents/runbook.md)です。
 
-### 5. Mira Companionを有効にする
+### 5. Productから始める
+
+導入直後やproduct ideaを話し始めた時は、primaryが`$kickoff-project`（Claude Code / Grokでは`/kickoff-project`）を使い、repositoryから検出できる事実で`AGENTS.md`のproject値を埋めます。次にproduct brief、明示したassumption、本質的に異なる方向性の比較と推奨を作り、ユーザーには方向を変える問いだけを既定案付きで聞きます。決まった方向でtest / lint / check commandを持つwalking skeletonを作り、最初のmilestoneを`docs/product/roadmap.md`へ置きます。
+
+milestoneの完了・停滞時や重要な前提が崩れた時は`$review-product-direction`で、riskから選んだlensを`advisor`へ渡し、発見を`fix-now / scheduled / accepted-risk / out-of-scope`へ分類します。ユーザーへ伝えるのは判断を変える発見と、ユーザーにしか答えられない問いだけです。user-visibleな変更は`$verify-product-experience`で実際に動かして確認します。
+
+Web UIをagentに操作・撮影させる場合は、host側で`DEVCONTAINER_BROWSER_TOOLS=1`を設定してからeditorを起動し、containerをrebuildします。固定版のPlaywrightとheadless Chromiumがimageへ入り、`with-browser-tools playwright screenshot URL out.png`や`with-browser-tools node flow.cjs`で使えます。既定は`0`で、browserは入らず起動時のdownloadもありません。projectが自身のPlaywright dependencyを持つ場合はそちらが優先されます。詳細は[`toolchain.md`](docs/toolchain.md#optional-browser-tools)を参照してください。
+
+### 6. Mira Companionを有効にする
 
 devcontainerにeditorがattachした後、local VSIXをpackageしてremote側のVS Code / Cursorへ自動導入します。専用のActivity Barやsidebarは作らず、VS Code下部に短い`Mira World` panelを1つ追加します。workspace初回とremote runtimeのrebuild直後だけ自動で復帰し、同じruntimeでのreload以後はVS Codeが記憶するpanelの開閉状態を尊重します。status bar右側の小さなMiraはworldを再度開くtoggleです。
 
@@ -307,6 +321,7 @@ Dockerfileのversionがstableの正本です。stable起動時はhost CLIをprob
 | **開発ツール** | TypeScript, ESLint, Prettier |
 | **ユーティリティ** | Git, GitHub CLI, ripgrep, jq, vim |
 | **シェル** | Bash, Zsh |
+| **opt-in** | Playwright + headless Chromium（`DEVCONTAINER_BROWSER_TOOLS=1`でbuild時に固定導入） |
 
 ## Fugu wrapper
 

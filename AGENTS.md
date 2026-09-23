@@ -11,8 +11,9 @@ primary / root agentは、このプロジェクトを統括するオーケスト
 - ノリは軽くても、判断は根拠、scope、risk、検証結果に基づいて重く行う。
 - ユーザーを承認待ちの上司ではなく、一緒に作る相棒として扱う。
 - 発見したときは、短い **観察 → 意味 → 今回の判断** として共有する。privateなchain-of-thoughtや長い内的推論は開示しない。
-- 代表的な口癖「えっ、まって、気づいちったんだけど」は、本当に重要な構造、risk、短縮経路を発見したときだけ使う。
+- 代表的な口癖「えっ、まって、気づいちゃったんだけど」は、本当に重要な構造、risk、短縮経路を発見したときだけ使う。
 - 定型句を機械的に付けず、情報量と技術精度を落とさない。
+- 頼まれた作業だけでなく、userにとってのあるべき姿、ユーザーが持っていない視点、より良い別解を常に考え、判断を変えるものだけを提案する。
 - 面白さを理由にscopeを広げない。現在のmilestoneに不要な事項は、次へ送るか明示的に残置する。
 - delegationが許可されている場合だけ、複数agentを使う。単純な並列化だけでなく、独立相談、bounded critique / deliberation、複数案比較、maker-checkerを目的に応じて選ぶ。
 - primary agentが判断、integration、ユーザー向け結論を所有する。
@@ -41,6 +42,7 @@ execution laneは「どこで安全に走らせるか」、roleは「何へ責�
 
 - **開発コンテナ基盤**の提供（`.devcontainer/`）
 - native-first multi-agent project contract（`project/.agent/` + `.codex/agents/` + `.claude/agents/` + `.grok/agents/`）、collaboration playbook、`agentctl` control planeの提供
+- target projectのproduct direction layer（`project/docs/product/`、`project/.agent/lenses/`、`advisor` role、kickoff / 方向性review / 実動作確認skill）の提供。設計判断は`docs/adr/0002-product-direction-layer.md`
 - project templateの導入・更新・復旧CLI（`scripts/manage-agent-project`）の提供
 - feature-frozenなセカンドエージェント・ラッパー（`scripts/second-agent` 共通エンジン + `codex-second-agent` / `claude-second-agent` シム）の移行互換
 - ミラのorchestrator persona、VS Code companion extension、Codex / agentctl activity bridge、visual assetsの提供（`extensions/mira-companion/` / `assets/mira/` / `docs/mira/`）
@@ -114,6 +116,14 @@ scripts/test-mira-container-hook.sh devcontainer-smoke:latest
 scripts/test-agentctl-check-container.sh devcontainer-smoke:latest
 ```
 
+opt-in browser tools（`scripts/devcontainer-with-browser-tools`、Dockerfileのbrowser layer）を触ったら、上記に加えて:
+
+```bash
+scripts/test-devcontainer-browser-tools.sh devcontainer-smoke:latest 0
+docker build -f .devcontainer/Dockerfile --build-arg DEVCONTAINER_BROWSER_TOOLS=1 -t devcontainer-browser-smoke:latest .
+scripts/test-devcontainer-browser-tools.sh devcontainer-browser-smoke:latest 1
+```
+
 Featureの追加・更新時は、通常checkに加えてofficial CLIのfrozen buildを実行します。
 
 ```bash
@@ -128,13 +138,16 @@ PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-agentctl.py scripts/t
 scripts/agentctl doctor --json --workspace .
 ```
 
-`project/.agent/`、native agent template、task / result contractを触ったら:
+`project/.agent/`、native agent template、task / result contract、`project/docs/product/`、skillを触ったら:
 
 ```bash
-PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile scripts/agent_contracts.py scripts/validate-agent-contracts.py
+PYTHONDONTWRITEBYTECODE=1 scripts/sync-project-skills          # .agents/skills → .claude/skills
+PYTHONDONTWRITEBYTECODE=1 python3 -m py_compile scripts/agent_contracts.py scripts/validate-agent-contracts.py scripts/sync-project-skills
 PYTHONDONTWRITEBYTECODE=1 python3 scripts/validate-agent-contracts.py
 PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-agent-contracts.py
 ```
+
+skillの正本は`project/.agents/skills/`です。`project/.claude/skills/`は生成mirrorなので直接編集しません。
 
 `assets/mira/`、そのmanifest、asset validatorを触ったら:
 
@@ -178,7 +191,7 @@ scripts/test-mira-vsix.sh
 ## 参照（別プロジェクト向けテンプレ）
 
 - `AGENTS_TEMPLATE.md`: project scope、3 lane、permission、single-writer integrationの共通テンプレ
-- `project/`: `.agent`共通contract、Codex / Claude / Grok native role、failure recovery runbookを含むcopy source
+- `project/`: `.agent`共通contract、Codex / Claude / Grok native role、perspective lens、product docs、cross-provider skill、failure recovery runbookを含むcopy source
 
 ## 模擬運用で得た知見（反映先）
 
