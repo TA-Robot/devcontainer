@@ -8,9 +8,7 @@ ENV DEBIAN_FRONTEND=noninteractive \
     SHELL=/bin/bash
 
 # 基本パッケージのインストール
-# tmux is the bounded, inspectable terminal owner used by the documented
-# long-running benchmark workflow. Keeping it in the base image avoids falling
-# back to unowned nohup processes when an operator disconnects.
+# tmux backs the persistent Byobu sessions launched by `mira`.
 RUN apt-get update && apt-get install -y --no-install-recommends \
     apt-transport-https \
     bubblewrap \
@@ -193,36 +191,6 @@ COPY scripts/agentctl_jobs.py /usr/local/lib/agentctl/agentctl_jobs.py
 COPY docs/agentctl.md /usr/local/share/agentctl/README.md
 COPY scripts/agentctl_supervisor.py /usr/local/lib/agentctl/agentctl_supervisor.py
 COPY scripts/agent_contracts.py /usr/local/lib/agentctl/agent_contracts.py
-
-# Provider-free duration-atlas query runtime. Preserve the repository-relative
-# layout expected by agent_duration_study.py so schema discovery is anchored to
-# this root-owned bundle rather than whichever target project is open.
-COPY scripts/devcontainer-query-agent-duration-atlas /usr/local/bin/query-agent-duration-atlas
-COPY scripts/agent_contracts.py \
-    scripts/agent_duration_study.py \
-    scripts/agent_duration_atlas.py \
-    scripts/agent_duration_validity.py \
-    scripts/query_agent_duration_atlas.py \
-    /usr/local/lib/mira-duration-atlas-runtime/scripts/
-COPY experiments/multi-agent-duration/schemas/study.schema.json \
-    experiments/multi-agent-duration/schemas/case.schema.json \
-    experiments/multi-agent-duration/schemas/case-catalog.schema.json \
-    experiments/multi-agent-duration/schemas/capability.schema.json \
-    experiments/multi-agent-duration/schemas/fixture.schema.json \
-    experiments/multi-agent-duration/schemas/run.schema.json \
-    experiments/multi-agent-duration/schemas/batch.schema.json \
-    experiments/multi-agent-duration/schemas/atlas.schema.json \
-    experiments/multi-agent-duration/schemas/validity.schema.json \
-    /usr/local/lib/mira-duration-atlas-runtime/experiments/multi-agent-duration/schemas/
-COPY --chown=root:root generated/duration-atlas/current.json \
-    /usr/local/share/mira-duration-atlas/current.json
-COPY --chown=root:root generated/duration-atlas/current-validity.json \
-    /usr/local/share/mira-duration-atlas/current-validity.json
-RUN chmod 0555 /usr/local/bin/query-agent-duration-atlas \
-    && chmod 0444 /usr/local/lib/mira-duration-atlas-runtime/scripts/*.py \
-      /usr/local/lib/mira-duration-atlas-runtime/experiments/multi-agent-duration/schemas/*.json \
-      /usr/local/share/mira-duration-atlas/current.json \
-      /usr/local/share/mira-duration-atlas/current-validity.json
 
 # Provider-free, read-only aggregation of the local Mira episode ledger.
 COPY scripts/devcontainer-report-agent-collaboration-evidence \

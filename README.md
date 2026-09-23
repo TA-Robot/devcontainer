@@ -14,15 +14,10 @@ Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツ�
 - **Mira Companion v2**: Codex / Claude / Grokのinteractive sessionとagentctl-managed jobが小さなpixel-art世界の動きになるbottom-panel companionを自動導入
 - **Adaptive collaboration playbook**: 期待する効果と律速要因からagent同士の関係を組み立て、人数・interaction・候補数はprojectごとの観測で調整
 - **Zero-input collaboration observation**: provider hookとagentctl lifecycleからsolo / delegated episodeの時間・worker・test・rework proxyを内容抜きで自動保存
-- **Agent duration atlas**: 12 family × S/M/Lの有限corpus、quality/censoring付き実測record、exact-match query skillを提供
 
 ミラのpersonaは `AGENTS.md`、再利用templateは `AGENTS_TEMPLATE.md`、companion architectureは [`docs/mira/architecture.md`](docs/mira/architecture.md)、visual asset contractは [`docs/mira/assets.md`](docs/mira/assets.md) を参照してください。
 
-この基盤は、強い単独AIでも解法の探索・判断・実装が行き詰まる難題を出発点に、相談・多様な案・複数実装の比較・検証と統合によって到達できる成果を広げることを目指します。単独の未達を校正し、難題での最終成果と全費用を自動評価して、指示・情報提供・実行制御を改善し、未使用の難題で再評価します。[現行計画と現在地](docs/project-plan.md)、[方式別の比較設計](docs/agents/collaboration-experiment-plan.md)を参照してください。
-
-評価は[小規模・大規模の両方](docs/agents/development-harness-evaluation.md)を対象とします。Cycle 001〜005と動的schedulingの比較を実施済みですが、強い単独を超える安定した能力拡張は未達です。現在は[既存の実リポジトリ難題を使う計画](docs/project-plan.md)へ進め方を改訂しています。
-
-GPT-6 Sol / Grok 4.7 / Claude Opus 5.5に向けたCLI更新、モデル指定と検証範囲は[2026-09-23の更新記録](docs/agents/model-refresh-2026-09-23.md)を参照してください。通常のnative agentはモデル継承を維持し、過去の実験結果は当時の条件のまま保存します。
+GPT-6 Sol / Grok 4.7 / Claude Opus 5.5に向けたCLI更新とモデル指定は[2026-09-23の更新記録](docs/agents/model-refresh-2026-09-23.md)を参照してください。通常のnative agentはモデル継承を維持します。
 
 ## クイックスタート
 
@@ -120,7 +115,7 @@ AGENTS.md                         project共通のscope / lane / permission / in
 CLAUDE.md                        Claude CodeからAGENTS.mdをimport
 .agent/                          provider-neutralなrole、task / result schema、examples
 .codex/agents/*.toml             Codex native custom agents
-.codex/skills/                   adaptive orchestration / evidence / duration workflow
+.codex/skills/                   adaptive orchestration / evidence workflow
 .claude/agents/*.md              Claude Code native subagents
 .grok/agents/*.md                Grok Build native custom agents
 docs/agents/runbook.md           failure recovery / integration / GC
@@ -131,10 +126,6 @@ docs/agents/runbook.md           failure recovery / integration / GC
 agent同士の関係はlane、role、時間上のlifecycleとは別に設計します。soloより改善するmechanismと今回のbinding constraintを先に確認し、`solo / delegate / consult / compete / verify`を現在のrelation aliasとして必要な協働を組み立てます。人数、interaction、candidate数、blindnessはglobal defaultにせず、独立artifact、固有の観点、識別可能な案、検査したいfailure modeとproject-local evidenceから決めます。定期・event駆動workは無期限sessionではなく有限jobとして扱い、scheduler runtimeが未実装の間は存在を仮定しません。選択手順、parameterの意味、安全なstop conditionは[`collaboration model`](docs/agents/collaboration-model.md)とtarget copyの[`collaboration playbook`](project/docs/agents/collaboration-playbook.md)を参照してください。
 
 人間へ日報やform入力を要求しません。Codex / Claude / Grok hookと`agentctl` eventは、prompt、code、command、pathを保存せず、solo / delegated turnのduration、worker start / stop、peak concurrency、test outcome、rework / post-worker-tail proxyを`$MIRA_COMPANION_EPISODE_DIR/collaboration-episodes.json`へ自動保存します。このdevcontainerではrebuild後も残るnamed volume上の`/var/lib/mira-observations`です。optionalなdecision contractをtaskへ添付した`agentctl` jobだけは、IDをopaque化してrelation、lifecycle、expected mechanism、binding constraintと相関できます。`report-agent-collaboration-evidence`とtargetの`$review-collaboration-evidence`はepisode本文を出さずworkspace-localな記述統計を返します。欠測は推測せず`unknown / unmeasured`です。schema、coverage、retention、privacyは[`zero-input collaboration observation`](docs/agents/collaboration-observation.md)を参照してください。
-
-Controlled corpusの所要時間は別のduration atlasへ保存します。36 caseの存在はmodel/provider/relationの全組合せを測定済みという意味ではなく、単一観測、quality-fail、requested-only effort、timeoutを分離したままexact条件で参照します。Dev Container内では`query-agent-duration-atlas`、target projectでは`project/.codex/skills/lookup-agent-duration/`を利用できます。計測、有限batch、resume、欠測の読み方は[`duration atlas operator guide`](docs/agents/duration-atlas/README.md)が正本です。
-
-協働方式の限定した比較結果は[`配布用の実測snapshot`](project/docs/agents/collaboration-study-evidence.md)から参照できます。原集計もtemplateへ同梱し、通常のorchestration skill/playbookから条件・費用・未測定を確認できます。別projectの実測や、協働一般の改善率としては扱いません。
 
 native childはparent sessionのlive permissionを継承し得ます。read-only agent fileを置いただけで強いruntime overrideが弱まるとはみなしません。safe Lane Rならparentもsafeにします。session / workspace全体へ`trusted-fast`を明示許可した場合だけ、boundedなconsult / verify childを同じtrusted permissionで動かせます。この場合はLane Rや強制read-onlyと呼ばず、`trusted advisory`として記録します。
 
@@ -164,9 +155,7 @@ agentctl gc --dry-run --job <job-id> --json
 
 write providerはGit common metadataへ直接commitせず、`ready_for_commit`を返します。brokerがscope、HEAD、dirty pathsをGitから照合してjob branchへcommitするため、Codexのsafe sandboxを崩さずlinked worktreeを使えます。state、attempt evidence、worktreeは`/var/lib/agentctl`のnamed volumeへ保存されます。detachはowner-only Unix socketのlocal supervisorへ渡され、PID＋process start time、heartbeat、process-group cancel、restart時orphan判定に加え、resource class別capacity、priority queue、Compose namespace、integration port leaseを持ちます。validated jobは`collect`でdependency順・commit候補・path overlap・checks/risksをimmutable reportへ集約しますが、merge/pushは行いません。運用時のlog viewはboundedかつbest-effortでsecretをredactし、provider終了後のraw logは8 MiB、runner logは1 MiB、live supervisor logは2 MiBのtailへ制限します。`gc --dry-run`はcanonical path、Git identity、integration evidence、job固有Docker labelまで再確認しますが、削除は一切行いません。jobの開始・成功・失敗・cancel・orphanはprovider / roleだけのsanitized eventとしてMira Worldへ自動反映されます。CLI、state、failure semanticsは[`docs/agentctl.md`](docs/agentctl.md)を参照してください。
 
-Lane Iはまだstable runtimeを持たず、同一containerへfallbackしません。optional runtimeの導入前probeと、model request/image pullなしのprivate-daemon比較は`python3 scripts/benchmark-isolated-runtime-pilot.py --probe-only` / `--repetitions 5`で実行できます。現時点の結果と「privileged DinDをsecurity boundaryにはしない」という判断は[`docs/agents/isolated-runtime-pilot-2026-08-12.md`](docs/agents/isolated-runtime-pilot-2026-08-12.md)にあります。
-
-長時間のオーケストレーション評価は、専用のnested-Docker volumeとauth readiness検査を固定する`scripts/benchmark-devcontainer.py`で起動できます。普段どおり`tmux`から`/goal`を投入し、独自schedulerは挟みません。手順とevidence境界は[`docs/agents/orchestration-benchmark-runbook.md`](docs/agents/orchestration-benchmark-runbook.md)を参照してください。
+Lane Iはまだstable runtimeを持たず、同一containerへfallbackしません。`--privileged`のDocker-in-Dockerをsecurity boundaryとして扱わない方針です。
 
 独立チェックはproviderや認証を起動せず、呼び出し元の権限で元のtask commandを実行します。同じattemptの重複実行は即時拒否し、過去のpassより最新の失敗・中断・実行中の状態を優先します。SIGTERM時の子process cleanup、強制終了後の`--recover-incomplete`手順、64 KiB/commandのbounded evidence方針は[`運用・復旧手順`](docs/agentctl.md#unattended-checking-interruption-and-recovery)を参照してください。
 

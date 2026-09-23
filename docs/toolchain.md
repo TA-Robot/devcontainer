@@ -38,7 +38,7 @@ Current direct pins:
 The [2026-09-23 model refresh](agents/model-refresh-2026-09-23.md) records the
 CLI compatibility checks and current model entry points: `gpt-6-sol`,
 `grok-4.7`, and `claude-opus-5-5`. Native roles continue to inherit their model;
-CLI upgrades do not replace frozen experiment actors or historical scores.
+CLI upgrades do not change the model inherited by native roles.
 Opus 5.5 requires Claude Code 2.1.280 or later. Edge startup still follows the
 host version, so update the host CLI as well when adopting a new stable pin.
 

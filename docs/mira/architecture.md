@@ -25,7 +25,6 @@ agentctl durable job transitions ──────────┤ provider / ro
 
 product contractは「worldを始めて遊ぶ」のではなく、**普段のcodingが自然にworldの出来事になる**ことです。会話と承認は各provider、job ownershipは`agentctl`、orchestration判断はprimary agentが所有し、extensionはsanitized activityの表示とlocalな進行だけを担当します。
 
-60候補と採否は[`temp/mira-companion-v2/01-ambient-world-60.md`](../../temp/mira-companion-v2/01-ambient-world-60.md)、surface試行は[`02-experience-trials.md`](../../temp/mira-companion-v2/02-experience-trials.md)、実装sliceは[`03-build-plan.md`](../../temp/mira-companion-v2/03-build-plan.md)に残しています。0.2のstatus-bar-only案は`temp/mira-companion-refresh/`にhistoryとして残しますが、v2の仕様ではありません。
 
 ## Surface decision
 
