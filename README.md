@@ -1,14 +1,14 @@
 # Cursor Dev Container
 
-Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツール（Codex CLI、Gemini CLI、Claude Code、Grok Build）を統合し、**信頼済みのローカル開発環境**で素早く作業するための基盤を提供します。
+Cursor / VS Code 用の高権限 devcontainer 環境。AI コーディングツール（Codex CLI、Gemini CLI、Claude Code、Grok Build、OpenCode）を統合し、**信頼済みのローカル開発環境**で素早く作業するための基盤を提供します。
 
 ## 特徴
 
 - **Ubuntu 22.04** ベース
 - **Node.js 22.x** プリインストール
-- **AI ツール統合**: Codex CLI、Fugu wrapper、Gemini CLI、Claude Code、Grok Build がすぐに使える
+- **AI ツール統合**: Codex CLI、Fugu wrapper、Gemini CLI、Claude Code、Grok Build、OpenCode がすぐに使える
 - **再現可能なstable toolchain**: Feature、Node、global npm tool、AI CLIを固定し、起動時installなし
-- **ローカル起動はedge channel**: ホストのCodex / Gemini / Claude Code / Grok versionへ自動同期。固定版を使う場合はstableを指定
+- **ローカル起動はedge channel**: ホストのCodex / Gemini / Claude Code / Grok / OpenCode versionへ自動同期。固定版を使う場合はstableを指定
 - **Docker-in-Docker**: コンテナ内でDockerを利用可能
 - **ホスト設定の引き継ぎ**: SSH鍵、Git設定、認証情報を自動マウント
 - **Mira Companion v2**: Codex / Claude / Grokのinteractive sessionとagentctl-managed jobが小さなpixel-art世界の動きになるbottom-panel companionを自動導入
@@ -31,7 +31,7 @@ GPT-6 Sol / Grok 4.7 / Claude Opus 5.5に向けたCLI更新、モデル指定と
 ホスト側に以下のディレクトリを作成しておく（存在しない場合）:
 
 ```bash
-mkdir -p ~/.codex ~/.config/gemini ~/.claude ~/.grok
+mkdir -p ~/.codex ~/.config/gemini ~/.claude ~/.grok ~/.config/opencode ~/.local/share/opencode
 [ -s ~/.claude.json ] || printf '{}\n' > ~/.claude.json
 ```
 
@@ -80,6 +80,9 @@ grok-trusted -p "テストを書いて"
 
 # 旧aliasは移行互換として残る
 grok-yolo -p "テストを書いて"
+
+# OpenCode（Goを使う場合はTUI内の /connect でOpenCode Goを選ぶ）
+opencode
 
 # stable toolchain / provider capability / auth readiness / legacy stateを診断
 agentctl doctor
@@ -295,7 +298,7 @@ Dockerfileのversionがstableの正本です。stable起動時はhost CLIをprob
 | カテゴリ | ツール |
 |----------|--------|
 | **ランタイム** | Node.js 22.x, Python 3 |
-| **AI CLI** | @openai/codex, @google/gemini-cli, @anthropic-ai/claude-code, Grok Build |
+| **AI CLI** | @openai/codex, @google/gemini-cli, @anthropic-ai/claude-code, Grok Build, @opencode/cli |
 | **開発ツール** | TypeScript, ESLint, Prettier |
 | **ユーティリティ** | Git, GitHub CLI, ripgrep, jq, vim |
 | **シェル** | Bash, Zsh |
@@ -331,6 +334,8 @@ API key は次の順で使います。
 | `~/.claude.json` | `/home/devuser/.claude.json` | Claude Codeグローバル設定・アカウント情報 |
 | `~/.claude` | `/home/devuser/.claude` | Claude Code認証情報・設定 |
 | `~/.grok` | `/home/devuser/.grok` | Grok Build認証情報・設定・session |
+| `~/.config/opencode` | `/home/devuser/.config/opencode` | OpenCode設定 |
+| `~/.local/share/opencode` | `/home/devuser/.local/share/opencode` | OpenCode Go認証情報・session |
 | `~/.cache/devcontainer-ai-cli` | `/opt/devcontainer-host-ai-cli` | CLI version manifest（read-only、credential なし） |
 
 AI CLI の認証ディレクトリ/ファイルは CLI の標準パスへ直接 mount するため、ホスト側でログインし直した token 更新はコンテナ内からそのまま見えます。
@@ -352,7 +357,7 @@ export DEVCONTAINER_AI_CLI_CHANNEL=stable
 
 edgeでは次の順でhost側versionを反映します。
 
-1. ホストの `initializeCommand` が `codex --version` / `gemini --version` / `claude --version` / `grok --version` を検出し、`~/.cache/devcontainer-ai-cli/versions.env` にバージョン番号だけを保存
+1. ホストの `initializeCommand` が `codex --version` / `gemini --version` / `claude --version` / `grok --version` / `opencode --version` を検出し、`~/.cache/devcontainer-ai-cli/versions.env` にバージョン番号だけを保存
 2. cache ディレクトリをコンテナへ read-only mount
 3. `postStartCommand` が差分のあるnpm packageとGrok公式binaryを作業用prefixへ導入し、要求された全CLIの実行結果とversionを検証してから `/opt/devcontainer-ai-cli/bin` を一括で切り替える
 
@@ -369,10 +374,11 @@ codex --version
 gemini --version
 claude --version
 grok --version
+opencode --version
 fugu --version  # Fugu は Codex CLI を利用するため、Codex と同じ version
 ```
 
-hostに存在しないCLIはimage versionを維持します。旧`DEVCONTAINER_AI_CLI_SYNC=1`はedge opt-in、`=0`はhost probe/sync無効として移行期間だけ維持します。詳細と更新手順は [`docs/toolchain.md`](docs/toolchain.md) を参照してください。
+hostに存在しないCLIはimage versionを維持します。OpenCode GoはCLIとは別の契約プロバイダーで、利用には[公式手順](https://opencode.ai/v2/docs/console/go)に従ってAPI keyを取得し、OpenCode内の`/connect`で登録します。認証データは上記mountでホストと共有されます。OpenCodeは直接CLIとして提供し、`agentctl`のproviderには追加していません。旧`DEVCONTAINER_AI_CLI_SYNC=1`はedge opt-in、`=0`はhost probe/sync無効として移行期間だけ維持します。詳細と更新手順は [`docs/toolchain.md`](docs/toolchain.md) を参照してください。
 
 `fugu`自体はnpm packageではなく、このrepositoryの`scripts/fugu`を呼ぶwrapperです。実行engineのCodex versionは選択中のstable / edge channelに従います。
 

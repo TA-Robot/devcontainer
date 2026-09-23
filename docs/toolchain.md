@@ -31,6 +31,7 @@ Current direct pins:
 | Gemini CLI | `0.45.2` |
 | Claude Code | `2.1.280` |
 | Grok Build | `1.0.41` official Linux x86_64 binary, SHA-256 `9ce03ed23e16ea01072b4496263d6213a27899e1e3e107f008d36edf82e70407` |
+| OpenCode | `2.0.14` (`@opencode/cli`); OpenCode Go is a separately authenticated provider |
 | Dev Container CLI shipped in image and used by frozen smoke | `0.88.0` |
 
 The [2026-09-23 model refresh](agents/model-refresh-2026-09-23.md) records the
@@ -53,6 +54,17 @@ Its CLI source is also published in xAI's official
 [grok-build repository](https://github.com/xai-org/grok-build). The immutable
 image digest produced by CI remains the distribution/rollback unit; adding a
 fully locked npm installation is a separate hardening item.
+
+OpenCode is included so OpenCode Go can be selected inside the container. This
+adds one pinned npm CLI and its platform binary to the image, plus host mounts for
+`~/.config/opencode` and `~/.local/share/opencode`. Go subscription and login stay
+with the user; no key enters the image or version manifest. Edge selects the
+`opencode-ai` package for host OpenCode 1.x and `@opencode/cli` for 2.x, then
+checks the installed executable before publication. Directly mounting a host
+binary is unsuitable across host/container OS and CPU differences. To remove
+OpenCode, delete its Dockerfile ARG/install/ENV/symlink, the two mounts and host
+directory setup, and its sync mapping and tests; rebuilding the previous image
+digest is the rollback path.
 
 `bubblewrap` and `socat` are installed because Claude Code's fail-closed Linux
 sandbox requires both its filesystem sandbox and network proxy helpers; Grok
@@ -106,14 +118,16 @@ evidence if supported CLI startup behavior changes.
 Only after all requested tools pass verification does synchronization publish a
 complete executable directory. The existing physical prefix stays in place, so
 the container user needs no write access to `/opt` and wrappers keep using
-`$DEVCONTAINER_AI_CLI_PREFIX/bin`. A first update atomically exchanges the legacy
-physical `bin` directory with a symlink using Linux `renameat2`; subsequent
-updates atomically replace that symlink. If the filesystem cannot perform that
-exchange, synchronization fails without replacing the usable installation.
+`$DEVCONTAINER_AI_CLI_PREFIX/bin`. New images seed `bin` and `lib` as links to a
+stable generation, so the first edge update can atomically replace the `bin`
+link on Docker overlayfs. Legacy images with a physical `bin` directory attempt
+an atomic Linux `renameat2` exchange; filesystems that reject it leave the old
+installation usable and require an image rebuild. Later updates atomically
+replace the symlink.
 The active npm library lives alongside `bin` inside its `.ai-cli-generation-*`
-directory; the original top-level `lib` remains a legacy copy, not the active npm
-inventory. Unspecified tools and unrelated prefix files are retained. Wrapper
-flags, authentication mounts, host configuration and image pins are unchanged.
+directory. The top-level `lib` points to the stable generation and is not the
+active edge inventory. Unspecified tools and unrelated prefix files are retained.
+Publication does not alter wrapper flags, authentication mounts or host settings.
 
 An install, download or executable verification failure exits nonzero and leaves
 the previous executable set usable. Fix the reported cause and rerun
