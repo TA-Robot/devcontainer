@@ -89,6 +89,21 @@ agentctl doctor
 agentctl doctor --json
 ```
 
+### Mira terminal sessions
+
+`mira` はByobu上で権限確認を省いたCLIを起動します。同じGit worktreeで同じCLIをもう一度指定すると、起動済みのセッションへ戻ります。
+
+```bash
+mira codex
+mira claude
+mira gemini
+mira grok
+mira opencode
+mira list       # 一覧から番号で選んで接続
+```
+
+Codex / Claude / Grokは既存の`*-trusted`、Geminiは`--approval-mode=yolo --no-sandbox`、OpenCodeは`--auto`で起動します。OpenCodeの明示的なdeny設定は`--auto`でも有効です。最初の起動時だけ各CLIの引数を渡せます。Byobu内でF6を押すとCLIを動かしたまま切断し、`mira list`または`mira <CLI>`で戻れます。SSH接続が切れてもコンテナが動いている間はセッションが残り、CLIを終了すると一覧から消えます。コンテナの停止・再作成を越えてプロセスを保存する機能ではありません。
+
 image内Codexはversion pin / stable-edge同期をこのrepositoryが所有するため、system configでstartup update checkを無効化しています。通常の`codex`はproject trustを自動変更しません。明示的な`codex-trusted`だけは、full-access opt-inと同じscopeで起動時のcurrent working directoryをそのinvocation中だけtrusted projectとして渡し、headless goal投入前のonboarding promptを避けます。別directoryを対象にする場合は、起動前に移動するか`DEVCONTAINER_CODEX_TRUSTED_PROJECT_DIR`へabsolute pathを指定します。
 
 ### 4. Native multi-agent contractをprojectへ導入する

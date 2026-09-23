@@ -18,6 +18,7 @@ Current direct pins:
 | Ubuntu | `22.04` image digest in `Dockerfile` |
 | Python / TOML validation | Ubuntu Python 3.10 + `python3-tomli`; stdlib `tomllib` on Python >= 3.11 |
 | Provider sandbox helpers | Ubuntu `bubblewrap` and `socat` packages from the pinned base distribution |
+| Persistent terminal frontend | Ubuntu `byobu` package using the existing `tmux` backend |
 | Node | `22.22.3` plus archive SHA-256 |
 | TypeScript | `5.9.3` |
 | ts-node | `10.9.2` |
@@ -87,6 +88,15 @@ helper outside the global and Codex runner paths makes Codex use its own
 digest-checked bundled build, matching the frozen-image behavior. Remove this
 split only after a Codex/Ubuntu update passes the no-generation workspace-write,
 unrelated-read, and network-denial probe with the system helper.
+
+The `mira` terminal launcher adds Byobu so interactive CLI processes survive an
+SSH client disconnect while the container remains running. The existing tmux
+package remains the backend; Byobu adds its profile, status UI and launcher
+commands. A plain tmux wrapper was possible but would not provide the requested
+Byobu interface. To remove this dependency, delete the Byobu install and `mira`
+COPY/chmod in the Dockerfile, remove `scripts/mira` and its test, and rebuild the
+image. Stopping the container still ends its processes; Byobu is not a restart
+checkpoint.
 
 ## Selecting the local startup channel
 

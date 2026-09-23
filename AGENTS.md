@@ -214,6 +214,16 @@ node --check extensions/mira-companion/src/world-view.js
 node --check extensions/mira-companion/media/world-runtime.js
 ```
 
+`scripts/mira`またはByobu導入を触ったら:
+
+```bash
+bash -n scripts/mira
+PYTHONDONTWRITEBYTECODE=1 python3 -m unittest scripts/test-mira.py
+docker run --rm -e MIRA_TEST_BIN=/usr/local/bin/mira \
+  -v "$PWD:/workspace:ro" -w /workspace devcontainer-smoke:latest \
+  python3 -m unittest scripts/test-mira.py
+```
+
 `scripts/build-mira-icon-font.py`またはstatus bar glyphのsource mappingを触ったら、design-timeのPillow / fontToolsがある環境でfontを再生成し、生成済みWOFFも更新します。extension runtimeへこの2依存を追加してはいけません。
 
 ```bash
