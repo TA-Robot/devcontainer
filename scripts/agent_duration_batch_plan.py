@@ -11,6 +11,7 @@ from typing import Any, Iterable
 
 from agent_contracts import ContractValidationError, load_json
 from agent_duration_batch import PROVIDER_EFFORTS
+from agent_duration_capability import validate_requested_effort
 from agent_duration_study import (
     DurationStudyError,
     ROOT,
@@ -84,10 +85,7 @@ def _validated_series(series: Iterable[Series]) -> list[Series]:
         if item.provider not in PROVIDER_EFFORTS:
             raise DurationStudyError(f"unknown duration provider: {item.provider}")
         _require_identifier(item.model, "model")
-        if item.effort not in PROVIDER_EFFORTS[item.provider]:
-            raise DurationStudyError(
-                f"effort is unsupported by provider surface: {item.provider}/{item.effort}"
-            )
+        validate_requested_effort(item.provider, item.model, item.effort)
         if item in seen:
             raise DurationStudyError(
                 f"duplicate explicit series: {item.provider}/{item.model}/{item.effort}"

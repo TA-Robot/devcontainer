@@ -7,6 +7,7 @@ import time
 from typing import Any, Callable
 
 from agent_contracts import load_json
+from agent_duration_capability import PROVIDER_EFFORTS, validate_requested_effort
 from agent_duration_fixtures import DEFAULT_CATALOG
 from agent_duration_study import (
     DurationStudyError,
@@ -15,13 +16,6 @@ from agent_duration_study import (
     validate_record,
     validate_run_record,
 )
-
-
-PROVIDER_EFFORTS = {
-    "codex": {"low", "medium", "high", "xhigh", "max", "ultra"},
-    "claude": {"low", "medium", "high", "xhigh", "max"},
-    "grok": {"medium", "high", "xhigh", "max"},
-}
 
 
 def load_and_validate_batch(
@@ -52,11 +46,7 @@ def load_and_validate_batch(
     for entry in entries:
         if entry["case_id"] not in case_ids:
             raise DurationStudyError(f"duration batch case is absent from catalog: {entry['case_id']}")
-        if entry["effort"] not in PROVIDER_EFFORTS[entry["provider"]]:
-            raise DurationStudyError(
-                f"duration batch effort is unsupported by provider surface: "
-                f"{entry['provider']}/{entry['effort']}"
-            )
+        validate_requested_effort(entry["provider"], entry["model"], entry["effort"])
     return batch
 
 

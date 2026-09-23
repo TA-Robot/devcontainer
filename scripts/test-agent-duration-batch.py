@@ -148,6 +148,22 @@ class AgentDurationBatchTests(unittest.TestCase):
             with self.assertRaisesRegex(DurationStudyError, "unsupported by provider"):
                 load_and_validate_batch(self.write_batch(root, bad_effort))
 
+    def test_handwritten_batch_cannot_bypass_model_effort_guard(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="duration-batch-model-") as raw:
+            root = Path(raw)
+            entry = self.entry(1, effort="low")
+            entry.update(provider="grok", model="grok-4.7")
+            accepted = load_and_validate_batch(self.write_batch(root, self.batch([entry])))
+            self.assertEqual(accepted["entries"][0]["effort"], "low")
+            entry["effort"] = "max"
+            with self.assertRaisesRegex(DurationStudyError, "unsupported.*grok-4.7/max"):
+                load_and_validate_batch(self.write_batch(root, self.batch([entry])))
+            entry["model"] = "grok-4.6"
+            self.assertEqual(
+                load_and_validate_batch(self.write_batch(root, self.batch([entry])))["entries"][0]["effort"],
+                "max",
+            )
+
     def test_execution_continues_after_quality_fail_without_retry(self) -> None:
         with tempfile.TemporaryDirectory(prefix="duration-batch-execute-") as raw:
             root = Path(raw)

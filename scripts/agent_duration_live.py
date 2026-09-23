@@ -19,6 +19,7 @@ from typing import Any, Mapping
 from datetime import datetime, timezone
 
 from agent_contracts import load_json
+from agent_duration_capability import PROVIDER_EFFORTS, validate_requested_effort
 from agent_duration_fixtures import (
     DEFAULT_CATALOG,
     build_fixture,
@@ -54,14 +55,6 @@ PROVIDERS = {"codex", "claude", "grok"}
 ARTIFACT_RETENTIONS = {"content-free-only", "task-artifacts"}
 ARTIFACT_FILE_BYTES_CAP = 256 * 1024
 ARTIFACT_TOTAL_BYTES_CAP = 1024 * 1024
-PROVIDER_EFFORTS = {
-    "codex": {"low", "medium", "high", "xhigh", "max", "ultra"},
-    "claude": {"low", "medium", "high", "xhigh", "max"},
-    # Grok 1.0.5 advertises the flag but not its values.  Keep the experiment
-    # ladder explicit and rely on ephemeral session metadata to distinguish an
-    # applied value from a rejection or an unobservable request.
-    "grok": {"medium", "high", "xhigh", "max"},
-}
 RECORD_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9._-]{0,127}$")
 SEMVER = re.compile(r"(?<![0-9])([0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?)")
 CODEX_SANDBOX_PROBE_SCRIPT = """from pathlib import Path
@@ -1754,8 +1747,7 @@ def run_isolated_provider_fixture(
         raise DurationStudyError("live provider generation requires explicit authorization")
     if MODEL_ID.fullmatch(model) is None:
         raise DurationStudyError(f"{provider} model ID is invalid")
-    if effort not in PROVIDER_EFFORTS[provider]:
-        raise DurationStudyError(f"{provider} effort is outside the declared study ladder")
+    validate_requested_effort(provider, model, effort)
     if provider != "grok" and provider_binary is not None:
         raise DurationStudyError("a host-synced provider binary is only supported for Grok")
     if not math.isfinite(timeout_seconds) or timeout_seconds <= 0 or timeout_seconds > 3600:
@@ -2300,8 +2292,9 @@ def run_provider_study_once(
     ):
         if RECORD_ID.fullmatch(value) is None:
             raise DurationStudyError(f"{label} does not match the duration-study ID contract")
-    if MODEL_ID.fullmatch(model) is None or effort not in PROVIDER_EFFORTS[provider]:
-        raise DurationStudyError(f"{provider} model or effort is invalid")
+    if MODEL_ID.fullmatch(model) is None:
+        raise DurationStudyError(f"{provider} model ID is invalid")
+    validate_requested_effort(provider, model, effort)
     if not math.isfinite(timeout_seconds) or timeout_seconds <= 0 or timeout_seconds > 3600:
         raise DurationStudyError("live run timeout must be > 0 and <= 3600 seconds")
     if (

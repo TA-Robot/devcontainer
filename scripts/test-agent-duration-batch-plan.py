@@ -197,6 +197,16 @@ class AgentDurationBatchPlanTests(unittest.TestCase):
         with self.assertRaisesRegex(DurationStudyError, "duplicate explicit series"):
             self.plan(series=[duplicate, duplicate])
 
+    def test_grok_47_accepts_low_but_not_historical_max(self) -> None:
+        for model in ("grok-4.7", "grok-4.7-build-fast"):
+            with self.subTest(model=model):
+                allowed = self.plan(series=[Series("grok", model, "low")])
+                self.assertTrue(all(entry["effort"] == "low" for entry in allowed["entries"]))
+                with self.assertRaisesRegex(DurationStudyError, "unsupported.*max"):
+                    self.plan(series=[Series("grok", model, "max")])
+        historical = self.plan(series=[Series("grok", "grok-4.6", "max")])
+        self.assertTrue(all(entry["effort"] == "max" for entry in historical["entries"]))
+
     def test_cli_requires_explicit_model_and_effort_and_writes_without_provider_execution(self) -> None:
         with tempfile.TemporaryDirectory(prefix="duration-plan-cli-") as raw:
             output = Path(raw) / "batch.json"

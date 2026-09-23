@@ -583,6 +583,25 @@ raise SystemExit(125)
         self.assertIn("ultra", PROVIDER_EFFORTS["codex"])
         self.assertNotIn("ultra", PROVIDER_EFFORTS["claude"])
 
+    def test_grok_47_max_rejected_before_fixture_credentials_or_execution(self) -> None:
+        with tempfile.TemporaryDirectory(prefix="duration-model-guard-") as raw:
+            root = Path(raw)
+            for model in ("grok-4.7", "grok-4.7-build-fast"):
+                with self.subTest(model=model):
+                    with self.assertRaisesRegex(DurationStudyError, "unsupported.*max"):
+                        run_isolated_provider_fixture(
+                            "grok", root / "missing-fixture", image="missing-image",
+                            model=model, effort="max", auth_file=root / "missing-auth",
+                            live_generation_authorized=True, docker_bin="must-not-run",
+                        )
+                    with self.assertRaisesRegex(DurationStudyError, "unsupported.*max"):
+                        run_provider_study_once(
+                            "grok", "F04-S-PY-001", root / "output", image="missing-image",
+                            model=model, effort="max", auth_file=root / "missing-auth",
+                            live_generation_authorized=True, docker_bin="must-not-run",
+                        )
+            self.assertEqual(list(root.iterdir()), [])
+
     def test_expired_credential_is_rejected_before_provider_or_refresh(self) -> None:
         with tempfile.TemporaryDirectory(prefix="duration-live-expired-") as raw_temp:
             root = Path(raw_temp)

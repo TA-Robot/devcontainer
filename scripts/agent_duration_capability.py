@@ -16,10 +16,36 @@ from agent_duration_study import DurationStudyError, utc_timestamp, validate_rec
 
 
 PROVIDERS = ("codex", "claude", "grok")
+# The historical study ladder is a union, not a claim that every model accepts
+# every level. Keep old records/series readable when adding a new model.
+PROVIDER_EFFORTS = {
+    "codex": {"low", "medium", "high", "xhigh", "max", "ultra"},
+    "claude": {"low", "medium", "high", "xhigh", "max"},
+    "grok": {"low", "medium", "high", "xhigh", "max"},
+}
+# Documented 2026-09-23: https://docs.x.ai/developers/grok-4-7
+# Fast uses the same model in Grok Build. This request guard does not establish
+# account access or the applied setting; those still need runtime evidence.
+MODEL_EFFORTS = {
+    ("grok", "grok-4.7"): {"low", "medium", "high", "xhigh"},
+    ("grok", "grok-4.7-build-fast"): {"low", "medium", "high", "xhigh"},
+}
 ANSI_ESCAPE = re.compile(r"\x1b\[[0-?]*[ -/]*[@-~]")
 SEMVER = re.compile(r"(?<![0-9])([0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?)")
 CAPABILITY_ID = re.compile(r"^[a-z0-9][a-z0-9._-]{0,127}$")
 IMAGE_DIGEST = re.compile(r"^sha256:[0-9a-f]{64}$")
+
+
+def validate_requested_effort(provider: str, model: str, effort: str) -> None:
+    """Reject a known unsupported request before credentials or execution."""
+    if provider not in PROVIDER_EFFORTS:
+        raise DurationStudyError(f"unsupported provider: {provider}")
+    allowed = MODEL_EFFORTS.get((provider, model), PROVIDER_EFFORTS[provider])
+    if effort not in allowed:
+        raise DurationStudyError(
+            f"effort is unsupported by provider surface for model: "
+            f"{provider}/{model}/{effort}; allowed: {', '.join(sorted(allowed))}"
+        )
 
 
 def _clean_output(value: str) -> str:
